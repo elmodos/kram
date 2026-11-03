@@ -1,6 +1,6 @@
 """Sidebar filters (Synaptic's Status / Origin views) as plain predicates over PkgRow. No Qt."""
 from collections import Counter
-from collections.abc import Callable
+from collections.abc import Callable, Container
 from dataclasses import dataclass
 
 from .model import CatalogSnapshot, Origin, PkgRow, Status
@@ -30,7 +30,7 @@ def _with_counts(entries: list[FilterEntry], rows: list[PkgRow]) -> list[FilterE
     return entries
 
 
-def status_filters(snap: CatalogSnapshot) -> list[FilterEntry]:
+def status_filters(snap: CatalogSnapshot, marked: Container[tuple[str, str]] | None = None) -> list[FilterEntry]:
     def status_is(*statuses: Status) -> Predicate:
         return lambda r: r.status in statuses
 
@@ -44,6 +44,7 @@ def status_filters(snap: CatalogSnapshot) -> list[FilterEntry]:
         FilterEntry("status:unneeded", "Непотрібні залежності", status_is(Status.UNNEEDED)),
         FilterEntry("status:orphan", "Осиротілі (без репо)", status_is(Status.ORPHAN)),
         FilterEntry("status:newer", "Новіші за репо", status_is(Status.NEWER)),
+        *([FilterEntry("status:marked", "Позначені", lambda r: r.key in marked)] if marked is not None else []),
     ], snap.rows)
 
 

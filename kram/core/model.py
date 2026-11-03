@@ -117,3 +117,28 @@ class PkgDetails:
     files_complete: bool                 # False: repo primary metadata only lists some files
     changelog: list[ChangelogEntry]
     versions: list[VersionInfo]
+
+
+@dataclass(slots=True)
+class PreviewItem:
+    action: str          # install | upgrade | downgrade | reinstall | remove | reason
+    name: str
+    arch: str
+    evr: str
+    old_evr: str         # replaced version for upgrade/downgrade
+    repo_id: str
+    download_size: int
+    install_size: int
+    reason: str          # user | dependency | weak | clean (removed as no longer needed) | ""
+
+
+@dataclass(slots=True)
+class TransactionPreview:
+    items: list[PreviewItem]
+    problems: list[str]          # resolver messages; non-empty means the transaction cannot run
+    download_size: int
+    size_change: int             # bytes of disk space gained (+) or freed (-)
+
+    @property
+    def ok(self) -> bool:
+        return not self.problems

@@ -4,6 +4,7 @@ from functools import cache
 from PySide6.QtCore import QRect, Qt
 from PySide6.QtGui import QColor, QFont, QIcon, QPainter, QPen, QPixmap
 
+from ..core.marks import Action
 from ..core.model import Origin, Status
 
 _BOX = QRect(1, 1, 13, 13)
@@ -78,3 +79,57 @@ def origin_icon(origin: Origin) -> QIcon:
     p.drawText(QRect(1, 1, 14, 14), Qt.AlignCenter, ch)
     p.end()
     return QIcon(pm)
+
+
+def _glyph_box(fill: str, border: str, draw) -> QIcon:
+    pm, p = _canvas()
+    p.setPen(QPen(QColor(border), 1))
+    p.setBrush(QColor(fill))
+    p.drawRect(_BOX)
+    p.setPen(QPen(Qt.white, 2))
+    draw(p)
+    p.end()
+    return QIcon(pm)
+
+
+@cache
+def mark_icon(action: Action) -> QIcon:
+    def plus(p):
+        p.drawLine(4, 8, 11, 8)
+        p.drawLine(7, 4, 7, 12)
+
+    def cross(p):
+        p.drawLine(4, 4, 11, 11)
+        p.drawLine(11, 4, 4, 11)
+
+    def down(p):
+        p.drawLine(7, 4, 7, 12)
+        p.drawLine(4, 9, 7, 12)
+        p.drawLine(10, 9, 7, 12)
+
+    def letter(ch):
+        def draw(p):
+            p.setPen(Qt.white)
+            p.setFont(QFont("Noto Sans", 8, QFont.Bold))
+            p.drawText(_BOX, Qt.AlignCenter, ch)
+        return draw
+
+    style = {
+        Action.INSTALL: ("#4e8f3a", "#2f5a22", plus),
+        Action.REMOVE: ("#d64545", "#8a1f1f", cross),
+        Action.UPGRADE: ("#3d7fd6", "#1f4f8a", _arrow_up),
+        Action.REINSTALL: ("#3d7fd6", "#1f4f8a", letter("R")),
+        Action.DOWNGRADE: ("#b07a1f", "#6e4c10", down),
+        Action.MARK_USER: ("#4e8f3a", "#2f5a22", letter("U")),
+        Action.MARK_DEP: ("#9bb98f", "#2f5a22", letter("D")),
+    }
+    fill, border, draw = style[action]
+    return _glyph_box(fill, border, draw)
+
+
+# translucent so they work on light and dark palettes
+MARK_BACKGROUND = {
+    Action.INSTALL: (90, 170, 60, 70), Action.REMOVE: (210, 60, 60, 80), Action.UPGRADE: (60, 130, 220, 70),
+    Action.REINSTALL: (60, 130, 220, 50), Action.DOWNGRADE: (200, 150, 40, 70),
+    Action.MARK_USER: (90, 170, 60, 35), Action.MARK_DEP: (90, 170, 60, 35),
+}

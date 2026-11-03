@@ -1,27 +1,34 @@
 #!/usr/bin/python3 -I
 """Privileged helper for Kram. Runs as root via pkexec.
 
-Deliberately standalone (no kram imports): pkexec runs it with a clean environment, and this file is the
-security boundary, so it should stay small enough to review in one sitting.
+Deliberately standalone (only the stdlib and libdnf5): pkexec runs it with a clean environment, and this file
+is the security boundary, so it should stay small enough to review in one sitting. The GUI imports
+`build_goal` from here so its preview resolves exactly the same goal.
 
 Protocol: one JSON request per line on stdin, JSON event lines on stdout.
   {"op": "ping"}
-  {"op": "transaction", "install": [...], "remove": [...], "upgrade": [...], "upgrade_all": false, "test": false}
+  {"op": "refresh"}                                        re-download metadata of enabled repos
+  {"op": "transaction", "install": [...], "remove": [...], "upgrade": [...], "reinstall": [...],
+   "downgrade": [...], "mark_user": [...], "mark_dep": [...], "upgrade_all": false,
+   "download_only": false, "test": false}
+  {"op": "answer", "id": N, "yes": bool}                   reply to a "question" event (only while asked)
   {"op": "quit"}
-Events: {"event": "log"|"resolved"|"download"|"rpm"|"done", ...}
+Events: {"event": "log"|"resolved"|"download"|"rpm"|"question"|"done", ...}; every request ends with "done".
 """
 import json
 import os
 import re
 import sys
+import time
 
 # Specs are package names or NEVRAs. No '/', so no file paths or URLs can be smuggled in.
 SPEC_RE = re.compile(r"^[A-Za-z0-9_.+:~^-]{1,256}$")
 MAX_SPECS = 5000
+SPEC_FIELDS = ("install", "remove", "upgrade", "reinstall", "downgrade", "mark_user", "mark_dep")
 
-# rpm scriptlets and libdnf5 may write to fd 1; keep a private copy for the protocol and point fd 1 at stderr.
-_proto = os.fdopen(os.dup(1), "w", buffering=1, encoding="utf-8")
-os.dup2(2, 1)
+PROGRESS_INTERVAL = 0.1  # s; progress callbacks fire hundreds of times per file, the GUI needs ~10/s
+
+_proto = None  # private copy of the original stdout, see main()
 
 
 def emit(event: str, **fields) -> None:
@@ -42,39 +49,92 @@ def specs(req: dict, field: str) -> list[str]:
     return value
 
 
-def make_base():
+def validate(req: dict) -> dict[str, list[str]]:
+    fields = {f: specs(req, f) for f in SPEC_FIELDS}
+    if not (req.get("upgrade_all") or any(fields.values())):
+        raise ProtocolError("empty transaction")
+    return fields
+
+
+def build_goal(base, req: dict):
+    """Request -> libdnf5 Goal. Shared with the GUI's unprivileged preview."""
+    import libdnf5
+
+    fields = validate(req)
+    upgrade_all = bool(req.get("upgrade_all"))
+    goal = libdnf5.base.Goal(base)
+    for s in fields["install"]:
+        goal.add_install(s)
+    for s in fields["upgrade"]:
+        goal.add_upgrade(s)
+    for s in fields["reinstall"]:
+        goal.add_reinstall(s)
+    for s in fields["downgrade"]:
+        goal.add_downgrade(s)
+    for s in fields["remove"]:
+        goal.add_remove(s)
+    for s in fields["mark_user"]:
+        goal.add_rpm_reason_change(s, libdnf5.transaction.TransactionItemReason_USER)
+    for s in fields["mark_dep"]:
+        goal.add_rpm_reason_change(s, libdnf5.transaction.TransactionItemReason_DEPENDENCY)
+    if upgrade_all:
+        goal.add_rpm_upgrade()
+    return goal
+
+
+def make_base(download_cb=None, load=True):
     import libdnf5
     base = libdnf5.base.Base()
     base.load_config()
     base.setup()
-    repo_sack = base.get_repo_sack()
-    repo_sack.create_repos_from_system_configuration()
-    repo_sack.load_repos()
+    if download_cb is not None:
+        base.set_download_callbacks(libdnf5.repo.DownloadCallbacksUniquePtr(download_cb))
+    base.get_repo_sack().create_repos_from_system_configuration()
+    if load:
+        base.get_repo_sack().load_repos()
     return base
+
+
+def ask(question_id: int, **fields) -> bool:
+    """Send a question and block until the GUI answers it. Anything else, or EOF, means no."""
+    emit("question", id=question_id, **fields)
+    line = sys.stdin.readline()
+    try:
+        reply = json.loads(line)
+    except json.JSONDecodeError:
+        return False
+    return isinstance(reply, dict) and reply.get("op") == "answer" and reply.get("id") == question_id \
+        and reply.get("yes") is True
+
+
+def refresh() -> None:
+    import libdnf5
+    download_cb = DownloadProgress()
+    base = make_base(download_cb, load=False)
+    for repo in libdnf5.repo.RepoQuery(base):
+        if repo.is_enabled():
+            repo.expire()
+    emit("log", text="Оновлення метаданих репозиторіїв…")
+    base.get_repo_sack().load_repos()
+    emit("done", ok=True)
 
 
 def run_transaction(req: dict) -> None:
     import libdnf5
 
-    install, remove, upgrade = specs(req, "install"), specs(req, "remove"), specs(req, "upgrade")
-    upgrade_all = bool(req.get("upgrade_all"))
+    validate(req)  # before the slow repo loading
     test = bool(req.get("test"))
-    if not (install or remove or upgrade or upgrade_all):
-        raise ProtocolError("empty transaction")
+    download_only = bool(req.get("download_only"))
 
+    # Keep Python references: the UniquePtr owns only the C++ side, and if the Python object is collected
+    # libdnf5 calls into a dead director and aborts the whole process.
+    download_cb, rpm_cb, key_cb = DownloadProgress(), RpmProgress(), KeyImport()
     emit("log", text="Завантаження репозиторіїв…")
-    base = make_base()
-    goal = libdnf5.base.Goal(base)
-    for s in install:
-        goal.add_install(s)
-    for s in remove:
-        goal.add_remove(s)
-    for s in upgrade:
-        goal.add_upgrade(s)
-    if upgrade_all:
-        goal.add_rpm_upgrade()
+    base = make_base(download_cb)
+    for repo in libdnf5.repo.RepoQuery(base):
+        repo.set_callbacks(libdnf5.repo.RepoCallbacksUniquePtr(key_cb.for_repo()))
 
-    tr = goal.resolve()
+    tr = build_goal(base, req).resolve()
     if tr.get_problems() != libdnf5.base.GoalProblem_NO_PROBLEM:
         emit("done", ok=False, stage="resolve", error="\n".join(tr.get_resolve_logs_as_strings()))
         return
@@ -84,24 +144,35 @@ def run_transaction(req: dict) -> None:
         for tp in tr.get_transaction_packages()
     ])
 
-    # Keep Python references: the UniquePtr owns only the C++ side, and if the Python object is collected
-    # libdnf5 calls into a dead director and aborts the whole process.
-    download_cb, rpm_cb = DownloadProgress(), RpmProgress()
-    base.set_download_callbacks(libdnf5.repo.DownloadCallbacksUniquePtr(download_cb))
     tr.download()
+    if download_only:
+        emit("done", ok=True, download_only=True)
+        return
 
     tr.set_callbacks(libdnf5.rpm.TransactionCallbacksUniquePtr(rpm_cb))
     tr.set_description("kram")
-    if test:
-        result = tr.test()
-    else:
-        result = tr.run()
+    result = tr.test() if test else tr.run()
     if result != libdnf5.base.Transaction.TransactionRunResult_SUCCESS:
         problems = list(tr.get_transaction_problems()) + list(tr.get_gpg_signature_problems())
         emit("done", ok=False, stage="run", error=libdnf5.base.Transaction.transaction_result_to_string(result),
              details=problems)
         return
     emit("done", ok=True, test=test)
+
+
+class _Throttle:
+    """Lets a progress event through when enough time has passed, or when it is the first or the last one."""
+
+    def __init__(self):
+        self._last: dict = {}
+
+    def __call__(self, key, done, total) -> bool:
+        now = time.monotonic()
+        last = self._last.get(key)
+        if last is not None and done < total and now - last < PROGRESS_INTERVAL:
+            return False
+        self._last[key] = now
+        return True
 
 
 def _guarded(default):
@@ -127,26 +198,27 @@ def _callbacks():
     class DownloadProgress(libdnf5.repo.DownloadCallbacks):
         def __init__(self):
             super().__init__()
-            self._names = {}
             self._next = 0
+            self._throttle = _Throttle()
 
         @_guarded(0)
         def add_new_download(self, user_data, description, total_to_download):
             # the returned int comes back as user_cb_data in progress()/end()
             self._next += 1
-            self._names[self._next] = description
             emit("download", id=self._next, name=description, total=total_to_download, done=0)
             return self._next
 
         @_guarded(OK)
         def progress(self, user_cb_data, total_to_download, downloaded):
-            emit("download", id=user_cb_data, total=total_to_download, done=downloaded)
+            # metadata downloads report total=0 until the size is known; nothing to show yet
+            if total_to_download > 0 and self._throttle(user_cb_data, downloaded, total_to_download):
+                emit("download", id=user_cb_data, total=total_to_download, done=downloaded)
             return OK
 
         @_guarded(OK)
         def end(self, user_cb_data, status, msg):
-            emit("download", id=user_cb_data, end=True, ok=status != libdnf5.repo.DownloadCallbacks.TransferStatus_ERROR,
-                 msg=msg or "")
+            emit("download", id=user_cb_data, end=True,
+                 ok=status != libdnf5.repo.DownloadCallbacks.TransferStatus_ERROR, msg=msg or "")
             return OK
 
         @_guarded(OK)
@@ -155,6 +227,10 @@ def _callbacks():
             return OK
 
     class RpmProgress(libdnf5.rpm.TransactionCallbacks):
+        def __init__(self):
+            super().__init__()
+            self._throttle = _Throttle()
+
         @_guarded(None)
         def transaction_start(self, total):
             emit("rpm", step="prepare", total=total)
@@ -165,7 +241,8 @@ def _callbacks():
 
         @_guarded(None)
         def install_progress(self, item, amount, total):
-            emit("rpm", step="install", nevra=item.get_package().get_nevra(), done=amount, total=total)
+            if self._throttle(item.get_package().get_nevra(), amount, total):
+                emit("rpm", step="install", nevra=item.get_package().get_nevra(), done=amount, total=total)
 
         @_guarded(None)
         def uninstall_start(self, item, total):
@@ -173,7 +250,8 @@ def _callbacks():
 
         @_guarded(None)
         def uninstall_progress(self, item, amount, total):
-            emit("rpm", step="remove", nevra=item.get_package().get_nevra(), done=amount, total=total)
+            if self._throttle(item.get_package().get_nevra(), amount, total):
+                emit("rpm", step="remove", nevra=item.get_package().get_nevra(), done=amount, total=total)
 
         @_guarded(None)
         def elem_progress(self, item, amount, total):
@@ -189,15 +267,53 @@ def _callbacks():
             emit("log", text=f"Скрипт {libdnf5.rpm.TransactionCallbacks.script_type_to_string(type)} "
                              f"{libdnf5.rpm.to_full_nevra_string(nevra)} завершився з кодом {return_code}")
 
-    return DownloadProgress, RpmProgress
+    class RepoKeyCallbacks(libdnf5.repo.RepoCallbacks):
+        def __init__(self, owner):
+            super().__init__()
+            self._owner = owner
+
+        @_guarded(False)
+        def repokey_import(self, key_info):
+            return self._owner.ask(key_info)
+
+        @_guarded(None)
+        def repokey_imported(self, key_info):
+            emit("log", text=f"Імпортовано ключ {key_info.get_short_key_id()}")
+
+    class KeyImport:
+        """One question per key per transaction, shared by all repos."""
+
+        def __init__(self):
+            self._per_repo = []   # keep the director objects alive (see run_transaction)
+            self._answers = {}
+            self._next_id = 0
+
+        def for_repo(self):
+            cb = RepoKeyCallbacks(self)
+            self._per_repo.append(cb)
+            return cb
+
+        def ask(self, key_info) -> bool:
+            fp = key_info.get_fingerprint()
+            if fp not in self._answers:
+                self._next_id += 1
+                self._answers[fp] = ask(self._next_id, kind="gpg_key", key_id=key_info.get_short_key_id(),
+                                        fingerprint=fp, user_ids=list(key_info.get_user_ids()),
+                                        url=key_info.get_url(), timestamp=key_info.get_timestamp())
+            return self._answers[fp]
+
+    return DownloadProgress, RpmProgress, KeyImport
 
 
 def main() -> int:
+    global _proto, DownloadProgress, RpmProgress, KeyImport
+    # rpm scriptlets and libdnf5 may write to fd 1; keep a private copy for the protocol and point fd 1 at stderr.
+    _proto = os.fdopen(os.dup(1), "w", buffering=1, encoding="utf-8")
+    os.dup2(2, 1)
     if os.geteuid() != 0 and "--allow-non-root" not in sys.argv:
         emit("done", ok=False, stage="startup", error="helper must run as root")
         return 1
-    global DownloadProgress, RpmProgress
-    for line in sys.stdin:
+    while line := sys.stdin.readline():
         line = line.strip()
         if not line:
             continue
@@ -208,10 +324,10 @@ def main() -> int:
             op = req.get("op")
             if op == "ping":
                 emit("done", ok=True, uid=os.geteuid())
-            elif op == "transaction":
+            elif op in ("transaction", "refresh"):
                 if "DownloadProgress" not in globals():
-                    DownloadProgress, RpmProgress = _callbacks()
-                run_transaction(req)
+                    DownloadProgress, RpmProgress, KeyImport = _callbacks()
+                run_transaction(req) if op == "transaction" else refresh()
             elif op == "quit":
                 return 0
             else:

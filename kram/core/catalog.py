@@ -8,7 +8,18 @@ import time
 import libdnf5
 import rpm
 
-from .model import CatalogSnapshot, ChangelogEntry, PkgDetails, PkgRow, RepoInfo, Status, VersionInfo
+from ..helper.kram_helper import build_goal
+from .model import (
+    CatalogSnapshot,
+    ChangelogEntry,
+    PkgDetails,
+    PkgRow,
+    PreviewItem,
+    RepoInfo,
+    Status,
+    TransactionPreview,
+    VersionInfo,
+)
 from .origin import classify
 
 MAX_CHANGELOG = 30
@@ -219,6 +230,43 @@ class Catalog:
             return []
         # several versions of one package collapse into its catalog row
         return sorted({k for k in ((x.get_name(), x.get_arch()) for x in q) if k in self._pkgs})
+
+    def resolve(self, request: dict) -> TransactionPreview:
+        """Dry-run the transaction the helper would run (same goal builder), without root or downloads."""
+        tr = build_goal(self._base, request).resolve()
+        if tr.get_problems() != libdnf5.base.GoalProblem_NO_PROBLEM:
+            return TransactionPreview([], list(tr.get_resolve_logs_as_strings()), 0, 0)
+
+        T = libdnf5.transaction
+        actions = {T.TransactionItemAction_INSTALL: "install", T.TransactionItemAction_UPGRADE: "upgrade",
+                   T.TransactionItemAction_DOWNGRADE: "downgrade", T.TransactionItemAction_REINSTALL: "reinstall",
+                   T.TransactionItemAction_REMOVE: "remove", T.TransactionItemAction_REASON_CHANGE: "reason"}
+        reasons = {T.TransactionItemReason_USER: "user", T.TransactionItemReason_DEPENDENCY: "dependency",
+                   T.TransactionItemReason_WEAK_DEPENDENCY: "weak", T.TransactionItemReason_CLEAN: "clean"}
+        items, download, change = [], 0, 0
+        for tp in tr.get_transaction_packages():
+            p = tp.get_package()
+            act = tp.get_action()
+            if act == T.TransactionItemAction_REPLACED:  # the old side of an upgrade/downgrade
+                change -= p.get_install_size()
+                continue
+            if act not in actions:
+                continue
+            old = [r.get_evr() for r in tp.get_replaces()]
+            kind = actions[act]
+            if kind in ("install", "upgrade", "downgrade", "reinstall"):
+                download += p.get_download_size()
+                change += p.get_install_size()
+            elif kind == "remove":
+                change -= p.get_install_size()
+            items.append(PreviewItem(
+                action=kind, name=p.get_name(), arch=p.get_arch(), evr=p.get_evr(), old_evr=old[0] if old else "",
+                repo_id=p.get_repo_id() if kind != "remove" else p.get_from_repo_id(),
+                download_size=p.get_download_size() if kind != "remove" else 0,
+                install_size=p.get_install_size(), reason=reasons.get(tp.get_reason(), ""),
+            ))
+        items.sort(key=lambda i: (i.action, i.reason != "user", i.name))
+        return TransactionPreview(items, [], download, change)
 
     def find_provider(self, reldep: str) -> tuple[str, str] | None:
         """Best package in the catalog that satisfies a requirement string: installed first, then candidate."""

@@ -26,8 +26,10 @@ def test_rejects_bad_input():
         '{"op": "rm -rf"}',
         "not json",
         "[]",
+        '{"op": "transaction", "downgrade": ["bash-5.0;rm"]}',
+        '{"op": "transaction", "mark_user": [42]}',
     )
-    assert len(events) == 7
+    assert len(events) == 9
     assert all(ev["event"] == "done" and ev["ok"] is False and ev["stage"] == "protocol" for ev in events)
 
 
@@ -36,3 +38,24 @@ def test_refuses_non_root_without_flag():
     if out.returncode == 0:  # running the suite as root
         return
     assert json.loads(out.stdout)["stage"] == "startup"
+
+
+def test_question_waits_for_answer():
+    """ask() must consume exactly one reply line and treat anything but a matching yes as no."""
+    import importlib.util
+    import io
+
+    spec = importlib.util.spec_from_file_location("kram_helper_under_test", HELPER)
+    helper = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(helper)
+    helper._proto = io.StringIO()
+    for reply, expected in [('{"op": "answer", "id": 1, "yes": true}', True),
+                            ('{"op": "answer", "id": 2, "yes": true}', False),   # wrong id
+                            ('{"op": "answer", "id": 1, "yes": "true"}', False),  # not a bool
+                            ("garbage", False), ("", False)]:
+        sys.stdin, old = io.StringIO(reply + "\n" if reply else ""), sys.stdin
+        try:
+            assert helper.ask(1, kind="gpg_key") is expected
+        finally:
+            sys.stdin = old
+    assert '"question"' in helper._proto.getvalue()

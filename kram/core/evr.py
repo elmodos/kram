@@ -22,3 +22,7 @@ def evr_ranks(evrs: Iterable[str]) -> dict[str, int]:
     unique = sorted(set(evrs) - {""})
     unique.sort(key=functools.cmp_to_key(lambda a, b: rpm.labelCompare(split_evr(a), split_evr(b))))
     return {evr: i for i, evr in enumerate(unique)}
+
+
+def evr_cmp(a: str, b: str) -> int:
+    return rpm.labelCompare(split_evr(a), split_evr(b))

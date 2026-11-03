@@ -30,6 +30,7 @@ class Sidebar(QWidget):
         self._view = "status"
         self._selected: dict[str, str] = {}  # view -> selected entry id
         self.history: list[tuple[str, int, int]] = []  # (text, mode, result count), newest first
+        self.marked = None  # container of marked keys, for the "Marked" status entry
 
         lay = QVBoxLayout(self)
         lay.setContentsMargins(0, 0, 0, 0)
@@ -76,6 +77,10 @@ class Sidebar(QWidget):
                             lambda _r: True, count, query=(text, mode))
                 for text, mode, count in self.history]
 
+    def refresh_counts(self) -> None:
+        """Recount entries (e.g. after marking) without changing the selection or re-filtering."""
+        self._rebuild(emit=False)
+
     @property
     def current_view(self) -> str:
         return self._view
@@ -89,7 +94,12 @@ class Sidebar(QWidget):
         if self._snap is None:
             return
         builder = next(b for vid, _l, b in VIEWS if vid == self._view)
-        self._entries = self._history_entries() if builder == "history" else builder(self._snap)
+        if builder == "history":
+            self._entries = self._history_entries()
+        elif builder is status_filters:
+            self._entries = status_filters(self._snap, self.marked)
+        else:
+            self._entries = builder(self._snap)
         self.list.blockSignals(True)
         self.list.clear()
         want = self._selected.get(self._view)

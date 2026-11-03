@@ -1,12 +1,13 @@
 from functools import cache
 
 from PySide6.QtCore import QAbstractTableModel, QModelIndex, Qt
-from PySide6.QtGui import QFont
+from PySide6.QtGui import QColor, QFont
 
 from ..core.evr import evr_ranks
+from ..core.marks import ACTION_LABELS, MarkSet
 from ..core.model import PkgRow, Status
 from ..core.origin import display_repo
-from .icons import ORIGIN_LABEL, origin_icon, status_icon
+from .icons import MARK_BACKGROUND, ORIGIN_LABEL, mark_icon, origin_icon, status_icon
 
 COL_STATUS, COL_ORIGIN, COL_NAME, COL_INSTALLED, COL_CANDIDATE, COL_REPO, COL_SIZE, COL_SUMMARY = range(8)
 HEADERS = ["S", "", "Пакунок", "Встановлена версія", "Остання версія", "Репозиторій", "Розмір", "Опис"]
@@ -54,6 +55,7 @@ class PackageTableModel(QAbstractTableModel):
         self.basearch = "x86_64"
         self._sort: tuple[int, Qt.SortOrder] | None = (COL_NAME, Qt.AscendingOrder)
         self._evr_rank: dict[str, int] | None = None
+        self.marks = MarkSet()
 
     def set_rows(self, rows: list[PkgRow], basearch: str) -> None:
         self.beginResetModel()
@@ -76,6 +78,18 @@ class PackageTableModel(QAbstractTableModel):
     @property
     def sort_column(self) -> tuple[int, Qt.SortOrder] | None:
         return self._sort
+
+    def marks_changed(self, keys=None) -> None:
+        """Repaint rows whose marks changed (all visible rows if keys is None)."""
+        if not self.visible:
+            return
+        if keys is None:
+            self.dataChanged.emit(self.index(0, 0), self.index(len(self.visible) - 1, len(HEADERS) - 1))
+            return
+        for key in keys:
+            idx = self.index_of_key(key)
+            if idx.isValid():
+                self.dataChanged.emit(self.index(idx.row(), 0), self.index(idx.row(), len(HEADERS) - 1))
 
     def row_at(self, index: QModelIndex) -> PkgRow:
         return self.rows[self.visible[index.row()]]
@@ -147,14 +161,24 @@ class PackageTableModel(QAbstractTableModel):
                 case 7: return r.summary
         elif role == Qt.DecorationRole:
             if col == COL_STATUS:
-                return status_icon(r.status)
+                mark = self.marks.get(r.key)
+                return mark_icon(mark.action) if mark else status_icon(r.status)
             if col == COL_ORIGIN:
                 return origin_icon(r.origin)
         elif role == Qt.ToolTipRole:
             if col == COL_ORIGIN:
                 return f"{ORIGIN_LABEL[r.origin]}: {display_repo(r.origin_repo)}"
             if col == COL_STATUS:
-                return STATUS_LABEL[r.status]
+                mark = self.marks.get(r.key)
+                label = STATUS_LABEL[r.status]
+                if mark:
+                    target = f" {mark.evr}" if mark.evr else ""
+                    label += f"\nПозначено: {ACTION_LABELS[mark.action]}{target}"
+                return label + "\n\nКлік — меню дій"
+        elif role == Qt.BackgroundRole:
+            mark = self.marks.get(r.key)
+            if mark:
+                return QColor(*MARK_BACKGROUND[mark.action])
         elif role == Qt.TextAlignmentRole and col == COL_SIZE:
             return int(Qt.AlignRight | Qt.AlignVCenter)
         elif role == Qt.FontRole and col == COL_CANDIDATE and r.status is Status.UPGRADABLE:
