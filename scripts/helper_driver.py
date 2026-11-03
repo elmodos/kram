@@ -25,8 +25,12 @@ def main() -> int:
     proc = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True, bufsize=1)
     results = []
     for req in requests:
-        proc.stdin.write(json.dumps(req) + "\n")
-        proc.stdin.flush()
+        try:
+            proc.stdin.write(json.dumps(req) + "\n")
+            proc.stdin.flush()
+        except BrokenPipeError:
+            print("HELPER DIED")
+            return 1
         for line in proc.stdout:
             ev = json.loads(line)
             kind = ev["event"]
@@ -43,10 +47,16 @@ def main() -> int:
             if kind == "done":
                 results.append(ev.get("ok"))
                 break
-    proc.stdin.write('{"op": "quit"}\n')
-    proc.stdin.close()
+        else:
+            print("HELPER DIED before answering", req)
+            return 1
+    try:
+        proc.stdin.write('{"op": "quit"}\n')
+        proc.stdin.close()
+    except BrokenPipeError:
+        pass
     proc.wait()
-    return 0 if results and all(results) else 1
+    return 0 if len(results) == len(requests) and all(results) else 1
 
 
 if __name__ == "__main__":

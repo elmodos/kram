@@ -55,6 +55,8 @@ class RepoInfo:
     enabled: bool
     origin: Origin
     age_seconds: int | None   # time since metadata was downloaded; None if not loaded
+    priority: int = 99
+    file_path: str = ""
 
 
 @dataclass(slots=True)
@@ -64,6 +66,7 @@ class CatalogSnapshot:
     n_upgradable: int
     load_seconds: float
     basearch: str = "x86_64"
+    releasever: str = ""
     repos: list[RepoInfo] = field(default_factory=list)
     descriptions: list[str] = field(default_factory=list)   # aligned with rows
 

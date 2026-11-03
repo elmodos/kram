@@ -28,8 +28,18 @@ def test_rejects_bad_input():
         "[]",
         '{"op": "transaction", "downgrade": ["bash-5.0;rm"]}',
         '{"op": "transaction", "mark_user": [42]}',
+        '{"op": "repo_set_enabled", "repos": {}}',
+        '{"op": "repo_set_enabled", "repos": {"fedora; rm -rf /": true}}',
+        '{"op": "repo_set_enabled", "repos": {"fedora": "yes"}}',
+        '{"op": "copr", "action": "enable", "project": "owner/proj --hub=evil"}',
+        '{"op": "copr", "action": "build", "project": "owner/proj"}',
+        '{"op": "copr", "action": "enable", "project": "owner/proj", "hub": "evil.example/x"}',
+        '{"op": "copr", "action": "enable", "project": "-y/x"}',
+        '{"op": "copr", "action": "enable", "project": "owner/-x"}',
+        '{"op": "copr", "action": "enable", "project": "owner/x", "hub": "-evil"}',
+        '{"op": "repo_set_enabled", "repos": {"-fedora": true}}',
     )
-    assert len(events) == 9
+    assert len(events) == 19
     assert all(ev["event"] == "done" and ev["ok"] is False and ev["stage"] == "protocol" for ev in events)
 
 

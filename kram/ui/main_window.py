@@ -2,7 +2,7 @@
 import json
 import time
 
-from PySide6.QtCore import QSettings, QSize, Qt, QTimer
+from PySide6.QtCore import QSettings, QSize, Qt, QTimer, Signal
 from PySide6.QtGui import QAction, QGuiApplication, QIcon, QKeySequence
 from PySide6.QtWidgets import (
     QAbstractItemView,
@@ -28,10 +28,12 @@ from ..core.search import MODE_LABELS, Mode, SearchIndex
 from ..i18n import _, ngettext
 from ..ipc.client import HelperClient
 from .apply_dialog import ApplyDialog
+from .copr_dialog import CoprDialog
 from .details import DetailsTabs
 from .dnf_thread import DnfThread
 from .package_model import COL_NAME, COL_STATUS, PackageTableModel
 from .progress_dialog import ProgressDialog
+from .repos_dialog import ReposDialog
 from .sidebar import Sidebar
 
 COLUMN_WIDTHS = [26, 24, 230, 175, 175, 150, 80]
@@ -50,6 +52,8 @@ def _age(seconds: int | None) -> str:
 
 
 class MainWindow(QMainWindow):
+    catalogLoaded = Signal(object)  # CatalogSnapshot, after every (re)load
+
     def __init__(self):
         super().__init__()
         self.setWindowTitle(_("Kram — package manager"))
@@ -114,7 +118,10 @@ class MainWindow(QMainWindow):
         self.act_unmark_all.setEnabled(False)
         self.act_properties = self._action(_("Properties"), "document-properties", "Alt+Return",
                                            lambda: self.details.setCurrentIndex(1))
-        self.act_repos = self._action(_("Repositories"), "configure", enabled=False)
+        self.act_repos = self._action(_("Repositories"), "configure", slot=self.open_repos,
+                                      tip=_("Enable or disable software repositories"))
+        self.act_copr = self._action(_("COPR"), "folder-cloud", slot=self.open_copr,
+                                     tip=_("Manage COPR projects: community repositories"))
         self.act_find = self._action(_("Find"), "edit-find", QKeySequence.Find,
                                      lambda: (self.search.setFocus(), self.search.selectAll()))
         self.act_back = self._action(_("Back"), "go-previous", "Alt+Left", self.go_back,
@@ -174,7 +181,7 @@ class MainWindow(QMainWindow):
         m.addSeparator()
         m.addActions([self.act_properties, self.act_back])
         m = mb.addMenu(_("&Settings"))
-        m.addAction(self.act_repos)
+        m.addActions([self.act_repos, self.act_copr])
         m = mb.addMenu(_("&Help"))
         m.addAction(self.act_about)
 
@@ -186,7 +193,7 @@ class MainWindow(QMainWindow):
         tb.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
         tb.addActions([self.act_reload, self.act_mark_upgrades, self.act_apply])
         tb.addSeparator()
-        tb.addActions([self.act_properties, self.act_repos])
+        tb.addActions([self.act_properties, self.act_repos, self.act_copr])
         spacer = QWidget()
         spacer.setSizePolicy(spacer.sizePolicy().Policy.Expanding, spacer.sizePolicy().Policy.Preferred)
         tb.addWidget(spacer)
@@ -319,6 +326,7 @@ class MainWindow(QMainWindow):
         self.index = SearchIndex(snap.rows, snap.descriptions)
         self.key_index = {r.key: i for i, r in enumerate(snap.rows)}
         self._revalidate_marks()
+        self.catalogLoaded.emit(snap)
         self.age.setText(_age(snap.metadata_age) + "  ")
         view, entry = self._restore_filter if self.filter is None else (
             self.sidebar.current_view, self.sidebar.current_entry_id)
@@ -642,6 +650,39 @@ class MainWindow(QMainWindow):
             return
         self._run_helper({"op": "refresh"}, _("Refreshing metadata"))
         self.reload()
+
+    def run_helper_and_reload(self, request: dict, title: str) -> bool:
+        ok = self._run_helper(request, title)
+        self.reload()  # even after a failure: part of the change may have happened
+        return ok
+
+    def open_repos(self):
+        if not self.snapshot or self.helper.busy:
+            return
+        self.dnf.submit(self.catalog.repo_package_counts, self._show_repos)
+
+    def _show_repos(self, counts):
+        dlg = ReposDialog(self.snapshot.repos, counts, self)
+        if dlg.exec() == ReposDialog.Accepted and (changes := dlg.changes()):
+            self.run_helper_and_reload({"op": "repo_set_enabled", "repos": changes}, _("Changing repositories"))
+
+    def open_copr(self):
+        if not self.snapshot or self.helper.busy:
+            return
+        dlg = CoprDialog(self.run_helper_and_reload, self)
+
+        def refresh(snap):
+            self.dnf.submit(self.catalog.repo_package_counts, lambda counts: dlg.set_catalog(snap, counts))
+
+        def show_packages(repo_id):
+            dlg.accept()
+            self.search.clear()
+            self.sidebar.select("origin", f"repo:{repo_id}")
+        refresh(self.snapshot)
+        self.catalogLoaded.connect(refresh)
+        dlg.showPackages.connect(show_packages)
+        dlg.exec()
+        self.catalogLoaded.disconnect(refresh)
 
     def _run_helper(self, request: dict, title: str) -> bool:
         self.act_apply.setEnabled(False)

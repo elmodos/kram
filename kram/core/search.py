@@ -12,7 +12,7 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 from enum import IntEnum
 
-from ..i18n import _
+from ..i18n import _, pgettext
 from .model import PkgRow
 
 
@@ -31,7 +31,7 @@ class Mode(IntEnum):
 MODE_LABELS = {
     Mode.NAME: _("Name"),
     Mode.NAME_SUMMARY: _("Name + summary"),
-    Mode.DESCRIPTION: _("Description"),
+    Mode.DESCRIPTION: pgettext("search mode", "Description"),
     Mode.PROVIDES: _("Provides"),
     Mode.FILE: _("File"),
 }

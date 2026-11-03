@@ -11,6 +11,8 @@ Protocol: one JSON request per line on stdin, JSON event lines on stdout.
   {"op": "transaction", "install": [...], "remove": [...], "upgrade": [...], "reinstall": [...],
    "downgrade": [...], "mark_user": [...], "mark_dep": [...], "upgrade_all": false,
    "download_only": false, "test": false}
+  {"op": "repo_set_enabled", "repos": {"<repo id>": bool}}  persist via dnf5 config-manager, then load metadata
+  {"op": "copr", "action": "enable"|"disable"|"remove", "project": "owner/name", "hub": "<host>"}
   {"op": "answer", "id": N, "yes": bool}                   reply to a "question" event (only while asked)
   {"op": "quit"}
 Events: {"event": "log"|"resolved"|"download"|"rpm"|"question"|"done", ...}; every request ends with "done".
@@ -20,12 +22,21 @@ Events: {"event": "log"|"resolved"|"download"|"rpm"|"question"|"done", ...}; eve
 import json
 import os
 import re
+import subprocess
 import sys
 import time
 
 # Specs are package names or NEVRAs. No '/', so no file paths or URLs can be smuggled in.
 SPEC_RE = re.compile(r"^[A-Za-z0-9_.+:~^-]{1,256}$")
 MAX_SPECS = 5000
+# repo ids as dnf allows them (copr ids contain ':'); additionally checked against the configured repos
+REPO_ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.:+-]{0,199}$")
+# `dnf5 copr` arguments; must match kram.core.copr
+# first characters alphanumeric: an argument starting with "-" would be parsed as an option
+COPR_PROJECT_RE = re.compile(r"^@?[A-Za-z0-9][A-Za-z0-9_.+-]{0,99}/[A-Za-z0-9][A-Za-z0-9_.+-]{0,99}$")
+COPR_HUB_RE = re.compile(r"^[a-z0-9][a-z0-9.-]{0,252}$")
+COPR_DEFAULT_HUB = "copr.fedorainfracloud.org"
+COPR_ACTIONS = ("enable", "disable", "remove")
 SPEC_FIELDS = ("install", "remove", "upgrade", "reinstall", "downgrade", "mark_user", "mark_dep")
 
 PROGRESS_INTERVAL = 0.1  # s; progress callbacks fire hundreds of times per file, the GUI needs ~10/s
@@ -122,6 +133,65 @@ def refresh() -> None:
             repo.expire()
     log("refreshing", "Refreshing repository metadata…")
     base.get_repo_sack().load_repos()
+    emit("done", ok=True)
+
+
+def run_command(argv: list[str]) -> bool:
+    """Run a dnf5 subcommand (argv only, never a shell); its output goes to the log."""
+    log("command", "Running: {command}", command=" ".join(argv))
+    proc = subprocess.run(argv, stdin=subprocess.DEVNULL, capture_output=True, text=True, check=False)
+    for line in (proc.stdout + proc.stderr).splitlines():
+        if line.strip():
+            emit("log", text=line)
+    return proc.returncode == 0
+
+
+def load_metadata() -> None:
+    """Load (downloading what is missing) metadata of the enabled repos, e.g. after enabling one."""
+    log("loading_repos", "Loading repositories…")
+    make_base(DownloadProgress())
+
+
+def set_repos_enabled(req: dict) -> None:
+    repos = req.get("repos")
+    if not isinstance(repos, dict) or not 0 < len(repos) <= 500:
+        raise ProtocolError("repos: expected a non-empty object of repo id -> bool")
+    for repo_id, enabled in repos.items():
+        if not REPO_ID_RE.match(repo_id) or not isinstance(enabled, bool):
+            raise ProtocolError(f"repos: invalid entry {repo_id!r}")
+    import libdnf5
+    # keep `base` referenced while iterating: RepoQuery holds weak pointers into it, and a collected Base
+    # makes libdnf5 abort on "Dereferencing an invalidated WeakPtr"
+    base = make_base(load=False)
+    known = {r.get_id() for r in libdnf5.repo.RepoQuery(base)}
+    unknown = sorted(set(repos) - known)
+    if unknown:
+        raise ProtocolError(f"repos: not configured: {', '.join(unknown)}")
+    for repo_id, enabled in sorted(repos.items()):
+        if not run_command(["dnf5", "-q", "-y", "config-manager", "setopt", f"{repo_id}.enabled={int(enabled)}"]):
+            emit("done", ok=False, stage="config", error=f"could not change {repo_id}")
+            return
+    if any(repos.values()):
+        load_metadata()
+    emit("done", ok=True)
+
+
+def copr(req: dict) -> None:
+    action, project, hub = req.get("action"), req.get("project"), req.get("hub") or COPR_DEFAULT_HUB
+    if action not in COPR_ACTIONS:
+        raise ProtocolError(f"copr: unknown action {action!r}")
+    if not isinstance(project, str) or not COPR_PROJECT_RE.match(project):
+        raise ProtocolError(f"copr: invalid project {project!r}")
+    if not isinstance(hub, str) or not COPR_HUB_RE.match(hub):
+        raise ProtocolError(f"copr: invalid hub {hub!r}")
+    argv = ["dnf5", "-y", "copr"]
+    if hub != COPR_DEFAULT_HUB:
+        argv.append(f"--hub={hub}")
+    if not run_command([*argv, action, project]):
+        emit("done", ok=False, stage="copr", error=f"dnf5 copr {action} {project} failed")
+        return
+    if action == "enable":
+        load_metadata()
     emit("done", ok=True)
 
 
@@ -331,10 +401,11 @@ def main() -> int:
             op = req.get("op")
             if op == "ping":
                 emit("done", ok=True, uid=os.geteuid())
-            elif op in ("transaction", "refresh"):
+            elif op in ("transaction", "refresh", "repo_set_enabled", "copr"):
                 if "DownloadProgress" not in globals():
                     DownloadProgress, RpmProgress, KeyImport = _callbacks()
-                run_transaction(req) if op == "transaction" else refresh()
+                {"transaction": run_transaction, "refresh": lambda _r: refresh(),
+                 "repo_set_enabled": set_repos_enabled, "copr": copr}[op](req)
             elif op == "quit":
                 return 0
             else:

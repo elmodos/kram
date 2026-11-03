@@ -264,6 +264,18 @@ download only, refresh).
 
 **M4 — repositories and COPR.** The dialogs from §7.
 
+M4 (2026-11-03): ✅ Settings → Repositories: every configured repo with an enabled checkbox, package
+count, priority, origin and file; debuginfo/source hidden by default; changes are persisted by the helper
+with `dnf5 config-manager setopt <id>.enabled=…` (written to `/etc/dnf/repos.override.d/`, the `.repo`
+files are untouched) and new repos' metadata is loaded right away. Settings → COPR: enabled projects with
+package and installed counts; enable / disable / remove (warns how many installed packages will be
+orphaned and can show them) and "show packages"; search through the Copr API ranked by name, marking
+whether each project builds for the running Fedora/arch; an exact `owner/project` can be enabled without
+searching. The Copr search API is slow (10–20 s per query, whatever the limit), hence a 60 s timeout.
+Helper arguments are validated so nothing starting with `-` reaches `dnf5` as an option. Verified in the
+container (`scripts/container_check.sh`): repo disable/enable, unknown repo rejected, COPR enable /
+setopt on a COPR id / disable / remove, non-existent COPR project fails cleanly.
+
 **M5 — polish and packaging.** comps groups in the sidebar, save/load marks to a file, RPM spec, .desktop,
 metainfo, polkit policy, our own COPR, README with screenshots.
 

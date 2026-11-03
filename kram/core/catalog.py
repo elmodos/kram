@@ -4,6 +4,7 @@ Not thread-safe: every method must be called from the same single worker thread.
 """
 import functools
 import time
+from collections import Counter
 
 import libdnf5
 import rpm
@@ -134,7 +135,8 @@ class Catalog:
         # ~0.1 s for 70k packages; cheap enough to make full-description search instant
         descriptions = [(pkgs[r.key][0] or pkgs[r.key][1]).get_description() for r in rows]
         return CatalogSnapshot(rows, n_installed, n_upgradable, time.monotonic() - t0,
-                               basearch=basearch, repos=self._repos(), descriptions=descriptions)
+                               basearch=basearch, releasever=base.get_vars().get_value("releasever"),
+                               repos=self._repos(), descriptions=descriptions)
 
     def _repos(self) -> list[RepoInfo]:
         repos = []
@@ -145,9 +147,16 @@ class Catalog:
                 age = r.get_age() if r.is_enabled() else None
             except Exception:  # noqa: BLE001 - not loaded / no cache
                 age = None
-            repos.append(RepoInfo(r.get_id(), r.get_name(), r.is_enabled(), classify(r.get_id()), age))
+            repos.append(RepoInfo(r.get_id(), r.get_name(), r.is_enabled(), classify(r.get_id()), age,
+                                  priority=r.get_priority(), file_path=r.get_repo_file_path()))
         repos.sort(key=lambda r: r.id)
         return repos
+
+    def repo_package_counts(self) -> Counter[str]:
+        """Available packages (all versions) per enabled repo."""
+        q = libdnf5.rpm.PackageQuery(self._base)
+        q.filter_available()
+        return Counter(p.get_repo_id() for p in q)
 
     def details(self, key: tuple[str, str]) -> PkgDetails:
         inst, cand = self._pkgs[key]
