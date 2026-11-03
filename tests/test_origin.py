@@ -1,5 +1,5 @@
-from dnf_gui.core.model import Origin
-from dnf_gui.core.origin import classify, display_repo
+from kram.core.model import Origin
+from kram.core.origin import classify, display_repo
 
 
 def test_classify():

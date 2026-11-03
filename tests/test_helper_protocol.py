@@ -3,7 +3,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-HELPER = Path(__file__).resolve().parent.parent / "dnf_gui" / "helper" / "dnf_gui_helper.py"
+HELPER = Path(__file__).resolve().parent.parent / "kram" / "helper" / "kram_helper.py"
 
 
 def talk(*lines: str) -> list[dict]:

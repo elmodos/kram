@@ -1,7 +1,7 @@
 #!/usr/bin/python3 -I
-"""Privileged helper for dnf-gui. Runs as root via pkexec.
+"""Privileged helper for Kram. Runs as root via pkexec.
 
-Deliberately standalone (no dnf_gui imports): pkexec runs it with a clean environment, and this file is the
+Deliberately standalone (no kram imports): pkexec runs it with a clean environment, and this file is the
 security boundary, so it should stay small enough to review in one sitting.
 
 Protocol: one JSON request per line on stdin, JSON event lines on stdout.
@@ -91,7 +91,7 @@ def run_transaction(req: dict) -> None:
     tr.download()
 
     tr.set_callbacks(libdnf5.rpm.TransactionCallbacksUniquePtr(rpm_cb))
-    tr.set_description("dnf-gui")
+    tr.set_description("kram")
     if test:
         result = tr.test()
     else:

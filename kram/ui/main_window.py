@@ -27,7 +27,7 @@ COLUMN_WIDTHS = [26, 24, 230, 175, 175, 150, 80]
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Менеджер пакунків — dnf-gui")
+        self.setWindowTitle("Kram — менеджер пакунків")
         self.resize(1320, 860)
 
         self.dnf = DnfThread(self)

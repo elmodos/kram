@@ -1,4 +1,4 @@
-"""Throwaway UI mockup: renders hypothetical dnf-gui screens to PNG using real libdnf5 data."""
+"""Throwaway UI mockup: renders hypothetical Kram screens to PNG using real libdnf5 data."""
 import sys, os
 from dataclasses import dataclass, field
 
@@ -195,7 +195,7 @@ def details_html(r, tab):
 class MainWin(QMainWindow):
     def __init__(self, sidebar_mode, sidebar_items, sidebar_sel, rows_, sel_name, tab, search="", search_mode=0, sort=True):
         super().__init__()
-        self.setWindowTitle("Менеджер пакунків — dnf-gui")
+        self.setWindowTitle("Kram — менеджер пакунків")
         self.resize(1320, 860)
         mb = self.menuBar()
         for m in ["&Файл", "&Правка", "Па&кунок", "&Налаштування", "&Довідка"]:

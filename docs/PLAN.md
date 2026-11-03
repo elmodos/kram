@@ -1,4 +1,4 @@
-# dnf-gui — менеджер пакунків для Fedora в дусі Synaptic
+# Kram — менеджер пакунків для Fedora в дусі Synaptic
 
 План MVP. Мета: дати старожилу Debian на Fedora те саме відчуття, що й Synaptic —
 повний список пакунків, повний контроль, нічого не робиться без явного «Застосувати».
@@ -54,7 +54,7 @@
 │  MarkSet (позначені дії) ── │ ── Catalog (worker-потік, libdnf5)│
 │        │       resolve() для превʼю (без root, без завантажень) │
 └────────┼────────────────────────────────────────────────────────┘
-         │ pkexec dnf-gui-helper  (JSON-рядки по stdin/stdout)
+         │ pkexec kram-helper     (JSON-рядки по stdin/stdout)
 ┌────────▼────────── helper (root, короткоживучий) ──────────────┐
 │ refresh | transaction{install,remove,upgrade,downgrade,reinstall│
 │ ,mark-user/dep} | copr{enable,disable,remove} | repo{en,dis}    │
@@ -79,7 +79,7 @@
 
 ### Структура репозиторію
 ```
-dnf_gui/
+kram/
   core/            # без Qt; юніт-тестується
     catalog.py     # libdnf5 → PkgRow снапшот, ліниві деталі
     model.py       # PkgRow, Origin, Status enum-и
@@ -97,9 +97,9 @@ dnf_gui/
     main_window.py, package_table.py, sidebar.py, details.py,
     apply_dialog.py, progress_dialog.py, copr_dialog.py, repos_dialog.py
 data/
-  org.dnfgui.helper.policy   # polkit
-  dnf-gui.desktop
-packaging/dnf-gui.spec
+  org.kram.helper.policy     # polkit
+  kram.desktop
+packaging/kram.spec
 tests/
 ```
 
@@ -203,8 +203,8 @@ priority, кнопки Увімкнути/Вимкнути. debuginfo/source —
 
 ## 8. Привілейований helper і безпека
 
-- `/usr/libexec/dnf-gui-helper`, запуск `pkexec`, polkit action
-  `org.dnfgui.helper` з `auth_admin_keep` (пароль один раз на кілька хвилин).
+- `/usr/libexec/kram-helper`, запуск `pkexec`, polkit action
+  `org.kram.helper` з `auth_admin_keep` (пароль один раз на кілька хвилин).
 - Протокол: JSON-lines. Запити: `refresh`, `transaction{items:[{action,nevra|spec}]}`,
   `repo_set_enabled{id,bool}`, `copr{op,owner,project}`, `mark_reason{name,user|dep}`.
   Відповіді/події: `progress`, `log`, `question` (напр. імпорт GPG-ключа → GUI питає
@@ -267,6 +267,6 @@ RPM spec, .desktop, polkit-policy, власний COPR, README зі скріна
 
 ## 11. Відкриті питання
 
-1. Назва проєкту (робоча — `dnf-gui`).
+1. ~~Назва проєкту~~ — **Kram** (крам: товар, усе своє господарство). Перевірити вільність на GitHub/PyPI/Flathub; reverse-DNS для polkit (`org.kram`) — тимчасовий.
 2. Чи потрібні KDE-специфічні інтеграції (KNotification про оновлення в треї) — поза MVP?
 3. Чи показувати debuginfo/source пакунки взагалі (за замовчуванням — ні).
