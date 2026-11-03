@@ -220,6 +220,20 @@ priority, кнопки Увімкнути/Вимкнути. debuginfo/source —
 виконує `install` одного пакунка зі стрімом прогресу (callbacks
 `DownloadCallbacks`/`TransactionCallbacks`). Виходи: рішення «ок/не ок» по кожному.
 
+Результати M0 (2026-11-03):
+- ✅ Каталог: 70 561 рядок (`name.arch`), 1.7–2.2 с без root на теплому кеші. Статуси через
+  `filter_upgradable/extras/unneeded/userinstalled` libdnf5 — без власного порівняння EVR.
+- ✅ Qt: власна `QAbstractTableModel` на 70k рядків, ~17 мс на сторінку скролу (offscreen),
+  фільтр за підрядком імені — ~5 мс.
+- ✅ libdnf5 у одному потоці (`ThreadPoolExecutor(max_workers=1)`), результати в GUI через Qt-сигнал.
+- ✅ `Goal.resolve()` без root (fish → + ncurses-term).
+- ✅ Helper: протокол JSON-lines, валідація специфікацій, події завантаження зі стрімом прогресу.
+- ⚠️ Пастка SWIG: Python-обʼєкт callback-а треба тримати в змінній, інакше його збирає GC
+  і libdnf5 падає з `std::terminate`. Виняток, що вилетів із callback-а, теж валить процес →
+  усі callback-и загорнуті в `_guarded`. `add_new_download` має повертати `int`.
+- ⏳ Реальний запуск через `pkexec` + `Transaction.test()` — перевіряє користувач:
+  `python3 scripts/m0_helper_check.py fish` (rpm --test, система не змінюється).
+
 **M1 — read-only браузер.** Головне вікно, таблиця з усіма колонками, статуси й
 походження, ліва панель Статус/Походження, вкладки Опис/Загальне/Залежності/Версії,
 статус-бар. Нічого не змінює систему — вже корисно.
