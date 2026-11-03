@@ -234,8 +234,9 @@ priority, кнопки Увімкнути/Вимкнути. debuginfo/source —
 - ⚠️ Пастка SWIG: Python-обʼєкт callback-а треба тримати в змінній, інакше його збирає GC
   і libdnf5 падає з `std::terminate`. Виняток, що вилетів із callback-а, теж валить процес →
   усі callback-и загорнуті в `_guarded`. `add_new_download` має повертати `int`.
-- ⏳ Реальний запуск через `pkexec` + `Transaction.test()` — перевіряє користувач:
-  `python3 scripts/m0_helper_check.py fish` (rpm --test, система не змінюється).
+- ✅ Реальний запуск через `pkexec` (uid 0) + `Transaction.test()`: resolve → download → rpm test OK.
+  У режимі test rpm-callback-и (`install_*`, `script_*`) не викликались — перевіримо на першій
+  реальній транзакції в M3 (у VM/toolbox).
 
 **M1 — read-only браузер.** Головне вікно, таблиця з усіма колонками, статуси й
 походження, ліва панель Статус/Походження, вкладки Опис/Загальне/Залежності/Версії,
