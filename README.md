@@ -70,6 +70,7 @@ QT_QPA_PLATFORM=offscreen LANGUAGE=en python3 scripts/screenshots.py docs/screen
 
 - `packaging/kram.spec` is the RPM spec; `data/` has the `.desktop` file, AppStream metainfo, polkit policy
   and icon, all named after the app id `io.github.elmodos.Kram` (`kram/__init__.py`).
+- Step-by-step COPR setup: [docs/COPR.md](docs/COPR.md).
 - `.copr/Makefile` builds an SRPM from the current commit with a `.YYYYMMDDgitHASH` release suffix. To
   build in COPR: create a project, add a package with source type *SCM*, the clone URL of this repository,
   build method *make srpm*, and optionally enable *Auto-rebuild* with the GitHub webhook.
