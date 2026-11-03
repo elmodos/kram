@@ -1,5 +1,7 @@
 # Kram — менеджер пакунків для Fedora в дусі Synaptic
 
+Репозиторій: https://github.com/elmodos/kram · App ID: `io.github.elmodos.Kram`
+
 План MVP. Мета: дати старожилу Debian на Fedora те саме відчуття, що й Synaptic —
 повний список пакунків, повний контроль, нічого не робиться без явного «Застосувати».
 
@@ -97,8 +99,9 @@ kram/
     main_window.py, package_table.py, sidebar.py, details.py,
     apply_dialog.py, progress_dialog.py, copr_dialog.py, repos_dialog.py
 data/
-  org.kram.helper.policy     # polkit
-  kram.desktop
+  io.github.elmodos.Kram.policy     # polkit
+  io.github.elmodos.Kram.desktop
+  io.github.elmodos.Kram.metainfo.xml
 packaging/kram.spec
 tests/
 ```
@@ -204,7 +207,7 @@ priority, кнопки Увімкнути/Вимкнути. debuginfo/source —
 ## 8. Привілейований helper і безпека
 
 - `/usr/libexec/kram-helper`, запуск `pkexec`, polkit action
-  `org.kram.helper` з `auth_admin_keep` (пароль один раз на кілька хвилин).
+  `io.github.elmodos.Kram.helper` з `auth_admin_keep` (пароль один раз на кілька хвилин).
 - Протокол: JSON-lines. Запити: `refresh`, `transaction{items:[{action,nevra|spec}]}`,
   `repo_set_enabled{id,bool}`, `copr{op,owner,project}`, `mark_reason{name,user|dep}`.
   Відповіді/події: `progress`, `log`, `question` (напр. імпорт GPG-ключа → GUI питає
@@ -267,6 +270,6 @@ RPM spec, .desktop, polkit-policy, власний COPR, README зі скріна
 
 ## 11. Відкриті питання
 
-1. ~~Назва проєкту~~ — **Kram** (крам: товар, усе своє господарство). Перевірити вільність на GitHub/PyPI/Flathub; reverse-DNS для polkit (`org.kram`) — тимчасовий.
+1. ~~Назва проєкту~~ — **Kram** (крам: товар, усе своє господарство). Репозиторій: https://github.com/elmodos/kram, app ID `io.github.elmodos.Kram` (`kram/__init__.py`).
 2. Чи потрібні KDE-специфічні інтеграції (KNotification про оновлення в треї) — поза MVP?
 3. Чи показувати debuginfo/source пакунки взагалі (за замовчуванням — ні).
