@@ -10,6 +10,7 @@ def main() -> int:
     app = QApplication(sys.argv)
     app.setApplicationName("kram")
     app.setApplicationDisplayName("Kram")
+    app.setOrganizationName("kram")  # QSettings -> ~/.config/kram/kram.conf
     app.setOrganizationDomain(HOMEPAGE.removeprefix("https://"))
     # Wayland app_id: lets Plasma match the window to the .desktop file and its icon
     app.setDesktopFileName(APP_ID)

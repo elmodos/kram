@@ -1,5 +1,5 @@
 """Plain data passed from the libdnf5 thread to the GUI. No libdnf5 objects here."""
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 
 
@@ -32,6 +32,7 @@ class PkgRow:
     origin: Origin
     status: Status
     user_installed: bool = False
+    from_repo_id: str = ""     # repo it was installed from; "" if not installed
 
     @property
     def key(self) -> tuple[str, str]:
@@ -41,6 +42,20 @@ class PkgRow:
     def installed(self) -> bool:
         return bool(self.installed_evr)
 
+    @property
+    def origin_repo(self) -> str:
+        """The repo `origin` was derived from: where it came from if installed, else where it would come from."""
+        return self.from_repo_id or self.repo_id
+
+
+@dataclass(slots=True)
+class RepoInfo:
+    id: str
+    name: str
+    enabled: bool
+    origin: Origin
+    age_seconds: int | None   # time since metadata was downloaded; None if not loaded
+
 
 @dataclass(slots=True)
 class CatalogSnapshot:
@@ -48,3 +63,56 @@ class CatalogSnapshot:
     n_installed: int
     n_upgradable: int
     load_seconds: float
+    basearch: str = "x86_64"
+    repos: list[RepoInfo] = field(default_factory=list)
+
+    @property
+    def metadata_age(self) -> int | None:
+        """Age of the most recently refreshed enabled repo, i.e. time since the last refresh."""
+        ages = [r.age_seconds for r in self.repos if r.enabled and r.age_seconds is not None]
+        return min(ages) if ages else None
+
+
+@dataclass(slots=True)
+class VersionInfo:
+    evr: str
+    repo_id: str
+    installed: bool = False
+    candidate: bool = False
+
+
+@dataclass(slots=True)
+class ChangelogEntry:
+    timestamp: int
+    author: str
+    text: str
+
+
+@dataclass(slots=True)
+class PkgDetails:
+    nevra: str
+    summary: str
+    description: str
+    url: str
+    license: str
+    vendor: str
+    packager: str
+    source_rpm: str
+    build_time: int
+    install_time: int | None
+    repo_id: str
+    from_repo_id: str
+    install_size: int
+    download_size: int | None
+    user_installed: bool | None
+    requires: list[str]
+    recommends: list[str]
+    suggests: list[str]
+    provides: list[str]
+    conflicts: list[str]
+    obsoletes: list[str]
+    required_by: list[tuple[str, str]]   # installed packages that require this one
+    files: list[str]
+    files_complete: bool                 # False: repo primary metadata only lists some files
+    changelog: list[ChangelogEntry]
+    versions: list[VersionInfo]
