@@ -1,4 +1,5 @@
 """Kram — a Synaptic-style package manager for Fedora."""
+# SPDX-License-Identifier: GPL-3.0-or-later
 
 # Reverse-DNS of https://github.com/elmodos/kram. Also the .desktop file name, the Wayland app_id
 # and the prefix of the polkit action ids, so it must stay in sync with data/ and packaging/.
