@@ -17,6 +17,7 @@ class FilterEntry:
     count: int | None = None
     origin: Origin | None = None   # for the icon
     indent: int = 0
+    query: tuple[str, int] | None = None   # search-history entries: (text, search mode)
 
 
 def _all(_r: PkgRow) -> bool:

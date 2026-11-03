@@ -1,4 +1,5 @@
 """Main window: Synaptic layout. M1 is read-only — marking and applying arrive in M3."""
+import json
 import time
 
 from PySide6.QtCore import QSettings, QSize, Qt, QTimer
@@ -21,13 +22,14 @@ from .. import HOMEPAGE
 from ..core.catalog import Catalog
 from ..core.filters import FilterEntry
 from ..core.model import CatalogSnapshot, PkgRow
+from ..core.search import MODE_LABELS, Mode, SearchIndex
 from .details import DetailsTabs
 from .dnf_thread import DnfThread
 from .package_model import COL_NAME, PackageTableModel
 from .sidebar import Sidebar
 
 COLUMN_WIDTHS = [26, 24, 230, 175, 175, 150, 80]
-SEARCH_NAME, SEARCH_NAME_SUMMARY = range(2)
+HISTORY_IDLE_MS = 1500  # a search left alone this long goes into the history
 NOT_YET = "Буде в наступних версіях"
 
 
@@ -53,6 +55,11 @@ class MainWindow(QMainWindow):
         self.filter: FilterEntry | None = None
         self.history: list[tuple[str, str]] = []  # packages visited via dependency links, for Alt+Left
         self._details_for: tuple[str, str] | None = None
+        self.index: SearchIndex | None = None
+        self.key_index: dict[tuple[str, str], int] = {}
+        self._search_gen = 0                 # drops stale async (provides/file) results
+        self._user_sort = (COL_NAME, Qt.AscendingOrder)
+        self._last_count = 0
 
         self._build_actions()
         self._build_menus()
@@ -149,7 +156,12 @@ class MainWindow(QMainWindow):
         spacer.setSizePolicy(spacer.sizePolicy().Policy.Expanding, spacer.sizePolicy().Policy.Preferred)
         tb.addWidget(spacer)
         self.search_mode = QComboBox()
-        self.search_mode.addItems(["Назва", "Назва + опис"])
+        self.search_mode.addItems([MODE_LABELS[m] for m in Mode])
+        self.search_mode.setToolTip(
+            "Назва / Назва + опис / Повний опис — миттєвий пошук із ранжуванням.\n"
+            "Provides — пакунки, що надають можливість (libvulkan.so.1, python3dist(requests), webbrowser).\n"
+            "Файл — власник файлу (/usr/bin/7z або просто 7z; для невстановлених — лише основні файли).\n\n"
+            "Кілька слів — усі мають збігтися. ^на початку, в кінці$, * і ? — шаблони.")
         self.search_mode.currentIndexChanged.connect(self.apply_filter)
         tb.addWidget(self.search_mode)
         self.search = QLineEdit()
@@ -163,7 +175,9 @@ class MainWindow(QMainWindow):
         self._debounce = QTimer(self, singleShot=True, interval=150)
         self._debounce.timeout.connect(self.apply_filter)
         self.search.textChanged.connect(self._debounce.start)
-        self.search.returnPressed.connect(self.apply_filter)
+        self.search.returnPressed.connect(self._on_search_enter)
+        self._history_timer = QTimer(self, singleShot=True, interval=HISTORY_IDLE_MS)
+        self._history_timer.timeout.connect(self._remember_search)
 
     def _build_central(self):
         self.sidebar = Sidebar()
@@ -179,6 +193,7 @@ class MainWindow(QMainWindow):
         self.table.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self.table.setSortingEnabled(True)
         self.table.sortByColumn(COL_NAME, Qt.AscendingOrder)
+        self.table.header().sortIndicatorChanged.connect(self._on_sort_indicator)
         self.table.setContextMenuPolicy(Qt.CustomContextMenu)
         self.table.customContextMenuRequested.connect(self._context_menu)
         for col, width in enumerate(COLUMN_WIDTHS):
@@ -212,11 +227,18 @@ class MainWindow(QMainWindow):
         if state := s.value("table/header"):
             self.table.header().restoreState(state)
         self.details.setCurrentIndex(int(s.value("details/tab", 0)))
-        self.search_mode.setCurrentIndex(int(s.value("search/mode", SEARCH_NAME)))
+        self.search_mode.setCurrentIndex(int(s.value("search/mode", Mode.NAME)))
+        try:
+            self.sidebar.history = [tuple(h) for h in json.loads(s.value("search/history", "[]"))]
+        except (TypeError, ValueError):
+            self.sidebar.history = []
         self._restore_filter = (s.value("sidebar/view", "status"), s.value("sidebar/entry", "status:all"))
 
     def _save_settings(self):
         s = QSettings()
+        if self.model.sort_column is None:  # ranked search results: save the user's column sort instead
+            self.table.header().setSortIndicator(*self._user_sort)
+        s.setValue("search/history", json.dumps(self.sidebar.history, ensure_ascii=False))
         s.setValue("window/geometry", self.saveGeometry())
         s.setValue("window/hsplit", self.hsplit.saveState())
         s.setValue("window/vsplit", self.vsplit.saveState())
@@ -244,6 +266,8 @@ class MainWindow(QMainWindow):
         self.snapshot = snap
         self.act_reload.setEnabled(True)
         self.model.set_rows(snap.rows, snap.basearch)
+        self.index = SearchIndex(snap.rows, snap.descriptions)
+        self.key_index = {r.key: i for i, r in enumerate(snap.rows)}
         self.age.setText(_age(snap.metadata_age) + "  ")
         view, entry = self._restore_filter if self.filter is None else (
             self.sidebar.current_view, self.sidebar.current_entry_id)
@@ -259,37 +283,93 @@ class MainWindow(QMainWindow):
 
     def _on_filter(self, entry: FilterEntry):
         self.filter = entry
+        if entry.query is not None:  # a search-history entry: re-run that search
+            text, mode = entry.query
+            for w, setter in ((self.search, lambda: self.search.setText(text)),
+                              (self.search_mode, lambda: self.search_mode.setCurrentIndex(mode))):
+                w.blockSignals(True)
+                setter()
+                w.blockSignals(False)
+            self.apply_filter()
+            self._history_timer.stop()  # already in the history; don't reorder the list under the cursor
+            return
         self.apply_filter()
 
     def apply_filter(self):
+        """Sidebar filter, then search. Searches rank their results; an empty search uses the column sort."""
         if not self.snapshot or not self.filter:
             return
+        self._debounce.stop()
         t0 = time.perf_counter()
-        keep = self._current_key()
+        self._search_gen += 1
         pred = self.filter.predicate
-        words = self.search.text().lower().split()
         rows = self.snapshot.rows
-        if not words:
-            visible = [i for i, r in enumerate(rows) if pred(r)]
-        elif self.search_mode.currentIndex() == SEARCH_NAME:
-            # every word must match (AND); ranked search is M2
-            visible = [i for i, r in enumerate(rows) if all(w in r.name.lower() for w in words) and pred(r)]
+        candidates = [i for i, r in enumerate(rows) if pred(r)]
+        text = self.search.text().strip()
+        mode = Mode(self.search_mode.currentIndex())
+        if not text:
+            self._history_timer.stop()
+            self._show(candidates, ranked=False, ms=(time.perf_counter() - t0) * 1000)
+        elif mode.local:
+            self._show(self.index.search(text, mode, candidates), ranked=True, ms=(time.perf_counter() - t0) * 1000)
+            self._history_timer.start()
         else:
-            visible = [i for i, r in enumerate(rows)
-                       if all(w in r.name.lower() or w in r.summary.lower() for w in words) and pred(r)]
-        self.model.set_visible(visible)
-        self._update_status(len(visible), (time.perf_counter() - t0) * 1000)
-        if not (keep and self._select_key(keep, scroll=True)) and visible:
-            self.table.setCurrentIndex(self.model.index(0, COL_NAME))
-        elif not visible:
+            gen = self._search_gen
+            allowed = set(candidates)
+            lookup = self.catalog.search_provides if mode is Mode.PROVIDES else self.catalog.search_files
+            self.status.setText(f"Пошук «{text}» ({MODE_LABELS[mode]})…")
+
+            def done(keys):
+                if gen != self._search_gen:
+                    return
+                found = [i for k in keys if (i := self.key_index.get(k)) is not None and i in allowed]
+                self._show(self.index.rank_keys(found), ranked=True, ms=(time.perf_counter() - t0) * 1000)
+                self._history_timer.start()
+            self.dnf.submit(lambda: lookup(text), done, self._on_error)
+
+    def _show(self, visible: list[int], ranked: bool, ms: float):
+        # switch the header between "ranked" (no indicator) and the user's column sort without
+        # triggering a sort of the old rows; set_visible sorts the new ones
+        header = self.table.header()
+        if ranked or self.model.sort_column is None:
+            header.blockSignals(True)
+            header.setSortIndicator(*((-1, Qt.AscendingOrder) if ranked else self._user_sort))
+            header.blockSignals(False)
+            self.model.sort(-1) if ranked else self.model.set_sort_column(self._user_sort)
+        keep = self._current_key()
+        self.model.set_visible(visible, ranked=ranked)
+        self._last_count = len(visible)
+        self._update_status(len(visible), ms)
+        if not visible:
             self.details.clear()
+        elif ranked:  # best match first: select it rather than keeping an old selection
+            self.table.setCurrentIndex(self.model.index(0, COL_NAME))
+            self.table.scrollToTop()
+        elif not (keep and self._select_key(keep, scroll=True)):
+            self.table.setCurrentIndex(self.model.index(0, COL_NAME))
+
+    def _on_sort_indicator(self, column: int, order):
+        if column >= 0:
+            self._user_sort = (column, order)
+
+    def _on_search_enter(self):
+        self.apply_filter()
+        if not Mode(self.search_mode.currentIndex()).local:
+            return  # async: remembered when results arrive (timer started in done())
+        self._remember_search()
+
+    def _remember_search(self):
+        self._history_timer.stop()
+        text = self.search.text().strip()
+        if text:
+            self.sidebar.add_search(text, self.search_mode.currentIndex(), self._last_count)
 
     def _update_status(self, shown: int, ms: float):
         s = self.snapshot
         self.status.setText(
             f"{shown} показано, {s.n_installed} встановлено, {s.n_upgradable} оновлень. "
             f"0 до встановлення/оновлення, 0 до видалення.")
-        self.status.setToolTip(f"Каталог: {s.load_seconds:.2f} с, фільтр: {ms:.0f} мс")
+        self.status.setToolTip(f"Каталог: {s.load_seconds:.2f} с, фільтр і пошук: {ms:.0f} мс")
 
     # ---------------------------------------------------------------- selection and details
 

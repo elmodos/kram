@@ -3,6 +3,7 @@ from functools import cache
 from PySide6.QtCore import QAbstractTableModel, QModelIndex, Qt
 from PySide6.QtGui import QFont
 
+from ..core.evr import evr_ranks
 from ..core.model import PkgRow, Status
 from ..core.origin import display_repo
 from .icons import ORIGIN_LABEL, origin_icon, status_icon
@@ -17,8 +18,6 @@ SORT_KEYS = {
     COL_STATUS: lambda r: (_STATUS_ORDER[r.status], r.name.lower()),
     COL_ORIGIN: lambda r: (r.origin.value, r.name.lower()),
     COL_NAME: lambda r: (r.name.lower(), r.arch),
-    COL_INSTALLED: lambda r: (r.installed_evr == "", r.installed_evr, r.name.lower()),
-    COL_CANDIDATE: lambda r: (r.candidate_evr == "", r.candidate_evr, r.name.lower()),
     COL_REPO: lambda r: (display_repo(r.repo_id).lower(), r.name.lower()),
     COL_SIZE: lambda r: (r.size, r.name.lower()),
     COL_SUMMARY: lambda r: (r.summary.lower(), r.name.lower()),
@@ -42,26 +41,41 @@ def human_size(n: int) -> str:
 
 
 class PackageTableModel(QAbstractTableModel):
-    """Table over a flat list of rows; `visible` holds indices into `rows` (filtered and sorted)."""
+    """Table over a flat list of rows; `visible` holds indices into `rows` (filtered and sorted).
+
+    Two orderings: by a column (`sort`), or "ranked" — the order search produced, kept as is until the user
+    clicks a column header.
+    """
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self.rows: list[PkgRow] = []
         self.visible: list[int] = []
         self.basearch = "x86_64"
-        self._sort = (COL_NAME, Qt.AscendingOrder)
+        self._sort: tuple[int, Qt.SortOrder] | None = (COL_NAME, Qt.AscendingOrder)
+        self._evr_rank: dict[str, int] | None = None
 
     def set_rows(self, rows: list[PkgRow], basearch: str) -> None:
         self.beginResetModel()
         self.rows = rows
         self.basearch = basearch
         self.visible = list(range(len(rows)))
+        self._evr_rank = None
         self.endResetModel()
 
-    def set_visible(self, visible: list[int]) -> None:
+    def set_visible(self, visible: list[int], ranked: bool = False) -> None:
+        """`ranked`: keep the given order (search relevance) instead of the column sort."""
         self.beginResetModel()
-        self.visible = self._sorted(visible)
+        self.visible = visible if ranked or self._sort is None else self._sorted(visible)
         self.endResetModel()
+
+    def set_sort_column(self, sort: tuple[int, Qt.SortOrder]) -> None:
+        """Change the column sort without re-sorting now; the next set_visible applies it."""
+        self._sort = sort
+
+    @property
+    def sort_column(self) -> tuple[int, Qt.SortOrder] | None:
+        return self._sort
 
     def row_at(self, index: QModelIndex) -> PkgRow:
         return self.rows[self.visible[index.row()]]
@@ -75,6 +89,9 @@ class PackageTableModel(QAbstractTableModel):
     # --- sorting: done on our index list, so no QSortFilterProxyModel overhead on 70k rows
 
     def sort(self, column: int, order=Qt.AscendingOrder) -> None:
+        if column < 0:  # sort indicator cleared: keep the current (ranked) order
+            self._sort = None
+            return
         self._sort = (column, order)
         self.layoutAboutToBeChanged.emit()
         old = {pos: i for pos, i in enumerate(self.visible)}
@@ -87,8 +104,19 @@ class PackageTableModel(QAbstractTableModel):
 
     def _sorted(self, visible: list[int]) -> list[int]:
         column, order = self._sort
-        key = SORT_KEYS[column]
         rows = self.rows
+        if column in (COL_INSTALLED, COL_CANDIDATE):
+            if self._evr_rank is None:
+                self._evr_rank = evr_ranks([r.installed_evr for r in rows] + [r.candidate_evr for r in rows])
+            ranks = self._evr_rank
+            attr = "installed_evr" if column == COL_INSTALLED else "candidate_evr"
+
+            def key(r):
+                evr = getattr(r, attr)
+                # empty versions go last in both directions
+                return (evr == "") != (order == Qt.DescendingOrder), ranks.get(evr, -1), r.name.lower()
+        else:
+            key = SORT_KEYS[column]
         return sorted(visible, key=lambda i: key(rows[i]), reverse=order == Qt.DescendingOrder)
 
     # --- Qt model API

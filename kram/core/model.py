@@ -65,6 +65,7 @@ class CatalogSnapshot:
     load_seconds: float
     basearch: str = "x86_64"
     repos: list[RepoInfo] = field(default_factory=list)
+    descriptions: list[str] = field(default_factory=list)   # aligned with rows
 
     @property
     def metadata_age(self) -> int | None:

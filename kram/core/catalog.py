@@ -12,6 +12,9 @@ from .model import CatalogSnapshot, ChangelogEntry, PkgDetails, PkgRow, RepoInfo
 from .origin import classify
 
 MAX_CHANGELOG = 30
+# libdnf5 glob scans take ~0.3-0.9 s and can't be cancelled; too-short patterns would block the worker for
+# nothing useful
+MIN_SUBSTRING_QUERY = 3
 # not-installed debug packages are noise in a package list (TODO: make it a setting)
 HIDDEN_SUFFIXES = ("-debuginfo", "-debugsource")
 
@@ -117,8 +120,10 @@ class Catalog:
         rows.sort(key=lambda r: (r.name.lower(), r.arch))
         self._pkgs = pkgs
         self._user_installed = user_installed
+        # ~0.1 s for 70k packages; cheap enough to make full-description search instant
+        descriptions = [(pkgs[r.key][0] or pkgs[r.key][1]).get_description() for r in rows]
         return CatalogSnapshot(rows, n_installed, n_upgradable, time.monotonic() - t0,
-                               basearch=basearch, repos=self._repos())
+                               basearch=basearch, repos=self._repos(), descriptions=descriptions)
 
     def _repos(self) -> list[RepoInfo]:
         repos = []
@@ -177,6 +182,43 @@ class Catalog:
             files=list(p.get_files()), files_complete=inst is not None,
             changelog=changelog, versions=versions,
         )
+
+    def search_provides(self, text: str) -> list[tuple[str, str]]:
+        """Packages providing a capability. Plain words match the capability name exactly, falling back to
+        *word*; globs are passed through."""
+        text = text.strip()
+        if not text:
+            return []
+        if any(c in text for c in "*?["):
+            return self._keys(lambda q: q.filter_provides([text], libdnf5.common.QueryCmp_GLOB))
+        exact = self._keys(lambda q: q.filter_provides([text]))
+        if exact or len(text) < MIN_SUBSTRING_QUERY:
+            return exact
+        return self._keys(lambda q: q.filter_provides([f"*{text}*"], libdnf5.common.QueryCmp_GLOB))
+
+    def search_files(self, text: str) -> list[tuple[str, str]]:
+        """Packages owning a file. "/usr/bin/7z" is exact, "7z" means any path ending in /7z, globs pass through.
+        Not-installed packages are searched in primary metadata only (binaries, /etc, ...)."""
+        text = text.strip()
+        if not text:
+            return []
+        if any(c in text for c in "*?["):
+            pattern = text if text.startswith(("/", "*")) else f"*/{text}"
+            return self._keys(lambda q: q.filter_file([pattern], libdnf5.common.QueryCmp_GLOB))
+        if text.startswith("/"):
+            return self._keys(lambda q: q.filter_file([text]))
+        if len(text) < 2:
+            return []
+        return self._keys(lambda q: q.filter_file([f"*/{text}"], libdnf5.common.QueryCmp_GLOB))
+
+    def _keys(self, setup) -> list[tuple[str, str]]:
+        q = libdnf5.rpm.PackageQuery(self._base)
+        try:
+            setup(q)
+        except Exception:  # noqa: BLE001 - malformed capability strings raise
+            return []
+        # several versions of one package collapse into its catalog row
+        return sorted({k for k in ((x.get_name(), x.get_arch()) for x in q) if k in self._pkgs})
 
     def find_provider(self, reldep: str) -> tuple[str, str] | None:
         """Best package in the catalog that satisfies a requirement string: installed first, then candidate."""
