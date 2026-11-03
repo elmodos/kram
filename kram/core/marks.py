@@ -108,3 +108,33 @@ def dnf5_command(request: dict[str, list[str]]) -> str:
              ("downgrade", "downgrade"), ("remove", "remove"),
              ("mark_user", "mark user"), ("mark_dep", "mark dependency")]
     return "\n".join(f"sudo dnf5 {verb} {' '.join(request[k])}" for k, verb in verbs if request.get(k))
+
+
+MARKINGS_HEADER = "# Kram markings: <action> <name>.<arch> [<version>]"
+
+
+def dump_marks(marks: MarkSet) -> str:
+    """Plain-text markings file (File → Save Markings), one mark per line."""
+    lines = [MARKINGS_HEADER]
+    for (name, arch), mark in sorted(marks.items()):
+        lines.append(" ".join(filter(None, (mark.action.value, f"{name}.{arch}", mark.evr))))
+    return "\n".join(lines) + "\n"
+
+
+def parse_marks(text: str) -> tuple[list[tuple[tuple[str, str], Mark]], list[int]]:
+    """Read a markings file: ([(key, mark)], numbers of the lines that are not valid markings)."""
+    marks, bad = [], []
+    actions = {a.value: a for a in Action}
+    for n, line in enumerate(text.splitlines(), 1):
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+        fields = line.split()
+        action = actions.get(fields[0])
+        name, _dot, arch = fields[1].rpartition(".") if len(fields) > 1 else ("", "", "")
+        evr = fields[2] if len(fields) == 3 else ""
+        if action is None or not name or not arch or len(fields) > 3 or (action is Action.DOWNGRADE) != bool(evr):
+            bad.append(n)
+            continue
+        marks.append(((name, arch), Mark(action, evr)))
+    return marks, bad

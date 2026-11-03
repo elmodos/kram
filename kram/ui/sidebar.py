@@ -3,11 +3,11 @@ from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QButtonGroup, QListWidget, QListWidgetItem, QPushButton, QVBoxLayout, QWidget
 
-from ..core.filters import FilterEntry, origin_filters, status_filters
+from ..core.filters import FilterEntry, group_filters, origin_filters, status_filters
 from ..core.model import CatalogSnapshot
 from ..core.search import MODE_LABELS, Mode
 from ..i18n import _
-from .icons import origin_icon
+from .icons import origin_icon, status_icon
 
 MAX_HISTORY = 30
 
@@ -15,7 +15,7 @@ MAX_HISTORY = 30
 VIEWS = [
     ("status", _("Status"), status_filters),
     ("origin", _("Origin"), origin_filters),
-    ("groups", _("Groups"), None),
+    ("groups", _("Groups"), group_filters),
     ("search", _("Search results"), "history"),
     ("custom", _("Custom filters"), None),
 ]
@@ -109,6 +109,10 @@ class Sidebar(QWidget):
             item = QListWidgetItem("    " * e.indent + e.label + (f"   ({e.count})" if e.count is not None else ""))
             if e.origin is not None:
                 item.setIcon(origin_icon(e.origin))
+            elif e.status is not None:
+                item.setIcon(status_icon(e.status))
+            if e.tip:
+                item.setToolTip(e.tip)
             if i == 0 and e.query is None:
                 f = QFont(item.font())
                 f.setBold(True)

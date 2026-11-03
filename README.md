@@ -3,7 +3,41 @@
 A Synaptic-style package manager for Fedora: the full package list, checkboxes, statuses and origins,
 search that works, and nothing happens until you press **Apply**.
 
-Built on libdnf5 (the same library as `dnf5`) and Qt 6. Work in progress — see [docs/PLAN.md](docs/PLAN.md).
+Built on libdnf5 (the same library as `dnf5`) and Qt 6. See [docs/PLAN.md](docs/PLAN.md) for the design.
+
+![All packages: status, origin, versions, size](docs/screenshots/main.png)
+
+| Ranked search | COPR projects |
+|---|---|
+| ![Search](docs/screenshots/search.png) | ![COPR](docs/screenshots/copr.png) |
+
+## Features
+
+- Every package of the enabled repositories in one table: status, origin (Fedora / COPR / third-party /
+  local), installed and latest version, repository, size.
+- Filters by status, origin and repository, comps group, and earlier searches.
+- Search ranked by relevance: by name, name and summary, description, provided capability or file.
+- Mark for installation, upgrade, reinstallation, downgrade to a chosen version, removal, or change the
+  install reason; review the whole transaction (with dependencies and the equivalent `dnf5` command) before
+  anything happens. Markings can be saved to a file and read back (File menu).
+- Description, dependencies (clickable), files, all versions and the changelog of every package.
+- Enable and disable repositories; enable, disable and remove COPR projects, search Copr.
+- One password per session (polkit); browsing and searching need none.
+
+## Installing
+
+Build and install the RPM from a checkout (the same steps COPR runs):
+
+```sh
+sudo dnf install rpm-build make git-core 'dnf5-command(builddep)'
+make -f .copr/Makefile srpm outdir=/tmp/kram
+sudo dnf builddep /tmp/kram/kram-*.src.rpm
+rpmbuild --rebuild /tmp/kram/kram-*.src.rpm
+sudo dnf install ~/rpmbuild/RPMS/noarch/kram-*.noarch.rpm
+```
+
+The package installs the root helper as `/usr/libexec/kram-helper` with its own polkit action
+(`io.github.elmodos.Kram.helper`), the `.desktop` file, AppStream metadata and the translations.
 
 ## Running from a checkout
 
@@ -23,12 +57,24 @@ administrator password once per session (through `pkexec`).
 python3 -m pytest          # unit tests (needs pytest; gettext for the translation tests)
 ruff check .
 scripts/container_check.sh # real root transactions in a throwaway Fedora container (podman)
+scripts/rpm_check.sh       # build the RPM like COPR does, install it and check it, in a container
+QT_QPA_PLATFORM=offscreen LANGUAGE=en python3 scripts/screenshots.py docs/screenshots  # README images
 ```
 
 - `kram/core/` has no Qt and is where most logic and tests live.
 - `kram/helper/kram_helper.py` is the only code that runs as root. Keep it small; it is the security
   boundary.
 - All libdnf5 calls in the GUI process happen on one worker thread (`kram/ui/dnf_thread.py`).
+
+### Packaging and COPR
+
+- `packaging/kram.spec` is the RPM spec; `data/` has the `.desktop` file, AppStream metainfo, polkit policy
+  and icon, all named after the app id `io.github.elmodos.Kram` (`kram/__init__.py`).
+- `.copr/Makefile` builds an SRPM from the current commit with a `.YYYYMMDDgitHASH` release suffix. To
+  build in COPR: create a project, add a package with source type *SCM*, the clone URL of this repository,
+  build method *make srpm*, and optionally enable *Auto-rebuild* with the GitHub webhook.
+- A release: bump the version in `pyproject.toml`, `kram/__init__.py` and `packaging/kram.spec` (with a
+  `%changelog` entry and a `<release>` in the metainfo), then tag `v<version>`.
 
 ## Translations
 

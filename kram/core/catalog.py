@@ -10,9 +10,11 @@ import libdnf5
 import rpm
 
 from ..helper.kram_helper import build_goal
+from ..i18n import language
 from .model import (
     CatalogSnapshot,
     ChangelogEntry,
+    GroupInfo,
     PkgDetails,
     PkgRow,
     PreviewItem,
@@ -136,7 +138,24 @@ class Catalog:
         descriptions = [(pkgs[r.key][0] or pkgs[r.key][1]).get_description() for r in rows]
         return CatalogSnapshot(rows, n_installed, n_upgradable, time.monotonic() - t0,
                                basearch=basearch, releasever=base.get_vars().get_value("releasever"),
-                               repos=self._repos(), descriptions=descriptions)
+                               repos=self._repos(), descriptions=descriptions, groups=self._groups())
+
+    def _groups(self) -> list[GroupInfo]:
+        # an installed group shows up twice (system state + repo metadata): merge by id
+        lang = language() or ""
+        groups: dict[str, GroupInfo] = {}
+        for g in libdnf5.comps.GroupQuery(self._base):
+            gid = g.get_groupid()
+            if gid in groups:
+                groups[gid].installed |= g.get_installed()
+                continue
+            if not g.get_uservisible():
+                continue
+            groups[gid] = GroupInfo(
+                gid, (g.get_translated_name(lang) if lang else "") or g.get_name(),
+                (g.get_translated_description(lang) if lang else "") or g.get_description(),
+                g.get_installed(), frozenset(p.get_name() for p in g.get_packages()))
+        return sorted(groups.values(), key=lambda g: g.name.lower())
 
     def _repos(self) -> list[RepoInfo]:
         repos = []

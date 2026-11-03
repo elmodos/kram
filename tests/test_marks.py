@@ -1,4 +1,4 @@
-from kram.core.marks import Action, MarkSet, allowed_actions, dnf5_command
+from kram.core.marks import Action, MarkSet, allowed_actions, dnf5_command, dump_marks, parse_marks
 from kram.core.model import Origin, PkgRow, Status
 
 
@@ -50,3 +50,31 @@ def test_remark_replaces_and_unmark():
     assert m.get(CUR.key).action is Action.REMOVE
     m.unmark(CUR.key)
     assert CUR.key not in m
+
+
+def test_markings_file_roundtrip():
+    m = MarkSet()
+    m.set(NEW, Action.INSTALL)
+    m.set(OLD, Action.DOWNGRADE, "1:0.9-1.fc44")
+    m.set(CUR, Action.REMOVE)
+    text = dump_marks(m)
+    assert text.splitlines()[1:] == ["remove bash.x86_64", "downgrade firefox.x86_64 1:0.9-1.fc44",
+                                     "install fish.x86_64"]
+    marks, bad = parse_marks(text)
+    assert bad == []
+    assert dict(marks) == dict(m.items())
+
+
+def test_markings_file_bad_lines():
+    lines = [
+        "# comment", "", "install fish.x86_64",
+        "frobnicate fish.x86_64",       # 4: unknown action
+        "install fish",                 # 5: no arch
+        "downgrade fish.x86_64",        # 6: downgrade without a version
+        "remove fish.x86_64 1-1 extra",  # 7: too many fields
+        "install",                      # 8: no package
+        "  mark_dep  python3-foo.noarch  ",
+    ]
+    marks, bad = parse_marks("\n".join(lines))
+    assert bad == [4, 5, 6, 7, 8]
+    assert [k for k, _m in marks] == [("fish", "x86_64"), ("python3-foo", "noarch")]

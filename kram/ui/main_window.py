@@ -1,12 +1,14 @@
 """Main window: Synaptic layout — browse, mark, preview, apply."""
 import json
 import time
+from pathlib import Path
 
 from PySide6.QtCore import QSettings, QSize, Qt, QTimer, Signal
 from PySide6.QtGui import QAction, QGuiApplication, QIcon, QKeySequence
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QComboBox,
+    QFileDialog,
     QLabel,
     QLineEdit,
     QMainWindow,
@@ -18,11 +20,11 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from .. import HOMEPAGE
+from .. import HOMEPAGE, __version__
 from ..core.catalog import Catalog
 from ..core.evr import evr_cmp
 from ..core.filters import FilterEntry
-from ..core.marks import Action, allowed_actions
+from ..core.marks import Action, allowed_actions, dump_marks, parse_marks
 from ..core.model import CatalogSnapshot, PkgDetails, PkgRow, Status, TransactionPreview
 from ..core.search import MODE_LABELS, Mode, SearchIndex
 from ..i18n import _, ngettext
@@ -126,6 +128,12 @@ class MainWindow(QMainWindow):
                                      lambda: (self.search.setFocus(), self.search.selectAll()))
         self.act_back = self._action(_("Back"), "go-previous", "Alt+Left", self.go_back,
                                      tip=_("Go back to the previous package (after following a dependency)"))
+        self.act_save_marks = self._action(_("Save Markings As…"), "document-save-as", "Ctrl+S", self.save_marks,
+                                           tip=_("Save the marked changes to a text file"))
+        self.act_save_marks.setEnabled(False)
+        self.act_read_marks = self._action(_("Read Markings…"), "document-open", "Ctrl+O", self.read_marks,
+                                           tip=_("Mark the changes listed in a saved markings file"))
+        self.act_read_marks.setEnabled(False)
         self.act_quit = self._action(_("Quit"), "application-exit", QKeySequence.Quit, self.close)
         self.act_copy_name = self._action(_("Copy Name"), "edit-copy", "Ctrl+C", self.copy_names)
         self.act_copy_nevra = self._action(_("Copy name-version-release.arch"), "edit-copy", "Ctrl+Shift+C",
@@ -168,6 +176,8 @@ class MainWindow(QMainWindow):
         mb = self.menuBar()
         m = mb.addMenu(_("&File"))
         m.addActions([self.act_reload, self.act_reload_cache])
+        m.addSeparator()
+        m.addActions([self.act_read_marks, self.act_save_marks])
         m.addSeparator()
         m.addAction(self.act_quit)
         m = mb.addMenu(_("&Edit"))
@@ -517,7 +527,7 @@ class MainWindow(QMainWindow):
         m.exec(self.table.viewport().mapToGlobal(pos))
 
     def about(self):
-        QMessageBox.about(self, _("About Kram"), f"<h3>Kram</h3><p>{_('A Synaptic-style package manager for Fedora.')}</p>"
+        QMessageBox.about(self, _("About Kram"), f"<h3>Kram {__version__}</h3><p>{_('A Synaptic-style package manager for Fedora.')}</p>"
                                            f"<p><a href='{HOMEPAGE}'>{HOMEPAGE}</a></p>")
 
     # ---------------------------------------------------------------- marking
@@ -534,6 +544,8 @@ class MainWindow(QMainWindow):
         n = len(self.model.marks)
         self.act_apply.setEnabled(n > 0 and not self.helper.busy)
         self.act_unmark_all.setEnabled(n > 0)
+        self.act_save_marks.setEnabled(n > 0)
+        self.act_read_marks.setEnabled(self.snapshot is not None)
         self.act_mark_upgrades.setEnabled(bool(self.snapshot and self.snapshot.n_upgradable))
 
     def _marks_changed(self, keys):
@@ -565,6 +577,63 @@ class MainWindow(QMainWindow):
                    if r.status is Status.UPGRADABLE and self.model.marks.set(r, Action.UPGRADE)]
         self._marks_changed(None)
         self.statusBar().showMessage(ngettext("{n} package marked for upgrade", "{n} packages marked for upgrade", len(changed)).format(n=len(changed)), 5000)
+
+    def _markings_dir(self) -> str:
+        return QSettings().value("markings/dir", str(Path.home()))
+
+    def save_marks(self):
+        path, _filter = QFileDialog.getSaveFileName(self, _("Save Markings"),
+                                                    str(Path(self._markings_dir()) / "kram-markings.txt"),
+                                                    _("Text files (*.txt);;All files (*)"))
+        if not path:
+            return
+        try:
+            Path(path).write_text(dump_marks(self.model.marks), encoding="utf-8")
+        except OSError as e:
+            QMessageBox.critical(self, _("Save Markings"), _("Could not save {path}:\n\n{error}").format(
+                path=path, error=e.strerror or e))
+            return
+        QSettings().setValue("markings/dir", str(Path(path).parent))
+        n = len(self.model.marks)
+        self.statusBar().showMessage(ngettext("{n} marking saved to {path}", "{n} markings saved to {path}", n)
+                                     .format(n=n, path=path), 5000)
+
+    def read_marks(self):
+        path, _filter = QFileDialog.getOpenFileName(self, _("Read Markings"), self._markings_dir(),
+                                                    _("Text files (*.txt);;All files (*)"))
+        if path:
+            self.load_marks_file(path)
+
+    def load_marks_file(self, path: str) -> None:
+        """Add the marks from a markings file to the current ones; report what could not be marked."""
+        try:
+            text = Path(path).read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError) as e:
+            QMessageBox.critical(self, _("Read Markings"), _("Could not read {path}:\n\n{error}").format(
+                path=path, error=getattr(e, "strerror", None) or e))
+            return
+        QSettings().setValue("markings/dir", str(Path(path).parent))
+        marks, bad_lines = parse_marks(text)
+        rows = {r.key: r for r in self.snapshot.rows}
+        skipped = [f"{name}.{arch}" for (name, arch), mark in marks
+                   if not ((row := rows.get((name, arch))) and self.model.marks.set(row, mark.action, mark.evr))]
+        self._marks_changed(None)
+        n = len(marks) - len(skipped)
+        self.statusBar().showMessage(ngettext("{n} package marked", "{n} packages marked", n).format(n=n), 5000)
+        if skipped or bad_lines:
+            problems = []
+            if skipped:
+                problems.append(ngettext(
+                    "{n} marking no longer applies (package not found, already in that state, …):",
+                    "{n} markings no longer apply (packages not found, already in that state, …):",
+                    len(skipped)).format(n=len(skipped)) + "\n" + ", ".join(skipped))
+            if bad_lines:
+                problems.append(ngettext("{n} line is not a valid marking: {lines}",
+                                         "{n} lines are not valid markings: {lines}", len(bad_lines))
+                                .format(n=len(bad_lines), lines=", ".join(map(str, bad_lines))))
+            QMessageBox.warning(self, _("Read Markings"),
+                                ngettext("{n} package marked.", "{n} packages marked.", n).format(n=n) + "\n\n"
+                                + "\n\n".join(problems))
 
     def _revalidate_marks(self):
         """After a reload, drop marks that no longer apply (package gone, already installed, ...)."""

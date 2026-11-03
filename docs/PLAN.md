@@ -85,7 +85,7 @@ kram/
     catalog.py     # libdnf5 → PkgRow snapshot, lazy details, resolve(), provides/file search
     model.py       # PkgRow, Origin, Status, details/preview dataclasses
     origin.py      # origin classification
-    filters.py     # sidebar Status / Origin filters
+    filters.py     # sidebar Status / Origin / Groups filters
     search.py      # ranked in-memory search
     marks.py       # MarkSet, allowed actions, equivalent dnf5 command
     evr.py         # RPM version ordering
@@ -93,11 +93,15 @@ kram/
   helper/kram_helper.py   # the root process (standalone: stdlib + libdnf5 only)
   ui/              # main_window, sidebar, package_model, details, apply_dialog, progress_dialog, icons
 po/                # kram.pot + one <lang>.po per translation
-scripts/           # i18n.sh, container_check.sh, helper_driver.py, m0_helper_check.py
+data/              # .desktop, AppStream metainfo, polkit policy, icon
+packaging/kram.spec
+.copr/Makefile     # SRPM for COPR's "make srpm" build method
+scripts/           # i18n.sh, container_check.sh, rpm_check.sh, screenshots.py, helper_driver.py, m0_helper_check.py
 tests/
 docs/              # this plan, UI mockups
 ```
-Planned for M5: `data/io.github.elmodos.Kram.{policy,desktop,metainfo.xml}`, `packaging/kram.spec`.
+Packaging: `data/io.github.elmodos.Kram.{policy,desktop,metainfo.xml,svg}`, `packaging/kram.spec`,
+`.copr/Makefile` (M5).
 
 ## 4. Data model and statuses (the "S" column)
 
@@ -278,6 +282,18 @@ setopt on a COPR id / disable / remove, non-existent COPR project fails cleanly.
 
 **M5 — polish and packaging.** comps groups in the sidebar, save/load marks to a file, RPM spec, .desktop,
 metainfo, polkit policy, our own COPR, README with screenshots.
+
+M5 (2026-11-03): ✅ Groups view: user-visible comps groups (translated names when the metadata has the
+language; installed groups get the installed box; description as a tooltip). File → Save Markings / Read
+Markings: plain text, `<action> <name>.<arch> [<version>]` per line; reading adds to the current marks and
+reports lines that are invalid or no longer apply. Packaging: `packaging/kram.spec` (pyproject macros;
+`%check` runs desktop-file-validate, appstream-util and the test suite), `data/` (desktop file, metainfo,
+polkit policy with its own action for `/usr/libexec/kram-helper`, icon), `.copr/Makefile` for COPR's
+*make srpm* method. An installed Kram starts `pkexec /usr/libexec/kram-helper` (Kram's own polkit message);
+a source checkout still runs its own helper through `pkexec python3`. `scripts/rpm_check.sh` builds the
+SRPM and RPM the way COPR does in a container, installs it and checks the layout and the helper.
+README screenshots are rendered from the real UI by `scripts/screenshots.py`.
+Not done: creating the COPR project itself (needs the owner's Copr account).
 
 **After the MVP**: transaction history + undo (`dnf5 history`), versionlock (🔒), custom filters, local
 .rpm files, helper vs. dnf5daemon, offline system upgrades (`dnf5 offline`), dnf-automatic settings,

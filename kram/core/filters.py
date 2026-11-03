@@ -19,6 +19,8 @@ class FilterEntry:
     origin: Origin | None = None   # for the icon
     indent: int = 0
     query: tuple[str, int] | None = None   # search-history entries: (text, search mode)
+    status: Status | None = None   # for the icon (comps groups: installed or not)
+    tip: str = ""
 
 
 def _all(_r: PkgRow) -> bool:
@@ -80,3 +82,14 @@ def origin_filters(snap: CatalogSnapshot) -> list[FilterEntry]:
                 entries.append(FilterEntry(f"repo:{repo_id}", display_repo(repo_id), repo_is(repo_id),
                                            origin=origin, indent=1))
     return _with_counts(entries, rows)
+
+
+def group_filters(snap: CatalogSnapshot) -> list[FilterEntry]:
+    def in_group(names: frozenset[str]) -> Predicate:
+        return lambda r: r.name in names
+
+    entries = [FilterEntry("group:all", _("All groups"), _all)]
+    entries += [FilterEntry(f"group:{g.id}", g.name, in_group(g.packages), tip=g.description,
+                            status=Status.INSTALLED if g.installed else Status.NOT_INSTALLED)
+                for g in snap.groups]
+    return _with_counts(entries, snap.rows)

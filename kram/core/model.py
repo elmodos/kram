@@ -60,6 +60,16 @@ class RepoInfo:
 
 
 @dataclass(slots=True)
+class GroupInfo:
+    """A comps group (Synaptic's "sections"): the package names it lists, of any type."""
+    id: str
+    name: str                  # translated when the metadata has the current language
+    description: str
+    installed: bool
+    packages: frozenset[str]
+
+
+@dataclass(slots=True)
 class CatalogSnapshot:
     rows: list[PkgRow]
     n_installed: int
@@ -69,6 +79,7 @@ class CatalogSnapshot:
     releasever: str = ""
     repos: list[RepoInfo] = field(default_factory=list)
     descriptions: list[str] = field(default_factory=list)   # aligned with rows
+    groups: list[GroupInfo] = field(default_factory=list)   # user-visible comps groups, sorted by name
 
     @property
     def metadata_age(self) -> int | None:

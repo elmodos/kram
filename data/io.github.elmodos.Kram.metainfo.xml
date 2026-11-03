@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.github.elmodos.Kram</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-3.0-or-later</project_license>
+  <name>Kram</name>
+  <summary>Synaptic-style package manager for Fedora</summary>
+  <summary xml:lang="uk">Менеджер пакунків для Fedora у стилі Synaptic</summary>
+  <description>
+    <p>
+      Kram shows every package in the enabled repositories in one table: whether it is installed, where it came
+      from (Fedora, COPR or a third-party repository), the installed and the available version and its size.
+      Mark packages for installation, upgrade, downgrade or removal, review the complete transaction and apply it.
+      Nothing changes until you press Apply.
+    </p>
+    <ul>
+      <li>Ranked search by name, summary, description, provided capabilities or file</li>
+      <li>Filters by status, origin, repository and comps group</li>
+      <li>Dependencies, files, versions and changelog of every package</li>
+      <li>Enable and disable repositories, add and remove COPR projects</li>
+      <li>Built on libdnf5, the library behind dnf5</li>
+    </ul>
+  </description>
+  <launchable type="desktop-id">io.github.elmodos.Kram.desktop</launchable>
+  <provides>
+    <binary>kram</binary>
+  </provides>
+  <url type="homepage">https://github.com/elmodos/kram</url>
+  <url type="bugtracker">https://github.com/elmodos/kram/issues</url>
+  <url type="vcs-browser">https://github.com/elmodos/kram</url>
+  <url type="translate">https://github.com/elmodos/kram#translations</url>
+  <developer id="io.github.elmodos">
+    <name>elmodos</name>
+  </developer>
+  <categories>
+    <category>System</category>
+    <category>PackageManager</category>
+  </categories>
+  <screenshots>
+    <screenshot type="default">
+      <caption>All packages with status and origin</caption>
+      <image>https://raw.githubusercontent.com/elmodos/kram/main/docs/screenshots/main.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Search results ranked by relevance</caption>
+      <image>https://raw.githubusercontent.com/elmodos/kram/main/docs/screenshots/search.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>COPR projects</caption>
+      <image>https://raw.githubusercontent.com/elmodos/kram/main/docs/screenshots/copr.png</image>
+    </screenshot>
+  </screenshots>
+  <content_rating type="oars-1.1"/>
+  <releases>
+    <release version="0.1.0" date="2026-11-03">
+      <description>
+        <p>First release: browse, search, mark and apply; repositories and COPR projects.</p>
+      </description>
+    </release>
+  </releases>
+</component>

@@ -1,5 +1,5 @@
-from kram.core.filters import origin_filters, status_filters
-from kram.core.model import CatalogSnapshot, Origin, PkgRow, Status
+from kram.core.filters import group_filters, origin_filters, status_filters
+from kram.core.model import CatalogSnapshot, GroupInfo, Origin, PkgRow, Status
 
 
 def row(name, status=Status.NOT_INSTALLED, repo="fedora", from_repo="", origin=Origin.FEDORA, user=False):
@@ -43,3 +43,14 @@ def test_origin_subentries_add_up():
     assert c["origin:fedora"] == 3
     assert "origin:local" not in c
     assert next(e for e in entries if e.id == f"repo:{COPR}").label == "owner/proj"
+
+
+def test_group_filters():
+    snap = CatalogSnapshot(ROWS, 4, 1, 0.0, groups=[
+        GroupInfo("tools", "Tools", "Useful tools", True, frozenset({"a", "b", "not-in-catalog"})),
+        GroupInfo("empty", "Empty", "", False, frozenset()),
+    ])
+    entries = group_filters(snap)
+    assert counts(entries) == {"group:all": 6, "group:tools": 2, "group:empty": 0}
+    assert entries[1].status is Status.INSTALLED and entries[1].tip == "Useful tools"
+    assert entries[2].status is Status.NOT_INSTALLED

@@ -4,11 +4,13 @@ The helper stays alive for the whole session, so the password is asked once, not
 """
 import json
 import os
+import site
 import sys
 from pathlib import Path
 
 from PySide6.QtCore import QObject, QProcess, Signal
 
+from .. import INSTALLED_HELPER
 from ..i18n import _
 
 HELPER = Path(__file__).resolve().parent.parent / "helper" / "kram_helper.py"
@@ -30,7 +32,10 @@ class HelperClient(QObject):
         cmd = [sys.executable, "-I", str(HELPER)]
         if os.environ.get("KRAM_HELPER_NO_PKEXEC") == "1":  # development/tests: run unprivileged
             return cmd + ["--allow-non-root"]
-        return ["pkexec", *cmd]
+        if _installed() and Path(INSTALLED_HELPER).exists():
+            # matches the polkit policy's exec.path, so the dialog shows Kram's own message
+            return ["pkexec", INSTALLED_HELPER]
+        return ["pkexec", *cmd]  # source checkout: run the checkout's helper (generic pkexec prompt)
 
     def _ensure_started(self) -> None:
         if self._proc is not None and self._proc.state() != QProcess.NotRunning:
@@ -99,3 +104,8 @@ class HelperClient(QObject):
         if error == QProcess.FailedToStart and self.busy:
             self.busy = False
             self.failed.emit(_("Could not start pkexec. Is polkit installed?"))
+
+
+def _installed() -> bool:
+    """Kram runs from the system site-packages (a package), not from a source checkout."""
+    return any(HELPER.is_relative_to(d) for d in site.getsitepackages())

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE policyconfig PUBLIC "-//freedesktop//DTD PolicyKit Policy Configuration 1.0//EN"
+ "http://www.freedesktop.org/standards/PolicyKit/1/policyconfig.dtd">
+<policyconfig>
+  <vendor>Kram</vendor>
+  <vendor_url>https://github.com/elmodos/kram</vendor_url>
+  <icon_name>io.github.elmodos.Kram</icon_name>
+
+  <!-- One action for the whole helper: it runs for the session, so the password is asked once. -->
+  <action id="io.github.elmodos.Kram.helper">
+    <description>Manage software packages and repositories</description>
+    <description xml:lang="uk">Керування пакунками та репозиторіями</description>
+    <message>Authentication is required to install, remove or upgrade packages and to change repositories</message>
+    <message xml:lang="uk">Для встановлення, вилучення чи оновлення пакунків і зміни репозиторіїв потрібна автентифікація</message>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>auth_admin_keep</allow_active>
+    </defaults>
+    <annotate key="org.freedesktop.policykit.exec.path">/usr/libexec/kram-helper</annotate>
+  </action>
+</policyconfig>

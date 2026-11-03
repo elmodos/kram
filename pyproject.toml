@@ -1,14 +1,27 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "kram"
-version = "0.0.1"
+version = "0.1.0"
 requires-python = ">=3.13"
 description = "Synaptic-style package manager for Fedora (dnf5)"
 license = "GPL-3.0-or-later"
 license-files = ["LICENSE"]
 
+# PySide6, libdnf5 and rpm come from the distribution (python3-pyside6, python3-libdnf5, python3-rpm);
+# libdnf5 and rpm are not on PyPI, so they are not listed as dependencies here.
+
+[project.gui-scripts]
+kram = "kram.__main__:main"
+
 [project.urls]
 Homepage = "https://github.com/elmodos/kram"
 Issues = "https://github.com/elmodos/kram/issues"
+
+[tool.setuptools.packages.find]
+include = ["kram*"]
 
 [tool.ruff]
 line-length = 120
