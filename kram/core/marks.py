@@ -2,6 +2,7 @@
 from dataclasses import dataclass
 from enum import Enum
 
+from ..i18n import _
 from .model import PkgRow, Status
 
 
@@ -16,13 +17,13 @@ class Action(Enum):
 
 
 ACTION_LABELS = {
-    Action.INSTALL: "встановити",
-    Action.REMOVE: "видалити",
-    Action.UPGRADE: "оновити",
-    Action.REINSTALL: "перевстановити",
-    Action.DOWNGRADE: "понизити",
-    Action.MARK_USER: "позначити як встановлений вручну",
-    Action.MARK_DEP: "позначити як залежність",
+    Action.INSTALL: _("install"),
+    Action.REMOVE: _("remove"),
+    Action.UPGRADE: _("upgrade"),
+    Action.REINSTALL: _("reinstall"),
+    Action.DOWNGRADE: _("downgrade"),
+    Action.MARK_USER: _("mark as installed by user"),
+    Action.MARK_DEP: _("mark as dependency"),
 }
 
 INSTALL_LIKE = (Action.INSTALL, Action.UPGRADE, Action.REINSTALL, Action.DOWNGRADE)

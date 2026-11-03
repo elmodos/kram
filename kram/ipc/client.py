@@ -9,6 +9,8 @@ from pathlib import Path
 
 from PySide6.QtCore import QObject, QProcess, Signal
 
+from ..i18n import _
+
 HELPER = Path(__file__).resolve().parent.parent / "helper" / "kram_helper.py"
 # pkexec exit codes: the user dismissed the dialog / is not authorized
 PKEXEC_CANCELLED = (126, 127)
@@ -89,11 +91,11 @@ class HelperClient(QObject):
         if self.busy:
             self.busy = False
             if code in PKEXEC_CANCELLED:
-                self.failed.emit("Автентифікацію скасовано або доступ заборонено.")
+                self.failed.emit(_("Authentication was cancelled or not authorized."))
             else:
-                self.failed.emit(f"Привілейований процес несподівано завершився (код {code}).")
+                self.failed.emit(_("The privileged helper exited unexpectedly (code {code}).").format(code=code))
 
     def _on_error(self, error) -> None:
         if error == QProcess.FailedToStart and self.busy:
             self.busy = False
-            self.failed.emit("Не вдалося запустити pkexec. Чи встановлено polkit?")
+            self.failed.emit(_("Could not start pkexec. Is polkit installed?"))

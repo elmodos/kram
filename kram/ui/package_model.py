@@ -7,10 +7,13 @@ from ..core.evr import evr_ranks
 from ..core.marks import ACTION_LABELS, MarkSet
 from ..core.model import PkgRow, Status
 from ..core.origin import display_repo
+from ..i18n import _, pgettext
 from .icons import MARK_BACKGROUND, ORIGIN_LABEL, mark_icon, origin_icon, status_icon
 
 COL_STATUS, COL_ORIGIN, COL_NAME, COL_INSTALLED, COL_CANDIDATE, COL_REPO, COL_SIZE, COL_SUMMARY = range(8)
-HEADERS = ["S", "", "Пакунок", "Встановлена версія", "Остання версія", "Репозиторій", "Розмір", "Опис"]
+# TRANSLATORS: "S" is the narrow status column (Synaptic convention); keep it one letter
+HEADERS = [_("S"), "", _("Package"), _("Installed version"), _("Latest version"), _("Repository"), _("Size"),
+           _("Summary")]
 
 _STATUS_ORDER = {s: i for i, s in enumerate([
     Status.UPGRADABLE, Status.ORPHAN, Status.NEWER, Status.UNNEEDED, Status.INSTALLED, Status.NOT_INSTALLED])}
@@ -145,7 +148,7 @@ class PackageTableModel(QAbstractTableModel):
         if orientation == Qt.Horizontal and role == Qt.DisplayRole:
             return HEADERS[section]
         if orientation == Qt.Horizontal and role == Qt.ToolTipRole and section in (COL_STATUS, COL_ORIGIN):
-            return "Статус" if section == COL_STATUS else "Походження"
+            return _("Status") if section == COL_STATUS else _("Origin")
         return None
 
     def data(self, index, role=Qt.DisplayRole):
@@ -173,8 +176,8 @@ class PackageTableModel(QAbstractTableModel):
                 label = STATUS_LABEL[r.status]
                 if mark:
                     target = f" {mark.evr}" if mark.evr else ""
-                    label += f"\nПозначено: {ACTION_LABELS[mark.action]}{target}"
-                return label + "\n\nКлік — меню дій"
+                    label += "\n" + _("Marked: {action}").format(action=ACTION_LABELS[mark.action] + target)
+                return label + "\n\n" + _("Click for actions")
         elif role == Qt.BackgroundRole:
             mark = self.marks.get(r.key)
             if mark:
@@ -187,10 +190,10 @@ class PackageTableModel(QAbstractTableModel):
 
 
 STATUS_LABEL = {
-    Status.NOT_INSTALLED: "Не встановлено",
-    Status.INSTALLED: "Встановлено",
-    Status.UPGRADABLE: "Встановлено, є оновлення",
-    Status.NEWER: "Встановлена версія новіша за репозиторій",
-    Status.ORPHAN: "Встановлено, жоден репозиторій його не надає",
-    Status.UNNEEDED: "Встановлено як залежність, більше не потрібен",
+    Status.NOT_INSTALLED: pgettext("package status", "Not installed"),
+    Status.INSTALLED: pgettext("package status", "Installed"),
+    Status.UPGRADABLE: _("Installed, upgrade available"),
+    Status.NEWER: _("Installed version is newer than the repository"),
+    Status.ORPHAN: _("Installed, no repository provides it"),
+    Status.UNNEEDED: _("Installed as a dependency, no longer needed"),
 }

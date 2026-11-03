@@ -6,17 +6,18 @@ from PySide6.QtWidgets import QButtonGroup, QListWidget, QListWidgetItem, QPushB
 from ..core.filters import FilterEntry, origin_filters, status_filters
 from ..core.model import CatalogSnapshot
 from ..core.search import MODE_LABELS, Mode
+from ..i18n import _
 from .icons import origin_icon
 
 MAX_HISTORY = 30
 
 # (id, label, builder or None if not implemented yet); "search" is built from the sidebar's own history
 VIEWS = [
-    ("status", "Статус", status_filters),
-    ("origin", "Походження", origin_filters),
-    ("groups", "Групи", None),
-    ("search", "Результати пошуку", "history"),
-    ("custom", "Власні фільтри", None),
+    ("status", _("Status"), status_filters),
+    ("origin", _("Origin"), origin_filters),
+    ("groups", _("Groups"), None),
+    ("search", _("Search results"), "history"),
+    ("custom", _("Custom filters"), None),
 ]
 
 
@@ -45,7 +46,7 @@ class Sidebar(QWidget):
             btn.setChecked(view_id == self._view)
             btn.setEnabled(builder is not None)
             if builder is None:
-                btn.setToolTip("Буде в наступних версіях")
+                btn.setToolTip(_("Coming in a later version"))
             btn.clicked.connect(lambda _checked, v=view_id: self.set_view(v))
             self._buttons.addButton(btn)
             lay.addWidget(btn)
@@ -73,7 +74,7 @@ class Sidebar(QWidget):
             self._rebuild(emit=False)
 
     def _history_entries(self) -> list[FilterEntry]:
-        return [FilterEntry(_history_id(text, mode), f"«{text}» — {MODE_LABELS[Mode(mode)].lower()}",
+        return [FilterEntry(_history_id(text, mode), _("“{text}” — {mode}").format(text=text, mode=MODE_LABELS[Mode(mode)].lower()),
                             lambda _r: True, count, query=(text, mode))
                 for text, mode, count in self.history]
 
@@ -116,7 +117,7 @@ class Sidebar(QWidget):
             if e.id == want:
                 current = i
         if not self._entries:
-            placeholder = QListWidgetItem("Історія пошуку порожня")
+            placeholder = QListWidgetItem(_("Search history is empty"))
             placeholder.setFlags(Qt.NoItemFlags)
             self.list.addItem(placeholder)
         self.list.setCurrentRow(current)

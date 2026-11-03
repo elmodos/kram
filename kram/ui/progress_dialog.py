@@ -16,10 +16,20 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
+from ..i18n import N_, _, ngettext
 from ..ipc.client import HelperClient
 from .package_model import human_size
 
-STEP_TEXT = {"install": "Встановлення", "remove": "Видалення", "script": "Скрипт"}
+STEP_TEXT = {"install": N_("Installing {nevra}"), "remove": N_("Removing {nevra}"),
+             "script": N_("Running scriptlet {script} of {nevra}")}
+# keys of the helper's "log" events (see kram_helper.log); unknown keys fall back to the English text
+HELPER_MESSAGES = {
+    "loading_repos": N_("Loading repositories…"),
+    "refreshing": N_("Refreshing repository metadata…"),
+    "mirror_failure": N_("Mirror unavailable: {url}: {error}"),
+    "script_error": N_("Scriptlet {script} of {nevra} failed with exit code {code}"),
+    "key_imported": N_("Imported key {key_id}"),
+}
 
 
 class ProgressDialog(QDialog):
@@ -36,12 +46,12 @@ class ProgressDialog(QDialog):
         lay = QVBoxLayout(self)
         self.title = QLabel(f"<b>{title}</b>")
         lay.addWidget(self.title)
-        self.stage = QLabel("Очікування автентифікації…")
+        self.stage = QLabel(_("Waiting for authentication…"))
         self.stage.setWordWrap(True)
         lay.addWidget(self.stage)
-        self.download_label = QLabel("Завантаження")
+        self.download_label = QLabel(_("Download"))
         self.download_bar = QProgressBar()
-        self.rpm_label = QLabel("Встановлення")
+        self.rpm_label = QLabel(_("Installation"))
         self.rpm_bar = QProgressBar()
         for w in (self.download_label, self.download_bar, self.rpm_label, self.rpm_bar):
             lay.addWidget(w)
@@ -52,11 +62,11 @@ class ProgressDialog(QDialog):
         self.log = QPlainTextEdit()
         self.log.setReadOnly(True)
         self.log.setFont(QFontDatabase.systemFont(QFontDatabase.FixedFont))
-        box = QGroupBox("Подробиці")
+        box = QGroupBox(_("Details"))
         QVBoxLayout(box).addWidget(self.log)
         lay.addWidget(box, 1)
 
-        self.auto_close = QCheckBox("Закрити після успішного завершення")
+        self.auto_close = QCheckBox(_("Close when finished successfully"))
         self.auto_close.setChecked(QSettings().value("progress/auto_close", False, type=bool))
         lay.addWidget(self.auto_close)
         self.buttons = QDialogButtonBox(QDialogButtonBox.Close)
@@ -85,9 +95,11 @@ class ProgressDialog(QDialog):
     def _on_event(self, ev: dict) -> None:
         kind = ev.get("event")
         if kind == "log":
-            self._append(ev.get("text", ""))
+            self._append(self._log_text(ev))
         elif kind == "resolved":
-            self.stage.setText(f"Транзакція містить {len(ev['items'])} пакунків. Завантаження…")
+            n = len(ev["items"])
+            self.stage.setText(ngettext("The transaction has {n} package. Downloading…",
+                                        "The transaction has {n} packages. Downloading…", n).format(n=n))
             for item in ev["items"]:
                 self._append(f"{item['action']:>10}  {item['nevra']}")
         elif kind == "download":
@@ -99,15 +111,25 @@ class ProgressDialog(QDialog):
         elif kind == "done":
             self._finish(ev)
 
+    @staticmethod
+    def _log_text(ev: dict) -> str:
+        template = HELPER_MESSAGES.get(ev.get("key"))
+        if template is None:
+            return ev.get("text", "")
+        try:
+            return _(template).format(**ev.get("params", {}))
+        except (KeyError, IndexError):  # a translation with wrong placeholders must not break the log
+            return ev.get("text", "")
+
     def _on_download(self, ev: dict) -> None:
         i = ev["id"]
         if "name" in ev:
-            self._append(f"Завантаження {ev['name']}")
+            self._append(_("Downloading {name}").format(name=ev["name"]))
         if ev.get("end"):
             done, total = self._downloads.get(i, (0, 0))
             self._downloads[i] = (total, total)
             if not ev.get("ok"):
-                self._append(f"Помилка завантаження: {ev.get('msg')}")
+                self._append(_("Download failed: {error}").format(error=ev.get("msg")))
         else:
             self._downloads[i] = (ev.get("done", 0), ev.get("total", 0))
         done = sum(d for d, _ in self._downloads.values())
@@ -115,36 +137,35 @@ class ProgressDialog(QDialog):
         if total > 0:
             self.download_bar.setRange(0, 1000)
             self.download_bar.setValue(int(1000 * done / total))
-            self.download_label.setText(f"Завантаження: {human_size(int(done))} з {human_size(int(total))}")
+            self.download_label.setText(_("Downloaded {done} of {total}").format(done=human_size(int(done)),
+                                                                                  total=human_size(int(total))))
 
     def _on_rpm(self, ev: dict) -> None:
         step = ev.get("step")
         self.download_bar.setRange(0, 1000)
         self.download_bar.setValue(1000)
         if step == "prepare":
-            self.stage.setText("Підготовка транзакції rpm…")
+            self.stage.setText(_("Preparing the rpm transaction…"))
         elif step == "element":
             self.rpm_bar.setRange(0, max(ev["count"], 1))
             self.rpm_bar.setValue(ev["index"])
-            self.rpm_label.setText(f"Встановлення: {ev['index']} з {ev['count']}")
+            self.rpm_label.setText(_("Package {index} of {count}").format(index=ev["index"], count=ev["count"]))
         elif step in STEP_TEXT:
-            extra = f" ({ev['script']})" if step == "script" else ""
-            self.stage.setText(f"{STEP_TEXT[step]} {ev['nevra']}{extra}")
+            text = _(STEP_TEXT[step]).format(nevra=ev["nevra"], script=ev.get("script", ""))
+            self.stage.setText(text)
             if step != "script" and ev.get("done") == 0:
-                self._append(f"{STEP_TEXT[step]} {ev['nevra']}")
+                self._append(text)
 
     def _on_question(self, ev: dict) -> None:
         if ev.get("kind") != "gpg_key":
             self.client.answer(ev["id"], False)
             return
         when = datetime.fromtimestamp(ev["timestamp"]).strftime("%Y-%m-%d") if ev.get("timestamp") else "?"
-        text = (f"Імпортувати ключ OpenPGP для перевірки пакунків?\n\n"
-                f"Користувач: {', '.join(ev.get('user_ids', []))}\n"
-                f"Відбиток: {ev.get('fingerprint')}\n"
-                f"Створено: {when}\n"
-                f"Звідки: {ev.get('url')}")
-        yes = QMessageBox.question(self, "Імпорт ключа", text) == QMessageBox.Yes
-        self._append(f"Ключ {ev.get('key_id')}: {'імпортується' if yes else 'відхилено'}")
+        text = _("Import the OpenPGP key used to verify packages?\n\n"
+                 "User: {user}\nFingerprint: {fingerprint}\nCreated: {created}\nFrom: {url}").format(
+            user=", ".join(ev.get("user_ids", [])), fingerprint=ev.get("fingerprint"), created=when, url=ev.get("url"))
+        yes = QMessageBox.question(self, _("Import key"), text) == QMessageBox.Yes
+        self._append((_("Key {key_id}: importing") if yes else _("Key {key_id}: rejected")).format(key_id=ev.get("key_id")))
         self.client.answer(ev["id"], yes)
 
     def _finish(self, ev: dict) -> None:
@@ -156,12 +177,12 @@ class ProgressDialog(QDialog):
             self.download_bar.setValue(1)
             self.rpm_bar.setRange(0, 1)
             self.rpm_bar.setValue(1)
-            self.stage.setText("<b>Готово.</b>" + (" Пакунки завантажено." if ev.get("download_only") else ""))
-            self._append("Готово")
+            self.stage.setText(f"<b>{_('Done.')}</b>" + (" " + _("Packages downloaded.") if ev.get("download_only") else ""))
+            self._append(_("Done."))
             if self.auto_close.isChecked():
                 self.accept()
         else:
-            self._show_error(ev.get("error", "невідома помилка"), ev.get("details") or [])
+            self._show_error(ev.get("error", _("unknown error")), ev.get("details") or [])
 
     def _on_failed(self, message: str) -> None:
         self.running = False
@@ -169,9 +190,9 @@ class ProgressDialog(QDialog):
         self._show_error(message, [])
 
     def _show_error(self, message: str, details: list[str]) -> None:
-        first = html.escape((message.splitlines() or ["невідома помилка"])[0])
-        self.stage.setText(f"<span style='color:#c03030'><b>Помилка:</b> {first}</span>")
+        first = html.escape((message.splitlines() or [_("unknown error")])[0])
+        self.stage.setText(f"<span style='color:#c03030'><b>{_('Error:')}</b> {first}</span>")
         self.stage.setTextFormat(Qt.RichText)
-        self._append("ПОМИЛКА: " + message)
+        self._append(_("ERROR: {message}").format(message=message))
         for d in details:
             self._append("  " + d)

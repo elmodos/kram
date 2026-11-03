@@ -3,6 +3,7 @@ from collections import Counter
 from collections.abc import Callable, Container
 from dataclasses import dataclass
 
+from ..i18n import _
 from .model import CatalogSnapshot, Origin, PkgRow, Status
 from .origin import classify, display_repo
 
@@ -36,15 +37,15 @@ def status_filters(snap: CatalogSnapshot, marked: Container[tuple[str, str]] | N
 
     installed_like = (Status.INSTALLED, Status.UPGRADABLE, Status.NEWER, Status.ORPHAN, Status.UNNEEDED)
     return _with_counts([
-        FilterEntry("status:all", "Усі", _all),
-        FilterEntry("status:installed", "Встановлені", status_is(*installed_like)),
-        FilterEntry("status:not-installed", "Не встановлені", status_is(Status.NOT_INSTALLED)),
-        FilterEntry("status:upgradable", "Оновлювані", status_is(Status.UPGRADABLE)),
-        FilterEntry("status:user", "Встановлені вручну", lambda r: r.installed and r.user_installed),
-        FilterEntry("status:unneeded", "Непотрібні залежності", status_is(Status.UNNEEDED)),
-        FilterEntry("status:orphan", "Осиротілі (без репо)", status_is(Status.ORPHAN)),
-        FilterEntry("status:newer", "Новіші за репо", status_is(Status.NEWER)),
-        *([FilterEntry("status:marked", "Позначені", lambda r: r.key in marked)] if marked is not None else []),
+        FilterEntry("status:all", _("All"), _all),
+        FilterEntry("status:installed", _("Installed"), status_is(*installed_like)),
+        FilterEntry("status:not-installed", _("Not installed"), status_is(Status.NOT_INSTALLED)),
+        FilterEntry("status:upgradable", _("Upgradable"), status_is(Status.UPGRADABLE)),
+        FilterEntry("status:user", _("Installed by user"), lambda r: r.installed and r.user_installed),
+        FilterEntry("status:unneeded", _("Unneeded dependencies"), status_is(Status.UNNEEDED)),
+        FilterEntry("status:orphan", _("Orphaned (no repository)"), status_is(Status.ORPHAN)),
+        FilterEntry("status:newer", _("Newer than repository"), status_is(Status.NEWER)),
+        *([FilterEntry("status:marked", _("Marked"), lambda r: r.key in marked)] if marked is not None else []),
     ], snap.rows)
 
 
@@ -62,13 +63,13 @@ def origin_filters(snap: CatalogSnapshot) -> list[FilterEntry]:
     for repo_id in per_repo:
         repos_by_origin.setdefault(classify(repo_id), []).append(repo_id)
 
-    entries = [FilterEntry("origin:all", "Усі походження", _all)]
+    entries = [FilterEntry("origin:all", _("All origins"), _all)]
     groups = [
-        (Origin.FEDORA, "Fedora (офіційне)", False),
+        (Origin.FEDORA, _("Fedora (official)"), False),
         (Origin.COPR, "COPR", True),
-        (Origin.THIRD_PARTY, "Сторонні", True),
-        (Origin.LOCAL, "Локальні (@commandline)", False),
-        (Origin.UNKNOWN, "Невідоме (не записане)", False),
+        (Origin.THIRD_PARTY, _("Third-party"), True),
+        (Origin.LOCAL, _("Local (@commandline)"), False),
+        (Origin.UNKNOWN, _("Unknown (not recorded)"), False),
     ]
     for origin, label, expand in groups:
         if origin not in repos_by_origin:

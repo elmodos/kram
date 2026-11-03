@@ -25,6 +25,7 @@ from ..core.filters import FilterEntry
 from ..core.marks import Action, allowed_actions
 from ..core.model import CatalogSnapshot, PkgDetails, PkgRow, Status, TransactionPreview
 from ..core.search import MODE_LABELS, Mode, SearchIndex
+from ..i18n import _, ngettext
 from ..ipc.client import HelperClient
 from .apply_dialog import ApplyDialog
 from .details import DetailsTabs
@@ -35,23 +36,23 @@ from .sidebar import Sidebar
 
 COLUMN_WIDTHS = [26, 24, 230, 175, 175, 150, 80]
 HISTORY_IDLE_MS = 1500  # a search left alone this long goes into the history
-NOT_YET = "Буде в наступних версіях"
+NOT_YET = _("Coming in a later version")
 
 
 def _age(seconds: int | None) -> str:
     if seconds is None:
-        return "Метадані: невідомо"
+        return _("Metadata: unknown age")
     if seconds < 3600:
-        return f"Метадані: {seconds // 60} хв тому"
+        return _("Metadata: {minutes} min ago").format(minutes=seconds // 60)
     if seconds < 2 * 86400:
-        return f"Метадані: {seconds // 3600} год {seconds % 3600 // 60} хв тому"
-    return f"Метадані: {seconds // 86400} дн тому"
+        return _("Metadata: {hours} h {minutes} min ago").format(hours=seconds // 3600, minutes=seconds % 3600 // 60)
+    return _("Metadata: {days} d ago").format(days=seconds // 86400)
 
 
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Kram — менеджер пакунків")
+        self.setWindowTitle(_("Kram — package manager"))
         self.resize(1320, 860)
 
         self.dnf = DnfThread(self)
@@ -97,54 +98,55 @@ class MainWindow(QMainWindow):
         return a
 
     def _build_actions(self):
-        self.act_reload = self._action("Перечитати", "view-refresh", "Ctrl+R", self.refresh_metadata,
-                                       tip="Оновити метадані репозиторіїв і перечитати каталог (потрібен пароль)")
-        self.act_reload_cache = self._action("Перечитати з кешу", "view-refresh", "Ctrl+Shift+R", self.reload,
-                                             tip="Перечитати каталог із локального кешу, без мережі та пароля")
-        self.act_mark_upgrades = self._action("Позначити всі оновлення", "system-software-update", "Ctrl+U",
-                                              self.mark_all_upgrades, tip="Позначити для оновлення всі пакунки, "
-                                                                          "що мають новіші версії")
-        self.act_apply = self._action("Застосувати", "dialog-ok-apply", "Ctrl+P", self.apply,
-                                      tip="Переглянути й застосувати позначені зміни")
+        self.act_reload = self._action(_("Reload"), "view-refresh", "Ctrl+R", self.refresh_metadata,
+                                       tip=_("Refresh repository metadata and reload the catalog (needs a password)"))
+        self.act_reload_cache = self._action(_("Reload from cache"), "view-refresh", "Ctrl+Shift+R", self.reload,
+                                             tip=_("Reload the catalog from the local cache, without network or "
+                                                   "password"))
+        self.act_mark_upgrades = self._action(_("Mark All Upgrades"), "system-software-update", "Ctrl+U",
+                                              self.mark_all_upgrades,
+                                              tip=_("Mark every package that has a newer version for upgrade"))
+        self.act_apply = self._action(_("Apply"), "dialog-ok-apply", "Ctrl+P", self.apply,
+                                      tip=_("Review and apply the marked changes"))
         self.act_apply.setEnabled(False)
-        self.act_unmark_all = self._action("Зняти всі позначки", "edit-clear", "Ctrl+Shift+Z", self.unmark_all,
-                                           tip="Скасувати всі позначені зміни")
+        self.act_unmark_all = self._action(_("Unmark All"), "edit-clear", "Ctrl+Shift+Z", self.unmark_all,
+                                           tip=_("Discard all marked changes"))
         self.act_unmark_all.setEnabled(False)
-        self.act_properties = self._action("Властивості", "document-properties", "Alt+Return",
+        self.act_properties = self._action(_("Properties"), "document-properties", "Alt+Return",
                                            lambda: self.details.setCurrentIndex(1))
-        self.act_repos = self._action("Репозиторії", "configure", enabled=False)
-        self.act_find = self._action("Знайти", "edit-find", QKeySequence.Find,
+        self.act_repos = self._action(_("Repositories"), "configure", enabled=False)
+        self.act_find = self._action(_("Find"), "edit-find", QKeySequence.Find,
                                      lambda: (self.search.setFocus(), self.search.selectAll()))
-        self.act_back = self._action("Назад", "go-previous", "Alt+Left", self.go_back,
-                                     tip="Повернутися до попереднього пакунка (після переходу за залежністю)")
-        self.act_quit = self._action("Вихід", "application-exit", QKeySequence.Quit, self.close)
-        self.act_copy_name = self._action("Копіювати назву", "edit-copy", "Ctrl+C", self.copy_names)
-        self.act_copy_nevra = self._action("Копіювати name-version-release.arch", "edit-copy", "Ctrl+Shift+C",
+        self.act_back = self._action(_("Back"), "go-previous", "Alt+Left", self.go_back,
+                                     tip=_("Go back to the previous package (after following a dependency)"))
+        self.act_quit = self._action(_("Quit"), "application-exit", QKeySequence.Quit, self.close)
+        self.act_copy_name = self._action(_("Copy Name"), "edit-copy", "Ctrl+C", self.copy_names)
+        self.act_copy_nevra = self._action(_("Copy name-version-release.arch"), "edit-copy", "Ctrl+Shift+C",
                                            self.copy_nevras)
         # scoped to the table, so Ctrl+C still copies text in the search field and the detail tabs
         for a in (self.act_copy_name, self.act_copy_nevra):
             self.removeAction(a)
             a.setShortcutContext(Qt.WidgetWithChildrenShortcut)
-        self.act_about = self._action("Про Kram", "help-about", slot=self.about)
+        self.act_about = self._action(_("About Kram"), "help-about", slot=self.about)
         # package actions are scoped to the table: Del/Ins/Ctrl+Z keep their meaning in the search field
         self.mark_actions: dict[Action, QAction] = {}
         for action, text, icon, shortcut in [
-            (Action.INSTALL, "Позначити для встановлення", "list-add", "Ins"),
-            (Action.UPGRADE, "Позначити для оновлення", "go-up", None),
-            (Action.REINSTALL, "Позначити для перевстановлення", "view-refresh", None),
-            (Action.REMOVE, "Позначити для видалення", "list-remove", "Del"),
-            (Action.MARK_USER, "Позначити як встановлений вручну", "user-identity", None),
-            (Action.MARK_DEP, "Позначити як залежність", "link", None),
+            (Action.INSTALL, _("Mark for Installation"), "list-add", "Ins"),
+            (Action.UPGRADE, _("Mark for Upgrade"), "go-up", None),
+            (Action.REINSTALL, _("Mark for Reinstallation"), "view-refresh", None),
+            (Action.REMOVE, _("Mark for Removal"), "list-remove", "Del"),
+            (Action.MARK_USER, _("Mark as Installed by User"), "user-identity", None),
+            (Action.MARK_DEP, _("Mark as Dependency"), "link", None),
         ]:
             a = self._action(text, icon, shortcut, lambda _c=False, act=action: self.mark_selected(act), tip=text)
             self.removeAction(a)
             a.setShortcutContext(Qt.WidgetWithChildrenShortcut)
             self.mark_actions[action] = a
-        self.downgrade_menu = QMenu("Понизити до версії", self)
+        self.downgrade_menu = QMenu(_("Downgrade to Version"), self)
         self.downgrade_menu.setIcon(QIcon.fromTheme("go-down"))
         self.downgrade_menu.aboutToShow.connect(self._fill_downgrade_menu)
-        self.act_unmark = self._action("Зняти позначку", "edit-undo", "Ctrl+Z", self.unmark_selected,
-                                       tip="Зняти позначку з вибраних пакунків")
+        self.act_unmark = self._action(_("Unmark"), "edit-undo", "Ctrl+Z", self.unmark_selected,
+                                       tip=_("Unmark the selected packages"))
         self.removeAction(self.act_unmark)
         self.act_unmark.setShortcutContext(Qt.WidgetWithChildrenShortcut)
         self.act_mark_upgrades.setEnabled(False)
@@ -157,27 +159,27 @@ class MainWindow(QMainWindow):
 
     def _build_menus(self):
         mb = self.menuBar()
-        m = mb.addMenu("&Файл")
+        m = mb.addMenu(_("&File"))
         m.addActions([self.act_reload, self.act_reload_cache])
         m.addSeparator()
         m.addAction(self.act_quit)
-        m = mb.addMenu("&Правка")
+        m = mb.addMenu(_("&Edit"))
         m.addActions([self.act_mark_upgrades, self.act_unmark_all, self.act_apply])
         m.addSeparator()
         m.addActions([self.act_copy_name, self.act_copy_nevra])
         m.addSeparator()
         m.addAction(self.act_find)
-        m = mb.addMenu("Па&кунок")
+        m = mb.addMenu(_("&Package"))
         self._package_menu(m)
         m.addSeparator()
         m.addActions([self.act_properties, self.act_back])
-        m = mb.addMenu("&Налаштування")
+        m = mb.addMenu(_("&Settings"))
         m.addAction(self.act_repos)
-        m = mb.addMenu("&Довідка")
+        m = mb.addMenu(_("&Help"))
         m.addAction(self.act_about)
 
     def _build_toolbar(self):
-        tb = QToolBar("Головна панель")
+        tb = QToolBar(_("Main toolbar"))
         tb.setObjectName("main-toolbar")
         tb.setMovable(False)
         tb.setIconSize(QSize(24, 24))
@@ -191,14 +193,14 @@ class MainWindow(QMainWindow):
         self.search_mode = QComboBox()
         self.search_mode.addItems([MODE_LABELS[m] for m in Mode])
         self.search_mode.setToolTip(
-            "Назва / Назва + опис / Повний опис — миттєвий пошук із ранжуванням.\n"
-            "Provides — пакунки, що надають можливість (libvulkan.so.1, python3dist(requests), webbrowser).\n"
-            "Файл — власник файлу (/usr/bin/7z або просто 7z; для невстановлених — лише основні файли).\n\n"
-            "Кілька слів — усі мають збігтися. ^на початку, в кінці$, * і ? — шаблони.")
+            _("Name / Name + summary / Description: instant ranked search.\n"
+              "Provides: packages providing a capability (libvulkan.so.1, python3dist(requests), webbrowser).\n"
+              "File: owner of a file (/usr/bin/7z or just 7z; only the main files for packages not installed).\n\n"
+              "Several words: all must match. ^start, end$, * and ? are wildcards."))
         self.search_mode.currentIndexChanged.connect(self.apply_filter)
         tb.addWidget(self.search_mode)
         self.search = QLineEdit()
-        self.search.setPlaceholderText("Пошук (Ctrl+F)")
+        self.search.setPlaceholderText(_("Search (Ctrl+F)"))
         self.search.setClearButtonEnabled(True)
         self.search.setFixedWidth(300)
         self.search.addAction(QIcon.fromTheme("edit-find"), QLineEdit.LeadingPosition)
@@ -291,7 +293,9 @@ class MainWindow(QMainWindow):
             event.ignore()
             return
         if len(self.model.marks) and QMessageBox.question(
-                self, "Kram", f"Є {len(self.model.marks)} позначених змін, які не застосовано. Вийти?") \
+                self, "Kram", ngettext("{n} marked change has not been applied. Quit anyway?",
+                                       "{n} marked changes have not been applied. Quit anyway?",
+                                       len(self.model.marks)).format(n=len(self.model.marks))) \
                 != QMessageBox.Yes:
             event.ignore()
             return
@@ -303,7 +307,7 @@ class MainWindow(QMainWindow):
     # ---------------------------------------------------------------- loading and filtering
 
     def reload(self):
-        self.status.setText("Завантаження метаданих…")
+        self.status.setText(_("Loading metadata…"))
         self.act_reload.setEnabled(False)
         self.dnf.submit(self.catalog.load, self._on_loaded, self._on_error)
 
@@ -325,8 +329,8 @@ class MainWindow(QMainWindow):
 
     def _on_error(self, e: BaseException):
         self.act_reload.setEnabled(True)
-        self.status.setText(f"Помилка: {e}")
-        QMessageBox.critical(self, "Kram", f"Не вдалося завантажити каталог пакунків:\n\n{e}")
+        self.status.setText(_("Error: {error}").format(error=e))
+        QMessageBox.critical(self, "Kram", _("Could not load the package catalog:\n\n{error}").format(error=e))
 
     def _on_filter(self, entry: FilterEntry):
         self.filter = entry
@@ -364,7 +368,7 @@ class MainWindow(QMainWindow):
             gen = self._search_gen
             allowed = set(candidates)
             lookup = self.catalog.search_provides if mode is Mode.PROVIDES else self.catalog.search_files
-            self.status.setText(f"Пошук «{text}» ({MODE_LABELS[mode]})…")
+            self.status.setText(_("Searching “{text}” ({mode})…").format(text=text, mode=MODE_LABELS[mode]))
 
             def done(keys):
                 if gen != self._search_gen:
@@ -418,12 +422,14 @@ class MainWindow(QMainWindow):
         if shown is None:
             shown = self.model.rowCount()
         inst, rm = self.model.marks.counts()
+        upgrades = ngettext("{n} upgrade", "{n} upgrades", s.n_upgradable).format(n=s.n_upgradable)
         self.status.setText(
-            f"{shown} показано, {s.n_installed} встановлено, {s.n_upgradable} оновлень. "
-            f"{inst} до встановлення/оновлення, {rm} до видалення.")
+            _("{shown} listed, {installed} installed, {upgrades}.").format(
+                shown=shown, installed=s.n_installed, upgrades=upgrades) + " "
+            + _("{install} to install/upgrade, {remove} to remove.").format(install=inst, remove=rm))
         if ms is None:
             return
-        self.status.setToolTip(f"Каталог: {s.load_seconds:.2f} с, фільтр і пошук: {ms:.0f} мс")
+        self.status.setToolTip(_("Catalog: {load:.2f} s, filter and search: {ms:.0f} ms").format(load=s.load_seconds, ms=ms))
 
     # ---------------------------------------------------------------- selection and details
 
@@ -460,7 +466,7 @@ class MainWindow(QMainWindow):
         else:
             self.dnf.submit(lambda: self.catalog.find_provider(value),
                             lambda key: self.navigate(key) if key else self.statusBar().showMessage(
-                                f"Нічого не надає «{value}»", 5000))
+                                _("Nothing provides “{what}”").format(what=value), 5000))
 
     def navigate(self, key: tuple[str, str], remember=True):
         if remember and (cur := self._current_key()) and cur != key:
@@ -473,7 +479,7 @@ class MainWindow(QMainWindow):
         self.search.blockSignals(False)
         self.sidebar.select("status", "status:all")
         if not self._select_key(key):
-            self.statusBar().showMessage(f"Пакунок {key[0]}.{key[1]} не знайдено в каталозі", 5000)
+            self.statusBar().showMessage(_("Package {name} not found in the catalog").format(name=f"{key[0]}.{key[1]}"), 5000)
 
     def go_back(self):
         if self.history:
@@ -503,7 +509,7 @@ class MainWindow(QMainWindow):
         m.exec(self.table.viewport().mapToGlobal(pos))
 
     def about(self):
-        QMessageBox.about(self, "Про Kram", f"<h3>Kram</h3><p>Менеджер пакунків для Fedora в дусі Synaptic.</p>"
+        QMessageBox.about(self, _("About Kram"), f"<h3>Kram</h3><p>{_('A Synaptic-style package manager for Fedora.')}</p>"
                                            f"<p><a href='{HOMEPAGE}'>{HOMEPAGE}</a></p>")
 
     # ---------------------------------------------------------------- marking
@@ -550,7 +556,7 @@ class MainWindow(QMainWindow):
         changed = [r.key for r in self.snapshot.rows
                    if r.status is Status.UPGRADABLE and self.model.marks.set(r, Action.UPGRADE)]
         self._marks_changed(None)
-        self.statusBar().showMessage(f"Позначено для оновлення: {len(changed)}", 5000)
+        self.statusBar().showMessage(ngettext("{n} package marked for upgrade", "{n} packages marked for upgrade", len(changed)).format(n=len(changed)), 5000)
 
     def _revalidate_marks(self):
         """After a reload, drop marks that no longer apply (package gone, already installed, ...)."""
@@ -567,14 +573,14 @@ class MainWindow(QMainWindow):
         rows = self._selected_rows()
         d = self._details
         if len(rows) != 1 or d is None or self._details_for != rows[0].key:
-            self.downgrade_menu.addAction("(завантаження…)").setEnabled(False)
+            self.downgrade_menu.addAction(_("(loading…)")).setEnabled(False)
             return
         row = rows[0]
         installed = {v.evr for v in d.versions if v.installed}
         older = [v for v in d.versions if not v.installed and v.evr not in installed
                  and evr_cmp(v.evr, row.installed_evr) < 0]
         if not older:
-            self.downgrade_menu.addAction("Старіших версій у репозиторіях немає").setEnabled(False)
+            self.downgrade_menu.addAction(_("No older versions in the repositories")).setEnabled(False)
         for v in older:
             self.downgrade_menu.addAction(f"{v.evr}  ({v.repo_id})",
                                           lambda evr=v.evr: self.mark_selected(Action.DOWNGRADE, evr))
@@ -607,15 +613,15 @@ class MainWindow(QMainWindow):
             return
         rows = {r.key: r for r in self.snapshot.rows}
         request = {"op": "transaction", **self.model.marks.request(rows)}
-        self.status.setText("Розрахунок залежностей…")
+        self.status.setText(_("Resolving dependencies…"))
         self.dnf.submit(lambda: self.catalog.resolve(request), lambda p: self._on_preview(p, request),
-                        lambda e: QMessageBox.critical(self, "Kram", f"Не вдалося розрахувати зміни:\n\n{e}"))
+                        lambda e: QMessageBox.critical(self, "Kram", _("Could not resolve the changes:\n\n{error}").format(error=e)))
 
     def _on_preview(self, preview: TransactionPreview, request: dict):
         self._update_status()
         if not preview.ok:
-            box = QMessageBox(QMessageBox.Warning, "Неможливо застосувати зміни",
-                              "Позначені зміни неможливо виконати. Зніміть або змініть позначки.", parent=self)
+            box = QMessageBox(QMessageBox.Warning, _("Cannot apply changes"),
+                              _("The marked changes cannot be carried out. Unmark or change them."), parent=self)
             box.setInformativeText(preview.problems[0][:500])
             box.setDetailedText("\n".join(preview.problems))
             box.exec()
@@ -626,7 +632,7 @@ class MainWindow(QMainWindow):
         download_only = dlg.download_only.isChecked()
         if download_only:
             request = {**request, "download_only": True}
-        if self._run_helper(request, "Застосування змін") and not download_only:
+        if self._run_helper(request, _("Applying changes")) and not download_only:
             self.model.marks.clear()
             self._marks_changed(None)
             self.reload()
@@ -634,7 +640,7 @@ class MainWindow(QMainWindow):
     def refresh_metadata(self):
         if self.helper.busy:
             return
-        self._run_helper({"op": "refresh"}, "Оновлення метаданих")
+        self._run_helper({"op": "refresh"}, _("Refreshing metadata"))
         self.reload()
 
     def _run_helper(self, request: dict, title: str) -> bool:

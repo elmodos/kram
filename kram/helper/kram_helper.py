@@ -14,6 +14,8 @@ Protocol: one JSON request per line on stdin, JSON event lines on stdout.
   {"op": "answer", "id": N, "yes": bool}                   reply to a "question" event (only while asked)
   {"op": "quit"}
 Events: {"event": "log"|"resolved"|"download"|"rpm"|"question"|"done", ...}; every request ends with "done".
+"log" events carry an English "text" plus a "key" and "params" so the GUI can show them translated
+(pkexec strips the locale from the environment, so the helper does not translate anything itself).
 """
 import json
 import os
@@ -33,6 +35,10 @@ _proto = None  # private copy of the original stdout, see main()
 
 def emit(event: str, **fields) -> None:
     _proto.write(json.dumps({"event": event, **fields}, ensure_ascii=False) + "\n")
+
+
+def log(key: str, template: str, **params) -> None:
+    emit("log", key=key, params=params, text=template.format(**params))
 
 
 class ProtocolError(Exception):
@@ -114,7 +120,7 @@ def refresh() -> None:
     for repo in libdnf5.repo.RepoQuery(base):
         if repo.is_enabled():
             repo.expire()
-    emit("log", text="Оновлення метаданих репозиторіїв…")
+    log("refreshing", "Refreshing repository metadata…")
     base.get_repo_sack().load_repos()
     emit("done", ok=True)
 
@@ -129,7 +135,7 @@ def run_transaction(req: dict) -> None:
     # Keep Python references: the UniquePtr owns only the C++ side, and if the Python object is collected
     # libdnf5 calls into a dead director and aborts the whole process.
     download_cb, rpm_cb, key_cb = DownloadProgress(), RpmProgress(), KeyImport()
-    emit("log", text="Завантаження репозиторіїв…")
+    log("loading_repos", "Loading repositories…")
     base = make_base(download_cb)
     for repo in libdnf5.repo.RepoQuery(base):
         repo.set_callbacks(libdnf5.repo.RepoCallbacksUniquePtr(key_cb.for_repo()))
@@ -223,7 +229,7 @@ def _callbacks():
 
         @_guarded(OK)
         def mirror_failure(self, user_cb_data, msg, url, metadata):
-            emit("log", text=f"Дзеркало недоступне: {url}: {msg}")
+            log("mirror_failure", "Mirror unavailable: {url}: {error}", url=url, error=msg)
             return OK
 
     class RpmProgress(libdnf5.rpm.TransactionCallbacks):
@@ -264,8 +270,9 @@ def _callbacks():
 
         @_guarded(None)
         def script_error(self, item, nevra, type, return_code):
-            emit("log", text=f"Скрипт {libdnf5.rpm.TransactionCallbacks.script_type_to_string(type)} "
-                             f"{libdnf5.rpm.to_full_nevra_string(nevra)} завершився з кодом {return_code}")
+            log("script_error", "Scriptlet {script} of {nevra} failed with exit code {code}",
+                script=libdnf5.rpm.TransactionCallbacks.script_type_to_string(type),
+                nevra=libdnf5.rpm.to_full_nevra_string(nevra), code=return_code)
 
     class RepoKeyCallbacks(libdnf5.repo.RepoCallbacks):
         def __init__(self, owner):
@@ -278,7 +285,7 @@ def _callbacks():
 
         @_guarded(None)
         def repokey_imported(self, key_info):
-            emit("log", text=f"Імпортовано ключ {key_info.get_short_key_id()}")
+            log("key_imported", "Imported key {key_id}", key_id=key_info.get_short_key_id())
 
     class KeyImport:
         """One question per key per transaction, shared by all repos."""

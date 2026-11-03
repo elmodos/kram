@@ -6,6 +6,7 @@ from PySide6.QtGui import QColor, QFont, QIcon, QPainter, QPen, QPixmap
 
 from ..core.marks import Action
 from ..core.model import Origin, Status
+from ..i18n import _
 
 _BOX = QRect(1, 1, 13, 13)
 
@@ -58,8 +59,8 @@ def status_icon(status: Status) -> QIcon:
 
 
 ORIGIN_LABEL = {
-    Origin.FEDORA: "Fedora", Origin.COPR: "COPR", Origin.THIRD_PARTY: "Стороннє",
-    Origin.LOCAL: "Локальне", Origin.UNKNOWN: "Невідоме",
+    Origin.FEDORA: "Fedora", Origin.COPR: "COPR", Origin.THIRD_PARTY: _("Third-party origin"),
+    Origin.LOCAL: _("Local origin"), Origin.UNKNOWN: _("Unknown origin"),
 }
 _ORIGIN_STYLE = {
     Origin.FEDORA: ("#294172", "F"), Origin.COPR: ("#d4762c", "C"), Origin.THIRD_PARTY: ("#6b6b6b", "3"),

@@ -12,6 +12,7 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 from enum import IntEnum
 
+from ..i18n import _
 from .model import PkgRow
 
 
@@ -28,11 +29,11 @@ class Mode(IntEnum):
 
 
 MODE_LABELS = {
-    Mode.NAME: "Назва",
-    Mode.NAME_SUMMARY: "Назва + опис",
-    Mode.DESCRIPTION: "Повний опис",
-    Mode.PROVIDES: "Provides",
-    Mode.FILE: "Файл",
+    Mode.NAME: _("Name"),
+    Mode.NAME_SUMMARY: _("Name + summary"),
+    Mode.DESCRIPTION: _("Description"),
+    Mode.PROVIDES: _("Provides"),
+    Mode.FILE: _("File"),
 }
 
 EXACT, PREFIX, NAME, SUMMARY, DESCRIPTION = range(5)

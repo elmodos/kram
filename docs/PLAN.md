@@ -1,303 +1,293 @@
-# Kram — менеджер пакунків для Fedora в дусі Synaptic
+# Kram — a Synaptic-style package manager for Fedora
 
-Репозиторій: https://github.com/elmodos/kram · App ID: `io.github.elmodos.Kram`
+Repository: https://github.com/elmodos/kram · App ID: `io.github.elmodos.Kram`
 
-План MVP. Мета: дати старожилу Debian на Fedora те саме відчуття, що й Synaptic —
-повний список пакунків, повний контроль, нічого не робиться без явного «Застосувати».
+MVP plan. Goal: give a long-time Debian user on Fedora the same feeling Synaptic gives — the full
+package list, full control, and nothing happens until you press "Apply".
 
-## 1. Принципи (що робимо і чого не робимо)
+## 1. Principles (what we do and what we don't)
 
-- **Один щільний вікно-інструмент**: меню, тулбар, ліва панель фільтрів, таблиця, вкладки
-  з деталями, статус-бар. Без «магазину», карток, скріншотів, рейтингів, анімацій.
-- **Маркування → перегляд → застосування.** Клік по галочці лише *позначає* дію.
-  Нічого не встановлюється/видаляється, поки не натиснуто «Застосувати» і не показано
-  повний список змін із залежностями.
-- **Чесність**: GUI показує те саме, що показав би `dnf5`, і може вивести еквівалентну
-  команду (`dnf5 install … remove …`) — для довіри і для копіювання в термінал.
-- **Швидкість**: старт ≤ 2–3 с на теплому кеші, пошук — миттєвий (≤ 50 мс на натискання).
-- **GUI ніколи не працює від root.** Root — тільки маленький helper на час транзакції.
+- **One dense tool window**: menu, toolbar, filter sidebar, table, detail tabs, status bar. No "store",
+  cards, screenshots, ratings or animations.
+- **Mark → review → apply.** Clicking a checkbox only *marks* an action. Nothing is installed or removed
+  until "Apply" is pressed and the full list of changes, dependencies included, has been shown.
+- **Honesty**: the GUI shows what `dnf5` would do and can print the equivalent command
+  (`dnf5 install … remove …`), for trust and for copying into a terminal.
+- **Speed**: start-up ≤ 2–3 s on a warm cache, search is instant (≤ 50 ms per keystroke).
+- **The GUI never runs as root.** Only a small helper does, for the duration of a transaction.
+- **English source strings, translated with gettext** (see §9).
 
-## 2. Технологічний стек
+## 2. Technology
 
-| Шар | Вибір | Чому |
+| Layer | Choice | Why |
 |---|---|---|
-| Мова | Python 3.14 (системний) | бінди libdnf5 є в репо, без збірки |
-| GUI | **PySide6 (Qt 6)** | ти на KDE → нативний Breeze; `QTreeView` + власна модель тягне 100k рядків віртуально; класичні віджети (меню, тулбари, splitter-и) без libadwaita-шних «свистілок» |
-| Пакетний бекенд | **`python3-libdnf5`** (прямі бінди) | та сама логіка, що у `dnf5`; читання працює без root з системного кешу |
-| Привілеї | **pkexec + власний helper** (JSON по stdin/stdout) + polkit policy | повний контроль над прогресом і помилками; один запит пароля на сесію застосування |
-| COPR | `dnf5 copr …` через helper + Copr API (`/api_3/`) для пошуку проєктів | плагін уже вміє коректно генерувати .repo під chroot |
-| Тести | pytest, pytest-qt, фейковий бекенд; реальні транзакції — у VM/`toolbox` | |
-| Якість | ruff, mypy (м'яко, на `core/`) | |
-| Пакування | RPM spec + власний COPR | ставиться як усе інше |
+| Language | Python 3.14 (system) | libdnf5 bindings are packaged, nothing to build |
+| GUI | **PySide6 (Qt 6)** | native Breeze look on KDE; `QTreeView` + a custom model handles 100k rows virtually; classic widgets (menus, toolbars, splitters) without libadwaita's mobile-first patterns |
+| Package backend | **`python3-libdnf5`** (direct bindings) | the same logic as `dnf5`; reading works without root from the system cache |
+| Privileges | **pkexec + our own helper** (JSON over stdin/stdout) + polkit policy | full control over progress and errors; one password prompt per session |
+| COPR | `dnf5 copr …` through the helper + Copr API (`/api_3/`) for project search | the plugin already generates correct .repo files per chroot |
+| Translations | **gettext** (`po/*.po`), Qt's own `qtbase_*.qm` for standard buttons | standard on Linux, supported by Weblate / Fedora's translation platform, works in non-Qt code |
+| Tests | pytest, a fake backend; real transactions in a throwaway Fedora container | |
+| Quality | ruff | |
+| Packaging | RPM spec + our own COPR | installs like everything else |
 
-Альтернативи і чому ні (поки):
-- **GTK4 + libadwaita** — штовхає в мобільний HIG, без класичного меню; на KDE виглядає чужим.
-  GTK3 — тупикова гілка.
-- **dnf5daemon-server (D-Bus)** — офіційний шлях (ним користується dnfdragora), але
-  в системі не встановлений, API ще рухається, COPR не покриває, а прогрес/помилки гірше
-  контролювати. Архітектуру робимо так, щоб бекенд-транзакцій можна було замінити на
-  dnf5daemon пізніше (інтерфейс `TransactionBackend`).
+Alternatives and why not (for now):
+- **GTK4 + libadwaita** pushes towards the mobile HIG with no classic menu bar; looks foreign on KDE.
+  GTK3 is a dead end.
+- **dnf5daemon-server (D-Bus)** is the official route (dnfdragora uses it), but it is not installed by
+  default, its API is still moving, it does not cover COPR, and progress/errors are harder to control.
+  The transaction side is kept small so it can be swapped for dnf5daemon later.
 
-### Заміряно на цій машині (Fedora 44, dnf5 5.4.6)
-- `load_repos()` без root, `cache_only=True`: **~1.2 с**; повний query: ~1 с.
-- У сакові **109 171** NEVRA, **70 319** унікальних імен, 73 247 «latest x86_64+noarch».
-- Встановлено 3 090. Поле `from_repo_id` встановлених дає: `updates`, `fedora`,
-  хеш на кшталт `6ecc2dfa…` (пакунки з інсталяційного образу Anaconda), `<unknown>`
-  (репо більше нема), `@commandline` (ставили з локального .rpm), `copr:…`, сторонні.
-  → класифікація походження реальна і корисна (див. §4).
+### Measured on the development machine (Fedora 44, dnf5 5.4.6)
+- `load_repos()` without root, `cache_only=True`: **~1.2 s**; a full query: ~1 s.
+- **109,171** NEVRAs in the sack, **70,319** unique names, 73,247 "latest x86_64+noarch".
+- 3,090 installed. `from_repo_id` of installed packages: `updates`, `fedora`, a hash like `6ecc2dfa…`
+  (packages from the Anaconda installation image), `<unknown>` (not recorded), `@commandline` (installed
+  from a local .rpm), `copr:…`, third-party repos → origin classification is real and useful (§4).
 
-## 3. Архітектура
+## 3. Architecture
 
 ```
-┌────────────── GUI-процес (користувач) ─────────────────────────┐
-│  Qt MainWindow ── PackageTableModel ── FilterEngine/Search     │
-│        │                    ▲                                   │
-│        ▼                    │ снапшот (list[PkgRow])           │
-│  MarkSet (позначені дії) ── │ ── Catalog (worker-потік, libdnf5)│
-│        │       resolve() для превʼю (без root, без завантажень) │
-└────────┼────────────────────────────────────────────────────────┘
-         │ pkexec kram-helper     (JSON-рядки по stdin/stdout)
-┌────────▼────────── helper (root, короткоживучий) ──────────────┐
-│ refresh | transaction{install,remove,upgrade,downgrade,reinstall│
-│ ,mark-user/dep} | copr{enable,disable,remove} | repo{en,dis}    │
-│ → події прогресу: download, verify, rpm-step, scriptlet, log    │
-└────────────────────────────────────────────────────────────────┘
+┌──────────────── GUI process (user) ──────────────────────────────┐
+│  Qt MainWindow ── PackageTableModel ── filters / SearchIndex      │
+│        │                    ▲                                     │
+│        ▼                    │ snapshot (list[PkgRow])             │
+│  MarkSet (marked actions) ─ │ ── Catalog (worker thread, libdnf5) │
+│        │     resolve() for the preview (no root, no downloads)    │
+└────────┼──────────────────────────────────────────────────────────┘
+         │ pkexec kram_helper.py   (JSON lines over stdin/stdout)
+┌────────▼──────── helper (root, lives for the session) ────────────┐
+│ refresh | transaction{install,remove,upgrade,downgrade,reinstall, │
+│ mark_user,mark_dep} | (M4: copr, repo enable/disable)             │
+│ → events: download, rpm step, scriptlet, question, log, done      │
+└───────────────────────────────────────────────────────────────────┘
 ```
 
-Ключові рішення:
-- **libdnf5 живе в одному worker-потоці** (`Base` не thread-safe). GUI отримує
-  *плоский снапшот* — масив простих dataclass/tuple, без SWIG-обʼєктів. Деталі
-  (залежності, файли, changelog) — ліниві запити в той самий потік.
-- **Одна логічна строка = `name.arch`**, а не NEVRA. Всередині: встановлена версія,
-  найкраща доступна, список усіх доступних версій (вкладка «Версії»). i686 ховаємо,
-  якщо не встановлено (перемикач у налаштуваннях).
-- **Резолв робимо двічі**: у GUI (непривілейовано) — для діалогу «будуть також
-  встановлені/видалені…»; у helper-і — реально, з тими ж специфікаціями. Якщо результат
-  розійшовся (репо оновилися) — helper відмовляє, GUI перечитує й показує знову.
-- **Helper — тупий і малий** (~300–500 рядків): валідує JSON-команди за whitelist-схемою,
-  жодних довільних аргументів/шляхів. Це межа безпеки — рев'юимо окремо.
-- Після кожної транзакції/refresh — перезавантаження каталогу у фоні, збереження
-  позиції курсору та фільтра.
+Key decisions:
+- **libdnf5 lives on one worker thread** (`Base` is not thread-safe). The GUI receives a *flat snapshot*
+  of plain dataclasses, no SWIG objects. Details (dependencies, files, changelog) are lazy queries on the
+  same thread.
+- **One row = `name.arch`**, not a NEVRA. Inside: installed version, best available version, and the list
+  of all versions (the "Versions" tab). Other arches (i686) are shown only when installed.
+- **The goal is built once, by one function** (`kram.helper.kram_helper.build_goal`): the GUI resolves it
+  unprivileged for the preview dialog, the helper resolves and runs the same request.
+- **The helper is small and dumb**: it validates JSON requests against a whitelist, accepts no file paths
+  or arbitrary arguments. It is the security boundary — review it separately.
+- After every transaction or refresh the catalog reloads in the background, keeping cursor and filter.
 
-### Структура репозиторію
+### Repository layout
 ```
 kram/
-  core/            # без Qt; юніт-тестується
-    catalog.py     # libdnf5 → PkgRow снапшот, ліниві деталі
-    model.py       # PkgRow, Origin, Status enum-и
-    origin.py      # класифікація походження
-    search.py      # індекс + ранжування
-    marks.py       # MarkSet, конфлікти позначок
-    resolve.py     # Goal → TransactionPreview
-    copr.py        # список/парсинг copr-репо, Copr API
-  ipc/
-    protocol.py    # схема повідомлень (спільна для GUI і helper)
-    client.py      # запуск pkexec, стрім подій
-  helper/
-    main.py        # root-процес
-  ui/
-    main_window.py, package_table.py, sidebar.py, details.py,
-    apply_dialog.py, progress_dialog.py, copr_dialog.py, repos_dialog.py
-data/
-  io.github.elmodos.Kram.policy     # polkit
-  io.github.elmodos.Kram.desktop
-  io.github.elmodos.Kram.metainfo.xml
-packaging/kram.spec
+  __init__.py      # APP_ID, homepage
+  __main__.py      # QApplication setup, translators
+  i18n.py          # gettext setup: _(), ngettext(), pgettext(), N_()
+  core/            # no Qt; unit-tested
+    catalog.py     # libdnf5 → PkgRow snapshot, lazy details, resolve(), provides/file search
+    model.py       # PkgRow, Origin, Status, details/preview dataclasses
+    origin.py      # origin classification
+    filters.py     # sidebar Status / Origin filters
+    search.py      # ranked in-memory search
+    marks.py       # MarkSet, allowed actions, equivalent dnf5 command
+    evr.py         # RPM version ordering
+  ipc/client.py    # pkexec'd helper process, event stream
+  helper/kram_helper.py   # the root process (standalone: stdlib + libdnf5 only)
+  ui/              # main_window, sidebar, package_model, details, apply_dialog, progress_dialog, icons
+po/                # kram.pot + one <lang>.po per translation
+scripts/           # i18n.sh, container_check.sh, helper_driver.py, m0_helper_check.py
 tests/
+docs/              # this plan, UI mockups
 ```
+Planned for M5: `data/io.github.elmodos.Kram.{policy,desktop,metainfo.xml}`, `packaging/kram.spec`.
 
-## 4. Модель даних і статуси (колонка «S»)
+## 4. Data model and statuses (the "S" column)
 
-Іконка-статус (як у Synaptic, квадратик + колір/гліф):
+Status icon (Synaptic-style box with colour/glyph):
 
-| Статус | Значення |
+| Status | Meaning |
 |---|---|
-| ☐ | не встановлено |
-| ■ | встановлено, актуальне |
-| ■↑ | встановлено, є оновлення |
-| ■↓ | встановлено новіше, ніж є в репо (локальна збірка/репо прибрали версію) |
-| ■? | встановлено, жодне увімкнене репо його не надає («осиротілий») |
-| ■· | встановлено як залежність і більше не потрібне (autoremove-кандидат) |
-| позначки | + встановити, ↑ оновити, ↓ понизити, ⟳ перевстановити, ✕ видалити, 🔒 заблоковано (versionlock, пізніше) |
+| ☐ | not installed |
+| ■ | installed, up to date |
+| ■↑ | installed, an upgrade is available |
+| ■↓ | installed version is newer than any repository has (local build, version withdrawn) |
+| ■? | installed, no enabled repository provides it ("orphaned") |
+| ■· | installed as a dependency and no longer needed (autoremove candidate) |
+| marks | + install, ↑ upgrade, ↓ downgrade, R reinstall, ✕ remove, U/D install reason; 🔒 versionlock (later) |
 
-Окрема вузька колонка **«Походження»** (друга колонка, як іконка Ubuntu у Synaptic):
+A separate narrow **Origin** column (second column, like the Ubuntu icon in Synaptic):
 
-| Походження | Правило |
+| Origin | Rule |
 |---|---|
-| Fedora (офіційне) | `fedora`, `updates`, `updates-testing`, `fedora-cisco-openh264`, репо інсталятора Anaconda (хеш-ID / `anaconda`) |
-| COPR | `repo_id` починається з `copr:` → показуємо `owner/project` |
-| Стороннє | будь-яке інше репо (rpmfusion, google-chrome, vscode…) — з назвою репо |
-| Локальне | `@commandline` |
-| Невідоме | `<unknown>` / репо зникло |
+| Fedora (official) | `fedora`, `updates`, `updates-testing`, `fedora-cisco-openh264`, the Anaconda installer repo (hash id / `anaconda`) |
+| COPR | `repo_id` starts with `copr:` → shown as `owner/project` |
+| Third-party | any other repo (rpmfusion, google-chrome, vscode…), with the repo name |
+| Local | `@commandline` |
+| Unknown | `<unknown>`: dnf did not record where it came from |
 
-Список «офіційних» — у конфігу, не хардкод (на випадок RHEL/CentOS Stream пізніше).
+For installed packages the origin is where it was installed *from*; for others, where it would come from.
+The list of "official" repos should move to a config file (RHEL/CentOS Stream later).
 
-Колонки таблиці: S · Походження · Пакунок · Встановлена версія · Остання версія ·
-Репо · Розмір (встановлений/завантаження) · Опис (summary). Сортування за будь-якою;
-видимість і порядок колонок зберігаються.
+Table columns: S · Origin · Package · Installed version · Latest version · Repository · Size · Summary.
+Sortable by any column; widths and order are saved.
 
 ## 5. UI (MVP)
 
-Макет 1:1 з Synaptic:
+Laid out like Synaptic:
 
-- **Меню**: Файл (Зберегти/завантажити позначки, Історія, Вихід) · Правка (Скасувати
-  позначку, Позначити всі оновлення, Зняти всі позначки, Застосувати) · Пакунок
-  (Встановити, Видалити, Перевстановити, Оновити, Понизити до…, Позначити як
-  встановлений вручну/як залежність) · Налаштування (Репозиторії, COPR, Параметри) · Довідка.
-- **Тулбар**: Перечитати · Позначити всі оновлення · Застосувати · Властивості · поле пошуку.
-- **Ліва панель** з перемикачами внизу (як кнопки Synaptic):
-  - *Статус*: Усі / Встановлені / Не встановлені / Оновлювані / Встановлені вручну /
-    Непотрібні залежності / Осиротілі / Новіші за репо / Позначені.
-  - *Походження*: Fedora / COPR (кожен проєкт окремо) / Сторонні (кожне репо) / Локальні / Невідомі.
-  - *Групи*: comps-групи і environments (Fedora-аналог «Секцій»; RPM-тег `Group` мертвий).
-  - *Результати пошуку*: історія запитів.
-  - *Власні фільтри* — після MVP.
-- **Таблиця**: подвійний клік / пробіл по галочці → контекстне меню дій, як у Synaptic.
-  Мультивибір + дія для всіх. Позначені рядки підсвічуються кольором.
-- **Нижні вкладки**: Опис · Загальне (NEVRA, репо, ліцензія, URL, пакувальник, дата збірки,
-  розміри, причина встановлення) · Залежності (Requires / Provides / Recommends /
-  *Required by* — клікабельні) · Файли · Версії (усі доступні з репо, вибір конкретної) ·
-  Changelog (якщо метадані завантажені).
-- **Статус-бар**: «N показано, M встановлено, K оновлень, X до встановлення/оновлення,
-  Y до видалення, завантажити Z МБ».
-- **Діалог «Застосувати»**: дерево змін (встановити/оновити/понизити/видалити/
-  залежності окремо), сумарні розміри, кнопка «Показати команду dnf5».
-  Якщо видаляється щось критичне (protected packages, kernel-core, dnf) — червоне попередження.
-- **Вікно прогресу**: загальний прогрес, поточний файл/крок rpm, розгортаний лог,
-  «Закрити після успіху».
+- **Menu**: File (Reload, Reload from cache, Quit) · Edit (Mark All Upgrades, Unmark All, Apply, Copy,
+  Find) · Package (mark for install/upgrade/reinstall/removal, downgrade to…, install reason, unmark,
+  Properties, Back) · Settings (Repositories, COPR) · Help.
+- **Toolbar**: Reload · Mark All Upgrades · Apply · Properties · Repositories · search mode + field.
+- **Sidebar** with view buttons below it (as in Synaptic):
+  - *Status*: All / Installed / Not installed / Upgradable / Installed by user / Unneeded dependencies /
+    Orphaned / Newer than repository / Marked.
+  - *Origin*: Fedora / COPR (each project) / Third-party (each repo) / Local / Unknown.
+  - *Groups*: comps groups and environments (Fedora's equivalent of "Sections"; the RPM `Group` tag is dead).
+  - *Search results*: query history.
+  - *Custom filters*: after the MVP.
+- **Table**: clicking the status box opens the action menu, as in Synaptic; double click installs/upgrades
+  or unmarks. Multi-selection applies an action to all rows it fits. Marked rows are tinted.
+- **Detail tabs**: Description · General (NEVRA, repos, license, URL, packager, build date, sizes, install
+  reason) · Dependencies (Requires / Recommends / Suggests / Required by / Conflicts / Obsoletes / Provides,
+  clickable) · Files · Versions (all installed and available) · Changelog.
+- **Status bar**: "N listed, M installed, K upgrades. X to install/upgrade, Y to remove." + metadata age.
+- **Apply dialog**: tree of changes (dependencies and unneeded removals listed separately), download size
+  and disk space change, the equivalent dnf5 command, "download only". Removing essential packages
+  (kernel-core, systemd, dnf5, …) shows a red warning.
+- **Progress window**: download and rpm progress, current step, expandable log, "close when finished".
 
-Клавіатура: `Ctrl+F` пошук, `Ctrl+R` перечитати, `Ctrl+G` / `Ctrl+P` застосувати,
-`Ctrl+U` позначити оновлення, `Del` позначити до видалення, `+`/`Ins` встановити, `Ctrl+Z` скасувати позначку.
+Keyboard: `Ctrl+F` search, `Ctrl+R` reload, `Ctrl+P` apply, `Ctrl+U` mark upgrades, `Ins` install,
+`Del` remove, `Ctrl+Z` unmark, `Alt+←` back.
 
-## 6. Пошук (щоб працював)
+## 6. Search (that works)
 
-Причина болю в dnfdragora — пошук через окремі запити до бекенду з фіксованими полями.
-У нас:
+The pain with dnfdragora is search through separate backend queries over fixed fields. Here:
 
-- Після завантаження будуємо **in-memory індекс** по ~70k `name.arch`:
-  lowercase name, summary, (опційно) description. Це ~десятки МБ, будується < 1 с
-  у фоновому потоці.
-- **Інкрементальний пошук** при наборі (debounce 150 мс) в межах поточного фільтра лівої панелі.
-- Режими (випадайка біля поля): *Назва* (за замовч.) · *Назва + опис* · *Повний опис* ·
-  *Provides* (`libdnf5 filter_provides`) · *Файл* (`filter_file`, напр. `/usr/bin/foo` або `*/libfoo.so*`).
-- Синтаксис: кілька слів = AND; `^name` / `name$` — якорі; `*`/`?` — glob.
-- **Ранжування**: точний збіг імені → префікс → підрядок в імені → збіг у summary →
-  в описі; всередині — встановлені вище. Перший рядок завжди «той самий пакунок».
-- Сортування колонкою відключає ранжування (поведінка Synaptic).
+- After loading, an **in-memory index** over ~70k `name.arch`: lowercased name, summary, description.
+- **Incremental search** while typing (150 ms debounce) within the current sidebar filter.
+- Modes: *Name* (default) · *Name + summary* · *Description* · *Provides* (libdnf5 `filter_provides`) ·
+  *File* (`filter_file`, e.g. `/usr/bin/foo` or `*/libfoo.so*`).
+- Syntax: several words = AND; `^name` / `name$` anchors; `*` / `?` globs.
+- **Ranking**: exact name → name prefix → name substring → summary → description; within a tier installed
+  first, then shorter names. The first row is "the package you meant".
+- Clicking a column header sorts the results instead (Synaptic behaviour); a new query ranks again.
 
-Ціль: ≤ 50 мс на натискання для режимів по імені/summary (перевірити бенчмарком у M2;
-fallback — попередньо склеєний рядок + `str.find`, або `re` по склеєному blob-у).
+## 7. COPR and repositories (M4)
 
-## 7. COPR і репозиторії
+**Repositories** dialog (Settings → Repositories): every repo from `/etc/yum.repos.d` — enabled checkbox,
+id, name, package count, file, priority, enable/disable buttons. debuginfo/source collapsed by default.
 
-Діалог **«Репозиторії»** (Налаштування → Репозиторії): таблиця всіх репо з
-`/etc/yum.repos.d` — увімкнено (галочка), id, назва, к-сть пакунків, звідки (файл),
-priority, кнопки Увімкнути/Вимкнути. debuginfo/source — згорнуті за замовчуванням.
+**COPR** dialog:
+- Enabled projects (from `copr:` repos): owner/project, enabled, package count, how many are installed.
+- **Add**: `owner/project` field + "Search" (Copr API `/api_3/project/search`) with results (name,
+  description, whether a chroot exists for the running Fedora).
+- **Enable / Disable / Remove** → the helper runs `dnf5 copr enable|disable|remove`.
+- Before removing: "N packages are installed from this COPR — they will become orphaned; show them?".
+- When adding: a one-line note that COPR projects are not reviewed by Fedora.
 
-Діалог **«COPR»**:
-- Список підключених проєктів (з `copr:` репо): owner/project, увімкнено,
-  к-сть пакунків, скільки з них встановлено.
-- **Додати**: поле `owner/project` + кнопка «Знайти» (Copr API `/api_3/project/search`)
-  з результатами (назва, опис, чи є chroot під поточний Fedora).
-- **Увімкнути / Вимкнути / Видалити** → helper викликає `dnf5 copr enable|disable|remove`.
-- Перед видаленням: «з цього COPR встановлено N пакунків — вони стануть осиротілими;
-  показати їх?» (перехід у фільтр).
-- Попередження при додаванні: COPR — не перевірені Fedora (одним рядком, без драми).
+## 8. Privileged helper and security
 
-## 8. Привілейований helper і безпека
+- Installed as `/usr/libexec/kram-helper`, started with `pkexec`, polkit action
+  `io.github.elmodos.Kram.helper` with `auth_admin_keep`. During development the generic
+  `org.freedesktop.policykit.exec` action is used.
+- Protocol: JSON lines (documented at the top of `kram_helper.py`). Requests: `ping`, `refresh`,
+  `transaction{install,remove,upgrade,reinstall,downgrade,mark_user,mark_dep,upgrade_all,download_only}`,
+  `answer`, `quit`. Events: `log`, `resolved`, `download`, `rpm`, `question` (OpenPGP key import: the GUI
+  shows the fingerprint and asks), `done{ok,error}`.
+- Validation: known ops only, package specs matched by a regex (no `/`), no file paths from the GUI
+  (local .rpm files later, separately).
+- The helper does not translate: pkexec strips the locale. `log` events carry an English text plus a key
+  and parameters, and the GUI shows the translated message.
 
-- `/usr/libexec/kram-helper`, запуск `pkexec`, polkit action
-  `io.github.elmodos.Kram.helper` з `auth_admin_keep` (пароль один раз на кілька хвилин).
-- Протокол: JSON-lines. Запити: `refresh`, `transaction{items:[{action,nevra|spec}]}`,
-  `repo_set_enabled{id,bool}`, `copr{op,owner,project}`, `mark_reason{name,user|dep}`.
-  Відповіді/події: `progress`, `log`, `question` (напр. імпорт GPG-ключа → GUI питає
-  користувача, показує fingerprint), `done{ok,error}`.
-- Валідація: тільки відомі `op`, NEVRA/spec — regex, repo id — тільки з існуючих,
-  жодних шляхів до файлів від GUI (локальні .rpm — пізніше, окремо).
-- Lock: якщо інший dnf тримає lock — зрозуміле повідомлення, а не зависання.
+## 9. Translations
 
-## 9. Етапи
+- Source strings are English, marked with `_()`, `ngettext()` (plurals), `pgettext()` (same English word,
+  different meaning) and `N_()` (mark only) from `kram.i18n`.
+- `po/kram.pot` is the template, `po/<lang>.po` the translations. `scripts/i18n.sh update` re-extracts
+  and merges; `scripts/i18n.sh new <lang>` starts a new language; `scripts/i18n.sh check` validates.
+- When running from a checkout, `kram.i18n` compiles `po/*.po` into `kram/locale/` (gitignored) on start.
+- Tests fail if the template is stale, a catalog is incomplete or has fuzzy entries, or a translation uses
+  `{placeholders}` that the source does not have.
+- The language follows the environment (`LANGUAGE`, `LC_ALL`, `LC_MESSAGES`, `LANG`).
 
-**M0 — спайк (1–2 вечори).** Підтвердити: libdnf5 у worker-потоці + PySide6 модель
-на 70k рядків (плавний скрол), `Goal.resolve()` без root, helper через pkexec
-виконує `install` одного пакунка зі стрімом прогресу (callbacks
-`DownloadCallbacks`/`TransactionCallbacks`). Виходи: рішення «ок/не ок» по кожному.
+## 10. Milestones
 
-Результати M0 (2026-11-03):
-- ✅ Каталог: 70 561 рядок (`name.arch`), 1.7–2.2 с без root на теплому кеші. Статуси через
-  `filter_upgradable/extras/unneeded/userinstalled` libdnf5 — без власного порівняння EVR.
-- ✅ Qt: власна `QAbstractTableModel` на 70k рядків, ~17 мс на сторінку скролу (offscreen),
-  фільтр за підрядком імені — ~5 мс.
-- ✅ libdnf5 у одному потоці (`ThreadPoolExecutor(max_workers=1)`), результати в GUI через Qt-сигнал.
-- ✅ `Goal.resolve()` без root (fish → + ncurses-term).
-- ✅ Helper: протокол JSON-lines, валідація специфікацій, події завантаження зі стрімом прогресу.
-- ⚠️ Пастка SWIG: Python-обʼєкт callback-а треба тримати в змінній, інакше його збирає GC
-  і libdnf5 падає з `std::terminate`. Виняток, що вилетів із callback-а, теж валить процес →
-  усі callback-и загорнуті в `_guarded`. `add_new_download` має повертати `int`.
-- ✅ Реальний запуск через `pkexec` (uid 0) + `Transaction.test()`: resolve → download → rpm test OK.
-  У режимі test rpm-callback-и (`install_*`, `script_*`) не викликались; на справжній транзакції
-  (контейнер, M3) — приходять.
+**M0 — spike.** Confirm: libdnf5 on a worker thread + a PySide6 model with 70k rows (smooth scrolling),
+`Goal.resolve()` without root, the helper running a transaction through pkexec with streamed progress.
 
-**M1 — read-only браузер.** Головне вікно, таблиця з усіма колонками, статуси й
-походження, ліва панель Статус/Походження, вкладки Опис/Загальне/Залежності/Версії,
-статус-бар. Нічого не змінює систему — вже корисно.
+M0 results (2026-11-03):
+- ✅ Catalog: 70,561 rows (`name.arch`), 1.7–2.2 s without root on a warm cache. Statuses come from
+  libdnf5's `filter_upgradable/extras/unneeded/userinstalled`, no hand-written EVR comparison.
+- ✅ Qt: a custom `QAbstractTableModel` over 70k rows, ~17 ms per page scrolled (offscreen); name
+  substring filter ~5 ms.
+- ✅ libdnf5 on one thread (`ThreadPoolExecutor(max_workers=1)`), results delivered via a Qt signal.
+- ✅ `Goal.resolve()` without root (fish → + ncurses-term).
+- ✅ Helper: JSON-lines protocol, spec validation, streamed download events.
+- ⚠️ SWIG trap: the Python callback object must be kept referenced, otherwise it is garbage collected and
+  libdnf5 aborts with `std::terminate`. An exception escaping a callback also kills the process → every
+  callback is wrapped in `_guarded`. `add_new_download` must return an `int`.
+- ✅ Real run through `pkexec` (uid 0) + `Transaction.test()`: resolve → download → rpm test OK.
+  In test mode the rpm callbacks (`install_*`, `script_*`) are not called; in a real transaction
+  (container, M3) they are.
 
-Стан M1 (2026-11-03): ✅ меню/тулбар/ліва панель (Статус, Походження з розбивкою по COPR і
-сторонніх репо), сортування за будь-якою колонкою, вкладки Опис/Загальне/Залежності (+ «від нього
-залежать», клікабельні — перехід до пакунка-постачальника, Alt+← назад)/Файли/Версії (усі встановлені
-й доступні)/Changelog, вік метаданих у статус-барі, збереження вікна/колонок/фільтра в
-`~/.config/kram/kram.conf`. Невстановлені `-debuginfo`/`-debugsource` приховано.
-Сортування версій поки рядкове (не EVR) — виправити разом із M2.
+**M1 — read-only browser.** Main window, all table columns, statuses and origins, Status/Origin sidebar,
+Description/General/Dependencies/Versions tabs, status bar.
 
-**M2 — пошук.** Індекс, режими, ранжування, історія пошуку в лівій панелі, бенчмарк.
+M1 (2026-11-03): ✅ menus/toolbar/sidebar (Status; Origin broken down per COPR project and third-party
+repo), sorting by any column, detail tabs incl. "required by" and clickable dependencies (jump to the
+providing package, Alt+← back), all installed/available versions, changelog, metadata age, window /
+columns / filter saved in `~/.config/kram/kram.conf`. Uninstalled `-debuginfo`/`-debugsource` hidden.
 
-Стан M2 (2026-11-03): ✅ пошук із ранжуванням (точна назва → префікс → підрядок → summary → опис;
-далі встановлені, коротші, за абеткою), AND по словах, `^`/`$`/`*`/`?`, режими Назва / Назва + опис /
-Повний опис (описи вантажаться разом із каталогом, +0.1 с) / Provides / Файл (через libdnf5 у фоні,
-застарілі результати відкидаються). Клік по колонці сортує результати, новий запит повертає ранжування,
-порожній — колонкове сортування користувача. Історія пошуку в лівій панелі (Enter або 1.5 с без змін,
-до 30 записів, зберігається). Версії сортуються за правилами rpm. Час: 20–45 мс типовий запит,
-~130 мс однобуквений (69k результатів; debounce 150 мс). Glob-fallback для Provides — лише від 3 символів
-(запит libdnf5 не скасовується).
+**M2 — search.** Index, modes, ranking, search history in the sidebar, benchmark.
 
-**M3 — транзакції.** MarkSet, контекстне меню дій, «Позначити всі оновлення»,
-діалог превʼю з залежностями, helper, прогрес, перечитування після. Refresh метаданих.
-Позначити як встановлений вручну/залежність. Обробка GPG-ключів.
+M2 (2026-11-03): ✅ ranked search (exact → prefix → substring → summary → description; then installed,
+shorter, alphabetical), AND terms, `^`/`$`/`*`/`?`, modes Name / Name + summary / Description
+(descriptions load with the catalog, +0.1 s) / Provides / File (libdnf5 on the worker thread, stale
+results dropped). Header click sorts results, a new query ranks again, an empty one restores the user's
+column sort. Search history in the sidebar (Enter or 1.5 s idle, up to 30, persisted). Version columns
+use RPM ordering. Timing: 20–45 ms typical query, ~130 ms for one letter (69k results; 150 ms debounce).
+The Provides `*word*` fallback needs ≥ 3 characters (a libdnf5 query cannot be cancelled).
 
-Стан M3 (2026-11-03): ✅ позначки (встановити/оновити/перевстановити/понизити до версії/видалити/
-причина вручну↔залежність), клік по S — меню дій, подвійний клік — встановити/оновити/зняти,
-«Позначити всі оновлення», фільтр «Позначені», лічильники в статус-барі. «Застосувати» → розрахунок
-без root тим самим `build_goal`, що й у helper → діалог змін (групи, залежності, розміри, попередження
-про критичні пакунки, еквівалентна команда, «лише завантажити») → helper через pkexec (живе всю
-сесію, пароль один раз) → прогрес завантаження/rpm/скриптів, лог, імпорт GPG-ключа з підтвердженням.
-«Перечитати» тепер оновлює метадані через helper; «Перечитати з кешу» — без root.
-Перевірено справжніми транзакціями від root у контейнері Fedora 44: `scripts/container_check.sh`
-(встановлення з імпортом ключа, зміна причини, перевстановлення, видалення з непотрібними
-залежностями, нерозв'язна вимога, лише завантаження, refresh).
+**M3 — transactions.** MarkSet, action menu, Mark All Upgrades, preview with dependencies, helper,
+progress, reload afterwards, metadata refresh, install reason, OpenPGP keys.
 
-**M4 — репозиторії і COPR.** Діалоги з §7.
+M3 (2026-11-03): ✅ marks (install / upgrade / reinstall / downgrade to a version / remove / install
+reason), status-box action menu, double click, Mark All Upgrades, "Marked" filter, status bar counts.
+Apply → unprivileged resolve with the helper's own `build_goal` → changes dialog (groups, dependencies,
+sizes, essential-package warning, equivalent command, download only) → helper through pkexec (lives for
+the session, one password) → download / rpm / scriptlet progress, log, key import confirmation.
+"Reload" refreshes metadata through the helper; "Reload from cache" needs no root.
+Verified with real root transactions in a Fedora 44 container: `scripts/container_check.sh` (install with
+key import, reason change, reinstall, removal with unneeded dependencies, unsatisfiable request,
+download only, refresh).
 
-**M5 — шліфування і пакування.** Групи comps у лівій панелі, вкладка Файли/Changelog,
-збереження стану вікна/колонок, зберегти/завантажити позначки у файл,
-RPM spec, .desktop, polkit-policy, власний COPR, README зі скрінами.
+**i18n (2026-11-03)**: ✅ all strings English + gettext, Ukrainian catalog complete (§9).
 
-**Після MVP**: історія транзакцій + undo (`dnf5 history`), versionlock (🔒),
-власні фільтри, локальні .rpm, вибір між helper-ом і dnf5daemon, системні оновлення
-офлайн (`dnf5 offline`), підтримка dnf-automatic налаштувань.
+**M4 — repositories and COPR.** The dialogs from §7.
 
-## 10. Ризики
+**M5 — polish and packaging.** comps groups in the sidebar, save/load marks to a file, RPM spec, .desktop,
+metainfo, polkit policy, our own COPR, README with screenshots.
 
-| Ризик | Що робимо |
+**After the MVP**: transaction history + undo (`dnf5 history`), versionlock (🔒), custom filters, local
+.rpm files, helper vs. dnf5daemon, offline system upgrades (`dnf5 offline`), dnf-automatic settings,
+in-app language override.
+
+## 11. Risks
+
+| Risk | Mitigation |
 |---|---|
-| SWIG-бінди libdnf5 ламкі (segfault, витоки, обʼєкти, що живуть довше за `Base`) | вся libdnf5 — в одному потоці; у GUI лише копії даних; M0 перевіряє |
-| Кеш метаданих застарів (GUI читає системний кеш без root) | показуємо вік кешу в статус-барі; «Перечитати» робить refresh через helper |
-| Різниця резолву GUI vs helper | helper звіряє план; при розбіжності — повтор превʼю |
-| Changelog/filelists не завантажуються dnf5 за замовчуванням | вкладки показують «недоступно», опція в налаштуваннях вмикає `optional_metadata_types` |
-| Модульність/protected packages/обмеження dnf5 | показуємо помилки резолву текстом libdnf5 дослівно, без «спрощень» |
-| 100k рядків у Qt | власна `QAbstractTableModel` над масивом, без `QStandardItemModel`; фільтрація повертає список індексів |
+| libdnf5 SWIG bindings are fragile (segfaults, leaks, objects outliving `Base`) | all of libdnf5 on one thread; the GUI only holds copies; callbacks kept referenced and guarded |
+| Stale metadata cache (the GUI reads the system cache without root) | metadata age in the status bar; "Reload" refreshes through the helper |
+| GUI and helper resolving differently (repos changed in between) | one shared goal builder; the helper resolves again and shows its own result in the log |
+| Changelog/filelists are not downloaded by dnf5 by default | tabs say so; a setting could enable `optional_metadata_types` |
+| Modularity / protected packages / dnf5 limits | resolver errors are shown verbatim, no "simplification" |
+| 100k rows in Qt | a custom `QAbstractTableModel` over an index list, no `QStandardItemModel` |
 
-## 11. Відкриті питання
+## 12. Open questions
 
-1. ~~Назва проєкту~~ — **Kram** (крам: товар, усе своє господарство). Репозиторій: https://github.com/elmodos/kram, app ID `io.github.elmodos.Kram` (`kram/__init__.py`).
-2. Чи потрібні KDE-специфічні інтеграції (KNotification про оновлення в треї) — поза MVP?
-3. Чи показувати debuginfo/source пакунки взагалі (за замовчуванням — ні).
+1. ~~Project name~~ — **Kram** (Ukrainian *крам*: goods, one's household stuff). Repository
+   https://github.com/elmodos/kram, app ID `io.github.elmodos.Kram` (`kram/__init__.py`).
+2. KDE-specific integration (KNotification about updates in the tray) — outside the MVP?
+3. Should debuginfo/source packages be shown at all (default: no).
+
+The mockups in `docs/mockups/` show the Ukrainian locale; `docs/mockups/mockup.py` is a throwaway
+script that rendered them before the real UI existed.
