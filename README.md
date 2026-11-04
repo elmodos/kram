@@ -37,6 +37,7 @@ Built on libdnf5 (the same library as `dnf5`) and Qt 6. See [docs/PLAN.md](docs/
 - Description, dependencies (clickable), files, all versions and the changelog of every package.
 - Enable and disable repositories; enable, disable and remove COPR projects, search Copr.
 - One password per session (polkit); browsing and searching need none.
+- In 12 languages ([Translations](#translations)).
 
 ## Installing
 
@@ -98,7 +99,14 @@ scripts/rpm_check.sh       # build the RPM like COPR does, install it and check 
 
 ## Translations
 
-User-visible strings are English in the code and translated with gettext:
+Kram is available in English, Czech, French, German, Italian, Japanese, Korean, Polish, Portuguese (Brazil),
+Simplified Chinese, Spanish and Ukrainian. The language follows the desktop's language setting.
+
+Only the Ukrainian translation has been checked by a native speaker; the others are a first pass that needs
+review. If something reads oddly in your language, please fix it in `po/<lang>.po` and open a pull request,
+or just open an issue quoting the string and a better wording. New languages are welcome too.
+
+For developers: user-visible strings are English in the code and translated with gettext:
 
 ```python
 from kram.i18n import _, ngettext, pgettext, N_
@@ -111,11 +119,13 @@ pgettext("package status", "Installed")                   # same English word, d
 Use named `{placeholders}` with `.format()`, never f-strings inside `_()`.
 
 - Update the template and all catalogs after changing strings: `scripts/i18n.sh update`
-- Start a new language: `scripts/i18n.sh new de`, then translate `po/de.po`
+- Start a new language: `scripts/i18n.sh new <lang>` (e.g. `nl`, `zh_TW`), then translate `po/<lang>.po`;
+  also add the language to `data/` (`.desktop` `GenericName`/`Comment`/`Keywords`, the metainfo `summary`
+  and the polkit `description`/`message`)
 - Validate: `scripts/i18n.sh check` (the test suite also checks that the template is current, catalogs
   are complete, and placeholders match)
 
-The language follows the environment, e.g. `LANGUAGE=uk python3 -m kram`.
+To try a language without changing the desktop: `LANGUAGE=de python3 -m kram`.
 
 ## License
 
