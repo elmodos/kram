@@ -1,5 +1,5 @@
 %global appid io.github.elmodos.Kram
-%global base_version 0.1.4
+%global base_version 0.1.5
 
 Name:           kram
 # A tagged release (v%%{base_version}) is plain %%{base_version}. Any other commit gets a snapshot from
@@ -83,6 +83,10 @@ QT_QPA_PLATFORM=offscreen %pytest
 %{_datadir}/icons/hicolor/scalable/apps/%{appid}.svg
 
 %changelog
+* Wed Nov 04 2026 Modo Ltunzher <offnormal@gmail.com> - 0.1.5-1
+- Load the package catalog even when an enabled repository has no metadata ("Failed to set up metadata
+  download"); such repositories are listed in the status bar (GitHub issue #1)
+
 * Wed Nov 04 2026 Modo Ltunzher <offnormal@gmail.com> - 0.1.4-1
 - Translations: Czech, French, German, Italian, Japanese, Korean, Polish, Portuguese (Brazil),
   Simplified Chinese, Spanish (first pass, review welcome)
