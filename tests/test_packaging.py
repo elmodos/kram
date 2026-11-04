@@ -33,3 +33,11 @@ def test_app_id_and_helper_path():
     assert exec_path == kram.INSTALLED_HELPER
     assert "%{_libexecdir}/kram-helper" in (ROOT / "packaging/kram.spec").read_text()
     assert kram.INSTALLED_HELPER == "/usr/libexec/kram-helper"
+
+
+def test_readme_lists_every_translation():
+    readme = (ROOT / "README.md").read_text()
+    codes = sorted(p.stem for p in (ROOT / "po").glob("*.po"))
+    assert f"translations-{len(codes) + 1}%20languages" in readme  # + English
+    listed = sorted(re.findall(r"^\| [^|]+ \| [^|]+ \| `([a-zA-Z_]+)` \|", readme, re.MULTILINE))
+    assert listed == codes

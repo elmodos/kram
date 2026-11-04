@@ -7,6 +7,7 @@
 [![Fedora 43 | 44 | 45 | Rawhide](https://img.shields.io/badge/Fedora-43%20%7C%2044%20%7C%2045%20%7C%20Rawhide-294172?logo=fedora&logoColor=white)](https://copr.fedorainfracloud.org/coprs/elmodos/Kram/)
 [![Latest release](https://img.shields.io/github/v/tag/elmodos/kram?label=release&sort=semver)](https://github.com/elmodos/kram/tags)
 [![License: GPL-3.0-or-later](https://img.shields.io/github/license/elmodos/kram)](LICENSE)
+[![Translations: 12 languages](https://img.shields.io/badge/translations-12%20languages-2ea44f)](#translations)
 
 A Synaptic-style package manager for Fedora: the full package list, checkboxes, statuses and origins,
 search that works, and nothing happens until you press **Apply**.
@@ -99,12 +100,26 @@ scripts/rpm_check.sh       # build the RPM like COPR does, install it and check 
 
 ## Translations
 
-Kram is available in English, Czech, French, German, Italian, Japanese, Korean, Polish, Portuguese (Brazil),
-Simplified Chinese, Spanish and Ukrainian. The language follows the desktop's language setting.
+Kram follows the desktop's language setting.
 
-Only the Ukrainian translation has been checked by a native speaker; the others are a first pass that needs
-review. If something reads oddly in your language, please fix it in `po/<lang>.po` and open a pull request,
-or just open an issue quoting the string and a better wording. New languages are welcome too.
+| Language | | Code | Status |
+|---|---|---|---|
+| Čeština | Czech | `cs` | needs review |
+| Deutsch | German | `de` | needs review |
+| English | English | — | source |
+| Español | Spanish | `es` | needs review |
+| Français | French | `fr` | needs review |
+| Italiano | Italian | `it` | needs review |
+| 日本語 | Japanese | `ja` | needs review |
+| 한국어 | Korean | `ko` | needs review |
+| Polski | Polish | `pl` | needs review |
+| Português (Brasil) | Portuguese (Brazil) | `pt_BR` | needs review |
+| Українська | Ukrainian | `uk` | reviewed |
+| 简体中文 | Chinese (Simplified) | `zh_CN` | needs review |
+
+"Needs review" means a complete first pass not yet checked by a native speaker. If something reads oddly in
+your language, please fix it in `po/<code>.po` and open a pull request, or just open an issue quoting the
+string and a better wording. New languages are welcome too.
 
 For developers: user-visible strings are English in the code and translated with gettext:
 
