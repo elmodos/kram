@@ -1,9 +1,9 @@
 """Left panel: one filter list whose content is chosen by the buttons below it, as in Synaptic."""
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import QPoint, Qt, Signal
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QButtonGroup, QListWidget, QListWidgetItem, QPushButton, QVBoxLayout, QWidget
 
-from ..core.filters import FilterEntry, group_filters, origin_filters, status_filters
+from ..core.filters import FilterEntry, custom_filter_entries, group_filters, origin_filters, status_filters
 from ..core.model import CatalogSnapshot
 from ..core.search import MODE_LABELS, Mode
 from ..i18n import _
@@ -11,18 +11,20 @@ from .icons import origin_icon, status_icon
 
 MAX_HISTORY = 30
 
-# (id, label, builder or None if not implemented yet); "search" is built from the sidebar's own history
+# (id, label, builder); "search" and "custom" are built from the sidebar's own history / custom filters
 VIEWS = [
     ("status", _("Status"), status_filters),
     ("origin", _("Origin"), origin_filters),
     ("groups", _("Groups"), group_filters),
     ("search", _("Search results"), "history"),
-    ("custom", _("Custom filters"), None),
+    ("custom", _("Custom filters"), "custom"),
 ]
 
 
 class Sidebar(QWidget):
     filterChanged = Signal(object)  # FilterEntry
+    contextMenuRequested = Signal(QPoint, object)  # global position, FilterEntry under the cursor or None
+    entryActivated = Signal(object)  # FilterEntry, on double click
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -32,21 +34,24 @@ class Sidebar(QWidget):
         self._selected: dict[str, str] = {}  # view -> selected entry id
         self.history: list[tuple[str, int, int]] = []  # (text, mode, result count), newest first
         self.marked = None  # container of marked keys, for the "Marked" status entry
+        self.custom: list = []  # kram.core.custom_filters.CustomFilter, in sidebar order
 
         lay = QVBoxLayout(self)
         lay.setContentsMargins(0, 0, 0, 0)
         self.list = QListWidget()
         self.list.currentRowChanged.connect(self._on_row)
+        self.list.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.list.customContextMenuRequested.connect(
+            lambda pos: self.contextMenuRequested.emit(self.list.viewport().mapToGlobal(pos), self._entry_at(pos)))
+        self.list.itemDoubleClicked.connect(
+            lambda item: (e := self._entry_at(self.list.visualItemRect(item).center())) and self.entryActivated.emit(e))
         lay.addWidget(self.list, 1)
 
         self._buttons = QButtonGroup(self)
-        for view_id, label, builder in VIEWS:
+        for view_id, label, _builder in VIEWS:
             btn = QPushButton(label)
             btn.setCheckable(True)
             btn.setChecked(view_id == self._view)
-            btn.setEnabled(builder is not None)
-            if builder is None:
-                btn.setToolTip(_("Coming in a later version"))
             btn.clicked.connect(lambda _checked, v=view_id: self.set_view(v))
             self._buttons.addButton(btn)
             lay.addWidget(btn)
@@ -97,6 +102,8 @@ class Sidebar(QWidget):
         builder = next(b for vid, _l, b in VIEWS if vid == self._view)
         if builder == "history":
             self._entries = self._history_entries()
+        elif builder == "custom":
+            self._entries = custom_filter_entries(self._snap, self.custom)
         elif builder is status_filters:
             self._entries = status_filters(self._snap, self.marked)
         else:
@@ -121,13 +128,18 @@ class Sidebar(QWidget):
             if e.id == want:
                 current = i
         if not self._entries:
-            placeholder = QListWidgetItem(_("Search history is empty"))
+            placeholder = QListWidgetItem(_("Search history is empty") if self._view == "search" else
+                                          _("No custom filters yet.\nRight-click to create one."))
             placeholder.setFlags(Qt.NoItemFlags)
             self.list.addItem(placeholder)
         self.list.setCurrentRow(current)
         self.list.blockSignals(False)
         if emit:
             self._on_row(current)
+
+    def _entry_at(self, pos) -> FilterEntry | None:
+        row = self.list.indexAt(pos).row()
+        return self._entries[row] if 0 <= row < len(self._entries) else None
 
     def _on_row(self, row: int) -> None:
         if 0 <= row < len(self._entries):

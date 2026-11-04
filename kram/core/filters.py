@@ -93,3 +93,8 @@ def group_filters(snap: CatalogSnapshot) -> list[FilterEntry]:
                             status=Status.INSTALLED if g.installed else Status.NOT_INSTALLED)
                 for g in snap.groups]
     return _with_counts(entries, snap.rows)
+
+
+def custom_filter_entries(snap: CatalogSnapshot, filters: list) -> list[FilterEntry]:
+    """Entries for the user's custom filters (kram.core.custom_filters.CustomFilter), in their order."""
+    return _with_counts([FilterEntry(f"custom:{f.name}", f.name, f.compile(snap)) for f in filters], snap.rows)

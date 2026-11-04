@@ -23,6 +23,7 @@ from PySide6.QtWidgets import (
 
 from .. import HOMEPAGE, __version__
 from ..core.catalog import Catalog
+from ..core.custom_filters import CustomFilter, Field, conditions_for_view, load_filters
 from ..core.evr import evr_cmp
 from ..core.filters import FilterEntry
 from ..core.marks import Action, allowed_actions, dump_marks, parse_marks
@@ -34,6 +35,7 @@ from .apply_dialog import ApplyDialog
 from .copr_dialog import CoprDialog
 from .details import DetailsTabs
 from .dnf_thread import DnfThread
+from .filters_dialog import FiltersDialog
 from .package_model import COL_NAME, COL_STATUS, PackageTableModel
 from .progress_dialog import ProgressDialog
 from .repos_dialog import ReposDialog
@@ -131,6 +133,11 @@ class MainWindow(QMainWindow):
                                            lambda: self.details.setCurrentIndex(1))
         self.act_repos = self._action(_("Repositories"), "configure", slot=self.open_repos,
                                       tip=_("Enable or disable software repositories"))
+        self.act_filters = self._action(_("Custom Filters…"), "view-filter", slot=lambda: self.edit_filters(),
+                                        tip=_("Create and edit your own filters for the sidebar"))
+        self.act_new_filter = self._action(_("New Filter from Current View…"), "list-add",
+                                           slot=self.new_filter_from_view,
+                                           tip=_("A custom filter with the current sidebar selection and search"))
         self.act_copr = self._action(_("COPR"), "folder-cloud", slot=self.open_copr,
                                      tip=_("Manage COPR projects: community repositories"))
         self.act_find = self._action(_("Find"), "edit-find", QKeySequence.Find,
@@ -224,6 +231,8 @@ class MainWindow(QMainWindow):
         m = mb.addMenu(_("&Settings"))
         m.addActions([self.act_repos, self.act_copr])
         m.addSeparator()
+        m.addActions([self.act_filters, self.act_new_filter])
+        m.addSeparator()
         m.addMenu(_("Toolbar")).addActions(self.toolbar_styles.actions())
         m = mb.addMenu(_("&Help"))
         m.addAction(self.act_about)
@@ -270,6 +279,9 @@ class MainWindow(QMainWindow):
     def _build_central(self):
         self.sidebar = Sidebar()
         self.sidebar.filterChanged.connect(self._on_filter)
+        self.sidebar.contextMenuRequested.connect(self._sidebar_menu)
+        self.sidebar.entryActivated.connect(
+            lambda e: e.id.startswith("custom:") and self.edit_filters(select=e.id.removeprefix("custom:")))
 
         self.model = PackageTableModel(self)
         self.sidebar.marked = self.model.marks
@@ -325,6 +337,10 @@ class MainWindow(QMainWindow):
             self.sidebar.history = [tuple(h) for h in json.loads(s.value("search/history", "[]"))]
         except (TypeError, ValueError):
             self.sidebar.history = []
+        try:
+            self.sidebar.custom = load_filters(json.loads(s.value("filters/custom", "[]")))
+        except (TypeError, ValueError):
+            self.sidebar.custom = []
         self._restore_filter = (s.value("sidebar/view", "status"), s.value("sidebar/entry", "status:all"))
 
     def _save_settings(self):
@@ -563,6 +579,59 @@ class MainWindow(QMainWindow):
         m.addSeparator()
         m.addAction(self.act_properties)
         m.exec(self.table.viewport().mapToGlobal(pos))
+
+    # ---------------------------------------------------------- custom filters
+
+    def _save_custom_filters(self) -> None:
+        QSettings().setValue("filters/custom", json.dumps([f.to_dict() for f in self.sidebar.custom],
+                                                          ensure_ascii=False))
+
+    def edit_filters(self, select: str | None = None, new: CustomFilter | None = None) -> None:
+        d = FiltersDialog(self.sidebar.custom, self.snapshot, self, select=select, new=new)
+        if not d.exec():
+            return
+        self.sidebar.custom = d.filters()
+        self._save_custom_filters()
+        name = d.current_name()
+        if name is not None:
+            self.sidebar.select("custom", f"custom:{name}")
+        elif self.sidebar.current_view == "custom":
+            self.sidebar.set_view("custom")
+
+    def new_filter_from_view(self) -> None:
+        entry_id = self.sidebar.current_entry_id or ""
+        text = self.search.text().strip()
+        mode = Mode(self.search_mode.currentIndex())
+        search_field = {Mode.NAME: Field.NAME, Mode.NAME_SUMMARY: Field.NAME_SUMMARY,
+                        Mode.DESCRIPTION: Field.DESCRIPTION}.get(mode)
+        conditions = conditions_for_view(entry_id, text, search_field)
+        if entry_id.startswith("custom:"):
+            base = next((f for f in self.sidebar.custom if f"custom:{f.name}" == entry_id), None)
+            if base is not None:
+                conditions = list(base.conditions) + conditions
+        # named after what it reproduces: "Upgradable", "COPR “term”", …; "All" adds nothing to the name
+        from_view = bool(conditions_for_view(entry_id, "", None)) or entry_id.startswith("custom:")
+        parts = [self.filter.label if self.filter and from_view else "", f"“{text}”" if text and search_field else ""]
+        self.edit_filters(new=CustomFilter(" ".join(p for p in parts if p) or _("New filter"), conditions))
+
+    def delete_filter(self, name: str) -> None:
+        if QMessageBox.question(self, _("Custom Filters"), _("Delete the filter “{name}”?").format(name=name)) \
+                != QMessageBox.Yes:
+            return
+        self.sidebar.custom = [f for f in self.sidebar.custom if f.name != name]
+        self._save_custom_filters()
+        self.sidebar.set_view(self.sidebar.current_view)
+
+    def _sidebar_menu(self, pos, entry: FilterEntry | None) -> None:
+        m = QMenu(self)
+        if entry is not None and entry.id.startswith("custom:"):
+            name = entry.id.removeprefix("custom:")
+            m.addAction(QIcon.fromTheme("document-edit"), _("Edit Filter…"), lambda: self.edit_filters(select=name))
+            m.addAction(QIcon.fromTheme("edit-delete"), _("Delete Filter"), lambda: self.delete_filter(name))
+            m.addSeparator()
+        m.addAction(self.act_new_filter)
+        m.addAction(self.act_filters)
+        m.exec(pos)
 
     def about(self):
         QMessageBox.about(self, _("About Kram"), f"<h3>Kram {__version__}</h3><p>{_('A Synaptic-style package manager for Fedora.')}</p>"

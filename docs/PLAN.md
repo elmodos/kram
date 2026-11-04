@@ -147,7 +147,7 @@ Laid out like Synaptic:
   - *Origin*: Fedora / COPR (each project) / Third-party (each repo) / Local / Unknown.
   - *Groups*: comps groups and environments (Fedora's equivalent of "Sections"; the RPM `Group` tag is dead).
   - *Search results*: query history.
-  - *Custom filters*: after the MVP.
+  - *Custom filters*: user-defined condition lists (2026-11-04).
 - **Table**: clicking the status box opens the action menu, as in Synaptic; double click installs/upgrades
   or unmarks. Multi-selection applies an action to all rows it fits. Marked rows are tinted.
 - **Detail tabs**: Description · General (NEVRA, repos, license, URL, packager, build date, sizes, install
@@ -295,7 +295,13 @@ SRPM and RPM the way COPR does in a container, installs it and checks the layout
 COPR project: https://copr.fedorainfracloud.org/coprs/elmodos/Kram/ (2026-11-04), installed and upgraded
 through Kram itself. README screenshots (`docs/screenshots/`) are real Plasma screenshots.
 
-**After the MVP**: transaction history + undo (`dnf5 history`), versionlock (🔒), custom filters, local
+**Custom filters (2026-11-04)**: ✅ Settings → Custom Filters (or right-click the sidebar): named filters of
+conditions on name, name or summary, description, status, origin, repository, group, install reason,
+architecture and installed size, matching all or any; a live count while editing; "New Filter from Current
+View" turns the sidebar selection plus the search into conditions. Stored as JSON in kram.conf
+(`filters/custom`), compiled to in-memory predicates (`kram/core/custom_filters.py`).
+
+**After the MVP**: transaction history + undo (`dnf5 history`), versionlock (🔒), local
 .rpm files, helper vs. dnf5daemon, offline system upgrades (`dnf5 offline`), dnf-automatic settings,
 in-app language override.
 
