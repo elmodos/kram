@@ -42,6 +42,8 @@ class ProgressDialog(QDialog):
         self.ok = False
         self.running = True
         self._downloads: dict[int, tuple[float, float]] = {}  # id -> (done, total)
+        self._rpm_count = 0
+        self._last_logged: tuple[str, str] | None = None  # (step, nevra) of the last rpm line in the log
 
         lay = QVBoxLayout(self)
         self.title = QLabel(f"<b>{title}</b>")
@@ -147,14 +149,23 @@ class ProgressDialog(QDialog):
         if step == "prepare":
             self.stage.setText(_("Preparing the rpm transaction…"))
         elif step == "element":
-            self.rpm_bar.setRange(0, max(ev["count"], 1))
-            self.rpm_bar.setValue(ev["index"])
-            self.rpm_label.setText(_("Package {index} of {count}").format(index=ev["index"], count=ev["count"]))
+            # libdnf5 numbers the transaction elements from 0
+            self._rpm_count = ev["count"]
+            self._set_rpm_position(ev["index"] + 1)
         elif step in STEP_TEXT:
             text = _(STEP_TEXT[step]).format(nevra=ev["nevra"], script=ev.get("script", ""))
             self.stage.setText(text)
-            if step != "script" and ev.get("done") == 0:
+            # "start" and the first "progress" of a package both come with done == 0: log it once
+            if step != "script" and ev.get("done") == 0 and self._last_logged != (step, ev["nevra"]):
+                self._last_logged = (step, ev["nevra"])
                 self._append(text)
+
+    def _set_rpm_position(self, position: int) -> None:
+        count = max(self._rpm_count, 1)
+        self.rpm_bar.setRange(0, count)
+        self.rpm_bar.setValue(min(position, count))
+        self.rpm_label.setText(_("Package {index} of {count}").format(index=min(position, count),
+                                                                      count=self._rpm_count))
 
     def _on_question(self, ev: dict) -> None:
         if ev.get("kind") != "gpg_key":
@@ -175,8 +186,11 @@ class ProgressDialog(QDialog):
         if self.ok:
             self.download_bar.setRange(0, 1)
             self.download_bar.setValue(1)
-            self.rpm_bar.setRange(0, 1)
-            self.rpm_bar.setValue(1)
+            if self._rpm_count:
+                self._set_rpm_position(self._rpm_count)
+            else:
+                self.rpm_bar.setRange(0, 1)
+                self.rpm_bar.setValue(1)
             self.stage.setText(f"<b>{_('Done.')}</b>" + (" " + _("Packages downloaded.") if ev.get("download_only") else ""))
             self._append(_("Done."))
             if self.auto_close.isChecked():
