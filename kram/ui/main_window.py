@@ -4,7 +4,7 @@ import time
 from pathlib import Path
 
 from PySide6.QtCore import QSettings, QSize, Qt, QTimer, Signal
-from PySide6.QtGui import QAction, QGuiApplication, QIcon, QKeySequence
+from PySide6.QtGui import QAction, QActionGroup, QGuiApplication, QIcon, QKeySequence
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QComboBox,
@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
     QMainWindow,
     QMenu,
     QMessageBox,
+    QSizePolicy,
     QSplitter,
     QToolBar,
     QTreeView,
@@ -41,6 +42,14 @@ from .sidebar import Sidebar
 COLUMN_WIDTHS = [26, 24, 230, 175, 175, 150, 80]
 HISTORY_IDLE_MS = 1500  # a search left alone this long goes into the history
 NOT_YET = _("Coming in a later version")
+# toolbar styles (Settings → Toolbar, or right-click the toolbar): id, label, button style, icon size
+# (an invalid size means the style's default, which on Plasma follows System Settings)
+TOOLBAR_STYLES = [
+    ("system", _("Follow System Settings"), Qt.ToolButtonFollowStyle, QSize()),
+    ("under", _("Text Under Icons"), Qt.ToolButtonTextUnderIcon, QSize(24, 24)),
+    ("beside", _("Compact: Text Beside Icons"), Qt.ToolButtonTextBesideIcon, QSize(16, 16)),
+    ("icons", _("Icons Only"), Qt.ToolButtonIconOnly, QSize(22, 22)),
+]
 
 
 def _age(seconds: int | None) -> str:
@@ -58,7 +67,7 @@ class MainWindow(QMainWindow):
 
     def __init__(self):
         super().__init__()
-        self.setWindowTitle(_("Kram — package manager"))
+        self.setWindowTitle(_("Package Manager"))  # Qt appends " — Kram" (the application display name)
         self.resize(1320, 860)
 
         self.dnf = DnfThread(self)
@@ -165,6 +174,28 @@ class MainWindow(QMainWindow):
         self.removeAction(self.act_unmark)
         self.act_unmark.setShortcutContext(Qt.WidgetWithChildrenShortcut)
         self.act_mark_upgrades.setEnabled(False)
+        self.toolbar_styles = QActionGroup(self)
+        for style_id, label, _button, _size in TOOLBAR_STYLES:
+            a = self.toolbar_styles.addAction(label)
+            a.setCheckable(True)
+            a.setData(style_id)
+        self.toolbar_styles.triggered.connect(lambda a: self.set_toolbar_style(a.data()))
+
+    def set_toolbar_style(self, style_id: str) -> None:
+        _id, _label, button, size = next((t for t in TOOLBAR_STYLES if t[0] == style_id), TOOLBAR_STYLES[0])
+        self.toolbar.setToolButtonStyle(button)
+        self.toolbar.setIconSize(size)
+        for a in self.toolbar_styles.actions():
+            a.setChecked(a.data() == _id)
+
+    def toolbar_style(self) -> str:
+        return next((a.data() for a in self.toolbar_styles.actions() if a.isChecked()), TOOLBAR_STYLES[0][0])
+
+    def createPopupMenu(self) -> QMenu:
+        # instead of Qt's default "show/hide toolbars" menu: the toolbar can't be hidden, only restyled
+        menu = QMenu(self)
+        menu.addActions(self.toolbar_styles.actions())
+        return menu
 
     def _package_menu(self, menu: QMenu) -> None:
         menu.addActions(list(self.mark_actions.values()))
@@ -192,15 +223,17 @@ class MainWindow(QMainWindow):
         m.addActions([self.act_properties, self.act_back])
         m = mb.addMenu(_("&Settings"))
         m.addActions([self.act_repos, self.act_copr])
+        m.addSeparator()
+        m.addMenu(_("Toolbar")).addActions(self.toolbar_styles.actions())
         m = mb.addMenu(_("&Help"))
         m.addAction(self.act_about)
 
     def _build_toolbar(self):
-        tb = QToolBar(_("Main toolbar"))
+        tb = self.toolbar = QToolBar(_("Main toolbar"))
         tb.setObjectName("main-toolbar")
         tb.setMovable(False)
-        tb.setIconSize(QSize(24, 24))
-        tb.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
+        tb.toggleViewAction().setEnabled(False)  # no way to hide it, so no way to lose it
+        self.set_toolbar_style(TOOLBAR_STYLES[0][0])
         tb.addActions([self.act_reload, self.act_mark_upgrades, self.act_apply])
         tb.addSeparator()
         tb.addActions([self.act_properties, self.act_repos, self.act_copr])
@@ -219,7 +252,10 @@ class MainWindow(QMainWindow):
         self.search = QLineEdit()
         self.search.setPlaceholderText(_("Search (Ctrl+F)"))
         self.search.setClearButtonEnabled(True)
-        self.search.setFixedWidth(300)
+        # shrinks before anything overflows into the toolbar's ">" menu (where Ctrl+F could not reach it)
+        self.search.setMinimumWidth(160)
+        self.search.setMaximumWidth(300)
+        self.search.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.search.addAction(QIcon.fromTheme("edit-find"), QLineEdit.LeadingPosition)
         tb.addWidget(self.search)
         self.addToolBar(tb)
@@ -275,6 +311,7 @@ class MainWindow(QMainWindow):
 
     def _restore_settings(self):
         s = QSettings()
+        self.set_toolbar_style(s.value("toolbar/style", TOOLBAR_STYLES[0][0]))
         if geom := s.value("window/geometry"):
             self.restoreGeometry(geom)
         for key, splitter in (("window/hsplit", self.hsplit), ("window/vsplit", self.vsplit)):
@@ -295,6 +332,7 @@ class MainWindow(QMainWindow):
         if self.model.sort_column is None:  # ranked search results: save the user's column sort instead
             self.table.header().setSortIndicator(*self._user_sort)
         s.setValue("search/history", json.dumps(self.sidebar.history, ensure_ascii=False))
+        s.setValue("toolbar/style", self.toolbar_style())
         s.setValue("window/geometry", self.saveGeometry())
         s.setValue("window/hsplit", self.hsplit.saveState())
         s.setValue("window/vsplit", self.vsplit.saveState())

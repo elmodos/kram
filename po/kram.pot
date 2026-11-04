@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kram\n"
 "Report-Msgid-Bugs-To: https://github.com/elmodos/kram/issues\n"
-"POT-Creation-Date: 2026-11-03 23:02+0200\n"
+"POT-Creation-Date: 2026-11-04 12:10+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -250,7 +250,7 @@ msgstr ""
 msgid "Download packages only"
 msgstr ""
 
-#: kram/ui/apply_dialog.py:110 kram/ui/main_window.py:115
+#: kram/ui/apply_dialog.py:110 kram/ui/main_window.py:124
 msgid "Apply"
 msgstr ""
 
@@ -542,194 +542,214 @@ msgstr ""
 msgid "Unknown origin"
 msgstr ""
 
-#: kram/ui/main_window.py:43 kram/ui/sidebar.py:49
+#: kram/ui/main_window.py:44 kram/ui/sidebar.py:49
 msgid "Coming in a later version"
 msgstr ""
 
 #: kram/ui/main_window.py:48
-msgid "Metadata: unknown age"
+msgid "Follow System Settings"
+msgstr ""
+
+#: kram/ui/main_window.py:49
+msgid "Text Under Icons"
 msgstr ""
 
 #: kram/ui/main_window.py:50
+msgid "Compact: Text Beside Icons"
+msgstr ""
+
+#: kram/ui/main_window.py:51
+msgid "Icons Only"
+msgstr ""
+
+#: kram/ui/main_window.py:57
+msgid "Metadata: unknown age"
+msgstr ""
+
+#: kram/ui/main_window.py:59
 #, python-brace-format
 msgid "Metadata: {minutes} min ago"
 msgstr ""
 
-#: kram/ui/main_window.py:52
+#: kram/ui/main_window.py:61
 #, python-brace-format
 msgid "Metadata: {hours} h {minutes} min ago"
 msgstr ""
 
-#: kram/ui/main_window.py:53
+#: kram/ui/main_window.py:62
 #, python-brace-format
 msgid "Metadata: {days} d ago"
 msgstr ""
 
-#: kram/ui/main_window.py:61
-msgid "Kram — package manager"
-msgstr ""
-
-#: kram/ui/main_window.py:107
-msgid "Reload"
-msgstr ""
-
-#: kram/ui/main_window.py:108
-msgid "Refresh repository metadata and reload the catalog (needs a password)"
-msgstr ""
-
-#: kram/ui/main_window.py:109
-msgid "Reload from cache"
-msgstr ""
-
-#: kram/ui/main_window.py:110
-msgid "Reload the catalog from the local cache, without network or password"
-msgstr ""
-
-#: kram/ui/main_window.py:112
-msgid "Mark All Upgrades"
-msgstr ""
-
-#: kram/ui/main_window.py:114
-msgid "Mark every package that has a newer version for upgrade"
+#: kram/ui/main_window.py:70
+msgid "Package Manager"
 msgstr ""
 
 #: kram/ui/main_window.py:116
-msgid "Review and apply the marked changes"
+msgid "Reload"
+msgstr ""
+
+#: kram/ui/main_window.py:117
+msgid "Refresh repository metadata and reload the catalog (needs a password)"
 msgstr ""
 
 #: kram/ui/main_window.py:118
-msgid "Unmark All"
+msgid "Reload from cache"
 msgstr ""
 
 #: kram/ui/main_window.py:119
-msgid "Discard all marked changes"
+msgid "Reload the catalog from the local cache, without network or password"
 msgstr ""
 
 #: kram/ui/main_window.py:121
-msgid "Properties"
+msgid "Mark All Upgrades"
 msgstr ""
 
-#: kram/ui/main_window.py:123 kram/ui/repos_dialog.py:30
-msgid "Repositories"
-msgstr ""
-
-#: kram/ui/main_window.py:124
-msgid "Enable or disable software repositories"
+#: kram/ui/main_window.py:123
+msgid "Mark every package that has a newer version for upgrade"
 msgstr ""
 
 #: kram/ui/main_window.py:125
-msgid "COPR"
-msgstr ""
-
-#: kram/ui/main_window.py:126
-msgid "Manage COPR projects: community repositories"
+msgid "Review and apply the marked changes"
 msgstr ""
 
 #: kram/ui/main_window.py:127
-msgid "Find"
+msgid "Unmark All"
 msgstr ""
 
-#: kram/ui/main_window.py:129
-msgid "Back"
+#: kram/ui/main_window.py:128
+msgid "Discard all marked changes"
 msgstr ""
 
 #: kram/ui/main_window.py:130
-msgid "Go back to the previous package (after following a dependency)"
+msgid "Properties"
 msgstr ""
 
-#: kram/ui/main_window.py:131
-msgid "Save Markings As…"
+#: kram/ui/main_window.py:132 kram/ui/repos_dialog.py:30
+msgid "Repositories"
 msgstr ""
 
-#: kram/ui/main_window.py:132
-msgid "Save the marked changes to a text file"
+#: kram/ui/main_window.py:133
+msgid "Enable or disable software repositories"
 msgstr ""
 
 #: kram/ui/main_window.py:134
-msgid "Read Markings…"
+msgid "COPR"
 msgstr ""
 
 #: kram/ui/main_window.py:135
-msgid "Mark the changes listed in a saved markings file"
+msgid "Manage COPR projects: community repositories"
 msgstr ""
 
-#: kram/ui/main_window.py:137
-msgid "Quit"
+#: kram/ui/main_window.py:136
+msgid "Find"
 msgstr ""
 
 #: kram/ui/main_window.py:138
-msgid "Copy Name"
+msgid "Back"
 msgstr ""
 
 #: kram/ui/main_window.py:139
+msgid "Go back to the previous package (after following a dependency)"
+msgstr ""
+
+#: kram/ui/main_window.py:140
+msgid "Save Markings As…"
+msgstr ""
+
+#: kram/ui/main_window.py:141
+msgid "Save the marked changes to a text file"
+msgstr ""
+
+#: kram/ui/main_window.py:143
+msgid "Read Markings…"
+msgstr ""
+
+#: kram/ui/main_window.py:144
+msgid "Mark the changes listed in a saved markings file"
+msgstr ""
+
+#: kram/ui/main_window.py:146
+msgid "Quit"
+msgstr ""
+
+#: kram/ui/main_window.py:147
+msgid "Copy Name"
+msgstr ""
+
+#: kram/ui/main_window.py:148
 msgid "Copy name-version-release.arch"
 msgstr ""
 
-#: kram/ui/main_window.py:145 kram/ui/main_window.py:530
+#: kram/ui/main_window.py:154 kram/ui/main_window.py:568
 msgid "About Kram"
 msgstr ""
 
-#: kram/ui/main_window.py:149
+#: kram/ui/main_window.py:158
 msgid "Mark for Installation"
 msgstr ""
 
-#: kram/ui/main_window.py:150
+#: kram/ui/main_window.py:159
 msgid "Mark for Upgrade"
 msgstr ""
 
-#: kram/ui/main_window.py:151
+#: kram/ui/main_window.py:160
 msgid "Mark for Reinstallation"
 msgstr ""
 
-#: kram/ui/main_window.py:152
+#: kram/ui/main_window.py:161
 msgid "Mark for Removal"
 msgstr ""
 
-#: kram/ui/main_window.py:153
+#: kram/ui/main_window.py:162
 msgid "Mark as Installed by User"
 msgstr ""
 
-#: kram/ui/main_window.py:154
+#: kram/ui/main_window.py:163
 msgid "Mark as Dependency"
 msgstr ""
 
-#: kram/ui/main_window.py:160
+#: kram/ui/main_window.py:169
 msgid "Downgrade to Version"
 msgstr ""
 
-#: kram/ui/main_window.py:163
+#: kram/ui/main_window.py:172
 msgid "Unmark"
 msgstr ""
 
-#: kram/ui/main_window.py:164
+#: kram/ui/main_window.py:173
 msgid "Unmark the selected packages"
 msgstr ""
 
-#: kram/ui/main_window.py:177
+#: kram/ui/main_window.py:208
 msgid "&File"
 msgstr ""
 
-#: kram/ui/main_window.py:183
+#: kram/ui/main_window.py:214
 msgid "&Edit"
 msgstr ""
 
-#: kram/ui/main_window.py:189
+#: kram/ui/main_window.py:220
 msgid "&Package"
 msgstr ""
 
-#: kram/ui/main_window.py:193
+#: kram/ui/main_window.py:224
 msgid "&Settings"
 msgstr ""
 
-#: kram/ui/main_window.py:195
+#: kram/ui/main_window.py:227
+msgid "Toolbar"
+msgstr ""
+
+#: kram/ui/main_window.py:228
 msgid "&Help"
 msgstr ""
 
-#: kram/ui/main_window.py:199
+#: kram/ui/main_window.py:232
 msgid "Main toolbar"
 msgstr ""
 
-#: kram/ui/main_window.py:213
+#: kram/ui/main_window.py:246
 msgid ""
 "Name / Name + summary / Description: instant ranked search.\n"
 "Provides: packages providing a capability (libvulkan.so.1, "
@@ -740,27 +760,27 @@ msgid ""
 "Several words: all must match. ^start, end$, * and ? are wildcards."
 msgstr ""
 
-#: kram/ui/main_window.py:220
+#: kram/ui/main_window.py:253
 msgid "Search (Ctrl+F)"
 msgstr ""
 
-#: kram/ui/main_window.py:313
+#: kram/ui/main_window.py:351
 #, python-brace-format
 msgid "{n} marked change has not been applied. Quit anyway?"
 msgid_plural "{n} marked changes have not been applied. Quit anyway?"
 msgstr[0] ""
 msgstr[1] ""
 
-#: kram/ui/main_window.py:327
+#: kram/ui/main_window.py:365
 msgid "Loading metadata…"
 msgstr ""
 
-#: kram/ui/main_window.py:350
+#: kram/ui/main_window.py:388
 #, python-brace-format
 msgid "Error: {error}"
 msgstr ""
 
-#: kram/ui/main_window.py:351
+#: kram/ui/main_window.py:389
 #, python-brace-format
 msgid ""
 "Could not load the package catalog:\n"
@@ -768,63 +788,63 @@ msgid ""
 "{error}"
 msgstr ""
 
-#: kram/ui/main_window.py:389
+#: kram/ui/main_window.py:427
 #, python-brace-format
 msgid "Searching “{text}” ({mode})…"
 msgstr ""
 
-#: kram/ui/main_window.py:443
+#: kram/ui/main_window.py:481
 #, python-brace-format
 msgid "{n} upgrade"
 msgid_plural "{n} upgrades"
 msgstr[0] ""
 msgstr[1] ""
 
-#: kram/ui/main_window.py:445
+#: kram/ui/main_window.py:483
 #, python-brace-format
 msgid "{shown} listed, {installed} installed, {upgrades}."
 msgstr ""
 
-#: kram/ui/main_window.py:447
+#: kram/ui/main_window.py:485
 #, python-brace-format
 msgid "{install} to install/upgrade, {remove} to remove."
 msgstr ""
 
-#: kram/ui/main_window.py:450
+#: kram/ui/main_window.py:488
 #, python-brace-format
 msgid "Catalog: {load:.2f} s, filter and search: {ms:.0f} ms"
 msgstr ""
 
-#: kram/ui/main_window.py:487
+#: kram/ui/main_window.py:525
 #, python-brace-format
 msgid "Nothing provides “{what}”"
 msgstr ""
 
-#: kram/ui/main_window.py:500
+#: kram/ui/main_window.py:538
 #, python-brace-format
 msgid "Package {name} not found in the catalog"
 msgstr ""
 
-#: kram/ui/main_window.py:530
+#: kram/ui/main_window.py:568
 msgid "A Synaptic-style package manager for Fedora."
 msgstr ""
 
-#: kram/ui/main_window.py:579
+#: kram/ui/main_window.py:617
 #, python-brace-format
 msgid "{n} package marked for upgrade"
 msgid_plural "{n} packages marked for upgrade"
 msgstr[0] ""
 msgstr[1] ""
 
-#: kram/ui/main_window.py:585 kram/ui/main_window.py:593
+#: kram/ui/main_window.py:623 kram/ui/main_window.py:631
 msgid "Save Markings"
 msgstr ""
 
-#: kram/ui/main_window.py:587 kram/ui/main_window.py:603
+#: kram/ui/main_window.py:625 kram/ui/main_window.py:641
 msgid "Text files (*.txt);;All files (*)"
 msgstr ""
 
-#: kram/ui/main_window.py:593
+#: kram/ui/main_window.py:631
 #, python-brace-format
 msgid ""
 "Could not save {path}:\n"
@@ -832,19 +852,19 @@ msgid ""
 "{error}"
 msgstr ""
 
-#: kram/ui/main_window.py:598
+#: kram/ui/main_window.py:636
 #, python-brace-format
 msgid "{n} marking saved to {path}"
 msgid_plural "{n} markings saved to {path}"
 msgstr[0] ""
 msgstr[1] ""
 
-#: kram/ui/main_window.py:602 kram/ui/main_window.py:612
-#: kram/ui/main_window.py:634
+#: kram/ui/main_window.py:640 kram/ui/main_window.py:650
+#: kram/ui/main_window.py:672
 msgid "Read Markings"
 msgstr ""
 
-#: kram/ui/main_window.py:612
+#: kram/ui/main_window.py:650
 #, python-brace-format
 msgid ""
 "Could not read {path}:\n"
@@ -852,14 +872,14 @@ msgid ""
 "{error}"
 msgstr ""
 
-#: kram/ui/main_window.py:622
+#: kram/ui/main_window.py:660
 #, python-brace-format
 msgid "{n} package marked"
 msgid_plural "{n} packages marked"
 msgstr[0] ""
 msgstr[1] ""
 
-#: kram/ui/main_window.py:627
+#: kram/ui/main_window.py:665
 #, python-brace-format
 msgid ""
 "{n} marking no longer applies (package not found, already in that state, …):"
@@ -868,33 +888,33 @@ msgid_plural ""
 msgstr[0] ""
 msgstr[1] ""
 
-#: kram/ui/main_window.py:631
+#: kram/ui/main_window.py:669
 #, python-brace-format
 msgid "{n} line is not a valid marking: {lines}"
 msgid_plural "{n} lines are not valid markings: {lines}"
 msgstr[0] ""
 msgstr[1] ""
 
-#: kram/ui/main_window.py:635
+#: kram/ui/main_window.py:673
 #, python-brace-format
 msgid "{n} package marked."
 msgid_plural "{n} packages marked."
 msgstr[0] ""
 msgstr[1] ""
 
-#: kram/ui/main_window.py:653
+#: kram/ui/main_window.py:691
 msgid "(loading…)"
 msgstr ""
 
-#: kram/ui/main_window.py:660
+#: kram/ui/main_window.py:698
 msgid "No older versions in the repositories"
 msgstr ""
 
-#: kram/ui/main_window.py:693
+#: kram/ui/main_window.py:731
 msgid "Resolving dependencies…"
 msgstr ""
 
-#: kram/ui/main_window.py:695
+#: kram/ui/main_window.py:733
 #, python-brace-format
 msgid ""
 "Could not resolve the changes:\n"
@@ -902,23 +922,23 @@ msgid ""
 "{error}"
 msgstr ""
 
-#: kram/ui/main_window.py:700
+#: kram/ui/main_window.py:738
 msgid "Cannot apply changes"
 msgstr ""
 
-#: kram/ui/main_window.py:701
+#: kram/ui/main_window.py:739
 msgid "The marked changes cannot be carried out. Unmark or change them."
 msgstr ""
 
-#: kram/ui/main_window.py:712
+#: kram/ui/main_window.py:750
 msgid "Applying changes"
 msgstr ""
 
-#: kram/ui/main_window.py:720
+#: kram/ui/main_window.py:758
 msgid "Refreshing metadata"
 msgstr ""
 
-#: kram/ui/main_window.py:736
+#: kram/ui/main_window.py:774
 msgid "Changing repositories"
 msgstr ""
 
