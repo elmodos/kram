@@ -5,11 +5,15 @@ search that works, and nothing happens until you press **Apply**.
 
 Built on libdnf5 (the same library as `dnf5`) and Qt 6. See [docs/PLAN.md](docs/PLAN.md) for the design.
 
-![All packages: status, origin, versions, size](docs/screenshots/main.png)
+![All packages: status, origin, versions, size; package details](docs/screenshots/main.png)
 
-| Ranked search | COPR projects |
+| Review before applying | COPR projects |
 |---|---|
-| ![Search](docs/screenshots/search.png) | ![COPR](docs/screenshots/copr.png) |
+| ![Apply changes](docs/screenshots/apply-preview.png) | ![COPR](docs/screenshots/copr.png) |
+
+| Progress | Key import |
+|---|---|
+| ![Applying changes](docs/screenshots/progress.png) | ![Import key](docs/screenshots/key-import.png) |
 
 ## Features
 
@@ -26,7 +30,14 @@ Built on libdnf5 (the same library as `dnf5`) and Qt 6. See [docs/PLAN.md](docs/
 
 ## Installing
 
-Build and install the RPM from a checkout (the same steps COPR runs):
+From COPR (builds of `main`):
+
+```sh
+sudo dnf copr enable elmodos/Kram
+sudo dnf install kram
+```
+
+Or build and install the RPM from a checkout (the same steps COPR runs):
 
 ```sh
 sudo dnf install rpm-build make git-core 'dnf5-command(builddep)'
@@ -58,7 +69,6 @@ python3 -m pytest          # unit tests (needs pytest; gettext for the translati
 ruff check .
 scripts/container_check.sh # real root transactions in a throwaway Fedora container (podman)
 scripts/rpm_check.sh       # build the RPM like COPR does, install it and check it, in a container
-QT_QPA_PLATFORM=offscreen LANGUAGE=en python3 scripts/screenshots.py docs/screenshots  # README images
 ```
 
 - `kram/core/` has no Qt and is where most logic and tests live.

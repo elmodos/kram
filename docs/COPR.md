@@ -1,13 +1,14 @@
 # Publishing Kram in COPR
 
-Everything in the repository is ready: `packaging/kram.spec` and `.copr/Makefile` (COPR's *make srpm* build method).
-The steps below are done once, in the Copr web UI, by the project owner.
+The project exists: https://copr.fedorainfracloud.org/coprs/elmodos/Kram/ (note the capital K in the project
+name). It builds `packaging/kram.spec` through `.copr/Makefile` (COPR's *make srpm* build method).
+The steps below are how it was set up, for reference or for a new project.
 
 ## 1. Create the project
 
 1. Log in at https://copr.fedorainfracloud.org (Fedora account, FAS).
 2. **New Project**:
-   - Name: `kram`
+   - Name: `Kram`
    - Description / instructions: "Synaptic-style package manager for Fedora (dnf5)", link to
      https://github.com/elmodos/kram
    - Chroots: `fedora-44-x86_64`, `fedora-rawhide-x86_64` (and `fedora-43-x86_64` if wanted).
@@ -44,11 +45,9 @@ Pushes to `main` then start a build automatically.
 ## 4. Install from COPR
 
 ```sh
-sudo dnf copr enable <copr-user>/kram     # <copr-user> = your FAS user name
+sudo dnf copr enable elmodos/Kram
 sudo dnf install kram
 ```
-
-Afterwards update the "Installing" section of `README.md` with this command.
 
 ## Releases
 
@@ -71,6 +70,6 @@ translations. The first run downloads the build dependencies (a few minutes); th
 ## Notes
 
 - The metainfo screenshots point at `docs/screenshots/*.png` on `main` (raw.githubusercontent.com); replace the
-  images to change them, the URLs stay the same.
+  images to change them, the URLs stay the same. They are real screenshots taken on Plasma.
 - Runtime dependencies: python3-libdnf5, python3-rpm, python3-pyside6, polkit, dnf5-plugins (for `dnf5 copr`
   and `dnf5 config-manager`).

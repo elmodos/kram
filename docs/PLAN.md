@@ -96,7 +96,7 @@ po/                # kram.pot + one <lang>.po per translation
 data/              # .desktop, AppStream metainfo, polkit policy, icon
 packaging/kram.spec
 .copr/Makefile     # SRPM for COPR's "make srpm" build method
-scripts/           # i18n.sh, container_check.sh, rpm_check.sh, screenshots.py, helper_driver.py, m0_helper_check.py
+scripts/           # i18n.sh, container_check.sh, rpm_check.sh, helper_driver.py, m0_helper_check.py
 tests/
 docs/              # this plan, UI mockups
 ```
@@ -292,8 +292,8 @@ polkit policy with its own action for `/usr/libexec/kram-helper`, icon), `.copr/
 *make srpm* method. An installed Kram starts `pkexec /usr/libexec/kram-helper` (Kram's own polkit message);
 a source checkout still runs its own helper through `pkexec python3`. `scripts/rpm_check.sh` builds the
 SRPM and RPM the way COPR does in a container, installs it and checks the layout and the helper.
-README screenshots are rendered from the real UI by `scripts/screenshots.py`.
-Not done: creating the COPR project itself (needs the owner's Copr account).
+COPR project: https://copr.fedorainfracloud.org/coprs/elmodos/Kram/ (2026-11-04), installed and upgraded
+through Kram itself. README screenshots (`docs/screenshots/`) are real Plasma screenshots.
 
 **After the MVP**: transaction history + undo (`dnf5 history`), versionlock (🔒), custom filters, local
 .rpm files, helper vs. dnf5daemon, offline system upgrades (`dnf5 offline`), dnf-automatic settings,
