@@ -1,61 +1,116 @@
-"""Small painted status/origin icons, cached. Painted rather than themed so they read the same in any theme."""
+"""Small painted status/origin icons, cached. Painted rather than themed so they read the same in any theme.
+
+Drawn as vectors in a 16×16 coordinate space at whatever size and screen scale Qt asks for, so they stay sharp at
+125 %, 150 %, 200 %… instead of being a 16 px bitmap scaled up.
+"""
+from collections.abc import Callable
 from functools import cache
 
-from PySide6.QtCore import QRect, Qt
-from PySide6.QtGui import QColor, QFont, QIcon, QPainter, QPen, QPixmap
+from PySide6.QtCore import QLineF, QRect, QRectF, QSize, Qt
+from PySide6.QtGui import QColor, QFont, QIcon, QIconEngine, QPainter, QPen, QPixmap
+from PySide6.QtWidgets import QApplication, QStyleOption
 
 from ..core.marks import Action
 from ..core.model import Origin, Status
 from ..i18n import _
 
-_BOX = QRect(1, 1, 13, 13)
+# 1 px strokes sit on half pixels so they are crisp at 100 %
+_BOX = QRectF(1.5, 1.5, 13, 13)
+_GRID = 16  # every icon is drawn in a 16×16 coordinate space
+
+Draw = Callable[[QPainter], None]
 
 
-def _canvas():
-    pm = QPixmap(16, 16)
-    pm.fill(Qt.transparent)
-    p = QPainter(pm)
-    p.setRenderHint(QPainter.Antialiasing)
-    return pm, p
+def _font(pixels: float) -> QFont:
+    f = QFont("Noto Sans")
+    f.setPixelSize(round(pixels * 10))  # scaled down by the painter below; a large size hints better
+    f.setBold(True)
+    return f
+
+
+def _text(p: QPainter, rect: QRectF, pixels: float, ch: str) -> None:
+    p.save()
+    p.translate(rect.topLeft())
+    p.scale(0.1, 0.1)
+    p.setFont(_font(pixels))
+    p.drawText(QRectF(0, 0, rect.width() * 10, rect.height() * 10), Qt.AlignCenter, ch)
+    p.restore()
+
+
+class _PaintedIconEngine(QIconEngine):
+    def __init__(self, draw: Draw):
+        super().__init__()
+        self._draw = draw
+
+    def paint(self, painter: QPainter, rect: QRect, _mode, _state) -> None:
+        side = min(rect.width(), rect.height())
+        painter.save()
+        painter.setRenderHint(QPainter.Antialiasing)
+        painter.translate(rect.x() + (rect.width() - side) / 2, rect.y() + (rect.height() - side) / 2)
+        painter.scale(side / _GRID, side / _GRID)
+        self._draw(painter)
+        painter.restore()
+
+    def scaledPixmap(self, size: QSize, mode, state, scale: float) -> QPixmap:
+        pm = QPixmap(size * scale)
+        pm.fill(Qt.transparent)
+        p = QPainter(pm)
+        self.paint(p, QRect(0, 0, pm.width(), pm.height()), mode, state)
+        p.end()
+        pm.setDevicePixelRatio(scale)
+        if mode == QIcon.Disabled:
+            pm = QApplication.style().generatedIconPixmap(QIcon.Disabled, pm, QStyleOption())
+        return pm
+
+    def pixmap(self, size: QSize, mode, state) -> QPixmap:
+        return self.scaledPixmap(size, mode, state, 1.0)
+
+    def clone(self) -> QIconEngine:
+        return _PaintedIconEngine(self._draw)
+
+
+def _painted(draw: Draw) -> QIcon:
+    return QIcon(_PaintedIconEngine(draw))
 
 
 def _arrow_up(p, color=Qt.white):
-    p.setPen(QPen(color, 2))
-    p.drawLine(7, 12, 7, 4)
-    p.drawLine(4, 7, 7, 4)
-    p.drawLine(10, 7, 7, 4)
+    p.setPen(QPen(color, 2, Qt.SolidLine, Qt.RoundCap))
+    p.drawLine(QLineF(8, 12, 8, 4.5))
+    p.drawLine(QLineF(5, 7.5, 8, 4.5))
+    p.drawLine(QLineF(11, 7.5, 8, 4.5))
 
 
 @cache
 def status_icon(status: Status) -> QIcon:
-    pm, p = _canvas()
     green, dark = QColor("#4e8f3a"), QColor("#2f5a22")
-    if status is Status.NOT_INSTALLED:
-        p.setPen(QPen(QColor("#888"), 1))
-        p.setBrush(Qt.white)
-        p.drawRect(_BOX)
-    elif status is Status.UPGRADABLE:
-        p.setPen(QPen(QColor("#8a5a00"), 1))
-        p.setBrush(QColor("#e0a020"))
-        p.drawRect(_BOX)
-        _arrow_up(p)
-    elif status is Status.UNNEEDED:
-        p.setPen(QPen(dark, 1))
-        p.setBrush(QColor("#9bb98f"))
-        p.drawRect(_BOX)
-        p.setPen(QPen(Qt.white, 3))
-        p.drawPoint(7, 7)
-    else:
-        p.setPen(QPen(dark, 1))
-        p.setBrush(green)
-        p.drawRect(_BOX)
-        glyph = {Status.ORPHAN: "?", Status.NEWER: "↓"}.get(status)
-        if glyph:
-            p.setPen(Qt.white)
-            p.setFont(QFont("Noto Sans", 8, QFont.Bold))
-            p.drawText(_BOX, Qt.AlignCenter, glyph)
-    p.end()
-    return QIcon(pm)
+
+    def draw(p: QPainter) -> None:
+        if status is Status.NOT_INSTALLED:
+            p.setPen(QPen(QColor("#888"), 1))
+            p.setBrush(Qt.white)
+            p.drawRect(_BOX)
+        elif status is Status.UPGRADABLE:
+            p.setPen(QPen(QColor("#8a5a00"), 1))
+            p.setBrush(QColor("#e0a020"))
+            p.drawRect(_BOX)
+            _arrow_up(p)
+        elif status is Status.UNNEEDED:
+            p.setPen(QPen(dark, 1))
+            p.setBrush(QColor("#9bb98f"))
+            p.drawRect(_BOX)
+            p.setPen(Qt.NoPen)
+            p.setBrush(Qt.white)
+            p.drawEllipse(QRectF(6.5, 6.5, 3, 3))
+        else:
+            p.setPen(QPen(dark, 1))
+            p.setBrush(green)
+            p.drawRect(_BOX)
+            glyph = {Status.ORPHAN: "?", Status.NEWER: "↓"}.get(status)
+            if glyph:
+                p.setPen(Qt.white)
+                _text(p, _BOX, 10.5, glyph)
+
+    return _painted(draw)
 
 
 ORIGIN_LABEL = {
@@ -71,48 +126,47 @@ _ORIGIN_STYLE = {
 @cache
 def origin_icon(origin: Origin) -> QIcon:
     color, ch = _ORIGIN_STYLE[origin]
-    pm, p = _canvas()
-    p.setBrush(QColor(color))
-    p.setPen(Qt.NoPen)
-    p.drawEllipse(1, 1, 14, 14)
-    p.setPen(Qt.white)
-    p.setFont(QFont("Noto Sans", 7, QFont.Bold))
-    p.drawText(QRect(1, 1, 14, 14), Qt.AlignCenter, ch)
-    p.end()
-    return QIcon(pm)
+
+    def draw(p: QPainter) -> None:
+        p.setBrush(QColor(color))
+        p.setPen(Qt.NoPen)
+        p.drawEllipse(QRectF(1, 1, 14, 14))
+        p.setPen(Qt.white)
+        _text(p, QRectF(1, 1, 14, 14), 9.5, ch)
+
+    return _painted(draw)
 
 
-def _glyph_box(fill: str, border: str, draw) -> QIcon:
-    pm, p = _canvas()
-    p.setPen(QPen(QColor(border), 1))
-    p.setBrush(QColor(fill))
-    p.drawRect(_BOX)
-    p.setPen(QPen(Qt.white, 2))
-    draw(p)
-    p.end()
-    return QIcon(pm)
+def _glyph_box(fill: str, border: str, glyph: Draw) -> QIcon:
+    def draw(p: QPainter) -> None:
+        p.setPen(QPen(QColor(border), 1))
+        p.setBrush(QColor(fill))
+        p.drawRect(_BOX)
+        p.setPen(QPen(Qt.white, 2, Qt.SolidLine, Qt.RoundCap))
+        glyph(p)
+
+    return _painted(draw)
 
 
 @cache
 def mark_icon(action: Action) -> QIcon:
     def plus(p):
-        p.drawLine(4, 8, 11, 8)
-        p.drawLine(7, 4, 7, 12)
+        p.drawLine(QLineF(4.5, 8, 11.5, 8))
+        p.drawLine(QLineF(8, 4.5, 8, 11.5))
 
     def cross(p):
-        p.drawLine(4, 4, 11, 11)
-        p.drawLine(11, 4, 4, 11)
+        p.drawLine(QLineF(5, 5, 11, 11))
+        p.drawLine(QLineF(11, 5, 5, 11))
 
     def down(p):
-        p.drawLine(7, 4, 7, 12)
-        p.drawLine(4, 9, 7, 12)
-        p.drawLine(10, 9, 7, 12)
+        p.drawLine(QLineF(8, 4, 8, 11.5))
+        p.drawLine(QLineF(5, 8.5, 8, 11.5))
+        p.drawLine(QLineF(11, 8.5, 8, 11.5))
 
     def letter(ch):
         def draw(p):
             p.setPen(Qt.white)
-            p.setFont(QFont("Noto Sans", 8, QFont.Bold))
-            p.drawText(_BOX, Qt.AlignCenter, ch)
+            _text(p, _BOX, 10.5, ch)
         return draw
 
     style = {
