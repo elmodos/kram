@@ -28,23 +28,33 @@ Project → **Packages** → **New package** → source type **SCM**:
 | Spec file | `packaging/kram.spec` |
 | Type | Git |
 | SRPM build method | **make srpm** |
-| Auto-rebuild | off for release builds; ✓ only for a snapshot project with the webhook below |
+| Auto-rebuild | ✓ (lets the tag webhook below start builds) |
 
 Save, then **Rebuild** to run the first build. The SRPM step runs `.copr/Makefile`: it archives the commit. The
 commit tagged `v<version>` builds as a plain release (`kram-0.1.0-2`); any other commit gets a snapshot version
 `0.1.0^YYYYMMDDgit<hash>`, which sorts after the release it follows and before the next one.
 `%check` runs desktop-file-validate, appstream-util and the test suite; a failing test fails the build.
 
-## 3. Rebuild on every push (optional, for a separate snapshot project)
+## 3. Build automatically when a release tag is pushed
 
-Every push to `main` would publish a snapshot (`0.1.0^…git…`) in place of the release, so do this only in a
-second project (e.g. `elmodos/Kram-nightly`, Committish `main`, Auto-rebuild on), not in `elmodos/Kram`.
+1. In Copr: project → **Settings** → **Integrations** → copy the GitHub webhook URL
+   (`https://copr.fedorainfracloud.org/webhooks/github/<id>/<secret>/`) and append the package name: `…/kram/`.
+2. On GitHub: repository → **Settings** → **Webhooks** → **Add webhook**: that payload URL, content type
+   `application/json`, "Let me select individual events" → only **Branch or tag creation**.
+   (Or: `gh api repos/elmodos/kram/hooks -f name=web -f 'config[url]=<URL>' -f 'config[content_type]=json'
+   -f 'events[]=create'`.)
 
-1. In Copr: project → **Settings** → **Integrations** → copy the GitHub webhook URL.
-2. On GitHub: repository → **Settings** → **Webhooks** → **Add webhook**:
-   payload URL = that URL, content type `application/json`, "Just the push event".
+How Copr handles it (frontend `webhooks_general.py`, `packages_logic.py`):
+- A tag creation event builds the package named in the URL, with the tag as the committish, so
+  `.copr/Makefile` sees the tagged commit and builds a plain release.
+- Without the package name in the URL, a tag only matches a package if it looks like `kram-<version>`; our tags
+  are `v<version>`, hence `…/kram/`.
+- Branch pushes are not sent (no push event), and would not match anyway: Copr rebuilds on a branch push only
+  when the package's Committish ends with that branch, and ours is a tag.
 
-Pushes to `main` then start a build automatically.
+For snapshots of every push to `main`, use a second project (e.g. `elmodos/Kram-nightly`, Committish `main`,
+Auto-rebuild on, webhook with the **push** event); never in `elmodos/Kram`, where a snapshot would replace the
+release.
 
 ## 4. Install from COPR
 
@@ -59,7 +69,8 @@ sudo dnf install kram
    (reset `Release:` to 1, add a `%changelog` entry) and add a `<release>` to
    `data/io.github.elmodos.Kram.metainfo.xml`. `tests/test_packaging.py` fails if they disagree.
 2. Commit, `git tag -a v<version> -m "Kram <version>"`, `git push origin main v<version>`.
-3. In Copr: package `kram` → Edit → Committish `v<version>` → Save → Rebuild.
+3. The tag webhook (section 3) starts the Copr build. Optionally set the package's Committish to the new tag
+   too, so a manual **Rebuild** in Copr builds the latest release rather than the previous one.
 
 `0.1.0` was released as `0.1.0-2`: the snapshot builds made before tagging were `0.1.0-1.YYYYMMDDgit<hash>`,
 which rpm sorts after `0.1.0-1`.
