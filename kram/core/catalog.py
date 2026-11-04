@@ -63,6 +63,10 @@ class Catalog:
         # would otherwise use ~/.cache/libdnf5, which nothing here updates, so "Reload" would seem to do nothing
         config = base.get_config()
         config.cachedir = config.system_cachedir
+        # and never write to it: after `dnf makecache` (e.g. dnf-makecache.timer) the .solv files are stale, and
+        # libdnf5 would try to rebuild them in a root-owned directory ("cannot create temporary file: (13)").
+        # Without them it parses the XML metadata instead, a few seconds slower until the next root refresh.
+        config.build_cache = False
         base.setup()
         config.cache_only = True
         repo_sack = base.get_repo_sack()
