@@ -301,9 +301,11 @@ architecture and installed size, matching all or any; a live count while editing
 View" turns the sidebar selection plus the search into conditions. Stored as JSON in kram.conf
 (`filters/custom`), compiled to in-memory predicates (`kram/core/custom_filters.py`).
 
-**After the MVP**: transaction history + undo (`dnf5 history`), versionlock (🔒), local
-.rpm files, helper vs. dnf5daemon, offline system upgrades (`dnf5 offline`), dnf-automatic settings,
-in-app language override.
+**After the MVP**: versionlock (🔒), local .rpm files, helper vs. dnf5daemon, offline system upgrades
+(`dnf5 offline`), dnf-automatic settings, in-app language override.
+
+**Decided against** (2026-11-04): transaction history with undo/rollback (`dnf5 history`). Not planned; `dnf5
+history` covers it from the terminal.
 
 ## 11. Risks
 

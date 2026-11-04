@@ -1,4 +1,12 @@
+<img src="data/io.github.elmodos.Kram.svg" alt="" width="96" align="right">
+
 # Kram
+
+[![COPR build status](https://copr.fedorainfracloud.org/coprs/elmodos/Kram/package/kram/status_image/last_build.png)](https://copr.fedorainfracloud.org/coprs/elmodos/Kram/package/kram/)
+[![COPR version](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fcopr.fedorainfracloud.org%2Fapi_3%2Fpackage%3Fownername%3Delmodos%26projectname%3DKram%26packagename%3Dkram%26with_latest_succeeded_build%3DTrue&query=%24.builds.latest_succeeded.source_package.version&label=COPR&color=blue)](https://copr.fedorainfracloud.org/coprs/elmodos/Kram/)
+[![Fedora 43 | 44 | 45 | Rawhide](https://img.shields.io/badge/Fedora-43%20%7C%2044%20%7C%2045%20%7C%20Rawhide-294172?logo=fedora&logoColor=white)](https://copr.fedorainfracloud.org/coprs/elmodos/Kram/)
+[![Latest release](https://img.shields.io/github/v/tag/elmodos/kram?label=release&sort=semver)](https://github.com/elmodos/kram/tags)
+[![License: GPL-3.0-or-later](https://img.shields.io/github/license/elmodos/kram)](LICENSE)
 
 A Synaptic-style package manager for Fedora: the full package list, checkboxes, statuses and origins,
 search that works, and nothing happens until you press **Apply**.

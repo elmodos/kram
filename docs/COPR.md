@@ -87,6 +87,9 @@ translations. The first run downloads the build dependencies (a few minutes); th
 
 ## Notes
 
+- README badges: the build status and version come from Copr and update themselves; the "Fedora 43 | 44 | 45 |
+  Rawhide" badge is static (shields.io can't list the project's chroots), so edit it when the chroots change.
+
 - The metainfo screenshots point at `docs/screenshots/*.png` on `main` (raw.githubusercontent.com); replace the
   images to change them, the URLs stay the same. They are real screenshots taken on Plasma.
 - Runtime dependencies: python3-libdnf5, python3-rpm, python3-pyside6, polkit, dnf5-plugins (for `dnf5 copr`
