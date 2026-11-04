@@ -18,18 +18,22 @@ BuildRequires:  python3-devel
 BuildRequires:  gettext
 BuildRequires:  desktop-file-utils
 BuildRequires:  libappstream-glib
-# for the test suite
+# for the test suite (python3-pyside6: the UI modules are imported and the icons rendered offscreen)
 BuildRequires:  python3-pytest
 BuildRequires:  python3-libdnf5
 BuildRequires:  python3-rpm
+BuildRequires:  python3-pyside6
 
 Requires:       python3-libdnf5
 Requires:       python3-rpm
+# pulls in Qt itself (qt6-qtbase, qt6-qtsvg for the SVG icons) through its library dependencies
 Requires:       python3-pyside6
 Requires:       polkit
 # "dnf5 copr" and "dnf5 config-manager" (COPR and repository changes)
 Requires:       dnf5-plugins
 Requires:       hicolor-icon-theme
+# translations of Qt's standard buttons (Yes, No, Cancel…) in the UI language
+Recommends:     qt6-qttranslations
 
 %description
 Kram is a package manager in the style of Synaptic, built on libdnf5. It lists every package in the enabled
@@ -67,7 +71,7 @@ cp -a build-locale/. %{buildroot}%{_datadir}/locale/
 %check
 desktop-file-validate %{buildroot}%{_datadir}/applications/%{appid}.desktop
 appstream-util validate-relax --nonet %{buildroot}%{_metainfodir}/%{appid}.metainfo.xml
-%pytest
+QT_QPA_PLATFORM=offscreen %pytest
 
 %files -f %{pyproject_files} -f %{name}.lang
 %doc README.md
