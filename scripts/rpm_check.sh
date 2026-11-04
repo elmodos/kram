@@ -17,7 +17,7 @@ exec podman run --rm "${out[@]}" -v "$src:/src:ro,Z" -v "kram-dnf-cache-$release
     dnf5 -q -y install rpm-build make git-core "dnf5-command(builddep)" libxml2 >/dev/null 2>&1
     cp -a /src /build && cd /build
     git config --global user.email check@localhost && git config --global user.name check
-    git add -A && git commit -qm "uncommitted changes" --allow-empty
+    if [ -n "$(git status --porcelain)" ]; then git add -A && git commit -qm "uncommitted changes"; fi
     echo "### SRPM"
     make -s -f .copr/Makefile srpm outdir=/out
     srpm=$(ls /out/*.src.rpm) && echo "$srpm"

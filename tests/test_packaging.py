@@ -13,7 +13,8 @@ DATA = ROOT / "data"
 
 def test_versions_match():
     pyproject = tomllib.loads((ROOT / "pyproject.toml").read_text())["project"]["version"]
-    spec = re.search(r"^Version:\s*(\S+)", (ROOT / "packaging/kram.spec").read_text(), re.MULTILINE).group(1)
+    spec = re.search(r"^%global base_version\s+(\S+)", (ROOT / "packaging/kram.spec").read_text(),
+                     re.MULTILINE).group(1)
     metainfo = ET.parse(DATA / f"{kram.APP_ID}.metainfo.xml").find("releases/release").get("version")
     assert kram.__version__ == pyproject == spec == metainfo
 

@@ -1,14 +1,16 @@
 %global appid io.github.elmodos.Kram
+%global base_version 0.1.0
 
 Name:           kram
-Version:        0.1.0
-# .copr/Makefile defines "snapshot" (.YYYYMMDDgitHASH) for builds from git
-Release:        1%{?snapshot}%{?dist}
+# A tagged release (v%%{base_version}) is plain %%{base_version}. Any other commit gets a snapshot from
+# .copr/Makefile, ^YYYYMMDDgitHASH: newer than the release it follows, older than the next one.
+Version:        %{base_version}%{?snapshot}
+Release:        2%{?dist}
 Summary:        Synaptic-style package manager for Fedora
 
 License:        GPL-3.0-or-later
 URL:            https://github.com/elmodos/kram
-Source0:        %{url}/archive/v%{version}/%{name}-%{version}.tar.gz
+Source0:        %{url}/archive/v%{base_version}/%{name}-%{base_version}.tar.gz
 
 BuildArch:      noarch
 
@@ -36,7 +38,7 @@ name, description, provides and files; marks changes, previews the whole transac
 enables and disables repositories and manages COPR projects.
 
 %prep
-%autosetup -n %{name}-%{version}
+%autosetup -n %{name}-%{base_version}
 
 %generate_buildrequires
 %pyproject_buildrequires
@@ -77,5 +79,9 @@ appstream-util validate-relax --nonet %{buildroot}%{_metainfodir}/%{appid}.metai
 %{_datadir}/icons/hicolor/scalable/apps/%{appid}.svg
 
 %changelog
+* Wed Nov 04 2026 Modo Ltunzher <offnormal@gmail.com> - 0.1.0-2
+- Tagged release v0.1.0; git snapshots now use the ^YYYYMMDDgitHASH version suffix
+- Release 2 so it is newer than the earlier 0.1.0-1.YYYYMMDDgitHASH snapshot builds
+
 * Tue Nov 03 2026 Modo Ltunzher <offnormal@gmail.com> - 0.1.0-1
 - First release

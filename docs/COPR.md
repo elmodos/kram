@@ -23,18 +23,22 @@ Project → **Packages** → **New package** → source type **SCM**:
 |---|---|
 | Package name | `kram` |
 | Clone URL | `https://github.com/elmodos/kram.git` |
-| Committish | `main` (or empty for the default branch) |
+| Committish | the latest release tag, e.g. `v0.1.0` (or `main` for snapshot builds) |
 | Subdirectory | empty |
 | Spec file | `packaging/kram.spec` |
 | Type | Git |
 | SRPM build method | **make srpm** |
-| Auto-rebuild | ✓ (needed for the webhook below) |
+| Auto-rebuild | off for release builds; ✓ only for a snapshot project with the webhook below |
 
-Save, then **Rebuild** to run the first build. The SRPM step runs `.copr/Makefile`: it archives the commit and
-adds a release suffix `.YYYYMMDDgit<hash>`, so every build from `main` is newer than the previous one.
+Save, then **Rebuild** to run the first build. The SRPM step runs `.copr/Makefile`: it archives the commit. The
+commit tagged `v<version>` builds as a plain release (`kram-0.1.0-2`); any other commit gets a snapshot version
+`0.1.0^YYYYMMDDgit<hash>`, which sorts after the release it follows and before the next one.
 `%check` runs desktop-file-validate, appstream-util and the test suite; a failing test fails the build.
 
-## 3. Rebuild on every push (optional)
+## 3. Rebuild on every push (optional, for a separate snapshot project)
+
+Every push to `main` would publish a snapshot (`0.1.0^…git…`) in place of the release, so do this only in a
+second project (e.g. `elmodos/Kram-nightly`, Committish `main`, Auto-rebuild on), not in `elmodos/Kram`.
 
 1. In Copr: project → **Settings** → **Integrations** → copy the GitHub webhook URL.
 2. On GitHub: repository → **Settings** → **Webhooks** → **Add webhook**:
@@ -51,11 +55,14 @@ sudo dnf install kram
 
 ## Releases
 
-1. Bump the version in `pyproject.toml`, `kram/__init__.py`, `packaging/kram.spec` (plus a `%changelog`
-   entry) and add a `<release>` to `data/io.github.elmodos.Kram.metainfo.xml`.
-   `tests/test_packaging.py` fails if they disagree.
-2. Commit, tag `v<version>`, push the tag. Builds from the tag still get the git snapshot suffix; that is fine
-   for a COPR.
+1. Bump the version in `pyproject.toml`, `kram/__init__.py`, `%global base_version` in `packaging/kram.spec`
+   (reset `Release:` to 1, add a `%changelog` entry) and add a `<release>` to
+   `data/io.github.elmodos.Kram.metainfo.xml`. `tests/test_packaging.py` fails if they disagree.
+2. Commit, `git tag -a v<version> -m "Kram <version>"`, `git push origin main v<version>`.
+3. In Copr: package `kram` → Edit → Committish `v<version>` → Save → Rebuild.
+
+`0.1.0` is released as `0.1.0-2`: the snapshot builds made before tagging were `0.1.0-1.YYYYMMDDgit<hash>`,
+which rpm sorts after `0.1.0-1`.
 
 ## Before pushing a packaging change
 
