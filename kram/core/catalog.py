@@ -59,8 +59,12 @@ class Catalog:
         t0 = time.monotonic()
         base = libdnf5.base.Base()
         base.load_config()
+        # read the system cache (/var/cache/libdnf5), which the root helper refreshes; for a normal user libdnf5
+        # would otherwise use ~/.cache/libdnf5, which nothing here updates, so "Reload" would seem to do nothing
+        config = base.get_config()
+        config.cachedir = config.system_cachedir
         base.setup()
-        base.get_config().cache_only = True
+        config.cache_only = True
         repo_sack = base.get_repo_sack()
         repo_sack.create_repos_from_system_configuration()
         repo_sack.load_repos()
