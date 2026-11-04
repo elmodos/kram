@@ -14,11 +14,31 @@ from ..core.marks import Action
 from ..core.model import Origin, Status
 from ..i18n import _
 
-# 1 px strokes sit on half pixels so they are crisp at 100 %
-_BOX = QRectF(1.5, 1.5, 13, 13)
+_BOX = QRectF(1.5, 1.5, 13, 13)   # where glyphs inside the box are centred
+_BOX_OUTER = QRectF(1, 1, 14, 14)  # the box including its 1 px border
 _GRID = 16  # every icon is drawn in a 16×16 coordinate space
 
 Draw = Callable[[QPainter], None]
+
+
+def _box(p: QPainter, border, fill) -> None:
+    """The status/mark box, snapped to whole device pixels with a whole-pixel border.
+
+    At fractional scales (125 %, 150 %) a scaled 1 px border lands between pixels and smears over two; snapping
+    keeps it one crisp line on every screen.
+    """
+    dpr = p.device().devicePixelRatioF()
+    t = p.transform()
+    outer = t.mapRect(_BOX_OUTER)
+    left, top = round(outer.left() * dpr) / dpr, round(outer.top() * dpr) / dpr
+    right, bottom = round(outer.right() * dpr) / dpr, round(outer.bottom() * dpr) / dpr
+    pen = max(1, round(t.m11() * dpr)) / dpr
+    p.save()
+    p.resetTransform()
+    p.setPen(QPen(QColor(border), pen))
+    p.setBrush(QColor(fill))
+    p.drawRect(QRectF(left + pen / 2, top + pen / 2, right - left - pen, bottom - top - pen))
+    p.restore()
 
 
 def _font(pixels: float) -> QFont:
@@ -86,25 +106,17 @@ def status_icon(status: Status) -> QIcon:
 
     def draw(p: QPainter) -> None:
         if status is Status.NOT_INSTALLED:
-            p.setPen(QPen(QColor("#888"), 1))
-            p.setBrush(Qt.white)
-            p.drawRect(_BOX)
+            _box(p, "#888", Qt.white)
         elif status is Status.UPGRADABLE:
-            p.setPen(QPen(QColor("#8a5a00"), 1))
-            p.setBrush(QColor("#e0a020"))
-            p.drawRect(_BOX)
+            _box(p, "#8a5a00", "#e0a020")
             _arrow_up(p)
         elif status is Status.UNNEEDED:
-            p.setPen(QPen(dark, 1))
-            p.setBrush(QColor("#9bb98f"))
-            p.drawRect(_BOX)
+            _box(p, dark, "#9bb98f")
             p.setPen(Qt.NoPen)
             p.setBrush(Qt.white)
             p.drawEllipse(QRectF(6.5, 6.5, 3, 3))
         else:
-            p.setPen(QPen(dark, 1))
-            p.setBrush(green)
-            p.drawRect(_BOX)
+            _box(p, dark, green)
             glyph = {Status.ORPHAN: "?", Status.NEWER: "↓"}.get(status)
             if glyph:
                 p.setPen(Qt.white)
@@ -139,9 +151,7 @@ def origin_icon(origin: Origin) -> QIcon:
 
 def _glyph_box(fill: str, border: str, glyph: Draw) -> QIcon:
     def draw(p: QPainter) -> None:
-        p.setPen(QPen(QColor(border), 1))
-        p.setBrush(QColor(fill))
-        p.drawRect(_BOX)
+        _box(p, border, fill)
         p.setPen(QPen(Qt.white, 2, Qt.SolidLine, Qt.RoundCap))
         glyph(p)
 
