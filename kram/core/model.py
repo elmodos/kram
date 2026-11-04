@@ -82,6 +82,11 @@ class CatalogSnapshot:
     groups: list[GroupInfo] = field(default_factory=list)   # user-visible comps groups, sorted by name
 
     @property
+    def unavailable_repos(self) -> list[RepoInfo]:
+        """Enabled repos without usable metadata (skipped while loading)."""
+        return [r for r in self.repos if r.enabled and r.age_seconds is None]
+
+    @property
     def metadata_age(self) -> int | None:
         """Age of the most recently refreshed enabled repo, i.e. time since the last refresh."""
         ages = [r.age_seconds for r in self.repos if r.enabled and r.age_seconds is not None]

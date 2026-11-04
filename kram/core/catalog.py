@@ -67,10 +67,16 @@ class Catalog:
         # libdnf5 would try to rebuild them in a root-owned directory ("cannot create temporary file: (13)").
         # Without them it parses the XML metadata instead, a few seconds slower until the next root refresh.
         config.build_cache = False
+        # only read what the helper downloaded: never fetch metadata as the normal user (it would fail with
+        # "Failed to set up metadata download" for a repo that has no cache yet)
+        config.cacheonly = "all"
         base.setup()
-        config.cache_only = True
         repo_sack = base.get_repo_sack()
         repo_sack.create_repos_from_system_configuration()
+        # a repo without usable metadata (no build for this release yet, server down) must not hide every other
+        # package: skip it whatever its .repo file says; the snapshot lists it as unavailable
+        for repo in libdnf5.repo.RepoQuery(base):
+            repo.get_config().skip_if_unavailable = True
         repo_sack.load_repos()
         self._base = base
 
@@ -170,10 +176,8 @@ class Catalog:
         for r in libdnf5.repo.RepoQuery(self._base):
             if r.get_id().startswith("@"):
                 continue
-            try:
-                age = r.get_age() if r.is_enabled() else None
-            except Exception:  # noqa: BLE001 - not loaded / no cache
-                age = None
+            # get_timestamp() is -1 when the repo has no loaded metadata (get_age() is then meaningless)
+            age = r.get_age() if r.is_enabled() and r.get_timestamp() != -1 else None
             repos.append(RepoInfo(r.get_id(), r.get_name(), r.is_enabled(), classify(r.get_id()), age,
                                   priority=r.get_priority(), file_path=r.get_repo_file_path()))
         repos.sort(key=lambda r: r.id)

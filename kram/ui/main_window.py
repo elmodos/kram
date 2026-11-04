@@ -93,6 +93,11 @@ class MainWindow(QMainWindow):
 
         self.status = QLabel()
         self.statusBar().addWidget(self.status, 1)
+        # enabled repositories that could not be loaded; clicking opens Settings → Repositories
+        self.repo_warning = QLabel()
+        self.repo_warning.setVisible(False)
+        self.repo_warning.linkActivated.connect(lambda _link: self.open_repos())
+        self.statusBar().addPermanentWidget(self.repo_warning)
         self.age = QLabel()
         self.statusBar().addPermanentWidget(self.age)
 
@@ -392,12 +397,27 @@ class MainWindow(QMainWindow):
         self._revalidate_marks()
         self.catalogLoaded.emit(snap)
         self.age.setText(_age(snap.metadata_age) + "  ")
+        self._show_repo_warning(snap)
         view, entry = self._restore_filter if self.filter is None else (
             self.sidebar.current_view, self.sidebar.current_entry_id)
         self.sidebar.set_snapshot(snap)
         self.sidebar.select(view, entry)  # emits filterChanged -> apply_filter
         if keep:
             self._select_key(keep)
+
+    def _show_repo_warning(self, snap: CatalogSnapshot) -> None:
+        missing = snap.unavailable_repos
+        self.repo_warning.setVisible(bool(missing))
+        if not missing:
+            return
+        n = len(missing)
+        text = ngettext("{n} repository has no metadata", "{n} repositories have no metadata", n).format(n=n)
+        self.repo_warning.setText(f"⚠ <a href='repos'>{text}</a>  ")
+        self.repo_warning.setToolTip(
+            _("Not loaded, so their packages are missing from the list:\n{names}\n\n"
+              "Use Reload to download them. If a repository keeps failing (for example it has no packages for "
+              "this Fedora release yet), disable it in Settings → Repositories.").format(
+                names="\n".join(f"• {r.name} ({r.id})" for r in missing)))
 
     def _on_error(self, e: BaseException):
         self.act_reload.setEnabled(True)
