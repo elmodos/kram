@@ -1,5 +1,5 @@
 %global appid io.github.elmodos.Kram
-%global base_version 0.1.1
+%global base_version 0.1.2
 
 Name:           kram
 # A tagged release (v%%{base_version}) is plain %%{base_version}. Any other commit gets a snapshot from
@@ -83,6 +83,11 @@ QT_QPA_PLATFORM=offscreen %pytest
 %{_datadir}/icons/hicolor/scalable/apps/%{appid}.svg
 
 %changelog
+* Wed Nov 04 2026 Modo Ltunzher <offnormal@gmail.com> - 0.1.2-1
+- Fix "cannot create temporary file: Permission denied" when loading the catalog after a background
+  metadata refresh (dnf-makecache.timer)
+- %%check also imports the UI and renders the icons; recommend qt6-qttranslations
+
 * Wed Nov 04 2026 Modo Ltunzher <offnormal@gmail.com> - 0.1.1-1
 - Read the system metadata cache, so Reload shows new packages and the real metadata age
 - Custom filters in the sidebar
