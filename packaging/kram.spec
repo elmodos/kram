@@ -1,11 +1,11 @@
 %global appid io.github.elmodos.Kram
-%global base_version 0.1.0
+%global base_version 0.1.1
 
 Name:           kram
 # A tagged release (v%%{base_version}) is plain %%{base_version}. Any other commit gets a snapshot from
 # .copr/Makefile, ^YYYYMMDDgitHASH: newer than the release it follows, older than the next one.
 Version:        %{base_version}%{?snapshot}
-Release:        2%{?dist}
+Release:        1%{?dist}
 Summary:        Synaptic-style package manager for Fedora
 
 License:        GPL-3.0-or-later
@@ -79,6 +79,12 @@ appstream-util validate-relax --nonet %{buildroot}%{_metainfodir}/%{appid}.metai
 %{_datadir}/icons/hicolor/scalable/apps/%{appid}.svg
 
 %changelog
+* Wed Nov 04 2026 Modo Ltunzher <offnormal@gmail.com> - 0.1.1-1
+- Read the system metadata cache, so Reload shows new packages and the real metadata age
+- Custom filters in the sidebar
+- Toolbar styles (follow System Settings, compact text beside icons, …) instead of hiding the toolbar
+- Sharp status and origin icons on scaled screens (125 %, 150 %, 200 %)
+
 * Wed Nov 04 2026 Modo Ltunzher <offnormal@gmail.com> - 0.1.0-2
 - Tagged release v0.1.0; git snapshots now use the ^YYYYMMDDgitHASH version suffix
 - Release 2 so it is newer than the earlier 0.1.0-1.YYYYMMDDgitHASH snapshot builds

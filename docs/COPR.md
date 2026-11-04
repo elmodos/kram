@@ -61,7 +61,7 @@ sudo dnf install kram
 2. Commit, `git tag -a v<version> -m "Kram <version>"`, `git push origin main v<version>`.
 3. In Copr: package `kram` → Edit → Committish `v<version>` → Save → Rebuild.
 
-`0.1.0` is released as `0.1.0-2`: the snapshot builds made before tagging were `0.1.0-1.YYYYMMDDgit<hash>`,
+`0.1.0` was released as `0.1.0-2`: the snapshot builds made before tagging were `0.1.0-1.YYYYMMDDgit<hash>`,
 which rpm sorts after `0.1.0-1`.
 
 ## Before pushing a packaging change
