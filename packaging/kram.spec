@@ -1,5 +1,5 @@
 %global appid io.github.elmodos.Kram
-%global base_version 0.1.5
+%global base_version 0.1.6
 
 Name:           kram
 # A tagged release (v%%{base_version}) is plain %%{base_version}. Any other commit gets a snapshot from
@@ -83,6 +83,11 @@ QT_QPA_PLATFORM=offscreen %pytest
 %{_datadir}/icons/hicolor/scalable/apps/%{appid}.svg
 
 %changelog
+* Thu Nov 05 2026 Modo Ltunzher <offnormal@gmail.com> - 0.1.6-1
+- Relicensed under the MIT License; the About dialog shows the copyright and license
+- Search results: remove a search from the history or clear the whole history (context menu)
+- Search field: a funnel icon while the search text filters the list
+
 * Wed Nov 04 2026 Modo Ltunzher <offnormal@gmail.com> - 0.1.5-1
 - Load the package catalog even when an enabled repository has no metadata ("Failed to set up metadata
   download"); such repositories are listed in the status bar (GitHub issue #1)
