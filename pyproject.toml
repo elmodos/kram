@@ -27,6 +27,12 @@ include = ["kram*"]
 line-length = 120
 extend-exclude = ["docs/mockups"]
 
+# also read by Pylance in VS Code; it overrides the editor's typeCheckingMode
+[tool.pyright]
+typeCheckingMode = "standard"
+pythonVersion = "3.13"
+exclude = ["docs/mockups", "build", "**/__pycache__"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
