@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kram\n"
 "Report-Msgid-Bugs-To: https://github.com/elmodos/kram/issues\n"
-"POT-Creation-Date: 2026-11-05 09:26+0200\n"
+"POT-Creation-Date: 2026-11-05 17:44+0200\n"
 "PO-Revision-Date: 2026-11-04 14:07+0200\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -850,7 +850,7 @@ msgstr "Copiar nome"
 msgid "Copy name-version-release.arch"
 msgstr "Copiar nome-versão-lançamento.arq"
 
-#: kram/ui/main_window.py:166 kram/ui/main_window.py:657
+#: kram/ui/main_window.py:166 kram/ui/main_window.py:666
 msgid "About Kram"
 msgstr "Sobre o Kram"
 
@@ -1042,30 +1042,38 @@ msgstr "Editar filtro…"
 msgid "Delete Filter"
 msgstr "Excluir filtro"
 
+#: kram/ui/main_window.py:655
+msgid "Remove from History"
+msgstr "Remover do histórico"
+
 #: kram/ui/main_window.py:657
+msgid "Clear Search History"
+msgstr "Limpar o histórico de pesquisa"
+
+#: kram/ui/main_window.py:666
 msgid "A Synaptic-style package manager for Fedora."
 msgstr "Um gerenciador de pacotes para o Fedora no estilo do Synaptic."
 
-#: kram/ui/main_window.py:659
+#: kram/ui/main_window.py:668
 msgid "Released under the MIT License."
 msgstr "Distribuído sob a Licença MIT."
 
-#: kram/ui/main_window.py:707
+#: kram/ui/main_window.py:716
 #, python-brace-format
 msgid "{n} package marked for upgrade"
 msgid_plural "{n} packages marked for upgrade"
 msgstr[0] "{n} pacote marcado para atualização"
 msgstr[1] "{n} pacotes marcados para atualização"
 
-#: kram/ui/main_window.py:713 kram/ui/main_window.py:721
+#: kram/ui/main_window.py:722 kram/ui/main_window.py:730
 msgid "Save Markings"
 msgstr "Salvar marcações"
 
-#: kram/ui/main_window.py:715 kram/ui/main_window.py:731
+#: kram/ui/main_window.py:724 kram/ui/main_window.py:740
 msgid "Text files (*.txt);;All files (*)"
 msgstr "Arquivos de texto (*.txt);;Todos os arquivos (*)"
 
-#: kram/ui/main_window.py:721
+#: kram/ui/main_window.py:730
 #, python-brace-format
 msgid ""
 "Could not save {path}:\n"
@@ -1076,19 +1084,19 @@ msgstr ""
 "\n"
 "{error}"
 
-#: kram/ui/main_window.py:726
+#: kram/ui/main_window.py:735
 #, python-brace-format
 msgid "{n} marking saved to {path}"
 msgid_plural "{n} markings saved to {path}"
 msgstr[0] "{n} marcação salva em {path}"
 msgstr[1] "{n} marcações salvas em {path}"
 
-#: kram/ui/main_window.py:730 kram/ui/main_window.py:740
-#: kram/ui/main_window.py:762
+#: kram/ui/main_window.py:739 kram/ui/main_window.py:749
+#: kram/ui/main_window.py:771
 msgid "Read Markings"
 msgstr "Ler marcações"
 
-#: kram/ui/main_window.py:740
+#: kram/ui/main_window.py:749
 #, python-brace-format
 msgid ""
 "Could not read {path}:\n"
@@ -1099,14 +1107,14 @@ msgstr ""
 "\n"
 "{error}"
 
-#: kram/ui/main_window.py:750
+#: kram/ui/main_window.py:759
 #, python-brace-format
 msgid "{n} package marked"
 msgid_plural "{n} packages marked"
 msgstr[0] "{n} pacote marcado"
 msgstr[1] "{n} pacotes marcados"
 
-#: kram/ui/main_window.py:755
+#: kram/ui/main_window.py:764
 #, python-brace-format
 msgid ""
 "{n} marking no longer applies (package not found, already in that state, …):"
@@ -1118,33 +1126,33 @@ msgstr[1] ""
 "{n} marcações não se aplicam mais (pacotes não encontrados, já nesse estado, "
 "…):"
 
-#: kram/ui/main_window.py:759
+#: kram/ui/main_window.py:768
 #, python-brace-format
 msgid "{n} line is not a valid marking: {lines}"
 msgid_plural "{n} lines are not valid markings: {lines}"
 msgstr[0] "{n} linha não é uma marcação válida: {lines}"
 msgstr[1] "{n} linhas não são marcações válidas: {lines}"
 
-#: kram/ui/main_window.py:763
+#: kram/ui/main_window.py:772
 #, python-brace-format
 msgid "{n} package marked."
 msgid_plural "{n} packages marked."
 msgstr[0] "{n} pacote marcado."
 msgstr[1] "{n} pacotes marcados."
 
-#: kram/ui/main_window.py:781
+#: kram/ui/main_window.py:790
 msgid "(loading…)"
 msgstr "(carregando…)"
 
-#: kram/ui/main_window.py:788
+#: kram/ui/main_window.py:797
 msgid "No older versions in the repositories"
 msgstr "Nenhuma versão anterior nos repositórios"
 
-#: kram/ui/main_window.py:821
+#: kram/ui/main_window.py:830
 msgid "Resolving dependencies…"
 msgstr "Resolvendo dependências…"
 
-#: kram/ui/main_window.py:823
+#: kram/ui/main_window.py:832
 #, python-brace-format
 msgid ""
 "Could not resolve the changes:\n"
@@ -1155,25 +1163,25 @@ msgstr ""
 "\n"
 "{error}"
 
-#: kram/ui/main_window.py:828
+#: kram/ui/main_window.py:837
 msgid "Cannot apply changes"
 msgstr "Não é possível aplicar as alterações"
 
-#: kram/ui/main_window.py:829
+#: kram/ui/main_window.py:838
 msgid "The marked changes cannot be carried out. Unmark or change them."
 msgstr ""
 "As alterações marcadas não podem ser realizadas. Desmarque-as ou modifique-"
 "as."
 
-#: kram/ui/main_window.py:840
+#: kram/ui/main_window.py:849
 msgid "Applying changes"
 msgstr "Aplicando alterações"
 
-#: kram/ui/main_window.py:848
+#: kram/ui/main_window.py:857
 msgid "Refreshing metadata"
 msgstr "Atualizando metadados"
 
-#: kram/ui/main_window.py:864
+#: kram/ui/main_window.py:873
 msgid "Changing repositories"
 msgstr "Alterando repositórios"
 
@@ -1409,16 +1417,16 @@ msgstr "Resultados da pesquisa"
 msgid "Custom filters"
 msgstr "Filtros personalizados"
 
-#: kram/ui/sidebar.py:82
+#: kram/ui/sidebar.py:95
 #, python-brace-format
 msgid "“{text}” — {mode}"
 msgstr "“{text}” — {mode}"
 
-#: kram/ui/sidebar.py:131
+#: kram/ui/sidebar.py:144
 msgid "Search history is empty"
 msgstr "O histórico de pesquisa está vazio"
 
-#: kram/ui/sidebar.py:132
+#: kram/ui/sidebar.py:145
 msgid ""
 "No custom filters yet.\n"
 "Right-click to create one."

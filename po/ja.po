@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kram\n"
 "Report-Msgid-Bugs-To: https://github.com/elmodos/kram/issues\n"
-"POT-Creation-Date: 2026-11-05 09:26+0200\n"
+"POT-Creation-Date: 2026-11-05 17:44+0200\n"
 "PO-Revision-Date: 2026-11-04 14:07+0200\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -842,7 +842,7 @@ msgstr "名前をコピー"
 msgid "Copy name-version-release.arch"
 msgstr "名前-バージョン-リリース.アーキテクチャ をコピー"
 
-#: kram/ui/main_window.py:166 kram/ui/main_window.py:657
+#: kram/ui/main_window.py:166 kram/ui/main_window.py:666
 msgid "About Kram"
 msgstr "Kram について"
 
@@ -1031,29 +1031,37 @@ msgstr "フィルターを編集…"
 msgid "Delete Filter"
 msgstr "フィルターを削除"
 
+#: kram/ui/main_window.py:655
+msgid "Remove from History"
+msgstr "履歴から削除"
+
 #: kram/ui/main_window.py:657
+msgid "Clear Search History"
+msgstr "検索履歴を消去"
+
+#: kram/ui/main_window.py:666
 msgid "A Synaptic-style package manager for Fedora."
 msgstr "Synaptic スタイルの Fedora 向けパッケージマネージャー。"
 
-#: kram/ui/main_window.py:659
+#: kram/ui/main_window.py:668
 msgid "Released under the MIT License."
 msgstr "MIT ライセンスの下で公開されています。"
 
-#: kram/ui/main_window.py:707
+#: kram/ui/main_window.py:716
 #, python-brace-format
 msgid "{n} package marked for upgrade"
 msgid_plural "{n} packages marked for upgrade"
 msgstr[0] "{n} 個のパッケージをアップグレード指定しました"
 
-#: kram/ui/main_window.py:713 kram/ui/main_window.py:721
+#: kram/ui/main_window.py:722 kram/ui/main_window.py:730
 msgid "Save Markings"
 msgstr "指定を保存"
 
-#: kram/ui/main_window.py:715 kram/ui/main_window.py:731
+#: kram/ui/main_window.py:724 kram/ui/main_window.py:740
 msgid "Text files (*.txt);;All files (*)"
 msgstr "テキストファイル (*.txt);;すべてのファイル (*)"
 
-#: kram/ui/main_window.py:721
+#: kram/ui/main_window.py:730
 #, python-brace-format
 msgid ""
 "Could not save {path}:\n"
@@ -1064,18 +1072,18 @@ msgstr ""
 "\n"
 "{error}"
 
-#: kram/ui/main_window.py:726
+#: kram/ui/main_window.py:735
 #, python-brace-format
 msgid "{n} marking saved to {path}"
 msgid_plural "{n} markings saved to {path}"
 msgstr[0] "{n} 件の指定を {path} に保存しました"
 
-#: kram/ui/main_window.py:730 kram/ui/main_window.py:740
-#: kram/ui/main_window.py:762
+#: kram/ui/main_window.py:739 kram/ui/main_window.py:749
+#: kram/ui/main_window.py:771
 msgid "Read Markings"
 msgstr "指定を読み込む"
 
-#: kram/ui/main_window.py:740
+#: kram/ui/main_window.py:749
 #, python-brace-format
 msgid ""
 "Could not read {path}:\n"
@@ -1086,13 +1094,13 @@ msgstr ""
 "\n"
 "{error}"
 
-#: kram/ui/main_window.py:750
+#: kram/ui/main_window.py:759
 #, python-brace-format
 msgid "{n} package marked"
 msgid_plural "{n} packages marked"
 msgstr[0] "{n} 個のパッケージを指定しました"
 
-#: kram/ui/main_window.py:755
+#: kram/ui/main_window.py:764
 #, python-brace-format
 msgid ""
 "{n} marking no longer applies (package not found, already in that state, …):"
@@ -1102,31 +1110,31 @@ msgstr[0] ""
 "{n} 件の指定はもう適用できません (パッケージが見つからない、すでにその状態で"
 "ある、など):"
 
-#: kram/ui/main_window.py:759
+#: kram/ui/main_window.py:768
 #, python-brace-format
 msgid "{n} line is not a valid marking: {lines}"
 msgid_plural "{n} lines are not valid markings: {lines}"
 msgstr[0] "{n} 行は有効な指定ではありません: {lines}"
 
-#: kram/ui/main_window.py:763
+#: kram/ui/main_window.py:772
 #, python-brace-format
 msgid "{n} package marked."
 msgid_plural "{n} packages marked."
 msgstr[0] "{n} 個のパッケージを指定しました。"
 
-#: kram/ui/main_window.py:781
+#: kram/ui/main_window.py:790
 msgid "(loading…)"
 msgstr "(読み込み中…)"
 
-#: kram/ui/main_window.py:788
+#: kram/ui/main_window.py:797
 msgid "No older versions in the repositories"
 msgstr "リポジトリに古いバージョンはありません"
 
-#: kram/ui/main_window.py:821
+#: kram/ui/main_window.py:830
 msgid "Resolving dependencies…"
 msgstr "依存関係を解決しています…"
 
-#: kram/ui/main_window.py:823
+#: kram/ui/main_window.py:832
 #, python-brace-format
 msgid ""
 "Could not resolve the changes:\n"
@@ -1137,23 +1145,23 @@ msgstr ""
 "\n"
 "{error}"
 
-#: kram/ui/main_window.py:828
+#: kram/ui/main_window.py:837
 msgid "Cannot apply changes"
 msgstr "変更を適用できません"
 
-#: kram/ui/main_window.py:829
+#: kram/ui/main_window.py:838
 msgid "The marked changes cannot be carried out. Unmark or change them."
 msgstr "指定した変更を実行できません。指定を解除するか変更してください。"
 
-#: kram/ui/main_window.py:840
+#: kram/ui/main_window.py:849
 msgid "Applying changes"
 msgstr "変更を適用しています"
 
-#: kram/ui/main_window.py:848
+#: kram/ui/main_window.py:857
 msgid "Refreshing metadata"
 msgstr "メタデータを更新しています"
 
-#: kram/ui/main_window.py:864
+#: kram/ui/main_window.py:873
 msgid "Changing repositories"
 msgstr "リポジトリを変更しています"
 
@@ -1388,16 +1396,16 @@ msgstr "検索結果"
 msgid "Custom filters"
 msgstr "カスタムフィルター"
 
-#: kram/ui/sidebar.py:82
+#: kram/ui/sidebar.py:95
 #, python-brace-format
 msgid "“{text}” — {mode}"
 msgstr "「{text}」 — {mode}"
 
-#: kram/ui/sidebar.py:131
+#: kram/ui/sidebar.py:144
 msgid "Search history is empty"
 msgstr "検索履歴は空です"
 
-#: kram/ui/sidebar.py:132
+#: kram/ui/sidebar.py:145
 msgid ""
 "No custom filters yet.\n"
 "Right-click to create one."

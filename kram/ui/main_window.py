@@ -649,6 +649,15 @@ class MainWindow(QMainWindow):
             m.addAction(QIcon.fromTheme("document-edit"), _("Edit Filter…"), lambda: self.edit_filters(select=name))
             m.addAction(QIcon.fromTheme("edit-delete"), _("Delete Filter"), lambda: self.delete_filter(name))
             m.addSeparator()
+        if self.sidebar.current_view == "search":
+            if entry is not None and entry.query is not None:
+                text, mode = entry.query
+                m.addAction(QIcon.fromTheme("edit-delete"), _("Remove from History"),
+                            lambda: self.sidebar.remove_search(text, mode))
+            clear = m.addAction(QIcon.fromTheme("edit-clear-history"), _("Clear Search History"),
+                                self.sidebar.clear_history)
+            clear.setEnabled(bool(self.sidebar.history))
+            m.addSeparator()
         m.addAction(self.act_new_filter)
         m.addAction(self.act_filters)
         m.exec(pos)

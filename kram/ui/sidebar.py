@@ -78,6 +78,19 @@ class Sidebar(QWidget):
         if self._view == "search":
             self._rebuild(emit=False)
 
+    def remove_search(self, text: str, mode: int) -> None:
+        self._drop_history([h for h in self.history if h[:2] != (text, mode)])
+
+    def clear_history(self) -> None:
+        self._drop_history([])
+
+    def _drop_history(self, history: list[tuple[str, int, int]]) -> None:
+        """Replace the history; the list re-filters only if the selected search went away."""
+        self.history = history
+        if self._view == "search":
+            kept = any(_history_id(text, mode) == self._selected.get("search") for text, mode, _c in history)
+            self._rebuild(emit=not kept)
+
     def _history_entries(self) -> list[FilterEntry]:
         return [FilterEntry(_history_id(text, mode), _("“{text}” — {mode}").format(text=text, mode=MODE_LABELS[Mode(mode)].lower()),
                             lambda _r: True, count, query=(text, mode))
