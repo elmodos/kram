@@ -6,7 +6,7 @@
 [![COPR version](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fcopr.fedorainfracloud.org%2Fapi_3%2Fpackage%3Fownername%3Delmodos%26projectname%3DKram%26packagename%3Dkram%26with_latest_succeeded_build%3DTrue&query=%24.builds.latest_succeeded.source_package.version&label=COPR&color=blue)](https://copr.fedorainfracloud.org/coprs/elmodos/Kram/)
 [![Fedora 43 | 44 | 45 | Rawhide](https://img.shields.io/badge/Fedora-43%20%7C%2044%20%7C%2045%20%7C%20Rawhide-294172?logo=fedora&logoColor=white)](https://copr.fedorainfracloud.org/coprs/elmodos/Kram/)
 [![Latest release](https://img.shields.io/github/v/tag/elmodos/kram?label=release&sort=semver)](https://github.com/elmodos/kram/tags)
-[![License: GPL-3.0-or-later](https://img.shields.io/github/license/elmodos/kram)](LICENSE)
+[![License: MIT](https://img.shields.io/github/license/elmodos/kram)](LICENSE)
 [![Translations: 12 languages](https://img.shields.io/badge/translations-12%20languages-2ea44f)](#translations)
 
 A Synaptic-style package manager for Fedora: the full package list, checkboxes, statuses and origins,
@@ -144,8 +144,6 @@ To try a language without changing the desktop: `LANGUAGE=de python3 -m kram`.
 
 ## License
 
-Kram is free software: you can redistribute it and/or modify it under the terms of the GNU General Public
-License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
-any later version. See [LICENSE](LICENSE).
+Kram is released under the [MIT License](LICENSE).
 
-SPDX-License-Identifier: GPL-3.0-or-later
+SPDX-License-Identifier: MIT

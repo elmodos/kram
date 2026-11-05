@@ -1,5 +1,5 @@
 """Kram — a Synaptic-style package manager for Fedora."""
-# SPDX-License-Identifier: GPL-3.0-or-later
+# SPDX-License-Identifier: MIT
 
 __version__ = "0.1.5"  # keep in sync with pyproject.toml and packaging/kram.spec
 

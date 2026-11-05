@@ -655,7 +655,8 @@ class MainWindow(QMainWindow):
 
     def about(self):
         QMessageBox.about(self, _("About Kram"), f"<h3>Kram {__version__}</h3><p>{_('A Synaptic-style package manager for Fedora.')}</p>"
-                                           f"<p><a href='{HOMEPAGE}'>{HOMEPAGE}</a></p>")
+                                           f"<p><a href='{HOMEPAGE}'>{HOMEPAGE}</a></p>"
+                                           f"<p>Copyright © 2026 Modo Ltunzher<br>{_('Released under the MIT License.')}</p>")
 
     # ---------------------------------------------------------------- marking
 

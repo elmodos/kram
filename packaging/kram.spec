@@ -8,7 +8,7 @@ Version:        %{base_version}%{?snapshot}
 Release:        1%{?dist}
 Summary:        Synaptic-style package manager for Fedora
 
-License:        GPL-3.0-or-later
+License:        MIT
 URL:            https://github.com/elmodos/kram
 Source0:        %{url}/archive/v%{base_version}/%{name}-%{base_version}.tar.gz
 
