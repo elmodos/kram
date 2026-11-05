@@ -270,7 +270,8 @@ class MainWindow(QMainWindow):
         self.search.setMinimumWidth(160)
         self.search.setMaximumWidth(300)
         self.search.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-        self.search.addAction(QIcon.fromTheme("edit-find"), QLineEdit.LeadingPosition)
+        self._search_icon = self.search.addAction(QIcon.fromTheme("edit-find"), QLineEdit.LeadingPosition)
+        self.search.textChanged.connect(self._update_search_icon)
         tb.addWidget(self.search)
         self.addToolBar(tb)
 
@@ -280,6 +281,14 @@ class MainWindow(QMainWindow):
         self.search.returnPressed.connect(self._on_search_enter)
         self._history_timer = QTimer(self, singleShot=True, interval=HISTORY_IDLE_MS)
         self._history_timer.timeout.connect(self._remember_search)
+
+    def _update_search_icon(self, text: str) -> None:
+        """A funnel while the search text filters the list, so it is not missed after switching views."""
+        active = bool(text.strip())
+        # the theme's own icon (monochrome in Breeze); themes without view-filter keep the magnifier
+        self._search_icon.setIcon(QIcon.fromTheme("view-filter" if active and QIcon.hasThemeIcon("view-filter")
+                                                  else "edit-find"))
+        self._search_icon.setToolTip(_("The list is filtered by the search text") if active else "")
 
     def _build_central(self):
         self.sidebar = Sidebar()
