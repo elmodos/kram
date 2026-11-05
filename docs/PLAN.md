@@ -301,8 +301,18 @@ architecture and installed size, matching all or any; a live count while editing
 View" turns the sidebar selection plus the search into conditions. Stored as JSON in kram.conf
 (`filters/custom`), compiled to in-memory predicates (`kram/core/custom_filters.py`).
 
-**After the MVP**: versionlock (🔒), local .rpm files, helper vs. dnf5daemon, offline system upgrades
+**After the MVP**: versionlock (🔒), helper vs. dnf5daemon, offline system upgrades
 (`dnf5 offline`), dnf-automatic settings, in-app language override.
+
+**Postponed for security reasons** (2026-11-05): installing local .rpm files. Scope: File → "Install Package
+File…", drag and drop, `MimeType=application/x-rpm` in the .desktop file; the file shows up in the list marked
+for installation (origin "Local (@commandline)") and goes through the normal apply dialog. Why postponed:
+- the helper is the security boundary and deliberately takes no paths (`SPEC_RE` forbids `/`); this needs a
+  new, strictly validated request type (absolute path to a regular `*.rpm` file, opened by the root helper);
+- local packages are usually not signature-checked (`localpkg_gpgcheck` is off by default in dnf5), so the
+  apply dialog must warn that the package is unverified and gets no updates unless it adds its own repo;
+- the GUI's preview has to load the same file (`add_cmdline_packages`) so both sides resolve the same goal.
+Until then: `sudo dnf install ./file.rpm` or Discover.
 
 **Decided against** (2026-11-04): transaction history with undo/rollback (`dnf5 history`). Not planned; `dnf5
 history` covers it from the terminal.
