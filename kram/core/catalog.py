@@ -18,6 +18,7 @@ from .model import (
     PkgDetails,
     PkgRow,
     PreviewItem,
+    Reason,
     RepoInfo,
     Status,
     TransactionPreview,
@@ -107,6 +108,11 @@ class Catalog:
         unneeded = keys(lambda q: q.filter_unneeded())
         user_installed = keys(lambda q: q.filter_userinstalled())
 
+        T = libdnf5.transaction
+        reasons = {T.TransactionItemReason_USER: Reason.USER, T.TransactionItemReason_GROUP: Reason.GROUP,
+                   T.TransactionItemReason_EXTERNAL_USER: Reason.EXTERNAL,
+                   T.TransactionItemReason_DEPENDENCY: Reason.DEPENDENCY,
+                   T.TransactionItemReason_WEAK_DEPENDENCY: Reason.WEAK}
         rows: list[PkgRow] = []
         pkgs: dict[tuple[str, str], tuple[object, object]] = {}
         n_upgradable = 0
@@ -131,7 +137,7 @@ class Catalog:
                 installed_evr=p.get_evr(), candidate_evr=cand.get_evr() if cand else "",
                 repo_id=cand.get_repo_id() if cand else from_repo,
                 size=p.get_install_size(), origin=classify(from_repo), status=status,
-                user_installed=key in user_installed, from_repo_id=from_repo,
+                user_installed=key in user_installed, from_repo_id=from_repo, reason=reasons.get(p.get_reason()),
             ))
             pkgs[key] = (p, cand)
 

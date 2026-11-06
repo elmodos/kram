@@ -36,12 +36,14 @@ from .copr_dialog import CoprDialog
 from .details import DetailsTabs
 from .dnf_thread import DnfThread
 from .filters_dialog import FiltersDialog
-from .package_model import COL_NAME, COL_STATUS, PackageTableModel
+from .package_model import COL_NAME, COL_STATUS, HEADERS, HIDEABLE, PackageTableModel
 from .progress_dialog import ProgressDialog
 from .repos_dialog import ReposDialog
 from .sidebar import Sidebar
 
-COLUMN_WIDTHS = [26, 24, 230, 175, 175, 150, 80]
+# bumped when columns change: an old saved state would put widths and hidden flags on the wrong columns
+HEADER_STATE_KEY = "table/header-v2"
+COLUMN_WIDTHS = [26, 24, 230, 175, 110, 175, 150, 80]
 HISTORY_IDLE_MS = 1500  # a search left alone this long goes into the history
 NOT_YET = _("Coming in a later version")
 # toolbar styles (Settings → Toolbar, or right-click the toolbar): id, label, button style, icon size
@@ -313,6 +315,8 @@ class MainWindow(QMainWindow):
         self.table.customContextMenuRequested.connect(self._context_menu)
         for col, width in enumerate(COLUMN_WIDTHS):
             self.table.setColumnWidth(col, width)
+        self.table.header().setContextMenuPolicy(Qt.CustomContextMenu)
+        self.table.header().customContextMenuRequested.connect(self._header_menu)
         self.table.selectionModel().currentRowChanged.connect(self._on_current)
         self.table.selectionModel().selectionChanged.connect(self._update_actions)
         self.table.addActions([self.act_copy_name, self.act_copy_nevra, *self.mark_actions.values(), self.act_unmark])
@@ -343,7 +347,7 @@ class MainWindow(QMainWindow):
         for key, splitter in (("window/hsplit", self.hsplit), ("window/vsplit", self.vsplit)):
             if state := s.value(key):
                 splitter.restoreState(state)
-        if state := s.value("table/header"):
+        if state := s.value(HEADER_STATE_KEY):
             self.table.header().restoreState(state)
         self.details.setCurrentIndex(int(s.value("details/tab", 0)))
         self.search_mode.setCurrentIndex(int(s.value("search/mode", Mode.NAME)))
@@ -366,7 +370,7 @@ class MainWindow(QMainWindow):
         s.setValue("window/geometry", self.saveGeometry())
         s.setValue("window/hsplit", self.hsplit.saveState())
         s.setValue("window/vsplit", self.vsplit.saveState())
-        s.setValue("table/header", self.table.header().saveState())
+        s.setValue(HEADER_STATE_KEY, self.table.header().saveState())
         s.setValue("details/tab", self.details.currentIndex())
         s.setValue("search/mode", self.search_mode.currentIndex())
         s.setValue("sidebar/view", self.sidebar.current_view)
@@ -650,6 +654,16 @@ class MainWindow(QMainWindow):
         self.sidebar.custom = [f for f in self.sidebar.custom if f.name != name]
         self._save_custom_filters()
         self.sidebar.set_view(self.sidebar.current_view)
+
+    def _header_menu(self, pos) -> None:
+        header = self.table.header()
+        m = QMenu(self)
+        for col in HIDEABLE:
+            act = m.addAction(HEADERS[col])
+            act.setCheckable(True)
+            act.setChecked(not header.isSectionHidden(col))
+            act.toggled.connect(lambda on, c=col: header.setSectionHidden(c, not on))
+        m.exec(header.viewport().mapToGlobal(pos))
 
     def _sidebar_menu(self, pos, entry: FilterEntry | None) -> None:
         m = QMenu(self)

@@ -20,6 +20,15 @@ class Status(Enum):
     UNNEEDED = "unneeded"    # installed as a dependency, nothing needs it any more
 
 
+class Reason(Enum):
+    """Why an installed package is there (dnf5's install reason). The first three keep it from autoremove."""
+    USER = "user"
+    GROUP = "group"
+    EXTERNAL = "external"    # installed outside dnf, or dnf lost the record: treated as installed by the user
+    DEPENDENCY = "dependency"
+    WEAK = "weak"            # pulled in by a Recommends/Supplements
+
+
 @dataclass(slots=True)
 class PkgRow:
     name: str
@@ -33,6 +42,7 @@ class PkgRow:
     status: Status
     user_installed: bool = False
     from_repo_id: str = ""     # repo it was installed from; "" if not installed
+    reason: Reason | None = None  # None if not installed
 
     @property
     def key(self) -> tuple[str, str]:
