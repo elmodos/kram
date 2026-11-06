@@ -98,7 +98,7 @@ packaging/kram.spec
 .copr/Makefile     # SRPM for COPR's "make srpm" build method
 scripts/           # i18n.sh, container_check.sh, rpm_check.sh, helper_driver.py, m0_helper_check.py
 tests/
-docs/              # this plan, UI mockups
+docs/              # this plan, COPR notes, README screenshots
 ```
 Packaging: `data/io.github.elmodos.Kram.{policy,desktop,metainfo.xml,svg}`, `packaging/kram.spec`,
 `.copr/Makefile` (M5).
@@ -342,6 +342,3 @@ history` covers it from the terminal.
    https://github.com/elmodos/kram, app ID `io.github.elmodos.Kram` (`kram/__init__.py`).
 2. KDE-specific integration (KNotification about updates in the tray) — outside the MVP?
 3. Should debuginfo/source packages be shown at all (default: no).
-
-The mockups in `docs/mockups/` show the Ukrainian locale; `docs/mockups/mockup.py` is a throwaway
-script that rendered them before the real UI existed.
