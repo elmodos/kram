@@ -1,5 +1,5 @@
 %global appid io.github.elmodos.Kram
-%global base_version 0.1.8
+%global base_version 0.1.9
 
 Name:           kram
 # A tagged release (v%%{base_version}) is plain %%{base_version}. Any other commit gets a snapshot from
@@ -83,6 +83,10 @@ QT_QPA_PLATFORM=offscreen %pytest
 %{_datadir}/icons/hicolor/scalable/apps/%{appid}.svg
 
 %changelog
+* Fri Nov 06 2026 Modo Ltunzher <offnormal@gmail.com> - 0.1.9-1
+- Toolbar: monochrome icon for Mark All Upgrades; Properties only in the Package menu
+- The package details pane can no longer be collapsed out of sight
+
 * Fri Nov 06 2026 Modo Ltunzher <offnormal@gmail.com> - 0.1.8-1
 - Marking a package for removal offers to mark the packages that depend on it (at any depth), as
   dnf5 remove would remove them; before, applying failed with "conflicting requests"
