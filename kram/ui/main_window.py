@@ -138,8 +138,8 @@ class MainWindow(QMainWindow):
         self.act_unmark_all = self._action(_("Unmark All"), "edit-clear", "Ctrl+Shift+Z", self.unmark_all,
                                            tip=_("Discard all marked changes"))
         self.act_unmark_all.setEnabled(False)
-        self.act_properties = self._action(_("Properties"), "document-properties", "Alt+Return",
-                                           lambda: self.details.setCurrentIndex(1))
+        self.act_properties = self._action(_("Properties"), "document-properties",
+                                           slot=lambda: self.details.setCurrentIndex(1))
         self.act_repos = self._action(_("Repositories"), "configure", slot=self.open_repos,
                                       tip=_("Enable or disable software repositories"))
         self.act_filters = self._action(_("Custom Filters…"), "view-filter", slot=lambda: self.edit_filters(),
@@ -254,7 +254,7 @@ class MainWindow(QMainWindow):
         self.set_toolbar_style(TOOLBAR_STYLES[0][0])
         tb.addActions([self.act_reload, self.act_mark_upgrades, self.act_apply])
         tb.addSeparator()
-        tb.addActions([self.act_properties, self.act_repos, self.act_copr])
+        tb.addActions([self.act_repos, self.act_copr])
         spacer = QWidget()
         spacer.setSizePolicy(spacer.sizePolicy().Policy.Expanding, spacer.sizePolicy().Policy.Preferred)
         tb.addWidget(spacer)
@@ -332,6 +332,7 @@ class MainWindow(QMainWindow):
         self.vsplit.addWidget(self.table)
         self.vsplit.addWidget(self.details)
         self.vsplit.setSizes([540, 260])
+        self.vsplit.setCollapsible(1, False)  # the details can shrink to their tab bar, not vanish
         self.hsplit = QSplitter(Qt.Horizontal)
         self.hsplit.addWidget(self.sidebar)
         self.hsplit.addWidget(self.vsplit)
@@ -611,8 +612,6 @@ class MainWindow(QMainWindow):
         self._package_menu(m)
         m.addSeparator()
         m.addActions([self.act_copy_name, self.act_copy_nevra])
-        m.addSeparator()
-        m.addAction(self.act_properties)
         m.exec(self.table.viewport().mapToGlobal(pos))
 
     # ---------------------------------------------------------- custom filters
