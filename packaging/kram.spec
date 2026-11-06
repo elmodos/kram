@@ -1,5 +1,5 @@
 %global appid io.github.elmodos.Kram
-%global base_version 0.1.6
+%global base_version 0.1.7
 
 Name:           kram
 # A tagged release (v%%{base_version}) is plain %%{base_version}. Any other commit gets a snapshot from
@@ -83,6 +83,9 @@ QT_QPA_PLATFORM=offscreen %pytest
 %{_datadir}/icons/hicolor/scalable/apps/%{appid}.svg
 
 %changelog
+* Fri Nov 06 2026 Modo Ltunzher <offnormal@gmail.com> - 0.1.7-1
+- Translations: Swedish (first pass, review welcome)
+
 * Thu Nov 05 2026 Modo Ltunzher <offnormal@gmail.com> - 0.1.6-1
 - Relicensed under the MIT License; the About dialog shows the copyright and license
 - Search results: remove a search from the history or clear the whole history (context menu)

@@ -1,7 +1,7 @@
 """Kram — a Synaptic-style package manager for Fedora."""
 # SPDX-License-Identifier: MIT
 
-__version__ = "0.1.6"  # keep in sync with pyproject.toml and packaging/kram.spec
+__version__ = "0.1.7"  # keep in sync with pyproject.toml and packaging/kram.spec
 
 # Reverse-DNS of https://github.com/elmodos/kram. Also the .desktop file name, the Wayland app_id
 # and the prefix of the polkit action ids, so it must stay in sync with data/ and packaging/.
