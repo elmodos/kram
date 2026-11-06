@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kram\n"
 "Report-Msgid-Bugs-To: https://github.com/elmodos/kram/issues\n"
-"POT-Creation-Date: 2026-11-05 18:05+0200\n"
+"POT-Creation-Date: 2026-11-06 11:33+0200\n"
 "PO-Revision-Date: 2026-11-04 14:07+0200\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -980,7 +980,7 @@ msgstr ""
 "exemplo, por ainda não ter pacotes para esta versão do Fedora), desative-o "
 "em Configurações → Repositórios."
 
-#: kram/ui/main_window.py:433
+#: kram/ui/main_window.py:433 kram/ui/main_window.py:744
 #, python-brace-format
 msgid "Error: {error}"
 msgstr "Erro: {error}"
@@ -1062,22 +1062,33 @@ msgstr "Um gerenciador de pacotes para o Fedora no estilo do Synaptic."
 msgid "Released under the MIT License."
 msgstr "Distribuído sob a Licença MIT."
 
-#: kram/ui/main_window.py:725
+#: kram/ui/main_window.py:726
+#, python-brace-format
+msgid "{n} installed package depends on the packages marked for removal and has to be removed as well:"
+msgid_plural "{n} installed packages depend on the packages marked for removal and have to be removed as well:"
+msgstr[0] "{n} pacote instalado depende dos pacotes marcados para remoção e também precisa ser removido:"
+msgstr[1] "{n} pacotes instalados dependem dos pacotes marcados para remoção e também precisam ser removidos:"
+
+#: kram/ui/main_window.py:732
+msgid "Mark"
+msgstr "Marcar"
+
+#: kram/ui/main_window.py:762
 #, python-brace-format
 msgid "{n} package marked for upgrade"
 msgid_plural "{n} packages marked for upgrade"
 msgstr[0] "{n} pacote marcado para atualização"
 msgstr[1] "{n} pacotes marcados para atualização"
 
-#: kram/ui/main_window.py:731 kram/ui/main_window.py:739
+#: kram/ui/main_window.py:768 kram/ui/main_window.py:776
 msgid "Save Markings"
 msgstr "Salvar marcações"
 
-#: kram/ui/main_window.py:733 kram/ui/main_window.py:749
+#: kram/ui/main_window.py:770 kram/ui/main_window.py:786
 msgid "Text files (*.txt);;All files (*)"
 msgstr "Arquivos de texto (*.txt);;Todos os arquivos (*)"
 
-#: kram/ui/main_window.py:739
+#: kram/ui/main_window.py:776
 #, python-brace-format
 msgid ""
 "Could not save {path}:\n"
@@ -1088,19 +1099,19 @@ msgstr ""
 "\n"
 "{error}"
 
-#: kram/ui/main_window.py:744
+#: kram/ui/main_window.py:781
 #, python-brace-format
 msgid "{n} marking saved to {path}"
 msgid_plural "{n} markings saved to {path}"
 msgstr[0] "{n} marcação salva em {path}"
 msgstr[1] "{n} marcações salvas em {path}"
 
-#: kram/ui/main_window.py:748 kram/ui/main_window.py:758
-#: kram/ui/main_window.py:780
+#: kram/ui/main_window.py:785 kram/ui/main_window.py:795
+#: kram/ui/main_window.py:817
 msgid "Read Markings"
 msgstr "Ler marcações"
 
-#: kram/ui/main_window.py:758
+#: kram/ui/main_window.py:795
 #, python-brace-format
 msgid ""
 "Could not read {path}:\n"
@@ -1111,14 +1122,14 @@ msgstr ""
 "\n"
 "{error}"
 
-#: kram/ui/main_window.py:768
+#: kram/ui/main_window.py:805
 #, python-brace-format
 msgid "{n} package marked"
 msgid_plural "{n} packages marked"
 msgstr[0] "{n} pacote marcado"
 msgstr[1] "{n} pacotes marcados"
 
-#: kram/ui/main_window.py:773
+#: kram/ui/main_window.py:810
 #, python-brace-format
 msgid ""
 "{n} marking no longer applies (package not found, already in that state, …):"
@@ -1130,33 +1141,33 @@ msgstr[1] ""
 "{n} marcações não se aplicam mais (pacotes não encontrados, já nesse estado, "
 "…):"
 
-#: kram/ui/main_window.py:777
+#: kram/ui/main_window.py:814
 #, python-brace-format
 msgid "{n} line is not a valid marking: {lines}"
 msgid_plural "{n} lines are not valid markings: {lines}"
 msgstr[0] "{n} linha não é uma marcação válida: {lines}"
 msgstr[1] "{n} linhas não são marcações válidas: {lines}"
 
-#: kram/ui/main_window.py:781
+#: kram/ui/main_window.py:818
 #, python-brace-format
 msgid "{n} package marked."
 msgid_plural "{n} packages marked."
 msgstr[0] "{n} pacote marcado."
 msgstr[1] "{n} pacotes marcados."
 
-#: kram/ui/main_window.py:799
+#: kram/ui/main_window.py:836
 msgid "(loading…)"
 msgstr "(carregando…)"
 
-#: kram/ui/main_window.py:806
+#: kram/ui/main_window.py:843
 msgid "No older versions in the repositories"
 msgstr "Nenhuma versão anterior nos repositórios"
 
-#: kram/ui/main_window.py:839
+#: kram/ui/main_window.py:876
 msgid "Resolving dependencies…"
 msgstr "Resolvendo dependências…"
 
-#: kram/ui/main_window.py:841
+#: kram/ui/main_window.py:878
 #, python-brace-format
 msgid ""
 "Could not resolve the changes:\n"
@@ -1167,25 +1178,25 @@ msgstr ""
 "\n"
 "{error}"
 
-#: kram/ui/main_window.py:846
+#: kram/ui/main_window.py:883
 msgid "Cannot apply changes"
 msgstr "Não é possível aplicar as alterações"
 
-#: kram/ui/main_window.py:847
+#: kram/ui/main_window.py:884
 msgid "The marked changes cannot be carried out. Unmark or change them."
 msgstr ""
 "As alterações marcadas não podem ser realizadas. Desmarque-as ou modifique-"
 "as."
 
-#: kram/ui/main_window.py:858
+#: kram/ui/main_window.py:895
 msgid "Applying changes"
 msgstr "Aplicando alterações"
 
-#: kram/ui/main_window.py:866
+#: kram/ui/main_window.py:903
 msgid "Refreshing metadata"
 msgstr "Atualizando metadados"
 
-#: kram/ui/main_window.py:882
+#: kram/ui/main_window.py:919
 msgid "Changing repositories"
 msgstr "Alterando repositórios"
 

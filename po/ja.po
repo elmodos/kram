@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kram\n"
 "Report-Msgid-Bugs-To: https://github.com/elmodos/kram/issues\n"
-"POT-Creation-Date: 2026-11-05 18:05+0200\n"
+"POT-Creation-Date: 2026-11-06 11:33+0200\n"
 "PO-Revision-Date: 2026-11-04 14:07+0200\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -970,7 +970,7 @@ msgstr ""
 "えば、この Fedora リリース向けのパッケージがまだない場合) は、設定 → リポジト"
 "リで無効にしてください。"
 
-#: kram/ui/main_window.py:433
+#: kram/ui/main_window.py:433 kram/ui/main_window.py:744
 #, python-brace-format
 msgid "Error: {error}"
 msgstr "エラー: {error}"
@@ -1051,21 +1051,31 @@ msgstr "Synaptic スタイルの Fedora 向けパッケージマネージャー�
 msgid "Released under the MIT License."
 msgstr "MIT ライセンスの下で公開されています。"
 
-#: kram/ui/main_window.py:725
+#: kram/ui/main_window.py:726
+#, python-brace-format
+msgid "{n} installed package depends on the packages marked for removal and has to be removed as well:"
+msgid_plural "{n} installed packages depend on the packages marked for removal and have to be removed as well:"
+msgstr[0] "{n} 個のインストール済みパッケージが削除指定したパッケージに依存しているため、一緒に削除する必要があります:"
+
+#: kram/ui/main_window.py:732
+msgid "Mark"
+msgstr "指定する"
+
+#: kram/ui/main_window.py:762
 #, python-brace-format
 msgid "{n} package marked for upgrade"
 msgid_plural "{n} packages marked for upgrade"
 msgstr[0] "{n} 個のパッケージをアップグレード指定しました"
 
-#: kram/ui/main_window.py:731 kram/ui/main_window.py:739
+#: kram/ui/main_window.py:768 kram/ui/main_window.py:776
 msgid "Save Markings"
 msgstr "指定を保存"
 
-#: kram/ui/main_window.py:733 kram/ui/main_window.py:749
+#: kram/ui/main_window.py:770 kram/ui/main_window.py:786
 msgid "Text files (*.txt);;All files (*)"
 msgstr "テキストファイル (*.txt);;すべてのファイル (*)"
 
-#: kram/ui/main_window.py:739
+#: kram/ui/main_window.py:776
 #, python-brace-format
 msgid ""
 "Could not save {path}:\n"
@@ -1076,18 +1086,18 @@ msgstr ""
 "\n"
 "{error}"
 
-#: kram/ui/main_window.py:744
+#: kram/ui/main_window.py:781
 #, python-brace-format
 msgid "{n} marking saved to {path}"
 msgid_plural "{n} markings saved to {path}"
 msgstr[0] "{n} 件の指定を {path} に保存しました"
 
-#: kram/ui/main_window.py:748 kram/ui/main_window.py:758
-#: kram/ui/main_window.py:780
+#: kram/ui/main_window.py:785 kram/ui/main_window.py:795
+#: kram/ui/main_window.py:817
 msgid "Read Markings"
 msgstr "指定を読み込む"
 
-#: kram/ui/main_window.py:758
+#: kram/ui/main_window.py:795
 #, python-brace-format
 msgid ""
 "Could not read {path}:\n"
@@ -1098,13 +1108,13 @@ msgstr ""
 "\n"
 "{error}"
 
-#: kram/ui/main_window.py:768
+#: kram/ui/main_window.py:805
 #, python-brace-format
 msgid "{n} package marked"
 msgid_plural "{n} packages marked"
 msgstr[0] "{n} 個のパッケージを指定しました"
 
-#: kram/ui/main_window.py:773
+#: kram/ui/main_window.py:810
 #, python-brace-format
 msgid ""
 "{n} marking no longer applies (package not found, already in that state, …):"
@@ -1114,31 +1124,31 @@ msgstr[0] ""
 "{n} 件の指定はもう適用できません (パッケージが見つからない、すでにその状態で"
 "ある、など):"
 
-#: kram/ui/main_window.py:777
+#: kram/ui/main_window.py:814
 #, python-brace-format
 msgid "{n} line is not a valid marking: {lines}"
 msgid_plural "{n} lines are not valid markings: {lines}"
 msgstr[0] "{n} 行は有効な指定ではありません: {lines}"
 
-#: kram/ui/main_window.py:781
+#: kram/ui/main_window.py:818
 #, python-brace-format
 msgid "{n} package marked."
 msgid_plural "{n} packages marked."
 msgstr[0] "{n} 個のパッケージを指定しました。"
 
-#: kram/ui/main_window.py:799
+#: kram/ui/main_window.py:836
 msgid "(loading…)"
 msgstr "(読み込み中…)"
 
-#: kram/ui/main_window.py:806
+#: kram/ui/main_window.py:843
 msgid "No older versions in the repositories"
 msgstr "リポジトリに古いバージョンはありません"
 
-#: kram/ui/main_window.py:839
+#: kram/ui/main_window.py:876
 msgid "Resolving dependencies…"
 msgstr "依存関係を解決しています…"
 
-#: kram/ui/main_window.py:841
+#: kram/ui/main_window.py:878
 #, python-brace-format
 msgid ""
 "Could not resolve the changes:\n"
@@ -1149,23 +1159,23 @@ msgstr ""
 "\n"
 "{error}"
 
-#: kram/ui/main_window.py:846
+#: kram/ui/main_window.py:883
 msgid "Cannot apply changes"
 msgstr "変更を適用できません"
 
-#: kram/ui/main_window.py:847
+#: kram/ui/main_window.py:884
 msgid "The marked changes cannot be carried out. Unmark or change them."
 msgstr "指定した変更を実行できません。指定を解除するか変更してください。"
 
-#: kram/ui/main_window.py:858
+#: kram/ui/main_window.py:895
 msgid "Applying changes"
 msgstr "変更を適用しています"
 
-#: kram/ui/main_window.py:866
+#: kram/ui/main_window.py:903
 msgid "Refreshing metadata"
 msgstr "メタデータを更新しています"
 
-#: kram/ui/main_window.py:882
+#: kram/ui/main_window.py:919
 msgid "Changing repositories"
 msgstr "リポジトリを変更しています"
 

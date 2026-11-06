@@ -78,3 +78,16 @@ def test_markings_file_bad_lines():
     marks, bad = parse_marks("\n".join(lines))
     assert bad == [4, 5, 6, 7, 8]
     assert [k for k, _m in marks] == [("fish", "x86_64"), ("python3-foo", "noarch")]
+
+
+def test_restore_takes_back_a_mark():
+    """Cancelling the dependents dialog restores what each package was marked with before."""
+    m = MarkSet()
+    m.set(OLD, Action.UPGRADE)
+    before = {OLD.key: m.get(OLD.key), CUR.key: m.get(CUR.key)}
+    m.set(OLD, Action.REMOVE)
+    m.set(CUR, Action.REMOVE)
+    for key, mark in before.items():
+        m.restore(key, mark)
+    assert m.get(OLD.key).action is Action.UPGRADE
+    assert CUR.key not in m

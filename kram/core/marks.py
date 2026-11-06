@@ -82,6 +82,13 @@ class MarkSet:
         self._marks[row.key] = Mark(action, evr)
         return True
 
+    def restore(self, key: tuple[str, str], mark: Mark | None) -> None:
+        """Put back a mark saved with get() (None: unmarked)."""
+        if mark is None:
+            self._marks.pop(key, None)
+        else:
+            self._marks[key] = mark
+
     def unmark(self, key: tuple[str, str]) -> None:
         self._marks.pop(key, None)
 

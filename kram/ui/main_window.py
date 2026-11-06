@@ -702,9 +702,46 @@ class MainWindow(QMainWindow):
             self.sidebar.refresh_counts()
 
     def mark_selected(self, action: Action, evr: str = ""):
-        changed = [r.key for r in self._selected_rows() if self.model.marks.set(r, action, evr)]
+        rows = self._selected_rows()
+        before = {r.key: self.model.marks.get(r.key) for r in rows}
+        changed = [r.key for r in rows if self.model.marks.set(r, action, evr)]
         if changed:
             self._marks_changed(changed)
+            if action is Action.REMOVE:
+                self._check_removal_dependents(changed, {k: before[k] for k in changed})
+
+    def _check_removal_dependents(self, keys: list, before: dict) -> None:
+        """Like Synaptic: packages that depend on the ones just marked for removal must go too; offer to mark them."""
+        rows = {r.key: r for r in self.snapshot.rows}
+        remove = self.model.marks.request(rows).get("remove", [])
+
+        def done(dependents):
+            marks = self.model.marks
+            if any((m := marks.get(k)) is None or m.action is not Action.REMOVE for k in keys):
+                return  # the marks changed meanwhile
+            extra = [rows[k] for k in dependents if k not in marks and k in rows]
+            if not extra:
+                return
+            box = QMessageBox(QMessageBox.Question, "Kram",
+                              ngettext("{n} installed package depends on the packages marked for removal and has to be "
+                                       "removed as well:",
+                                       "{n} installed packages depend on the packages marked for removal and have to be "
+                                       "removed as well:", len(extra)).format(n=len(extra)),
+                              QMessageBox.Cancel, self)
+            box.setInformativeText(", ".join(sorted(r.name for r in extra)))
+            mark_btn = box.addButton(_("Mark"), QMessageBox.AcceptRole)
+            box.setDefaultButton(mark_btn)
+            box.exec()
+            if box.clickedButton() is mark_btn:
+                for r in extra:
+                    marks.set(r, Action.REMOVE)
+                self._marks_changed([r.key for r in extra])
+            else:  # as in Synaptic, cancelling takes back the removal that needed them
+                for k, m in before.items():
+                    marks.restore(k, m)
+                self._marks_changed(list(before))
+        self.dnf.submit(lambda: self.catalog.removal_dependents(remove), done,
+                        lambda e: self.status.setText(_("Error: {error}").format(error=e)))
 
     def unmark_selected(self):
         keys = [r.key for r in self._selected_rows() if r.key in self.model.marks]

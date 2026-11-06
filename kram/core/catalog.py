@@ -54,6 +54,7 @@ class Catalog:
         # (name, arch) -> (installed pkg | None, candidate pkg | None); lives only on the worker thread
         self._pkgs: dict[tuple[str, str], tuple[object, object]] = {}
         self._user_installed: set[tuple[str, str]] = set()
+        self._system_base = None
 
     def load(self) -> CatalogSnapshot:
         t0 = time.monotonic()
@@ -79,6 +80,7 @@ class Catalog:
             repo.get_config().skip_if_unavailable = True
         repo_sack.load_repos()
         self._base = base
+        self._system_base = None  # built on first use, see removal_dependents
 
         basearch = base.get_vars().get_value("basearch")
         arches = [basearch, "noarch"]
@@ -270,6 +272,31 @@ class Catalog:
             return []
         # several versions of one package collapse into its catalog row
         return sorted({k for k in ((x.get_name(), x.get_arch()) for x in q) if k in self._pkgs})
+
+    def removal_dependents(self, remove: list[str]) -> list[tuple[str, str]]:
+        """Installed packages that depend on `remove` (specs), at any depth, and would have to be removed with
+        them, as keys. The real goal does not allow erasing, so these have to be marked too.
+
+        Resolved like `dnf5 remove`: allow_erasing on a base with only the installed packages. With the
+        repositories loaded, allow_erasing would also let the solver downgrade or swap packages instead."""
+        if self._system_base is None:
+            base = libdnf5.base.Base()
+            base.load_config()
+            base.setup()
+            base.get_repo_sack().load_repos(libdnf5.repo.Repo.Type_SYSTEM)
+            self._system_base = base
+        goal = libdnf5.base.Goal(self._system_base)
+        for s in remove:
+            goal.add_remove(s)
+        goal.set_allow_erasing(True)
+        tr = goal.resolve()
+        if tr.get_problems() != libdnf5.base.GoalProblem_NO_PROBLEM:
+            return []  # the preview will show the resolver's own message
+        T = libdnf5.transaction
+        found = {(tp.get_package().get_name(), tp.get_package().get_arch()) for tp in tr.get_transaction_packages()
+                 if tp.get_action() == T.TransactionItemAction_REMOVE
+                 and tp.get_reason() == T.TransactionItemReason_DEPENDENCY}
+        return sorted(k for k in found if k in self._pkgs)
 
     def resolve(self, request: dict) -> TransactionPreview:
         """Dry-run the transaction the helper would run (same goal builder), without root or downloads."""
