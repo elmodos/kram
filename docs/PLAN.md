@@ -301,7 +301,7 @@ architecture and installed size, matching all or any; a live count while editing
 View" turns the sidebar selection plus the search into conditions. Stored as JSON in kram.conf
 (`filters/custom`), compiled to in-memory predicates (`kram/core/custom_filters.py`).
 
-**After the MVP**: versionlock (🔒), helper vs. dnf5daemon, offline system upgrades
+**After the MVP**: versionlock (🔒), offline system upgrades
 (`dnf5 offline`), dnf-automatic settings, in-app language override.
 
 **Postponed for security reasons** (2026-11-05): installing local .rpm files. Scope: File → "Install Package
@@ -313,6 +313,14 @@ for installation (origin "Local (@commandline)") and goes through the normal app
   apply dialog must warn that the package is unverified and gets no updates unless it adds its own repo;
 - the GUI's preview has to load the same file (`add_cmdline_packages`) so both sides resolve the same goal.
 Until then: `sudo dnf install ./file.rpm` or Discover.
+
+**Reasonable, but not planned unless users ask for it** (2026-11-06): moving transactions from our helper to
+dnf5daemon, or supporting both. For: no root code of our own, standard dnf polkit actions, local .rpm and
+offline upgrades come almost for free. Against: dnf5daemon 5.4 has no `mark` (install reason) and cannot add
+repositories (COPR), so the helper would stay anyway; `auth_admin_keep` asks again every few minutes instead of
+once per session; `dnf5daemon-server` is not installed by default; the `v0` API changes between dnf5
+versions; D-Bus with complex types is awkward from PySide6; harder to test in containers. Both at once only
+makes sense as a migration path.
 
 **Decided against** (2026-11-04): transaction history with undo/rollback (`dnf5 history`). Not planned; `dnf5
 history` covers it from the terminal.
