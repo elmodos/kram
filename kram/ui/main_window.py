@@ -127,9 +127,11 @@ class MainWindow(QMainWindow):
         self.act_reload_cache = self._action(_("Reload from cache"), "view-refresh", "Ctrl+Shift+R", self.reload,
                                              tip=_("Reload the catalog from the local cache, without network or "
                                                    "password"))
-        self.act_mark_upgrades = self._action(_("Mark All Upgrades"), "system-software-update", "Ctrl+U",
-                                              self.mark_all_upgrades,
+        self.act_mark_upgrades = self._action(_("Mark All Upgrades"), None, "Ctrl+U", self.mark_all_upgrades,
                                               tip=_("Mark every package that has a newer version for upgrade"))
+        # Breeze's monochrome update glyph matches the other toolbar icons; system-software-update is a colour
+        # app icon there, kept as the fallback for themes without update-none
+        self.act_mark_upgrades.setIcon(QIcon.fromTheme("update-none", QIcon.fromTheme("system-software-update")))
         self.act_apply = self._action(_("Apply"), "dialog-ok-apply", "Ctrl+P", self.apply,
                                       tip=_("Review and apply the marked changes"))
         self.act_apply.setEnabled(False)
