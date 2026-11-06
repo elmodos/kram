@@ -7,7 +7,7 @@
 [![Fedora 43 | 44 | 45 | Rawhide](https://img.shields.io/badge/Fedora-43%20%7C%2044%20%7C%2045%20%7C%20Rawhide-294172?logo=fedora&logoColor=white)](https://copr.fedorainfracloud.org/coprs/elmodos/Kram/)
 [![Latest release](https://img.shields.io/github/v/tag/elmodos/kram?label=release&sort=semver)](https://github.com/elmodos/kram/tags)
 [![License: MIT](https://img.shields.io/github/license/elmodos/kram)](LICENSE)
-[![Translations: 12 languages](https://img.shields.io/badge/translations-12%20languages-2ea44f)](#translations)
+[![Translations: 13 languages](https://img.shields.io/badge/translations-13%20languages-2ea44f)](#translations)
 
 A Synaptic-style package manager for Fedora: the full package list, checkboxes, statuses and origins,
 search that works, and nothing happens until you press **Apply**.
@@ -38,7 +38,7 @@ Built on libdnf5 (the same library as `dnf5`) and Qt 6. See [docs/PLAN.md](docs/
 - Description, dependencies (clickable), files, all versions and the changelog of every package.
 - Enable and disable repositories; enable, disable and remove COPR projects, search Copr.
 - One password per session (polkit); browsing and searching need none.
-- In 12 languages ([Translations](#translations)).
+- In 13 languages ([Translations](#translations)).
 
 ## Installing
 
@@ -114,6 +114,7 @@ Kram follows the desktop's language setting.
 | 한국어 | Korean | `ko` | needs review |
 | Polski | Polish | `pl` | needs review |
 | Português (Brasil) | Portuguese (Brazil) | `pt_BR` | needs review |
+| Svenska | Swedish | `sv` | needs review |
 | Українська | Ukrainian | `uk` | reviewed |
 | 简体中文 | Chinese (Simplified) | `zh_CN` | needs review |
 
