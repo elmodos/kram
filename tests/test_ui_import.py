@@ -197,3 +197,16 @@ def test_progress_counts_packages_not_rpm_steps(app):
     assert dlg.rpm_label.text() == "Package 1 of 1"
     client.event.emit({"event": "done", "ok": True})
     assert dlg.rpm_bar.value() == dlg.rpm_bar.maximum()
+
+
+def test_whats_new_dialog(app):
+    import kram
+    from kram.core.releases import Release
+    from kram.ui.whats_new import WhatsNewDialog
+
+    dlg = WhatsNewDialog([Release(kram.__version__, "2026-11-10", ["Intro."], ["One", "Two"]),
+                          Release("0.0.1", "2026-01-01", [], ["First"])])
+    text = dlg.text.toPlainText()
+    assert f"{kram.__version__} — 2026-11-10 (this version)" in text and "Two" in text and "0.0.1" in text
+    empty = WhatsNewDialog([])
+    assert "not available" in empty.text.toPlainText()

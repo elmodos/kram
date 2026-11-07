@@ -23,6 +23,7 @@ from PySide6.QtWidgets import (
 )
 
 from .. import HOMEPAGE, __version__
+from ..core import releases
 from ..core.catalog import Catalog
 from ..core.custom_filters import CustomFilter, Field, conditions_for_view, load_filters
 from ..core.evr import evr_cmp
@@ -42,6 +43,7 @@ from .package_model import COL_NAME, COL_STATUS, HEADERS, HIDEABLE, PackageTable
 from .progress_dialog import ProgressDialog
 from .repos_dialog import ReposDialog
 from .sidebar import Sidebar
+from .whats_new import WhatsNewDialog
 
 # bumped when columns change: an old saved state would put widths and hidden flags on the wrong columns
 HEADER_STATE_KEY = "table/header-v2"
@@ -695,9 +697,16 @@ class MainWindow(QMainWindow):
         m.exec(pos)
 
     def about(self):
-        QMessageBox.about(self, _("About Kram"), f"<h3>Kram {__version__}</h3><p>{_('A Synaptic-style package manager for Fedora.')}</p>"
-                                           f"<p><a href='{HOMEPAGE}'>{HOMEPAGE}</a></p>"
-                                           f"<p>Copyright © 2026 Modo Ltunzher<br>{_('Released under the MIT License.')}</p>")
+        box = QMessageBox(QMessageBox.NoIcon, _("About Kram"),
+                          f"<h3>Kram {__version__}</h3><p>{_('A Synaptic-style package manager for Fedora.')}</p>"
+                          f"<p><a href='{HOMEPAGE}'>{HOMEPAGE}</a></p>"
+                          f"<p>Copyright © 2026 Modo Ltunzher<br>{_('Released under the MIT License.')}</p>",
+                          QMessageBox.Close, self)
+        box.setIconPixmap(self.windowIcon().pixmap(64, 64))
+        whats_new = box.addButton(_("What's New"), QMessageBox.ActionRole)
+        box.exec()
+        if box.clickedButton() is whats_new:
+            WhatsNewDialog(releases.load(), self).exec()
 
     # ---------------------------------------------------------------- marking
 

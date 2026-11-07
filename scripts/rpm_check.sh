@@ -51,6 +51,8 @@ from kram.ipc.client import HelperClient, _installed
 from kram.i18n import _
 import kram
 assert _installed(), kram.__file__
+from kram.core import releases
+assert releases.load()[0].version == kram.__version__  # the release notes come from the installed metainfo
 print(kram.__file__, HelperClient()._command(), _(\"Reload\"))
 "
     xmllint --noout --dtdvalid /usr/share/polkit-1/policyconfig-1.dtd /usr/share/polkit-1/actions/io.github.elmodos.Kram.policy 2>/dev/null \
