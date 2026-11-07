@@ -304,6 +304,11 @@ View" turns the sidebar selection plus the search into conditions. Stored as JSO
 **After the MVP**: versionlock (🔒), offline system upgrades
 (`dnf5 offline`), dnf-automatic settings, in-app language override.
 
+**Changelog in the app** (requested 2026-11-07, not designed yet): show what changed in each version somewhere
+in Kram. Source: commits that change something a user can notice end with `Changelog: <Area>: <change>` git
+trailers (from c4ed714 on), read with `git log vA..vB --format='%(trailers:key=Changelog,valueonly)'`; the
+release step will collect them into a file shipped with the package (and the metainfo `<release>` notes).
+
 **Cache** (after the MVP, planned 2026-11-07): a small dialog that shows the size of each package cache and
 cleans it through the helper.
 - `/var/cache/libdnf5`: the system dnf cache. With `keepcache=False` (the default) downloaded packages go away
