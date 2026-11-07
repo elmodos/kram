@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kram\n"
 "Report-Msgid-Bugs-To: https://github.com/elmodos/kram/issues\n"
-"POT-Creation-Date: 2026-11-06 17:26+0200\n"
+"POT-Creation-Date: 2026-11-07 22:48+0200\n"
 "PO-Revision-Date: 2026-11-04 14:07+0200\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -43,7 +43,7 @@ msgstr "状態"
 msgid "Origin"
 msgstr "提供元"
 
-#: kram/core/custom_filters.py:52 kram/ui/apply_dialog.py:55
+#: kram/core/custom_filters.py:52 kram/ui/apply_dialog.py:83
 #: kram/ui/details.py:44 kram/ui/package_model.py:15
 msgid "Repository"
 msgstr "リポジトリ"
@@ -226,114 +226,180 @@ msgstr "特権ヘルパーが予期せず終了しました (コード {code})�
 msgid "Could not start pkexec. Is polkit installed?"
 msgstr "pkexec を起動できませんでした。polkit はインストールされていますか？"
 
-#: kram/ui/apply_dialog.py:29
+#: kram/ui/apply_dialog.py:35
 msgid "To be installed"
 msgstr "インストール予定"
 
-#: kram/ui/apply_dialog.py:30
+#: kram/ui/apply_dialog.py:36
 msgid "To be installed as dependencies"
 msgstr "依存関係としてインストール予定"
 
-#: kram/ui/apply_dialog.py:31
+#: kram/ui/apply_dialog.py:37
 msgid "To be upgraded"
 msgstr "アップグレード予定"
 
-#: kram/ui/apply_dialog.py:32
+#: kram/ui/apply_dialog.py:38
 msgid "To be downgraded"
 msgstr "ダウングレード予定"
 
-#: kram/ui/apply_dialog.py:33
+#: kram/ui/apply_dialog.py:39
 msgid "To be reinstalled"
 msgstr "再インストール予定"
 
-#: kram/ui/apply_dialog.py:34
+#: kram/ui/apply_dialog.py:40
 msgid "To be removed"
 msgstr "削除予定"
 
-#: kram/ui/apply_dialog.py:35
+#: kram/ui/apply_dialog.py:41
 msgid "To be removed as dependent or no longer needed"
 msgstr "依存しているか不要になったため削除予定"
 
-#: kram/ui/apply_dialog.py:37
+#: kram/ui/apply_dialog.py:43
 msgid "Install reason changes"
 msgstr "インストール理由の変更"
 
-#: kram/ui/apply_dialog.py:39 kram/ui/package_model.py:24
+#: kram/ui/apply_dialog.py:45 kram/ui/package_model.py:24
 msgid "dependency"
 msgstr "依存関係"
 
-#: kram/ui/apply_dialog.py:39
+#: kram/ui/apply_dialog.py:45
 msgid "unneeded"
 msgstr "不要"
 
-#: kram/ui/apply_dialog.py:39 kram/ui/package_model.py:21
+#: kram/ui/apply_dialog.py:45 kram/ui/package_model.py:21
 msgid "user"
 msgstr "ユーザー"
 
-#: kram/ui/apply_dialog.py:39 kram/ui/package_model.py:25
+#: kram/ui/apply_dialog.py:45 kram/ui/package_model.py:25
 msgid "weak dependency"
 msgstr "弱い依存関係"
 
-#: kram/ui/apply_dialog.py:49 kram/ui/repos_dialog.py:85
+#: kram/ui/apply_dialog.py:68 kram/ui/repos_dialog.py:85
 msgid "Apply changes"
 msgstr "変更を適用"
 
-#: kram/ui/apply_dialog.py:52
+#: kram/ui/apply_dialog.py:80
 msgid "Review the list before applying."
 msgstr "適用する前に一覧を確認してください。"
 
-#: kram/ui/apply_dialog.py:52
+#: kram/ui/apply_dialog.py:80
 msgid "The following changes will be made."
 msgstr "次の変更が行われます。"
 
-#: kram/ui/apply_dialog.py:55 kram/ui/details.py:70 kram/ui/package_model.py:15
+#: kram/ui/apply_dialog.py:83 kram/ui/details.py:70 kram/ui/package_model.py:15
 msgid "Package"
 msgstr "パッケージ"
 
-#: kram/ui/apply_dialog.py:55 kram/ui/package_model.py:16
+#: kram/ui/apply_dialog.py:83 kram/ui/package_model.py:16
 msgid "Size"
 msgstr "サイズ"
 
-#: kram/ui/apply_dialog.py:55 kram/ui/details.py:44
+#: kram/ui/apply_dialog.py:83 kram/ui/details.py:44
 msgid "Version"
 msgstr "バージョン"
 
-#: kram/ui/apply_dialog.py:82
+#: kram/ui/apply_dialog.py:89
+msgid "Adds"
+msgstr "追加"
+
+#: kram/ui/apply_dialog.py:89
+msgid "Recommended by"
+msgstr "推奨元"
+
+#: kram/ui/apply_dialog.py:89
+msgid "Recommended package"
+msgstr "推奨パッケージ"
+
+#: kram/ui/apply_dialog.py:98
+msgid "Recommended packages."
+msgstr "推奨パッケージ。"
+
+#: kram/ui/apply_dialog.py:99
+msgid ""
+"Not required, but suggested by the packages being installed. Uncheck what "
+"you do not want."
+msgstr ""
+"必須ではありませんが、インストールするパッケージが推奨しています。不要なもの"
+"のチェックを外してください。"
+
+#: kram/ui/apply_dialog.py:122
+msgid "Equivalent command"
+msgstr "同等のコマンド"
+
+#: kram/ui/apply_dialog.py:126
+msgid "Download packages only"
+msgstr "パッケージのダウンロードのみ"
+
+#: kram/ui/apply_dialog.py:130 kram/ui/main_window.py:135
+msgid "Apply"
+msgstr "適用"
+
+#: kram/ui/apply_dialog.py:146
 #, python-brace-format
 msgid "To download: {size}."
 msgstr "ダウンロード: {size}。"
 
-#: kram/ui/apply_dialog.py:83
+#: kram/ui/apply_dialog.py:147
 #, python-brace-format
 msgid "Disk space change: {size}."
 msgstr "ディスク使用量の変化: {size}。"
 
-#: kram/ui/apply_dialog.py:89
+#: kram/ui/apply_dialog.py:153
 #, python-brace-format
 msgid "Essential system packages will be removed: {names}."
 msgstr "重要なシステムパッケージが削除されます: {names}。"
 
-#: kram/ui/apply_dialog.py:91
+#: kram/ui/apply_dialog.py:155
 #, python-brace-format
 msgid "{n} package will be removed."
 msgid_plural "{n} packages will be removed."
 msgstr[0] "{n} 個のパッケージが削除されます。"
 
-#: kram/ui/apply_dialog.py:93
+#: kram/ui/apply_dialog.py:156
 msgid "Make sure this is what you want."
 msgstr "本当にこれでよいか確認してください。"
 
-#: kram/ui/apply_dialog.py:102
-msgid "Equivalent command"
-msgstr "同等のコマンド"
+#: kram/ui/apply_dialog.py:191
+#, python-brace-format
+msgid "Recommended by dependencies ({n})"
+msgstr "依存関係による推奨 ({n})"
 
-#: kram/ui/apply_dialog.py:106
-msgid "Download packages only"
-msgstr "パッケージのダウンロードのみ"
+#: kram/ui/apply_dialog.py:198
+msgid ""
+"Pulled in because it complements packages being installed (language support, "
+"plugins)."
+msgstr ""
+"インストールするパッケージを補完するため追加されます (言語サポート、プラグイ"
+"ン)。"
 
-#: kram/ui/apply_dialog.py:110 kram/ui/main_window.py:135
-msgid "Apply"
-msgstr "適用"
+#: kram/ui/apply_dialog.py:212
+msgid "still installed: something else requires it"
+msgstr "それでもインストールされます: 他のパッケージが必要としています"
+
+#: kram/ui/apply_dialog.py:219
+#, python-brace-format
+msgid "+{size}, {n} package"
+msgid_plural "+{size}, {n} packages"
+msgstr[0] "+{size}、{n} 個のパッケージ"
+
+#: kram/ui/apply_dialog.py:240 kram/ui/main_window.py:891
+msgid "Resolving dependencies…"
+msgstr "依存関係を解決しています…"
+
+#: kram/ui/apply_dialog.py:250
+msgid "These choices cannot be carried out:"
+msgstr "この選択は実行できません:"
+
+#: kram/ui/apply_dialog.py:255 kram/ui/main_window.py:893
+#, python-brace-format
+msgid ""
+"Could not resolve the changes:\n"
+"\n"
+"{error}"
+msgstr ""
+"変更を解決できませんでした:\n"
+"\n"
+"{error}"
 
 #: kram/ui/copr_dialog.py:46
 msgid "COPR repositories"
@@ -1150,21 +1216,6 @@ msgstr "(読み込み中…)"
 msgid "No older versions in the repositories"
 msgstr "リポジトリに古いバージョンはありません"
 
-#: kram/ui/main_window.py:891
-msgid "Resolving dependencies…"
-msgstr "依存関係を解決しています…"
-
-#: kram/ui/main_window.py:893
-#, python-brace-format
-msgid ""
-"Could not resolve the changes:\n"
-"\n"
-"{error}"
-msgstr ""
-"変更を解決できませんでした:\n"
-"\n"
-"{error}"
-
 #: kram/ui/main_window.py:898
 msgid "Cannot apply changes"
 msgstr "変更を適用できません"
@@ -1173,15 +1224,15 @@ msgstr "変更を適用できません"
 msgid "The marked changes cannot be carried out. Unmark or change them."
 msgstr "指定した変更を実行できません。指定を解除するか変更してください。"
 
-#: kram/ui/main_window.py:910
+#: kram/ui/main_window.py:914
 msgid "Applying changes"
 msgstr "変更を適用しています"
 
-#: kram/ui/main_window.py:918
+#: kram/ui/main_window.py:922
 msgid "Refreshing metadata"
 msgstr "メタデータを更新しています"
 
-#: kram/ui/main_window.py:934
+#: kram/ui/main_window.py:938
 msgid "Changing repositories"
 msgstr "リポジトリを変更しています"
 

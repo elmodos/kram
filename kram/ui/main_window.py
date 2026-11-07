@@ -901,9 +901,13 @@ class MainWindow(QMainWindow):
             box.setDetailedText("\n".join(preview.problems))
             box.exec()
             return
-        dlg = ApplyDialog(preview, request, self.snapshot.basearch, self)
+        def resolve(req, done, failed):
+            self.dnf.submit(lambda: self.catalog.resolve(req, sizes=False), done, failed)
+
+        dlg = ApplyDialog(preview, request, self.snapshot.basearch, self, resolve=resolve)
         if dlg.exec() != ApplyDialog.Accepted:
             return
+        request = dlg.request  # with the recommendations the user unchecked
         download_only = dlg.download_only.isChecked()
         if download_only:
             request = {**request, "download_only": True}

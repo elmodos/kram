@@ -162,11 +162,31 @@ class PreviewItem:
 
 
 @dataclass(slots=True)
+class Recommendation:
+    """A weak dependency the transaction brings in (or would, if the user had not unchecked it)."""
+    what: str                    # the Recommends: string, e.g. "(libvirt-daemon-kvm or libvirt-daemon-qemu)",
+                                 # or a package name for one pulled in by its own Supplements:
+    by: list[str]                # names of the packages in the transaction that recommend it
+    direct: bool                 # recommended by a package the user marked, not by a dependency
+    brings: list[str]            # names it brings into the transaction now (empty while unchecked)
+    excludes: list[str]          # names to put in exclude_weak to uncheck it (every provider)
+    needed: list[str] = field(default_factory=list)  # unchecked, but still installed: a hard dependency
+    size: int | None = None      # install size it adds; with everything it pulls in when `exact`
+    count: int = 0               # packages it adds; likewise
+    exact: bool = False
+
+    @property
+    def checked(self) -> bool:
+        return bool(self.brings)
+
+
+@dataclass(slots=True)
 class TransactionPreview:
     items: list[PreviewItem]
     problems: list[str]          # resolver messages; non-empty means the transaction cannot run
     download_size: int
     size_change: int             # bytes of disk space gained (+) or freed (-)
+    recommendations: list[Recommendation] = field(default_factory=list)
 
     @property
     def ok(self) -> bool:

@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kram\n"
 "Report-Msgid-Bugs-To: https://github.com/elmodos/kram/issues\n"
-"POT-Creation-Date: 2026-11-06 17:26+0200\n"
+"POT-Creation-Date: 2026-11-07 22:48+0200\n"
 "PO-Revision-Date: 2026-11-04 14:07+0200\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -44,7 +44,7 @@ msgstr "Estado"
 msgid "Origin"
 msgstr "Origem"
 
-#: kram/core/custom_filters.py:52 kram/ui/apply_dialog.py:55
+#: kram/core/custom_filters.py:52 kram/ui/apply_dialog.py:83
 #: kram/ui/details.py:44 kram/ui/package_model.py:15
 msgid "Repository"
 msgstr "Repositório"
@@ -228,115 +228,181 @@ msgstr ""
 msgid "Could not start pkexec. Is polkit installed?"
 msgstr "Não foi possível iniciar o pkexec. O polkit está instalado?"
 
-#: kram/ui/apply_dialog.py:29
+#: kram/ui/apply_dialog.py:35
 msgid "To be installed"
 msgstr "Serão instalados"
 
-#: kram/ui/apply_dialog.py:30
+#: kram/ui/apply_dialog.py:36
 msgid "To be installed as dependencies"
 msgstr "Serão instalados como dependências"
 
-#: kram/ui/apply_dialog.py:31
+#: kram/ui/apply_dialog.py:37
 msgid "To be upgraded"
 msgstr "Serão atualizados"
 
-#: kram/ui/apply_dialog.py:32
+#: kram/ui/apply_dialog.py:38
 msgid "To be downgraded"
 msgstr "Terão a versão revertida"
 
-#: kram/ui/apply_dialog.py:33
+#: kram/ui/apply_dialog.py:39
 msgid "To be reinstalled"
 msgstr "Serão reinstalados"
 
-#: kram/ui/apply_dialog.py:34
+#: kram/ui/apply_dialog.py:40
 msgid "To be removed"
 msgstr "Serão removidos"
 
-#: kram/ui/apply_dialog.py:35
+#: kram/ui/apply_dialog.py:41
 msgid "To be removed as dependent or no longer needed"
 msgstr "Serão removidos por serem dependentes ou não mais necessários"
 
-#: kram/ui/apply_dialog.py:37
+#: kram/ui/apply_dialog.py:43
 msgid "Install reason changes"
 msgstr "Alterações do motivo da instalação"
 
-#: kram/ui/apply_dialog.py:39 kram/ui/package_model.py:24
+#: kram/ui/apply_dialog.py:45 kram/ui/package_model.py:24
 msgid "dependency"
 msgstr "dependência"
 
-#: kram/ui/apply_dialog.py:39
+#: kram/ui/apply_dialog.py:45
 msgid "unneeded"
 msgstr "desnecessário"
 
-#: kram/ui/apply_dialog.py:39 kram/ui/package_model.py:21
+#: kram/ui/apply_dialog.py:45 kram/ui/package_model.py:21
 msgid "user"
 msgstr "usuário"
 
-#: kram/ui/apply_dialog.py:39 kram/ui/package_model.py:25
+#: kram/ui/apply_dialog.py:45 kram/ui/package_model.py:25
 msgid "weak dependency"
 msgstr "dependência fraca"
 
-#: kram/ui/apply_dialog.py:49 kram/ui/repos_dialog.py:85
+#: kram/ui/apply_dialog.py:68 kram/ui/repos_dialog.py:85
 msgid "Apply changes"
 msgstr "Aplicar alterações"
 
-#: kram/ui/apply_dialog.py:52
+#: kram/ui/apply_dialog.py:80
 msgid "Review the list before applying."
 msgstr "Revise a lista antes de aplicar."
 
-#: kram/ui/apply_dialog.py:52
+#: kram/ui/apply_dialog.py:80
 msgid "The following changes will be made."
 msgstr "As seguintes alterações serão feitas."
 
-#: kram/ui/apply_dialog.py:55 kram/ui/details.py:70 kram/ui/package_model.py:15
+#: kram/ui/apply_dialog.py:83 kram/ui/details.py:70 kram/ui/package_model.py:15
 msgid "Package"
 msgstr "Pacote"
 
-#: kram/ui/apply_dialog.py:55 kram/ui/package_model.py:16
+#: kram/ui/apply_dialog.py:83 kram/ui/package_model.py:16
 msgid "Size"
 msgstr "Tamanho"
 
-#: kram/ui/apply_dialog.py:55 kram/ui/details.py:44
+#: kram/ui/apply_dialog.py:83 kram/ui/details.py:44
 msgid "Version"
 msgstr "Versão"
 
-#: kram/ui/apply_dialog.py:82
+#: kram/ui/apply_dialog.py:89
+msgid "Adds"
+msgstr "Adiciona"
+
+#: kram/ui/apply_dialog.py:89
+msgid "Recommended by"
+msgstr "Recomendado por"
+
+#: kram/ui/apply_dialog.py:89
+msgid "Recommended package"
+msgstr "Pacote recomendado"
+
+#: kram/ui/apply_dialog.py:98
+msgid "Recommended packages."
+msgstr "Pacotes recomendados."
+
+#: kram/ui/apply_dialog.py:99
+msgid ""
+"Not required, but suggested by the packages being installed. Uncheck what "
+"you do not want."
+msgstr ""
+"Não são necessários, mas são recomendados pelos pacotes a instalar. "
+"Desmarque o que você não quiser."
+
+#: kram/ui/apply_dialog.py:122
+msgid "Equivalent command"
+msgstr "Comando equivalente"
+
+#: kram/ui/apply_dialog.py:126
+msgid "Download packages only"
+msgstr "Apenas baixar os pacotes"
+
+#: kram/ui/apply_dialog.py:130 kram/ui/main_window.py:135
+msgid "Apply"
+msgstr "Aplicar"
+
+#: kram/ui/apply_dialog.py:146
 #, python-brace-format
 msgid "To download: {size}."
 msgstr "A baixar: {size}."
 
-#: kram/ui/apply_dialog.py:83
+#: kram/ui/apply_dialog.py:147
 #, python-brace-format
 msgid "Disk space change: {size}."
 msgstr "Alteração do espaço em disco: {size}."
 
-#: kram/ui/apply_dialog.py:89
+#: kram/ui/apply_dialog.py:153
 #, python-brace-format
 msgid "Essential system packages will be removed: {names}."
 msgstr "Pacotes essenciais do sistema serão removidos: {names}."
 
-#: kram/ui/apply_dialog.py:91
+#: kram/ui/apply_dialog.py:155
 #, python-brace-format
 msgid "{n} package will be removed."
 msgid_plural "{n} packages will be removed."
 msgstr[0] "{n} pacote será removido."
 msgstr[1] "{n} pacotes serão removidos."
 
-#: kram/ui/apply_dialog.py:93
+#: kram/ui/apply_dialog.py:156
 msgid "Make sure this is what you want."
 msgstr "Certifique-se de que é isso o que você quer."
 
-#: kram/ui/apply_dialog.py:102
-msgid "Equivalent command"
-msgstr "Comando equivalente"
+#: kram/ui/apply_dialog.py:191
+#, python-brace-format
+msgid "Recommended by dependencies ({n})"
+msgstr "Recomendados por dependências ({n})"
 
-#: kram/ui/apply_dialog.py:106
-msgid "Download packages only"
-msgstr "Apenas baixar os pacotes"
+#: kram/ui/apply_dialog.py:198
+msgid ""
+"Pulled in because it complements packages being installed (language support, "
+"plugins)."
+msgstr ""
+"Incluído porque complementa pacotes a instalar (suporte a idiomas, plugins)."
 
-#: kram/ui/apply_dialog.py:110 kram/ui/main_window.py:135
-msgid "Apply"
-msgstr "Aplicar"
+#: kram/ui/apply_dialog.py:212
+msgid "still installed: something else requires it"
+msgstr "será instalado mesmo assim: outro pacote precisa dele"
+
+#: kram/ui/apply_dialog.py:219
+#, python-brace-format
+msgid "+{size}, {n} package"
+msgid_plural "+{size}, {n} packages"
+msgstr[0] "+{size}, {n} pacote"
+msgstr[1] "+{size}, {n} pacotes"
+
+#: kram/ui/apply_dialog.py:240 kram/ui/main_window.py:891
+msgid "Resolving dependencies…"
+msgstr "Resolvendo dependências…"
+
+#: kram/ui/apply_dialog.py:250
+msgid "These choices cannot be carried out:"
+msgstr "Essas escolhas não podem ser aplicadas:"
+
+#: kram/ui/apply_dialog.py:255 kram/ui/main_window.py:893
+#, python-brace-format
+msgid ""
+"Could not resolve the changes:\n"
+"\n"
+"{error}"
+msgstr ""
+"Não foi possível resolver as alterações:\n"
+"\n"
+"{error}"
 
 #: kram/ui/copr_dialog.py:46
 msgid "COPR repositories"
@@ -1171,21 +1237,6 @@ msgstr "(carregando…)"
 msgid "No older versions in the repositories"
 msgstr "Nenhuma versão anterior nos repositórios"
 
-#: kram/ui/main_window.py:891
-msgid "Resolving dependencies…"
-msgstr "Resolvendo dependências…"
-
-#: kram/ui/main_window.py:893
-#, python-brace-format
-msgid ""
-"Could not resolve the changes:\n"
-"\n"
-"{error}"
-msgstr ""
-"Não foi possível resolver as alterações:\n"
-"\n"
-"{error}"
-
 #: kram/ui/main_window.py:898
 msgid "Cannot apply changes"
 msgstr "Não é possível aplicar as alterações"
@@ -1196,15 +1247,15 @@ msgstr ""
 "As alterações marcadas não podem ser realizadas. Desmarque-as ou modifique-"
 "as."
 
-#: kram/ui/main_window.py:910
+#: kram/ui/main_window.py:914
 msgid "Applying changes"
 msgstr "Aplicando alterações"
 
-#: kram/ui/main_window.py:918
+#: kram/ui/main_window.py:922
 msgid "Refreshing metadata"
 msgstr "Atualizando metadados"
 
-#: kram/ui/main_window.py:934
+#: kram/ui/main_window.py:938
 msgid "Changing repositories"
 msgstr "Alterando repositórios"
 

@@ -19,6 +19,7 @@ from .model import (
     PkgRow,
     PreviewItem,
     Reason,
+    Recommendation,
     RepoInfo,
     Status,
     TransactionPreview,
@@ -32,6 +33,8 @@ MAX_CHANGELOG = 30
 MIN_SUBSTRING_QUERY = 3
 # not-installed debug packages are noise in a package list (TODO: make it a setting)
 HIDDEN_SUFFIXES = ("-debuginfo", "-debugsource")
+# what a recommendation adds with everything it pulls in costs one more resolve (~0.4 s) each
+MAX_SIZED_RECOMMENDATIONS = 10
 
 
 def _evr_tuple(pkg):
@@ -304,12 +307,43 @@ class Catalog:
                  and tp.get_reason() == T.TransactionItemReason_DEPENDENCY}
         return sorted(k for k in found if k in self._pkgs)
 
-    def resolve(self, request: dict) -> TransactionPreview:
-        """Dry-run the transaction the helper would run (same goal builder), without root or downloads."""
-        tr = build_goal(self._base, request).resolve()
+    def resolve(self, request: dict, sizes: bool = True) -> TransactionPreview:
+        """Dry-run the transaction the helper would run (same goal builder), without root or downloads.
+
+        With `sizes`, what each recommendation of a marked package adds with everything it pulls in is
+        resolved too (a few more resolves); the others get their own size."""
+        tr = self._resolve_goal(request)
         if tr.get_problems() != libdnf5.base.GoalProblem_NO_PROBLEM:
             return TransactionPreview([], list(tr.get_resolve_logs_as_strings()), 0, 0)
+        preview = self._preview(tr)
+        preview.recommendations = self._recommendations(tr, request)
+        own = {i.name: i.install_size for i in preview.items}
+        sized = 0
+        for rec in sorted(preview.recommendations, key=lambda r: not r.direct):
+            if not rec.checked:
+                continue
+            if sizes and rec.direct and sized < MAX_SIZED_RECOMMENDATIONS:
+                sized += 1
+                without = self._resolve_goal({**request, "exclude_weak": [*request.get("exclude_weak", ()),
+                                                                          *rec.excludes]})
+                if without.get_problems() == libdnf5.base.GoalProblem_NO_PROBLEM:
+                    less = self._preview(without)
+                    rec.size, rec.count, rec.exact = (preview.size_change - less.size_change,
+                                                      len(preview.items) - len(less.items), True)
+                    continue
+            rec.size, rec.count = sum(own.get(n, 0) for n in rec.brings), len(rec.brings)
+        return preview
 
+    def _resolve_goal(self, request: dict):
+        # build_goal adds exclude_weak to the base's config; this base lives on, so put it back
+        config = self._base.get_config()
+        configured = config.exclude_from_weak
+        try:
+            return build_goal(self._base, request).resolve()
+        finally:
+            config.exclude_from_weak = configured
+
+    def _preview(self, tr) -> TransactionPreview:
         T = libdnf5.transaction
         actions = {T.TransactionItemAction_INSTALL: "install", T.TransactionItemAction_UPGRADE: "upgrade",
                    T.TransactionItemAction_DOWNGRADE: "downgrade", T.TransactionItemAction_REINSTALL: "reinstall",
@@ -340,6 +374,56 @@ class Catalog:
             ))
         items.sort(key=lambda i: (i.action, i.reason != "user", i.name))
         return TransactionPreview(items, [], download, change)
+
+    def _recommendations(self, tr, request: dict) -> list[Recommendation]:
+        """The recommendations that bring packages into `tr`, plus the ones the user unchecked."""
+        T = libdnf5.transaction
+        installing = (T.TransactionItemAction_INSTALL, T.TransactionItemAction_UPGRADE,
+                      T.TransactionItemAction_DOWNGRADE, T.TransactionItemAction_REINSTALL)
+        pkgs, weak, hard = [], set(), set()
+        for tp in tr.get_transaction_packages():
+            if tp.get_action() in installing:
+                p = tp.get_package()
+                pkgs.append(p)
+                (weak if tp.get_reason() == T.TransactionItemReason_WEAK_DEPENDENCY else hard).add(p.get_name())
+        excluded = set(request.get("exclude_weak", ()))
+        marked = set()
+        for field in ("install", "upgrade", "reinstall", "downgrade"):
+            for spec in request.get(field, ()):
+                q = libdnf5.rpm.PackageQuery(self._base)
+                if q.resolve_pkg_spec(spec, libdnf5.base.ResolveSpecSettings(), False)[0]:
+                    marked |= {x.get_name() for x in q}
+
+        recs: dict[str, Recommendation] = {}
+        for p in pkgs:
+            name = p.get_name()
+            for reldep in p.get_recommends():
+                q = libdnf5.rpm.PackageQuery(self._base)
+                q.filter_provides(reldep)
+                providers = sorted({x.get_name() for x in q})
+                brings = [n for n in providers if n in weak]
+                if not brings and not excluded.intersection(providers):
+                    continue  # already installed, or the solver did not want it
+                if not brings:
+                    q.filter_installed()
+                    if not q.empty():
+                        continue  # satisfied by an installed package anyway
+                what = reldep.to_string()
+                if what in recs:
+                    recs[what].by.append(name)
+                    recs[what].direct |= name in marked
+                else:
+                    recs[what] = Recommendation(what, [name], name in marked, brings, providers,
+                                                needed=[n for n in providers if n in hard] if not brings else [])
+        # pulled in by their own Supplements: (language packs, plugins), not by anything's Recommends:
+        covered = {n for r in recs.values() for n in r.brings}
+        for n in sorted(weak - covered):
+            recs[n] = Recommendation(n, [], False, [n], [n])
+        # unchecked ones whose recommending package left with them stay listed, so they can be checked again
+        listed = {n for r in recs.values() for n in r.excludes}
+        for n in sorted(excluded - listed):
+            recs[n] = Recommendation(n, [], False, [], [n], needed=[n] if n in hard else [])
+        return sorted(recs.values(), key=lambda r: (not r.direct, r.what.lstrip("(").lower()))
 
     def find_provider(self, reldep: str) -> tuple[str, str] | None:
         """Best package in the catalog that satisfies a requirement string: installed first, then candidate."""

@@ -91,3 +91,11 @@ def test_restore_takes_back_a_mark():
         m.restore(key, mark)
     assert m.get(OLD.key).action is Action.UPGRADE
     assert CUR.key not in m
+
+
+def test_command_shows_unchecked_recommendations():
+    req = {"install": ["virt-manager.noarch"], "remove": ["fish.x86_64"],
+           "exclude_weak": ["libvirt-daemon-kvm", "libvirt-daemon-qemu"]}
+    assert dnf5_command(req).splitlines() == [
+        "sudo dnf5 install --setopt=exclude_from_weak=libvirt-daemon-kvm,libvirt-daemon-qemu virt-manager.noarch",
+        "sudo dnf5 remove fish.x86_64"]

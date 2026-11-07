@@ -59,3 +59,34 @@ def test_sidebar_history_removal(app):
     sb.clear_history()
     assert sb.history == [] and sb.current_entry_id is None
     assert emitted[-1].id == "empty"
+
+
+def test_apply_dialog_unchecks_a_recommendation(app):
+    from PySide6.QtCore import Qt
+
+    from kram.core.model import PreviewItem, Recommendation, TransactionPreview
+    from kram.ui.apply_dialog import ApplyDialog
+
+    def preview(excluded):
+        items = [PreviewItem("install", "virt-manager", "noarch", "5.1-1", "", "fedora", 700, 2000, "user")]
+        recs = [Recommendation("(kvm or qemu)", ["virt-manager"], True, [] if excluded else ["kvm"], ["kvm", "qemu"],
+                               size=None if excluded else 9000, count=3, exact=True),
+                Recommendation("langpack", [], False, ["langpack"], ["langpack"], size=10, count=1)]
+        if not excluded:
+            items.append(PreviewItem("install", "kvm", "x86_64", "1-1", "", "fedora", 50, 9000, "weak"))
+        return TransactionPreview(items, [], 100, 11000 - 9000 * excluded, recs)
+
+    asked = []
+    dlg = ApplyDialog(preview(False), {"op": "transaction", "install": ["virt-manager.noarch"]},
+                      resolve=lambda req, done, failed: (asked.append(req), done(preview(True))))
+    assert dlg.recs.topLevelItemCount() == 2  # the direct one, then "Recommended by dependencies"
+    item = dlg.recs.topLevelItem(0)
+    assert item.text(0) == "kvm" and item.text(2) == "+8.8 kB, 3 packages"
+    item.setCheckState(0, Qt.Unchecked)
+    assert asked[-1]["exclude_weak"] == ["kvm", "qemu"]
+    assert dlg.request["exclude_weak"] == ["kvm", "qemu"]
+    item = dlg.recs.topLevelItem(0)
+    assert item.checkState(0) == Qt.Unchecked and item.text(0) == "kvm or qemu"
+    assert "exclude_from_weak=kvm,qemu" in dlg.cmd.toPlainText()
+    item.setCheckState(0, Qt.Checked)
+    assert "exclude_weak" not in asked[-1]

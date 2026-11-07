@@ -10,7 +10,8 @@ Protocol: one JSON request per line on stdin, JSON event lines on stdout.
   {"op": "refresh"}                                        re-download metadata of enabled repos
   {"op": "transaction", "install": [...], "remove": [...], "upgrade": [...], "reinstall": [...],
    "downgrade": [...], "mark_user": [...], "mark_dep": [...], "upgrade_all": false,
-   "download_only": false, "test": false}
+   "exclude_weak": [...], "download_only": false, "test": false}
+                                                           exclude_weak: names never pulled in as recommendations
   {"op": "repo_set_enabled", "repos": {"<repo id>": bool}}  persist via dnf5 config-manager, then load metadata
   {"op": "copr", "action": "enable"|"disable"|"remove", "project": "owner/name", "hub": "<host>"}
   {"op": "answer", "id": N, "yes": bool}                   reply to a "question" event (only while asked)
@@ -70,15 +71,23 @@ def validate(req: dict) -> dict[str, list[str]]:
     fields = {f: specs(req, f) for f in SPEC_FIELDS}
     if not (req.get("upgrade_all") or any(fields.values())):
         raise ProtocolError("empty transaction")
+    fields["exclude_weak"] = specs(req, "exclude_weak")
     return fields
 
 
 def build_goal(base, req: dict):
-    """Request -> libdnf5 Goal. Shared with the GUI's unprivileged preview."""
+    """Request -> libdnf5 Goal. Shared with the GUI's unprivileged preview.
+
+    `exclude_weak` is added to the base's exclude_from_weak config (`dnf --setopt=exclude_from_weak=`): those
+    packages are not installed as recommendations, but still as hard dependencies, and the solver does not swap
+    in another alternative of an "(a or b)" recommendation. A long-lived base must restore the option itself."""
     import libdnf5
 
     fields = validate(req)
     upgrade_all = bool(req.get("upgrade_all"))
+    if fields["exclude_weak"]:
+        config = base.get_config()
+        config.exclude_from_weak = (*config.exclude_from_weak, *fields["exclude_weak"])
     goal = libdnf5.base.Goal(base)
     for s in fields["install"]:
         goal.add_install(s)

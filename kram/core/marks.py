@@ -114,7 +114,10 @@ def dnf5_command(request: dict[str, list[str]]) -> str:
     verbs = [("install", "install"), ("upgrade", "upgrade"), ("reinstall", "reinstall"),
              ("downgrade", "downgrade"), ("remove", "remove"),
              ("mark_user", "mark user"), ("mark_dep", "mark dependency")]
-    return "\n".join(f"sudo dnf5 {verb} {' '.join(request[k])}" for k, verb in verbs if request.get(k))
+    weak = request.get("exclude_weak")
+    option = f" --setopt=exclude_from_weak={','.join(weak)}" if weak else ""
+    return "\n".join(f"sudo dnf5 {verb}{option if k in ('install', 'upgrade', 'reinstall', 'downgrade') else ''}"
+                     f" {' '.join(request[k])}" for k, verb in verbs if request.get(k))
 
 
 MARKINGS_HEADER = "# Kram markings: <action> <name>.<arch> [<version>]"

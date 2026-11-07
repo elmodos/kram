@@ -38,8 +38,10 @@ def test_rejects_bad_input():
         '{"op": "copr", "action": "enable", "project": "owner/-x"}',
         '{"op": "copr", "action": "enable", "project": "owner/x", "hub": "-evil"}',
         '{"op": "repo_set_enabled", "repos": {"-fedora": true}}',
+        '{"op": "transaction", "install": ["fish"], "exclude_weak": ["../etc/passwd"]}',
+        '{"op": "transaction", "exclude_weak": ["qemu-kvm-core"]}',
     )
-    assert len(events) == 19
+    assert len(events) == 21
     assert all(ev["event"] == "done" and ev["ok"] is False and ev["stage"] == "protocol" for ev in events)
 
 
