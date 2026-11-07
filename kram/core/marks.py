@@ -1,4 +1,5 @@
 """Marked changes (Synaptic's "mark for installation/removal/..."). Pure data, no libdnf5, no Qt."""
+import shlex
 from dataclasses import dataclass
 from enum import Enum
 
@@ -110,12 +111,14 @@ class MarkSet:
 
 
 def dnf5_command(request: dict[str, list[str]]) -> str:
-    """The equivalent dnf5 command lines, for the preview dialog."""
+    """The equivalent dnf5 command lines, for the preview dialog (and the installer's local_install request)."""
+    weak = request.get("exclude_weak")
+    option = f" --setopt=exclude_from_weak={','.join(weak)}" if weak else ""
+    if request.get("op") == "local_install":
+        return f"sudo dnf5 {request.get('action', 'install')}{option} {shlex.quote(request['path'])}"
     verbs = [("install", "install"), ("upgrade", "upgrade"), ("reinstall", "reinstall"),
              ("downgrade", "downgrade"), ("remove", "remove"),
              ("mark_user", "mark user"), ("mark_dep", "mark dependency")]
-    weak = request.get("exclude_weak")
-    option = f" --setopt=exclude_from_weak={','.join(weak)}" if weak else ""
     return "\n".join(f"sudo dnf5 {verb}{option if k in ('install', 'upgrade', 'reinstall', 'downgrade') else ''}"
                      f" {' '.join(request[k])}" for k, verb in verbs if request.get(k))
 

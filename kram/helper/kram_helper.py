@@ -138,8 +138,8 @@ def validate_local(req: dict) -> tuple[str, str, str, list[str]]:
     return path, digest, action, specs(req, "exclude_weak")
 
 
-def local_goal(base, path: str, action: str, exclude_weak: list[str]):
-    """A package file -> (Goal, Package). Shared with the GUI's preview of the file."""
+def cmdline_package(base, path: str):
+    """Add a package file to the base's @commandline repo and return its Package."""
     import libdnf5
 
     base.get_repo_sack().add_cmdline_packages([path])  # its returned map is opaque in the Python bindings
@@ -148,14 +148,21 @@ def local_goal(base, path: str, action: str, exclude_weak: list[str]):
     found = [p for p in query if p.get_package_path() == path]
     if not found:
         raise LocalFileError("not an rpm package")
-    package = found[0]
+    return found[-1]
+
+
+def local_goal(base, package, action: str, exclude_weak: list[str]):
+    """A package from `cmdline_package` -> Goal. Shared with the GUI's preview of the file; `exclude_weak` as in
+    `build_goal`."""
+    import libdnf5
+
     if exclude_weak:
         config = base.get_config()
         config.exclude_from_weak = (*config.exclude_from_weak, *exclude_weak)
     goal = libdnf5.base.Goal(base)
     {"install": goal.add_rpm_install, "reinstall": goal.add_rpm_reinstall,
      "downgrade": goal.add_rpm_downgrade}[action](package)
-    return goal, package
+    return goal
 
 
 class LocalFileError(Exception):
@@ -352,8 +359,8 @@ def local_install(req: dict) -> None:
         if not hmac.compare_digest(actual, expected):
             emit("done", ok=False, stage="file", error=f"{path}: the file changed after it was checked")
             return
-        run_goal(lambda base: local_goal(base, copy, action, exclude_weak)[0], test=bool(req.get("test")),
-                 download_only=False)
+        run_goal(lambda base: local_goal(base, cmdline_package(base, copy), action, exclude_weak),
+                 test=bool(req.get("test")), download_only=False)
     except LocalFileError as e:
         emit("done", ok=False, stage="file", error=f"{path}: {e}")
     finally:

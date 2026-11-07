@@ -191,3 +191,30 @@ class TransactionPreview:
     @property
     def ok(self) -> bool:
         return not self.problems
+
+
+@dataclass(slots=True)
+class Requirement:
+    """One dependency of a package file and what on this system satisfies it."""
+    text: str                    # "libX11.so.6()(64bit)", "(gtk3 or gtk4)"
+    installed: list[str]         # names of installed packages providing it
+    available: list[str]         # names of packages in the repositories providing it
+    own: bool = False            # the file provides it itself
+
+
+@dataclass(slots=True)
+class LocalTarget:
+    """What installing a package file means for this system."""
+    action: str                  # install | upgrade | downgrade | reinstall | alongside (installonly: a kernel)
+    installed_evr: str           # newest installed version of the package, "" if none
+    repo_evr: str                # best version in the enabled repositories, "" if none has it
+    repo_id: str
+    # "requires", "recommends", "suggests" -> its dependencies of that kind
+    deps: dict[str, list[Requirement]] = field(default_factory=dict)
+    repo_newer: bool = False     # the repositories have a newer version than the file: an update replaces it
+
+    @property
+    def helper_action(self) -> str:
+        """The helper's local_install action: libdnf5 installs a newer file as an upgrade, and an installonly
+        package next to the others."""
+        return "install" if self.action in ("upgrade", "alongside") else self.action

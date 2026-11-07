@@ -349,7 +349,7 @@ A gdebi-style dialog for one package file.
   code that runs as root; the header says so when there are any). Read from the file's header with python3-rpm.
 - **No separate confirmation**: the dialog already lists the changes; the button goes to pkexec and the normal
   progress dialog.
-- **Helper**: a new request `{"op": "local_install", "path": ..., "sha256": ..., "exclude": [...], "action":
+- **Helper**: a new request `{"op": "local_install", "path": ..., "sha256": ..., "exclude_weak": [...], "action":
   "install"|"reinstall"|"downgrade"}`. The helper opens the file with the caller's rights (`setgroups`,
   `setegid`, `seteuid` to `PKEXEC_UID`; `O_NOFOLLOW`; a regular file ending in `.rpm`; a size limit), clones it
   into its own 0700 directory (reflink via `FICLONE`, instant on btrfs and XFS, a plain copy otherwise, after
@@ -359,22 +359,31 @@ A gdebi-style dialog for one package file.
   refused), and exactly the reviewed file is installed. Signature state comes from `rpmkeys -Kv` (an OpenPGP
   line with OK / NOKEY, or none for an unsigned package).
 
-**Choosing recommended packages** (designed 2026-11-07): one shared widget for the installer and the normal apply
+**Choosing recommended packages** (done 2026-11-07): one shared widget for the installer and the normal apply
 dialog. A checkbox per *recommendation* (a `Recommends:` of a package in the transaction), not per package: a
-recommendation can be a choice like `(libvirt-daemon-kvm or libvirt-daemon-qemu)`, and excluding only the picked
-package makes the solver take the other one (virt-manager: 1.1 GB → 2.4 GB with every qemu arch). Unchecking a
-recommendation excludes every package that provides it, unless something hard-requires it ("needed by X",
-locked; found by resolving once without weak deps). The rest still installs with the "weak dependency" reason,
-so autoremove stays correct. The package's own recommendations come first; recommendations of its dependencies
-go in a collapsed group (on a bare system virt-manager brings 40 weak packages, most of them nested). Every
-toggle resolves again on the dnf thread (0.05–0.15 s per resolve) and the list shows each recommendation's size
-with what it pulls in. The preview resolves on a separate `Base` (like `removal_dependents`): user excludes are
-per Base, verified to leave the main list untouched. The helper's transaction requests take `"exclude":
-[names]`, validated with `SPEC_RE`. Initial state: all checked when `install_weak_deps` is on.
+recommendation can be a choice like `(libvirt-daemon-kvm or libvirt-daemon-qemu)`. Unchecking one puts every
+package that provides it into libdnf5's `exclude_from_weak` (`dnf5 --setopt=exclude_from_weak=a,b`): those are not
+installed as weak dependencies, but still as hard ones ("still installed: something else requires it"), and the
+solver does not swap in the other alternative. User excludes were tried first and did exactly that swap
+(virt-manager: 1.1 GB → 2.4 GB with every qemu arch). The rest still installs with the "weak dependency" reason,
+so autoremove stays correct. The marked packages' own recommendations come first; those of dependencies go in a
+collapsed group, packages pulled in by their own `Supplements:` get a row each. Every toggle resolves again on
+the dnf thread (~0.4 s); the first preview also resolves once without each direct recommendation (up to 10) to show
+what it adds with everything it pulls in. The catalog's long-lived base restores `exclude_from_weak` after each
+resolve. Requests carry `"exclude_weak": [names]` (validated like other specs); the equivalent command shows the
+`--setopt`. Initial state: what the solver picked with `install_weak_deps`.
 
-**Order**: recommended-packages widget in the apply dialog → helper `local_install` with container tests →
-installer dialog inside the main window → the dialog-only mode and .desktop → translations; the cache dialog
-later.
+**Order**: recommended-packages widget in the apply dialog (done) → helper `local_install` with container tests
+(done) → installer dialog inside the main window (done, translated along the way: the tests require complete
+catalogs) → the dialog-only mode and .desktop; the cache dialog later. README and metainfo with the release.
+
+As built (2026-11-08), beyond the design above: the Dependencies tab marks each requirement as installed (by which
+package), provided by the file itself, coming with this transaction, not installed, or unavailable; a kernel-like
+(installonly) file is "installed next to" the old version, not an upgrade; a newer version in a repository is a
+warning ("the next system update will install it over this one"); the progress log calls rpm's erase of a
+replaced copy "cleaning up the old copy" and counts packages, not rpm steps. Checked in a container with built test
+packages: install, upgrade, downgrade, reinstall, installonly, unsatisfiable, foreign arch, newer in a repo
+(`scripts/check_local_versions.py`).
 
 **Reasonable, but not planned unless users ask for it** (2026-11-06): moving transactions from our helper to
 dnf5daemon, or supporting both. For: no root code of our own, standard dnf polkit actions, local .rpm and

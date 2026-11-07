@@ -2,7 +2,7 @@
 import re
 from collections.abc import Callable
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QBrush, QColor, QFont, QFontDatabase, QIcon
 from PySide6.QtWidgets import (
     QCheckBox,
@@ -46,7 +46,7 @@ GROUPS = [
 REASON_TEXT = {"user": N_("user"), "dependency": N_("dependency"), "weak": N_("weak dependency"), "clean": N_("unneeded")}
 
 
-def _signed_size(n: int) -> str:
+def signed_size(n: int) -> str:
     return ("+" if n >= 0 else "−") + human_size(abs(n))
 
 
@@ -70,6 +70,127 @@ def _fit_columns(tree: QTreeWidget) -> None:
     header.setSectionResizeMode(0, QHeaderView.Stretch)
 
 
+class ChangesTree(QTreeWidget):
+    """Every package a transaction touches, grouped by what happens to it."""
+
+    def __init__(self, basearch: str = "x86_64", parent=None):
+        super().__init__(parent)
+        self._basearch = basearch
+        self.setHeaderLabels([_("Package"), _("Version"), _("Repository"), _("Size")])
+        _fit_columns(self)
+
+    def fill(self, preview: TransactionPreview) -> None:
+        self.clear()
+        bold = QFont(self.font())
+        bold.setBold(True)
+        for title, color, pred in GROUPS:
+            items = [i for i in preview.items if pred(i)]
+            if not items:
+                continue
+            top = QTreeWidgetItem([f"{_(title)} ({len(items)})"])
+            top.setFont(0, bold)
+            if color:
+                top.setForeground(0, QBrush(QColor(color)))
+            for i in items:
+                name = i.name if i.arch in ("noarch", self._basearch) else f"{i.name}.{i.arch}"
+                if i.action == "reason":
+                    version = f"→ {_(REASON_TEXT[i.reason]) if i.reason in REASON_TEXT else i.reason}"
+                else:
+                    version = f"{i.old_evr} → {i.evr}" if i.old_evr else i.evr
+                size = human_size(i.download_size if i.download_size else i.install_size)
+                QTreeWidgetItem(top, [name, version, display_repo(i.repo_id), size])
+            self.addTopLevelItem(top)
+            top.setExpanded(True)
+
+
+def removal_warning(preview: TransactionPreview) -> str:
+    """A loud warning when essential packages or very many go away; "" otherwise."""
+    critical = sorted({i.name for i in preview.items if i.action == "remove" and i.name in CRITICAL})
+    removed = sum(1 for i in preview.items if i.action == "remove")
+    warnings = []
+    if critical:
+        warnings.append(_("Essential system packages will be removed: {names}.").format(names=", ".join(critical)))
+    if removed >= 20:
+        warnings.append(ngettext("{n} package will be removed.", "{n} packages will be removed.", removed).format(n=removed))
+    return "⚠ " + " ".join(warnings) + " " + _("Make sure this is what you want.") if warnings else ""
+
+
+class RecommendationsList(QWidget):
+    """A checkbox per recommendation of the packages being installed. Unchecking one puts every package that
+    provides it in `exclude`; the owner resolves again and calls `fill` with the result."""
+    toggled = Signal()
+
+    def __init__(self, exclude: set[str], parent=None):
+        super().__init__(parent)
+        self.exclude = set(exclude)
+        self._sizes: dict[str, tuple] | None = None  # what each adds, from the first resolve: later ones skip it
+        # a label over a plain list, like the changes above: a group box frame nests badly in some styles
+        lay = QVBoxLayout(self)
+        lay.setContentsMargins(0, 0, 0, 0)
+        hint = QLabel("<b>{}</b> {}".format(
+            _("Recommended packages."),
+            _("Not required, but suggested by the packages being installed. Uncheck what you do not want.")))
+        hint.setWordWrap(True)
+        lay.addWidget(hint)
+        self.tree = QTreeWidget()
+        self.tree.setHeaderLabels([_("Recommended package"), _("Recommended by"), _("Adds")])
+        _fit_columns(self.tree)
+        self.tree.itemChanged.connect(self._on_changed)
+        lay.addWidget(self.tree)
+
+    def fill(self, preview: TransactionPreview) -> None:
+        if self._sizes is None:
+            self._sizes = {r.what: (r.size, r.count, r.exact) for r in preview.recommendations}
+        tree = self.tree
+        nested_open = any(tree.topLevelItem(i).childCount() and tree.topLevelItem(i).isExpanded()
+                          for i in range(tree.topLevelItemCount()))
+        tree.blockSignals(True)
+        tree.clear()
+        nested = [r for r in preview.recommendations if not r.direct]
+        parent = None
+        if nested:
+            parent = QTreeWidgetItem([_("Recommended by dependencies ({n})").format(n=len(nested))])
+            parent.setFlags(Qt.ItemIsEnabled)
+        for rec in preview.recommendations:
+            item = QTreeWidgetItem([_rec_label(rec), ", ".join(rec.by) or "—", self._adds(rec)])
+            item.setData(0, Qt.UserRole, rec)
+            item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsUserCheckable)
+            item.setCheckState(0, Qt.Checked if rec.checked else Qt.Unchecked)
+            tip = rec.what if rec.by else _("Pulled in because it complements packages being installed "
+                                            "(language support, plugins).")
+            item.setToolTip(0, tip)
+            if rec.direct:
+                tree.addTopLevelItem(item)
+            else:
+                parent.addChild(item)
+        if parent is not None:
+            tree.addTopLevelItem(parent)
+            parent.setExpanded(nested_open or not any(r.direct for r in preview.recommendations))
+        tree.blockSignals(False)
+
+    def _adds(self, rec: Recommendation) -> str:
+        if not rec.checked:
+            return _("still installed: something else requires it") if rec.needed else "—"
+        size, count, exact = rec.size, rec.count, rec.exact
+        if not exact and self._sizes.get(rec.what, (None, 0, False))[2]:
+            size, count, exact = self._sizes[rec.what]
+        if size is None:
+            return ""
+        if exact:
+            return ngettext("+{size}, {n} package", "+{size}, {n} packages", count).format(size=human_size(size), n=count)
+        return f"+{human_size(size)}"
+
+    def _on_changed(self, item: QTreeWidgetItem, column: int) -> None:
+        rec = item.data(0, Qt.UserRole)
+        if rec is None or column != 0:
+            return
+        if item.checkState(0) == Qt.Checked:
+            self.exclude -= set(rec.excludes)
+        else:
+            self.exclude |= set(rec.excludes)
+        self.toggled.emit()
+
+
 class ApplyDialog(QDialog):
     def __init__(self, preview: TransactionPreview, request: dict, basearch: str = "x86_64", parent=None,
                  resolve: Resolver | None = None):
@@ -77,35 +198,17 @@ class ApplyDialog(QDialog):
         self.setWindowTitle(_("Apply changes"))
         self.resize(820, 680)
         self.request = request
-        self._basearch = basearch
         self._resolve = resolve
         self._preview = preview
-        self._exclude: set[str] = set(request.get("exclude_weak", ()))
         self._generation = 0
-        # what each recommendation adds, from the first resolve: later ones skip that work
-        self._sizes = {r.what: (r.size, r.count, r.exact) for r in preview.recommendations}
 
         lay = QVBoxLayout(self)
         lay.addWidget(QLabel("<b>{}</b> {}".format(_("The following changes will be made."), _("Review the list before applying."))))
 
-        self.tree = QTreeWidget()
-        self.tree.setHeaderLabels([_("Package"), _("Version"), _("Repository"), _("Size")])
-        _fit_columns(self.tree)
-
-        self.recs = QTreeWidget()
-        self.recs.setHeaderLabels([_("Recommended package"), _("Recommended by"), _("Adds")])
-        _fit_columns(self.recs)
-        self.recs.itemChanged.connect(self._rec_toggled)
-        # a label over a plain list, like the changes above: a group box frame nests badly in some styles
-        self.recs_box = QWidget()
-        box_lay = QVBoxLayout(self.recs_box)
-        box_lay.setContentsMargins(0, 0, 0, 0)
-        hint = QLabel("<b>{}</b> {}".format(
-            _("Recommended packages."),
-            _("Not required, but suggested by the packages being installed. Uncheck what you do not want.")))
-        hint.setWordWrap(True)
-        box_lay.addWidget(hint)
-        box_lay.addWidget(self.recs)
+        self.tree = ChangesTree(basearch)
+        self.recs_box = RecommendationsList(set(request.get("exclude_weak", ())))
+        self.recs_box.toggled.connect(self._rec_toggled)
+        self.recs = self.recs_box.tree
 
         split = QSplitter(Qt.Vertical)
         split.addWidget(self.tree)
@@ -146,96 +249,21 @@ class ApplyDialog(QDialog):
 
     def _show(self, preview: TransactionPreview) -> None:
         self._preview = preview
-        self._fill_changes(preview)
-        self._fill_recommendations(preview)
+        self.tree.fill(preview)
+        self.recs_box.fill(preview)
         self.sizes.setText(
             _("To download: {size}.").format(size=f"<b>{human_size(preview.download_size)}</b>") + "   "
-            + _("Disk space change: {size}.").format(size=f"<b>{_signed_size(preview.size_change)}</b>"))
+            + _("Disk space change: {size}.").format(size=f"<b>{signed_size(preview.size_change)}</b>"))
 
-        critical = sorted({i.name for i in preview.items if i.action == "remove" and i.name in CRITICAL})
-        removed = sum(1 for i in preview.items if i.action == "remove")
-        warnings = []
-        if critical:
-            warnings.append(_("Essential system packages will be removed: {names}.").format(names=", ".join(critical)))
-        if removed >= 20:
-            warnings.append(ngettext("{n} package will be removed.", "{n} packages will be removed.", removed).format(n=removed))
-        self.warning.setText("⚠ " + " ".join(warnings) + " " + _("Make sure this is what you want.") if warnings else "")
-        self.warning.setVisible(bool(warnings))
+        warning = removal_warning(preview)
+        self.warning.setText(warning)
+        self.warning.setVisible(bool(warning))
         self.cmd.setPlainText(dnf5_command(self.request))
 
-    def _fill_changes(self, preview: TransactionPreview) -> None:
-        self.tree.clear()
-        bold = QFont(self.tree.font())
-        bold.setBold(True)
-        for title, color, pred in GROUPS:
-            items = [i for i in preview.items if pred(i)]
-            if not items:
-                continue
-            top = QTreeWidgetItem([f"{_(title)} ({len(items)})"])
-            top.setFont(0, bold)
-            if color:
-                top.setForeground(0, QBrush(QColor(color)))
-            for i in items:
-                name = i.name if i.arch in ("noarch", self._basearch) else f"{i.name}.{i.arch}"
-                if i.action == "reason":
-                    version = f"→ {_(REASON_TEXT[i.reason]) if i.reason in REASON_TEXT else i.reason}"
-                else:
-                    version = f"{i.old_evr} → {i.evr}" if i.old_evr else i.evr
-                size = human_size(i.download_size if i.download_size else i.install_size)
-                QTreeWidgetItem(top, [name, version, display_repo(i.repo_id), size])
-            self.tree.addTopLevelItem(top)
-            top.setExpanded(True)
-
-    def _fill_recommendations(self, preview: TransactionPreview) -> None:
-        nested_open = any(self.recs.topLevelItem(i).childCount() and self.recs.topLevelItem(i).isExpanded()
-                          for i in range(self.recs.topLevelItemCount()))
-        self.recs.blockSignals(True)
-        self.recs.clear()
-        nested = [r for r in preview.recommendations if not r.direct]
-        parent = None
-        if nested:
-            parent = QTreeWidgetItem([_("Recommended by dependencies ({n})").format(n=len(nested))])
-            parent.setFlags(Qt.ItemIsEnabled)
-        for rec in preview.recommendations:
-            item = QTreeWidgetItem([_rec_label(rec), ", ".join(rec.by) or "—", self._adds(rec)])
-            item.setData(0, Qt.UserRole, rec)
-            item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsUserCheckable)
-            item.setCheckState(0, Qt.Checked if rec.checked else Qt.Unchecked)
-            tip = rec.what if rec.by else _("Pulled in because it complements packages being installed "
-                                            "(language support, plugins).")
-            item.setToolTip(0, tip)
-            if rec.direct:
-                self.recs.addTopLevelItem(item)
-            else:
-                parent.addChild(item)
-        if parent is not None:
-            self.recs.addTopLevelItem(parent)
-            parent.setExpanded(nested_open or not any(r.direct for r in preview.recommendations))
-        self.recs.blockSignals(False)
-
-    def _adds(self, rec: Recommendation) -> str:
-        if not rec.checked:
-            return _("still installed: something else requires it") if rec.needed else "—"
-        size, count, exact = rec.size, rec.count, rec.exact
-        if not exact and self._sizes.get(rec.what, (None, 0, False))[2]:
-            size, count, exact = self._sizes[rec.what]
-        if size is None:
-            return ""
-        if exact:
-            return ngettext("+{size}, {n} package", "+{size}, {n} packages", count).format(size=human_size(size), n=count)
-        return f"+{human_size(size)}"
-
-    def _rec_toggled(self, item: QTreeWidgetItem, column: int) -> None:
-        rec = item.data(0, Qt.UserRole)
-        if rec is None or column != 0:
-            return
-        if item.checkState(0) == Qt.Checked:
-            self._exclude -= set(rec.excludes)
-        else:
-            self._exclude |= set(rec.excludes)
+    def _rec_toggled(self) -> None:
         request = {k: v for k, v in self.request.items() if k != "exclude_weak"}
-        if self._exclude:
-            request["exclude_weak"] = sorted(self._exclude)
+        if self.recs_box.exclude:
+            request["exclude_weak"] = sorted(self.recs_box.exclude)
         self.request = request
         if self._resolve is None:
             return

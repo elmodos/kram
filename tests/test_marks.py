@@ -99,3 +99,8 @@ def test_command_shows_unchecked_recommendations():
     assert dnf5_command(req).splitlines() == [
         "sudo dnf5 install --setopt=exclude_from_weak=libvirt-daemon-kvm,libvirt-daemon-qemu virt-manager.noarch",
         "sudo dnf5 remove fish.x86_64"]
+
+
+def test_command_for_a_package_file():
+    req = {"op": "local_install", "path": "/home/me/My Downloads/tool.rpm", "sha256": "0" * 64, "action": "reinstall"}
+    assert dnf5_command(req) == "sudo dnf5 reinstall '/home/me/My Downloads/tool.rpm'"

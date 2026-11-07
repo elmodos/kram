@@ -3,10 +3,11 @@ import json
 import time
 from pathlib import Path
 
-from PySide6.QtCore import QSettings, QSize, Qt, QTimer, Signal
+from PySide6.QtCore import QSettings, QSize, QStandardPaths, Qt, QTimer, Signal
 from PySide6.QtGui import QAction, QActionGroup, QGuiApplication, QIcon, QKeySequence
 from PySide6.QtWidgets import (
     QAbstractItemView,
+    QApplication,
     QComboBox,
     QFileDialog,
     QLabel,
@@ -36,6 +37,7 @@ from .copr_dialog import CoprDialog
 from .details import DetailsTabs
 from .dnf_thread import DnfThread
 from .filters_dialog import FiltersDialog
+from .install_dialog import InstallDialog
 from .package_model import COL_NAME, COL_STATUS, HEADERS, HIDEABLE, PackageTableModel
 from .progress_dialog import ProgressDialog
 from .repos_dialog import ReposDialog
@@ -103,6 +105,7 @@ class MainWindow(QMainWindow):
         self.age = QLabel()
         self.statusBar().addPermanentWidget(self.age)
 
+        self.setAcceptDrops(True)  # an .rpm file dropped anywhere on the window opens the installer
         self._restore_settings()
         self.reload()
 
@@ -159,6 +162,9 @@ class MainWindow(QMainWindow):
         self.act_read_marks = self._action(_("Read Markings…"), "document-open", "Ctrl+O", self.read_marks,
                                            tip=_("Mark the changes listed in a saved markings file"))
         self.act_read_marks.setEnabled(False)
+        self.act_open_file = self._action(_("Open Package File…"), "document-open", slot=self.open_package_file,
+                                          tip=_("Install a downloaded .rpm file (you can also drop it on the window)"))
+        self.act_open_file.setEnabled(False)
         self.act_quit = self._action(_("Quit"), "application-exit", QKeySequence.Quit, self.close)
         self.act_copy_name = self._action(_("Copy Name"), "edit-copy", "Ctrl+C", self.copy_names)
         self.act_copy_nevra = self._action(_("Copy name-version-release.arch"), "edit-copy", "Ctrl+Shift+C",
@@ -222,6 +228,8 @@ class MainWindow(QMainWindow):
     def _build_menus(self):
         mb = self.menuBar()
         m = mb.addMenu(_("&File"))
+        m.addAction(self.act_open_file)
+        m.addSeparator()
         m.addActions([self.act_reload, self.act_reload_cache])
         m.addSeparator()
         m.addActions([self.act_read_marks, self.act_save_marks])
@@ -707,6 +715,7 @@ class MainWindow(QMainWindow):
         self.act_unmark_all.setEnabled(n > 0)
         self.act_save_marks.setEnabled(n > 0)
         self.act_read_marks.setEnabled(self.snapshot is not None)
+        self.act_open_file.setEnabled(self._can_open_file())
         self.act_mark_upgrades.setEnabled(bool(self.snapshot and self.snapshot.n_upgradable))
 
     def _marks_changed(self, keys):
@@ -954,6 +963,50 @@ class MainWindow(QMainWindow):
         dlg.showPackages.connect(show_packages)
         dlg.exec()
         self.catalogLoaded.disconnect(refresh)
+
+    # ---------------------------------------------------------------- package files
+
+    def _can_open_file(self) -> bool:
+        """Not while another dialog or a transaction is running: a dropped file or a stray shortcut then does
+        nothing, whatever Qt's modality lets through."""
+        return self.snapshot is not None and not self.helper.busy and QApplication.activeModalWidget() is None
+
+    @staticmethod
+    def _dropped_rpm(mime) -> str | None:
+        urls = mime.urls() if mime.hasUrls() else []
+        if len(urls) == 1 and urls[0].isLocalFile() and urls[0].toLocalFile().endswith(".rpm"):
+            return urls[0].toLocalFile()
+        return None
+
+    def dragEnterEvent(self, event):
+        if self._dropped_rpm(event.mimeData()) and self._can_open_file():
+            event.acceptProposedAction()
+
+    def dropEvent(self, event):
+        if (path := self._dropped_rpm(event.mimeData())) and self._can_open_file():
+            event.acceptProposedAction()
+            # after the drop returns: a modal dialog inside a drop handler blocks the drag source
+            QTimer.singleShot(0, lambda: self.open_package_file(path))
+
+    def open_package_file(self, path: str | None = None) -> None:
+        if not self._can_open_file():
+            return
+        if not path:
+            s = QSettings()
+            start = s.value("install/dir", QStandardPaths.writableLocation(QStandardPaths.DownloadLocation))
+            path, _filter = QFileDialog.getOpenFileName(self, _("Open Package File"), start,
+                                                        _("RPM packages (*.rpm)"))
+            if not path:
+                return
+            s.setValue("install/dir", str(Path(path).parent))
+            if not self._can_open_file():
+                return
+        dlg = InstallDialog(path, self.catalog, self.dnf, self.helper, self.snapshot.basearch,
+                            marks=len(self.model.marks), parent=self)
+        dlg.exec()
+        if dlg.changed_system:
+            self.reload()
+        self._update_actions()
 
     def _run_helper(self, request: dict, title: str) -> bool:
         self.act_apply.setEnabled(False)

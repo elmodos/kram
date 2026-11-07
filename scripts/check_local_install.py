@@ -87,6 +87,12 @@ def main() -> None:
     shutil.copy(sys.argv[2], fresh)
     shutil.chown(fresh, USER, USER)
     name = subprocess.run(["rpm", "-qp", "--qf", "%{NAME}", fresh], capture_output=True, text=True).stdout
+    from kram.core import local_rpm  # the installed GUI module: what the installer dialog shows of the file
+    shown = local_rpm.read(fresh)
+    good = (shown.name, shown.sha256, shown.signature.state) == (name, sha256(fresh), "ok") and shown.files
+    print(("ok   " if good else "FAIL ") + f"the dialog reads {shown.nevra}, signed by {shown.signature.signer}")
+    if not good:
+        sys.exit(1)
     expect(f"install {name} for real", helper(path=fresh, sha256=sha256(fresh)), True)
     record = subprocess.run(["dnf5", "-q", "repoquery", "--installed", "--qf", "%{reason} %{from_repo}\n", name],
                             capture_output=True, text=True).stdout.split()

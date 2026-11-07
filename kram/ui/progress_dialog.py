@@ -21,7 +21,15 @@ from ..ipc.client import HelperClient
 from .package_model import human_size
 
 STEP_TEXT = {"install": N_("Installing {nevra}"), "remove": N_("Removing {nevra}"),
+             "cleanup": N_("Cleaning up the old copy of {nevra}"),
              "script": N_("Running scriptlet {script} of {nevra}")}
+# libdnf5's action names in the helper's "resolved" event
+RESOLVED_ACTIONS = {"Install": N_("install"), "Upgrade": N_("upgrade"), "Downgrade": N_("downgrade"),
+                    "Reinstall": N_("reinstall"), "Remove": N_("remove"), "Replaced": N_("old copy"),
+                    "Reason Change": N_("reason change")}
+# what the package bar counts; "Replaced" (the old copy rpm erases after an upgrade, downgrade or reinstall) and
+# reason changes are no package of their own
+COUNTED = ("Install", "Upgrade", "Downgrade", "Reinstall", "Remove")
 # keys of the helper's "log" events (see kram_helper.log); unknown keys fall back to the English text
 HELPER_MESSAGES = {
     "loading_repos": N_("Loading repositories…"),
@@ -44,6 +52,11 @@ class ProgressDialog(QDialog):
         self.running = True
         self._downloads: dict[int, tuple[float, float]] = {}  # id -> (done, total)
         self._rpm_count = 0
+        # from the "resolved" event: rpm counts the erase of a replaced copy as a step of its own, so the bar
+        # counts packages instead, and that erase is not shown as a removal
+        self._replaced: set[str] = set()
+        self._packages = 0
+        self._started: set[tuple[str, str]] = set()
         self._last_logged: tuple[str, str] | None = None  # (step, nevra) of the last rpm line in the log
 
         lay = QVBoxLayout(self)
@@ -58,8 +71,9 @@ class ProgressDialog(QDialog):
         self.rpm_bar = QProgressBar()
         for w in (self.download_label, self.download_bar, self.rpm_label, self.rpm_bar):
             lay.addWidget(w)
-        self.rpm_label.setVisible(request.get("op") == "transaction")
-        self.rpm_bar.setVisible(request.get("op") == "transaction")
+        installs = request.get("op") in ("transaction", "local_install")
+        self.rpm_label.setVisible(installs)
+        self.rpm_bar.setVisible(installs)
         self.download_bar.setRange(0, 0)  # busy until the first download reports its size
 
         self.log = QPlainTextEdit()
@@ -103,8 +117,11 @@ class ProgressDialog(QDialog):
             n = len(ev["items"])
             self.stage.setText(ngettext("The transaction has {n} package. Downloading…",
                                         "The transaction has {n} packages. Downloading…", n).format(n=n))
+            width = max((len(self._action_text(i["action"])) for i in ev["items"]), default=0)
             for item in ev["items"]:
-                self._append(f"{item['action']:>10}  {item['nevra']}")
+                self._append(f"{self._action_text(item['action']):>{width}}  {item['nevra']}")
+            self._replaced = {i["nevra"] for i in ev["items"] if i["action"] == "Replaced"}
+            self._packages = sum(1 for i in ev["items"] if i["action"] in COUNTED)
         elif kind == "download":
             self._on_download(ev)
         elif kind == "rpm":
@@ -151,15 +168,26 @@ class ProgressDialog(QDialog):
             self.stage.setText(_("Preparing the rpm transaction…"))
         elif step == "element":
             # libdnf5 numbers the transaction elements from 0
-            self._rpm_count = ev["count"]
-            self._set_rpm_position(ev["index"] + 1)
+            if not self._packages:  # no "resolved" event: rpm's own steps are all there is
+                self._rpm_count = ev["count"]
+                self._set_rpm_position(ev["index"] + 1)
         elif step in STEP_TEXT:
+            if step == "remove" and ev["nevra"] in self._replaced:
+                step = "cleanup"
+            elif step in ("install", "remove") and self._packages:
+                self._started.add((step, ev["nevra"]))
+                self._rpm_count = self._packages
+                self._set_rpm_position(len(self._started))
             text = _(STEP_TEXT[step]).format(nevra=ev["nevra"], script=ev.get("script", ""))
             self.stage.setText(text)
             # "start" and the first "progress" of a package both come with done == 0: log it once
             if step != "script" and ev.get("done") == 0 and self._last_logged != (step, ev["nevra"]):
                 self._last_logged = (step, ev["nevra"])
                 self._append(text)
+
+    @staticmethod
+    def _action_text(action: str) -> str:
+        return _(RESOLVED_ACTIONS[action]) if action in RESOLVED_ACTIONS else action
 
     def _set_rpm_position(self, position: int) -> None:
         count = max(self._rpm_count, 1)

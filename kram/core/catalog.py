@@ -9,17 +9,19 @@ from collections import Counter
 import libdnf5
 import rpm
 
-from ..helper.kram_helper import build_goal
+from ..helper.kram_helper import build_goal, cmdline_package, local_goal
 from ..i18n import language
 from .model import (
     CatalogSnapshot,
     ChangelogEntry,
     GroupInfo,
+    LocalTarget,
     PkgDetails,
     PkgRow,
     PreviewItem,
     Reason,
     Recommendation,
+    Requirement,
     RepoInfo,
     Status,
     TransactionPreview,
@@ -52,6 +54,17 @@ def _reldeps(reldep_list) -> list[str]:
     return [r.to_string() for r in reldep_list]
 
 
+def _own_deps(reldep_list) -> list:
+    """Without duplicates (/bin/sh for each scriptlet) and rpmlib() features, which rpm itself provides."""
+    seen, out = set(), []
+    for r in reldep_list:
+        text = r.to_string()
+        if text not in seen and not text.startswith("rpmlib("):
+            seen.add(text)
+            out.append(r)
+    return out
+
+
 class Catalog:
     def __init__(self) -> None:
         self._base = None
@@ -59,6 +72,7 @@ class Catalog:
         self._pkgs: dict[tuple[str, str], tuple[object, object]] = {}
         self._user_installed: set[tuple[str, str]] = set()
         self._system_base = None
+        self._local: dict[str, object] = {}  # package file path -> its Package in @commandline
 
     def load(self) -> CatalogSnapshot:
         t0 = time.monotonic()
@@ -85,6 +99,7 @@ class Catalog:
         repo_sack.load_repos()
         self._base = base
         self._system_base = None  # built on first use, see removal_dependents
+        self._local = {}
 
         basearch = base.get_vars().get_value("basearch")
         arches = [basearch, "noarch"]
@@ -312,11 +327,89 @@ class Catalog:
 
         With `sizes`, what each recommendation of a marked package adds with everything it pulls in is
         resolved too (a few more resolves); the others get their own size."""
-        tr = self._resolve_goal(request)
+        excluded = list(request.get("exclude_weak", ()))
+
+        def goal(extra: list[str]):
+            return build_goal(self._base, {**request, "exclude_weak": [*excluded, *extra]})
+        return self._resolve_preview(goal, set(excluded), self._marked_names(request), sizes)
+
+    def open_local(self, path: str) -> LocalTarget:
+        """Add a package file to the catalog's base (until `forget_local`) and say what installing it means.
+        Raises LocalFileError for a file libdnf5 cannot read as a package."""
+        package = self._local.get(path)
+        if package is None:
+            package = self._local[path] = cmdline_package(self._base, path)
+        q = libdnf5.rpm.PackageQuery(self._base)
+        q.filter_installed()
+        q.filter_name([package.get_name()])
+        # noarch <-> arch changes between versions still count as the same package
+        same_arch = [x for x in q if x.get_arch() == package.get_arch()]
+        installed = sorted(same_arch or list(q), key=_evr_sort_key)
+        # kernels and the like: another version goes next to the installed ones (installonlypkgs)
+        only = libdnf5.rpm.PackageQuery(self._base)
+        only.filter_repo_id(["@commandline"])
+        only.filter_installonly()
+        installonly = any(x.get_package_path() == package.get_package_path() for x in only)
+        action, installed_evr = "install", ""
+        if installed:
+            newest = installed[-1]
+            installed_evr = newest.get_evr()
+            order = rpm.labelCompare(_evr_tuple(package), _evr_tuple(newest))
+            if any(x.get_evr() == package.get_evr() and x.get_arch() == package.get_arch() for x in installed):
+                action = "reinstall"
+            elif installonly:
+                action = "alongside"
+            else:
+                action = "upgrade" if order > 0 else "downgrade"
+        q = libdnf5.rpm.PackageQuery(self._base)
+        q.filter_available()
+        q.filter_name([package.get_name()])
+        q.filter_repo_id(["@commandline"], libdnf5.common.QueryCmp_NEQ)
+        repo = sorted(q, key=_evr_sort_key)
+        deps = {"requires": package.get_requires(), "recommends": package.get_recommends(),
+                "suggests": package.get_suggests()}
+        return LocalTarget(action, installed_evr, repo[-1].get_evr() if repo else "",
+                           repo[-1].get_repo_id() if repo else "",
+                           {kind: [self._requirement(package, r) for r in _own_deps(reldeps)]
+                            for kind, reldeps in deps.items()},
+                           repo_newer=bool(repo) and rpm.labelCompare(_evr_tuple(repo[-1]), _evr_tuple(package)) > 0)
+
+    def _requirement(self, package, reldep) -> Requirement:
+        """What provides `reldep`: ~1 ms each, rich "(a or b)" dependencies included."""
+        q = libdnf5.rpm.PackageQuery(self._base)
+        q.filter_provides(reldep)
+        installed, available, own = set(), set(), False
+        for x in q:
+            if x.get_repo_id() == "@commandline":
+                own |= x.get_package_path() == package.get_package_path()
+            elif x.is_installed():
+                installed.add(x.get_name())
+            else:
+                available.add(x.get_name())
+        return Requirement(reldep.to_string(), sorted(installed), sorted(available), own)
+
+    def resolve_local(self, path: str, action: str, exclude_weak: list[str], sizes: bool = True) -> TransactionPreview:
+        """Like `resolve`, for a file from `open_local`; `action` is the helper's (install, reinstall, downgrade)."""
+        package = self._local[path]
+
+        def goal(extra: list[str]):
+            return local_goal(self._base, package, action, [*exclude_weak, *extra])
+        return self._resolve_preview(goal, set(exclude_weak), {package.get_name()}, sizes)
+
+    def forget_local(self) -> None:
+        """Hide the added package files again: they must not turn up as candidates for the marks."""
+        q = libdnf5.rpm.PackageQuery(self._base)
+        q.filter_repo_id(["@commandline"])
+        if not q.empty():
+            self._base.get_rpm_package_sack().add_user_excludes(q)
+        self._local = {}
+
+    def _resolve_preview(self, make_goal, excluded: set[str], marked: set[str], sizes: bool) -> TransactionPreview:
+        tr = self._resolve_goal(make_goal, [])
         if tr.get_problems() != libdnf5.base.GoalProblem_NO_PROBLEM:
             return TransactionPreview([], list(tr.get_resolve_logs_as_strings()), 0, 0)
         preview = self._preview(tr)
-        preview.recommendations = self._recommendations(tr, request)
+        preview.recommendations = self._recommendations(tr, excluded, marked)
         own = {i.name: i.install_size for i in preview.items}
         sized = 0
         for rec in sorted(preview.recommendations, key=lambda r: not r.direct):
@@ -324,8 +417,7 @@ class Catalog:
                 continue
             if sizes and rec.direct and sized < MAX_SIZED_RECOMMENDATIONS:
                 sized += 1
-                without = self._resolve_goal({**request, "exclude_weak": [*request.get("exclude_weak", ()),
-                                                                          *rec.excludes]})
+                without = self._resolve_goal(make_goal, rec.excludes)
                 if without.get_problems() == libdnf5.base.GoalProblem_NO_PROBLEM:
                     less = self._preview(without)
                     rec.size, rec.count, rec.exact = (preview.size_change - less.size_change,
@@ -334,12 +426,12 @@ class Catalog:
             rec.size, rec.count = sum(own.get(n, 0) for n in rec.brings), len(rec.brings)
         return preview
 
-    def _resolve_goal(self, request: dict):
-        # build_goal adds exclude_weak to the base's config; this base lives on, so put it back
+    def _resolve_goal(self, make_goal, extra_excludes: list[str]):
+        # the goal builders add exclude_weak to the base's config; this base lives on, so put it back
         config = self._base.get_config()
         configured = config.exclude_from_weak
         try:
-            return build_goal(self._base, request).resolve()
+            return make_goal(list(extra_excludes)).resolve()
         finally:
             config.exclude_from_weak = configured
 
@@ -375,8 +467,18 @@ class Catalog:
         items.sort(key=lambda i: (i.action, i.reason != "user", i.name))
         return TransactionPreview(items, [], download, change)
 
-    def _recommendations(self, tr, request: dict) -> list[Recommendation]:
-        """The recommendations that bring packages into `tr`, plus the ones the user unchecked."""
+    def _marked_names(self, request: dict) -> set[str]:
+        marked = set()
+        for field in ("install", "upgrade", "reinstall", "downgrade"):
+            for spec in request.get(field, ()):
+                q = libdnf5.rpm.PackageQuery(self._base)
+                if q.resolve_pkg_spec(spec, libdnf5.base.ResolveSpecSettings(), False)[0]:
+                    marked |= {x.get_name() for x in q}
+        return marked
+
+    def _recommendations(self, tr, excluded: set[str], marked: set[str]) -> list[Recommendation]:
+        """The recommendations that bring packages into `tr`, plus the ones the user unchecked (`excluded`).
+        Those of the `marked` packages are direct."""
         T = libdnf5.transaction
         installing = (T.TransactionItemAction_INSTALL, T.TransactionItemAction_UPGRADE,
                       T.TransactionItemAction_DOWNGRADE, T.TransactionItemAction_REINSTALL)
@@ -386,14 +488,6 @@ class Catalog:
                 p = tp.get_package()
                 pkgs.append(p)
                 (weak if tp.get_reason() == T.TransactionItemReason_WEAK_DEPENDENCY else hard).add(p.get_name())
-        excluded = set(request.get("exclude_weak", ()))
-        marked = set()
-        for field in ("install", "upgrade", "reinstall", "downgrade"):
-            for spec in request.get(field, ()):
-                q = libdnf5.rpm.PackageQuery(self._base)
-                if q.resolve_pkg_spec(spec, libdnf5.base.ResolveSpecSettings(), False)[0]:
-                    marked |= {x.get_name() for x in q}
-
         recs: dict[str, Recommendation] = {}
         for p in pkgs:
             name = p.get_name()

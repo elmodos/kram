@@ -41,6 +41,9 @@ exec podman run --rm "${out[@]}" -v "$src:/src:ro,Z" -v "kram-dnf-cache-$release
     echo "### local_install (as root, files of a normal user)"
     dnf5 -q download --destdir /tmp/dl hello >/dev/null 2>&1
     python3 /build/scripts/check_local_install.py "$rpm" /tmp/dl/hello-*.rpm
+    echo "### the installer: upgrade, downgrade, kernel-like, newer in a repository (test packages)"
+    dnf5 -q -y install createrepo_c >/dev/null 2>&1
+    (cd / && python3 /build/scripts/check_local_versions.py)
     echo "### the GUI uses the installed helper and translations"
     cd /  # not /build: that is a source checkout, and python3 -c would import kram from it
     QT_QPA_PLATFORM=offscreen LANGUAGE=uk python3 -c "

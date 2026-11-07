@@ -90,3 +90,110 @@ def test_apply_dialog_unchecks_a_recommendation(app):
     assert "exclude_from_weak=kvm,qemu" in dlg.cmd.toPlainText()
     item.setCheckState(0, Qt.Checked)
     assert "exclude_weak" not in asked[-1]
+
+
+def test_install_dialog(app, monkeypatch):
+    import time
+
+    from PySide6.QtCore import Qt
+
+    from kram.core import local_rpm
+    from kram.core.local_rpm import LocalRpm, Signature
+    from kram.core.model import LocalTarget, PreviewItem, Recommendation, Requirement, TransactionPreview
+    from kram.ui import install_dialog
+
+    rpm = LocalRpm("/tmp/tool-2.0-1.x86_64.rpm", "ab" * 32, 1000, "tool", None, "2.0", "1", "x86_64", "A tool",
+                   "Does things.", "", "MIT", "", "", 0, 5000, False, ["bash"], ["helper"], [], [], ["tool"], [], [],
+                   ["/usr/bin/tool"], [], "", Signature("nokey", "dbfcf71c6d9f90a6"))
+    monkeypatch.setattr(local_rpm, "read", lambda path: rpm)
+
+    def preview(excluded):
+        items = [PreviewItem("upgrade", "tool", "x86_64", "2.0-1", "1.0-1", "@commandline", 1000, 5000, "user")]
+        rec = Recommendation("helper", ["tool"], True, [] if excluded else ["helper"], ["helper"], size=10, count=1)
+        if not excluded:
+            items.append(PreviewItem("install", "helper", "x86_64", "1-1", "", "fedora", 50, 10, "weak"))
+        return TransactionPreview(items, [], 50, 4000, [rec])
+
+    calls = []
+
+    class Catalog:
+        def open_local(self, path):
+            calls.append(("open", path))
+            return LocalTarget("upgrade", "1.0-1", "", "", {
+                "requires": [Requirement("bash", ["bash"], ["bash"]), Requirement("libgone.so.1", [], [])],
+                "recommends": [Requirement("helper", [], ["helper"])], "suggests": []})
+
+        def resolve_local(self, path, action, exclude, sizes=True):
+            calls.append(("resolve", action, exclude))
+            return preview(bool(exclude))
+
+        def forget_local(self):
+            calls.append(("forget",))
+
+    class Dnf:  # runs everything at once, like the dnf thread would, only synchronously
+        def submit(self, fn, done, failed=None):
+            done(fn())
+
+    class Helper:
+        busy = False
+
+    requests = []
+
+    class Progress:
+        def __init__(self, helper, request, title, parent):
+            requests.append(request)
+            self.ok = True
+
+        def exec(self):
+            return 0
+    monkeypatch.setattr(install_dialog, "ProgressDialog", Progress)
+
+    dlg = install_dialog.InstallDialog(rpm.path, Catalog(), Dnf(), Helper(), marks=3)
+    deadline = time.monotonic() + 10
+    while dlg.rpm is None and time.monotonic() < deadline:  # the file is read on a thread of its own
+        app.processEvents()
+    assert dlg.install.text() == "Upgrade" and dlg.install.isEnabled()
+    notes = dlg.notes_text()
+    assert "1.0-1 to 2.0-1" in notes and "dbfcf71c6d9f90a6" in notes and "3 changes marked" in notes
+    assert "Also changes 1 more package" in dlg.sizes.text()
+    deps = dlg.deps.toPlainText()
+    assert "bash — installed: bash" in deps and "libgone.so.1 — unavailable" in deps
+    assert "helper — will be installed: helper" in deps
+
+    dlg.recs.tree.topLevelItem(0).setCheckState(0, Qt.Unchecked)
+    assert calls[-1] == ("resolve", "install", ["helper"])
+    assert "helper — not installed" in dlg.deps.toPlainText()  # unchecked: no longer part of the transaction
+    assert dlg.cmd.text() == "sudo dnf5 install --setopt=exclude_from_weak=helper /tmp/tool-2.0-1.x86_64.rpm"
+    dlg.install.click()
+    assert requests == [{"op": "local_install", "path": rpm.path, "sha256": rpm.sha256, "action": "install",
+                         "exclude_weak": ["helper"]}]
+    assert dlg.result() == install_dialog.QDialog.Accepted and dlg.changed_system and calls[-1] == ("forget",)
+
+
+def test_progress_counts_packages_not_rpm_steps(app):
+    """A reinstall is two rpm steps (install the copy, erase the old one): one package, and no "Removing"."""
+    from PySide6.QtCore import QObject, Signal
+
+    from kram.ui.progress_dialog import ProgressDialog
+
+    class Client(QObject):
+        event = Signal(dict)
+        failed = Signal(str)
+
+    client = Client()
+    dlg = ProgressDialog(client, {"op": "local_install"}, "Installing tool")
+    nevra = "tool-1.0-1.x86_64"
+    for ev in [{"event": "resolved", "items": [{"action": "Reinstall", "nevra": nevra},
+                                               {"action": "Replaced", "nevra": nevra}]},
+               {"event": "rpm", "step": "element", "index": 0, "count": 2, "nevra": nevra},
+               {"event": "rpm", "step": "install", "nevra": nevra, "done": 0, "total": 10},
+               {"event": "rpm", "step": "element", "index": 1, "count": 2, "nevra": nevra},
+               {"event": "rpm", "step": "remove", "nevra": nevra, "done": 0, "total": 10}]:
+        client.event.emit(ev)
+    log = dlg.log.toPlainText()
+    assert "reinstall  tool-1.0-1" in log and "old copy  tool-1.0-1" in log and "Replaced" not in log
+    assert "Installing tool-1.0-1.x86_64" in log and "Cleaning up the old copy of tool-1.0-1.x86_64" in log
+    assert "Removing" not in log
+    assert dlg.rpm_label.text() == "Package 1 of 1"
+    client.event.emit({"event": "done", "ok": True})
+    assert dlg.rpm_bar.value() == dlg.rpm_bar.maximum()
