@@ -29,6 +29,7 @@ HELPER_MESSAGES = {
     "mirror_failure": N_("Mirror unavailable: {url}: {error}"),
     "script_error": N_("Scriptlet {script} of {nevra} failed with exit code {code}"),
     "key_imported": N_("Imported key {key_id}"),
+    "copying_package": N_("Copying {name}…"),
 }
 
 

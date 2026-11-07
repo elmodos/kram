@@ -40,8 +40,13 @@ def test_rejects_bad_input():
         '{"op": "repo_set_enabled", "repos": {"-fedora": true}}',
         '{"op": "transaction", "install": ["fish"], "exclude_weak": ["../etc/passwd"]}',
         '{"op": "transaction", "exclude_weak": ["qemu-kvm-core"]}',
+        '{"op": "local_install", "path": "fish.rpm", "sha256": "' + "0" * 64 + '"}',
+        '{"op": "local_install", "path": "/etc/shadow", "sha256": "' + "0" * 64 + '"}',
+        '{"op": "local_install", "path": "/tmp/fish.rpm", "sha256": "' + "A" * 64 + '"}',
+        '{"op": "local_install", "path": "/tmp/fish.rpm", "sha256": "' + "0" * 64 + '", "action": "remove"}',
+        '{"op": "local_install", "path": "/tmp/fish.rpm", "sha256": "' + "0" * 64 + '", "exclude_weak": ["a/b"]}',
     )
-    assert len(events) == 21
+    assert len(events) == 26
     assert all(ev["event"] == "done" and ev["ok"] is False and ev["stage"] == "protocol" for ev in events)
 
 

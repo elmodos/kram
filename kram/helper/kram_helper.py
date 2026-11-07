@@ -12,6 +12,8 @@ Protocol: one JSON request per line on stdin, JSON event lines on stdout.
    "downgrade": [...], "mark_user": [...], "mark_dep": [...], "upgrade_all": false,
    "exclude_weak": [...], "download_only": false, "test": false}
                                                            exclude_weak: names never pulled in as recommendations
+  {"op": "local_install", "path": "/abs/file.rpm", "sha256": "<hex>", "action": "install"|"reinstall"|"downgrade",
+   "exclude_weak": [...], "test": false}                  one package file; see local_install()
   {"op": "repo_set_enabled", "repos": {"<repo id>": bool}}  persist via dnf5 config-manager, then load metadata
   {"op": "copr", "action": "enable"|"disable"|"remove", "project": "owner/name", "hub": "<host>"}
   {"op": "answer", "id": N, "yes": bool}                   reply to a "question" event (only while asked)
@@ -20,11 +22,18 @@ Events: {"event": "log"|"resolved"|"download"|"rpm"|"question"|"done", ...}; eve
 "log" events carry an English "text" plus a "key" and "params" so the GUI can show them translated
 (pkexec strips the locale from the environment, so the helper does not translate anything itself).
 """
+import fcntl
+import hashlib
+import hmac
 import json
 import os
+import pwd
 import re
+import shutil
+import stat
 import subprocess
 import sys
+import tempfile
 import time
 
 # Specs are package names or NEVRAs. No '/', so no file paths or URLs can be smuggled in.
@@ -39,6 +48,15 @@ COPR_HUB_RE = re.compile(r"^[a-z0-9][a-z0-9.-]{0,252}$")
 COPR_DEFAULT_HUB = "copr.fedorainfracloud.org"
 COPR_ACTIONS = ("enable", "disable", "remove")
 SPEC_FIELDS = ("install", "remove", "upgrade", "reinstall", "downgrade", "mark_user", "mark_dep")
+
+# local_install: where the helper keeps its private copy of the package file while it installs it
+LOCAL_DIR = "/var/cache/kram"
+MAX_LOCAL_RPM = 16 << 30  # bytes; games and IDEs ship rpms of several GB
+FREE_SPACE_MARGIN = 256 << 20
+SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
+LOCAL_ACTIONS = ("install", "reinstall", "downgrade")
+FICLONE = 0x40049409  # ioctl: copy-on-write clone (btrfs, XFS)
+COPY_CHUNK = 1 << 20
 
 PROGRESS_INTERVAL = 0.1  # s; progress callbacks fire hundreds of times per file, the GUI needs ~10/s
 
@@ -106,6 +124,113 @@ def build_goal(base, req: dict):
     if upgrade_all:
         goal.add_rpm_upgrade()
     return goal
+
+
+def validate_local(req: dict) -> tuple[str, str, str, list[str]]:
+    path, digest, action = req.get("path"), req.get("sha256"), req.get("action", "install")
+    if not isinstance(path, str) or not path.startswith("/") or not path.endswith(".rpm") \
+            or len(path) > 4096 or "\0" in path:
+        raise ProtocolError("path: expected an absolute path to a .rpm file")
+    if not isinstance(digest, str) or not SHA256_RE.match(digest):
+        raise ProtocolError("sha256: expected 64 lowercase hex digits")
+    if action not in LOCAL_ACTIONS:
+        raise ProtocolError(f"action: expected one of {', '.join(LOCAL_ACTIONS)}")
+    return path, digest, action, specs(req, "exclude_weak")
+
+
+def local_goal(base, path: str, action: str, exclude_weak: list[str]):
+    """A package file -> (Goal, Package). Shared with the GUI's preview of the file."""
+    import libdnf5
+
+    base.get_repo_sack().add_cmdline_packages([path])  # its returned map is opaque in the Python bindings
+    query = libdnf5.rpm.PackageQuery(base)
+    query.filter_repo_id(["@commandline"])
+    found = [p for p in query if p.get_package_path() == path]
+    if not found:
+        raise LocalFileError("not an rpm package")
+    package = found[0]
+    if exclude_weak:
+        config = base.get_config()
+        config.exclude_from_weak = (*config.exclude_from_weak, *exclude_weak)
+    goal = libdnf5.base.Goal(base)
+    {"install": goal.add_rpm_install, "reinstall": goal.add_rpm_reinstall,
+     "downgrade": goal.add_rpm_downgrade}[action](package)
+    return goal, package
+
+
+class LocalFileError(Exception):
+    pass
+
+
+def open_as_caller(path: str) -> tuple[int, int]:
+    """Open `path` with the rights of the user who ran pkexec, never with root's: (fd, size).
+
+    The path comes from the GUI, so root must not read a file the user could not read themselves. A symlink as
+    the last component, a FIFO or a device is refused too."""
+    flags = os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK | os.O_CLOEXEC
+    if os.geteuid() != 0:
+        fd = os.open(path, flags)
+    else:
+        try:
+            user = pwd.getpwuid(int(os.environ["PKEXEC_UID"]))
+        except (KeyError, ValueError) as e:
+            raise LocalFileError("unknown caller (PKEXEC_UID)") from e
+        groups = os.getgroups()
+        os.setgroups(os.getgrouplist(user.pw_name, user.pw_gid))
+        os.setegid(user.pw_gid)
+        os.seteuid(user.pw_uid)
+        try:
+            fd = os.open(path, flags)
+        finally:
+            os.seteuid(0)
+            os.setegid(0)
+            os.setgroups(groups)
+    st = os.fstat(fd)
+    if not stat.S_ISREG(st.st_mode) or st.st_size > MAX_LOCAL_RPM:
+        os.close(fd)
+        raise LocalFileError("not a regular file" if not stat.S_ISREG(st.st_mode) else "file too large")
+    return fd, st.st_size
+
+
+def clone_file(src: int, size: int, workdir: str) -> tuple[str, str]:
+    """Private copy of the open file in `workdir`: (path, sha256 of the copy).
+
+    A reflink is instant and takes no space; otherwise copy, after checking the free space. The hash is of the
+    copy, which the user can no longer change, so it is exactly what gets installed."""
+    dst = os.path.join(workdir, "package.rpm")
+    out = os.open(dst, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW | os.O_CLOEXEC, 0o600)
+    digest = hashlib.sha256()
+    try:
+        try:
+            fcntl.ioctl(out, FICLONE, src)
+        except OSError:
+            vfs = os.statvfs(workdir)
+            if vfs.f_bavail * vfs.f_frsize < size + FREE_SPACE_MARGIN:
+                raise LocalFileError(f"not enough free space in {LOCAL_DIR} for a copy of the package") from None
+            copied = 0
+            while chunk := os.read(src, COPY_CHUNK):
+                copied += len(chunk)
+                if copied > MAX_LOCAL_RPM:
+                    raise LocalFileError("file too large") from None
+                digest.update(chunk)
+                os.write(out, chunk)
+            return dst, digest.hexdigest()
+    finally:
+        os.close(out)
+    if os.stat(dst).st_size > MAX_LOCAL_RPM:
+        raise LocalFileError("file too large")
+    with open(dst, "rb") as f:
+        while chunk := f.read(COPY_CHUNK):
+            digest.update(chunk)
+    return dst, digest.hexdigest()
+
+
+def private_workdir() -> str:
+    os.makedirs(LOCAL_DIR, mode=0o700, exist_ok=True)
+    st = os.lstat(LOCAL_DIR)
+    if not stat.S_ISDIR(st.st_mode) or st.st_uid != os.geteuid() or st.st_mode & 0o077:
+        raise LocalFileError(f"{LOCAL_DIR} must be a directory owned by root with mode 0700")
+    return tempfile.mkdtemp(prefix="local-", dir=LOCAL_DIR)
 
 
 def make_base(download_cb=None, load=True):
@@ -205,11 +330,40 @@ def copr(req: dict) -> None:
 
 
 def run_transaction(req: dict) -> None:
-    import libdnf5
-
     validate(req)  # before the slow repo loading
-    test = bool(req.get("test"))
-    download_only = bool(req.get("download_only"))
+    run_goal(lambda base: build_goal(base, req), test=bool(req.get("test")),
+             download_only=bool(req.get("download_only")))
+
+
+def local_install(req: dict) -> None:
+    """Install one package file: opened with the caller's rights, cloned into a root-only directory, and
+    installed only if the copy's sha256 is the one the GUI showed the user."""
+    path, expected, action, exclude_weak = validate_local(req)
+    try:
+        fd, size = open_as_caller(path)
+    except (OSError, LocalFileError) as e:
+        emit("done", ok=False, stage="file", error=f"{path}: {getattr(e, 'strerror', None) or e}")
+        return
+    workdir = None
+    try:
+        workdir = private_workdir()
+        log("copying_package", "Copying {name}…", name=os.path.basename(path))
+        copy, actual = clone_file(fd, size, workdir)
+        if not hmac.compare_digest(actual, expected):
+            emit("done", ok=False, stage="file", error=f"{path}: the file changed after it was checked")
+            return
+        run_goal(lambda base: local_goal(base, copy, action, exclude_weak)[0], test=bool(req.get("test")),
+                 download_only=False)
+    except LocalFileError as e:
+        emit("done", ok=False, stage="file", error=f"{path}: {e}")
+    finally:
+        os.close(fd)
+        if workdir is not None:
+            shutil.rmtree(workdir, ignore_errors=True)
+
+
+def run_goal(make_goal, test: bool, download_only: bool) -> None:
+    import libdnf5
 
     # Keep Python references: the UniquePtr owns only the C++ side, and if the Python object is collected
     # libdnf5 calls into a dead director and aborts the whole process.
@@ -219,7 +373,7 @@ def run_transaction(req: dict) -> None:
     for repo in libdnf5.repo.RepoQuery(base):
         repo.set_callbacks(libdnf5.repo.RepoCallbacksUniquePtr(key_cb.for_repo()))
 
-    tr = build_goal(base, req).resolve()
+    tr = make_goal(base).resolve()
     if tr.get_problems() != libdnf5.base.GoalProblem_NO_PROBLEM:
         emit("done", ok=False, stage="resolve", error="\n".join(tr.get_resolve_logs_as_strings()))
         return
@@ -410,10 +564,10 @@ def main() -> int:
             op = req.get("op")
             if op == "ping":
                 emit("done", ok=True, uid=os.geteuid())
-            elif op in ("transaction", "refresh", "repo_set_enabled", "copr"):
+            elif op in ("transaction", "local_install", "refresh", "repo_set_enabled", "copr"):
                 if "DownloadProgress" not in globals():
                     DownloadProgress, RpmProgress, KeyImport = _callbacks()
-                {"transaction": run_transaction, "refresh": lambda _r: refresh(),
+                {"transaction": run_transaction, "local_install": local_install, "refresh": lambda _r: refresh(),
                  "repo_set_enabled": set_repos_enabled, "copr": copr}[op](req)
             elif op == "quit":
                 return 0

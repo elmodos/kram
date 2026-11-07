@@ -38,6 +38,9 @@ exec podman run --rm "${out[@]}" -v "$src:/src:ro,Z" -v "kram-dnf-cache-$release
     head -1 /usr/libexec/kram-helper
     echo "### installed helper (as root)"
     printf "%s\n" "{\"op\":\"ping\"}" "{\"op\":\"quit\"}" | /usr/libexec/kram-helper | head -1
+    echo "### local_install (as root, files of a normal user)"
+    dnf5 -q download --destdir /tmp/dl hello >/dev/null 2>&1
+    python3 /build/scripts/check_local_install.py "$rpm" /tmp/dl/hello-*.rpm
     echo "### the GUI uses the installed helper and translations"
     cd /  # not /build: that is a source checkout, and python3 -c would import kram from it
     QT_QPA_PLATFORM=offscreen LANGUAGE=uk python3 -c "
