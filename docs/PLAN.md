@@ -198,7 +198,7 @@ id, name, package count, file, priority, enable/disable buttons. debuginfo/sourc
   `answer`, `quit`. Events: `log`, `resolved`, `download`, `rpm`, `question` (OpenPGP key import: the GUI
   shows the fingerprint and asks), `done{ok,error}`.
 - Validation: known ops only, package specs matched by a regex (no `/`), no file paths from the GUI
-  (local .rpm files later, separately).
+  (local .rpm files: a separate `local_install` request, §10).
 - The helper does not translate: pkexec strips the locale. `log` events carry an English text plus a key
   and parameters, and the GUI shows the translated message.
 
@@ -304,15 +304,72 @@ View" turns the sidebar selection plus the search into conditions. Stored as JSO
 **After the MVP**: versionlock (🔒), offline system upgrades
 (`dnf5 offline`), dnf-automatic settings, in-app language override.
 
-**Postponed for security reasons** (2026-11-05): installing local .rpm files. Scope: File → "Install Package
-File…", drag and drop, `MimeType=application/x-rpm` in the .desktop file; the file shows up in the list marked
-for installation (origin "Local (@commandline)") and goes through the normal apply dialog. Why postponed:
-- the helper is the security boundary and deliberately takes no paths (`SPEC_RE` forbids `/`); this needs a
-  new, strictly validated request type (absolute path to a regular `*.rpm` file, opened by the root helper);
-- local packages are usually not signature-checked (`localpkg_gpgcheck` is off by default in dnf5), so the
-  apply dialog must warn that the package is unverified and gets no updates unless it adds its own repo;
-- the GUI's preview has to load the same file (`add_cmdline_packages`) so both sides resolve the same goal.
-Until then: `sudo dnf install ./file.rpm` or Discover.
+**Cache** (after the MVP, planned 2026-11-07): a small dialog that shows the size of each package cache and
+cleans it through the helper.
+- `/var/cache/libdnf5`: the system dnf cache. With `keepcache=False` (the default) downloaded packages go away
+  after a successful transaction; leftovers come from interrupted ones. Actions: "clean packages"
+  (`dnf clean packages`), "clean metadata" (the next load downloads it again).
+- `~/.cache/libdnf5`: metadata for non-root runs (Kram itself, `dnf` as the user); cleaned without the helper.
+- `/var/cache/PackageKit`: rpms that Discover / GNOME Software download for offline updates and do not clean
+  up (3.5 GB, 467 rpms on the author's laptop, 2026-11-07). Never clean it while an offline update is prepared
+  (`/system-update`, `/var/lib/PackageKit/prepared-update`): say so and leave it alone. The helper checks that
+  again itself.
+No per-version pruning ("remove already upgraded packages"): with `keepcache=False` dnf keeps none, and for
+PackageKit cleaning everything is simpler.
+
+**Local .rpm installer** (designed 2026-11-07, target 0.2.0; was postponed for security reasons on 2026-11-05).
+A gdebi-style dialog for one package file.
+- **Opening it**: File → "Open Package File…" and dropping an `.rpm` on the main window (window-modal over it);
+  `kram /path/file.rpm` shows only the dialog, no main window. The existing .desktop file gets `Exec=kram %f`
+  and `MimeType=application/x-rpm;`, so file managers offer "Open with Kram" and the menu keeps one entry.
+  The dialog is a self-contained component (catalog, dnf thread, helper client), the parent window is optional.
+  It shows a busy state while the catalog loads.
+- **One file only.** A vendor who ships an app as several rpms should publish a repository.
+- **Marks in the main window are left alone**: the transaction holds only this package and what it pulls in; a
+  line says "N marks in the main window are not part of this and stay". While any modal dialog is open or a
+  transaction runs, the main window ignores dropped files and disables the menu action (an explicit check, not
+  only Qt modality). A second Kram process started from a file manager meets the rpm lock and gets a plain
+  "another package operation is running" error.
+- **Header**: name, full version and arch, summary, a coloured state line, signature (signed by the Fedora key /
+  a repo's key, unknown key, unsigned; the last two are a warning, since dnf5 does not check local packages by
+  default), hints: "also available from repository X (version Y)", "gets no updates unless it adds a repo".
+- **States and the main button**: not installed → Install ("N more packages, download X MB, takes Y MB");
+  older installed → Upgrade (1.2 → 1.3); newer installed → Downgrade (with a warning); the same version →
+  Reinstall (the main window can only reinstall a version a repo still has) plus the `rpm -V` result ("3 files
+  missing or changed"; unreadable files listed apart as "could not check"; the buttons are disabled and the
+  status bar says what runs while it checks); not installable → only Close, with the solver's reason or the
+  wrong arch. No "Remove" here: removing installed packages belongs to the main window.
+- **Tabs**: Description, Details (license, URL, vendor, packager, build date, sizes), Dependencies (requires,
+  plus what the resolved transaction actually brings), Files, Changelog, **Scripts** (`%pre`/`%post`/triggers:
+  code that runs as root; the header says so when there are any). Read from the file's header with python3-rpm.
+- **No separate confirmation**: the dialog already lists the changes; the button goes to pkexec and the normal
+  progress dialog.
+- **Helper**: a new request `{"op": "local_install", "path": ..., "sha256": ..., "exclude": [...], "action":
+  "install"|"reinstall"|"downgrade"}`. The helper opens the file with the caller's rights (`setgroups`,
+  `setegid`, `seteuid` to `PKEXEC_UID`; `O_NOFOLLOW`; a regular file ending in `.rpm`; a size limit), clones it
+  into its own 0700 directory (reflink via `FICLONE`, instant on btrfs and XFS, a plain copy otherwise, after
+  checking free space), hashes the copy while copying and refuses if it differs from what the dialog showed,
+  then resolves with `add_cmdline_packages` on the copy and removes it afterwards. So root never reads a file
+  the user cannot (checked in a container: another user's file, a symlink, a FIFO and a root-group file are all
+  refused), and exactly the reviewed file is installed. Signature state comes from `rpmkeys -Kv` (an OpenPGP
+  line with OK / NOKEY, or none for an unsigned package).
+
+**Choosing recommended packages** (designed 2026-11-07): one shared widget for the installer and the normal apply
+dialog. A checkbox per *recommendation* (a `Recommends:` of a package in the transaction), not per package: a
+recommendation can be a choice like `(libvirt-daemon-kvm or libvirt-daemon-qemu)`, and excluding only the picked
+package makes the solver take the other one (virt-manager: 1.1 GB → 2.4 GB with every qemu arch). Unchecking a
+recommendation excludes every package that provides it, unless something hard-requires it ("needed by X",
+locked; found by resolving once without weak deps). The rest still installs with the "weak dependency" reason,
+so autoremove stays correct. The package's own recommendations come first; recommendations of its dependencies
+go in a collapsed group (on a bare system virt-manager brings 40 weak packages, most of them nested). Every
+toggle resolves again on the dnf thread (0.05–0.15 s per resolve) and the list shows each recommendation's size
+with what it pulls in. The preview resolves on a separate `Base` (like `removal_dependents`): user excludes are
+per Base, verified to leave the main list untouched. The helper's transaction requests take `"exclude":
+[names]`, validated with `SPEC_RE`. Initial state: all checked when `install_weak_deps` is on.
+
+**Order**: recommended-packages widget in the apply dialog → helper `local_install` with container tests →
+installer dialog inside the main window → the dialog-only mode and .desktop → translations; the cache dialog
+later.
 
 **Reasonable, but not planned unless users ask for it** (2026-11-06): moving transactions from our helper to
 dnf5daemon, or supporting both. For: no root code of our own, standard dnf polkit actions, local .rpm and
