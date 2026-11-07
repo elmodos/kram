@@ -24,6 +24,10 @@ Built on libdnf5 (the same library as `dnf5`) and Qt 6. See [docs/PLAN.md](docs/
 |---|---|
 | ![Applying changes](docs/screenshots/progress.png) | ![Import key](docs/screenshots/key-import.png) |
 
+| Installing a downloaded .rpm | What satisfies each dependency |
+|---|---|
+| ![Install a package file](docs/screenshots/install-file.png) | ![Dependencies of a package file](docs/screenshots/install-dependencies.png) |
+
 ## Features
 
 - Every package of the enabled repositories in one table: status, origin (Fedora / COPR / third-party /
@@ -35,6 +39,12 @@ Built on libdnf5 (the same library as `dnf5`) and Qt 6. See [docs/PLAN.md](docs/
 - Mark for installation, upgrade, reinstallation, downgrade to a chosen version, removal, or change the
   install reason; review the whole transaction (with dependencies and the equivalent `dnf5` command) before
   anything happens. Markings can be saved to a file and read back (File menu).
+- Choose which recommended packages to install: a checkbox per recommendation, with the size each one adds.
+- Install a downloaded `.rpm` file (File → Open Package File…, drop it on the window, or "Open with Kram" in
+  the file manager). Before anything happens it shows whether this installs, upgrades, downgrades or
+  reinstalls, who signed the file, the scripts it runs as root, what satisfies each dependency and whether a
+  repository has a newer version. A reinstall first checks the installed files (`rpm -V`). The helper installs exactly the file you
+  saw (checked by its SHA-256), read with your own permissions.
 - Description, dependencies (clickable), files, all versions and the changelog of every package.
 - Enable and disable repositories; enable, disable and remove COPR projects, search Copr.
 - One password per session (polkit); browsing and searching need none.
@@ -69,6 +79,7 @@ Tested on Fedora 44 with KDE Plasma; any Qt-friendly desktop should work:
 ```sh
 sudo dnf install python3-libdnf5 python3-rpm python3-pyside6 polkit gettext
 python3 -m kram
+python3 -m kram ~/Downloads/some-package.rpm   # only the installer for that file
 ```
 
 Browsing and searching need no privileges. Applying changes or refreshing metadata asks for the
