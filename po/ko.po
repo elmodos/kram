@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kram\n"
 "Report-Msgid-Bugs-To: https://github.com/elmodos/kram/issues\n"
-"POT-Creation-Date: 2026-11-08 00:29+0200\n"
+"POT-Creation-Date: 2026-11-08 00:51+0200\n"
 "PO-Revision-Date: 2026-11-04 14:07+0200\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -168,31 +168,31 @@ msgstr "모든 출처"
 msgid "All groups"
 msgstr "모든 그룹"
 
-#: kram/core/marks.py:20 kram/ui/progress_dialog.py:27
+#: kram/core/marks.py:21 kram/ui/progress_dialog.py:27
 msgid "install"
 msgstr "설치"
 
-#: kram/core/marks.py:21 kram/ui/progress_dialog.py:28
+#: kram/core/marks.py:22 kram/ui/progress_dialog.py:28
 msgid "remove"
 msgstr "제거"
 
-#: kram/core/marks.py:22 kram/ui/progress_dialog.py:27
+#: kram/core/marks.py:23 kram/ui/progress_dialog.py:27
 msgid "upgrade"
 msgstr "업그레이드"
 
-#: kram/core/marks.py:23 kram/ui/progress_dialog.py:28
+#: kram/core/marks.py:24 kram/ui/progress_dialog.py:28
 msgid "reinstall"
 msgstr "재설치"
 
-#: kram/core/marks.py:24 kram/ui/progress_dialog.py:27
+#: kram/core/marks.py:25 kram/ui/progress_dialog.py:27
 msgid "downgrade"
 msgstr "다운그레이드"
 
-#: kram/core/marks.py:25
+#: kram/core/marks.py:26
 msgid "mark as installed by user"
 msgstr "사용자가 설치한 것으로 표시"
 
-#: kram/core/marks.py:26
+#: kram/core/marks.py:27
 msgid "mark as dependency"
 msgstr "의존성으로 표시"
 
@@ -205,11 +205,11 @@ msgctxt "search mode"
 msgid "Description"
 msgstr "설명"
 
-#: kram/core/search.py:35 kram/ui/details.py:102 kram/ui/install_dialog.py:492
+#: kram/core/search.py:35 kram/ui/details.py:102 kram/ui/install_dialog.py:526
 msgid "Provides"
 msgstr "제공"
 
-#: kram/core/search.py:36 kram/ui/install_dialog.py:439
+#: kram/core/search.py:36 kram/ui/install_dialog.py:473
 #: kram/ui/repos_dialog.py:48
 msgid "File"
 msgstr "파일"
@@ -276,7 +276,7 @@ msgid "weak dependency"
 msgstr "약한 의존성"
 
 #: kram/ui/apply_dialog.py:79 kram/ui/details.py:70
-#: kram/ui/install_dialog.py:438 kram/ui/package_model.py:15
+#: kram/ui/install_dialog.py:472 kram/ui/package_model.py:15
 msgid "Package"
 msgstr "패키지"
 
@@ -288,26 +288,26 @@ msgstr "크기"
 msgid "Version"
 msgstr "버전"
 
-#: kram/ui/apply_dialog.py:112
+#: kram/ui/apply_dialog.py:115
 #, python-brace-format
 msgid "Essential system packages will be removed: {names}."
 msgstr "필수 시스템 패키지가 제거됩니다: {names}."
 
-#: kram/ui/apply_dialog.py:114
+#: kram/ui/apply_dialog.py:117
 #, python-brace-format
 msgid "{n} package will be removed."
 msgid_plural "{n} packages will be removed."
 msgstr[0] "패키지 {n}개가 제거됩니다."
 
-#: kram/ui/apply_dialog.py:115
+#: kram/ui/apply_dialog.py:118
 msgid "Make sure this is what you want."
 msgstr "원하는 작업이 맞는지 확인하십시오."
 
-#: kram/ui/apply_dialog.py:131
+#: kram/ui/apply_dialog.py:134
 msgid "Recommended packages."
 msgstr "추천 패키지."
 
-#: kram/ui/apply_dialog.py:132
+#: kram/ui/apply_dialog.py:135
 msgid ""
 "Not required, but suggested by the packages being installed. Uncheck what "
 "you do not want."
@@ -315,84 +315,85 @@ msgstr ""
 "필수는 아니지만 설치할 패키지가 추천합니다. 원하지 않는 항목은 선택을 해제하"
 "세요."
 
-#: kram/ui/apply_dialog.py:136
+#: kram/ui/apply_dialog.py:139
 msgid "Adds"
 msgstr "추가"
 
-#: kram/ui/apply_dialog.py:136
+#: kram/ui/apply_dialog.py:139
 msgid "Recommended by"
 msgstr "추천한 패키지"
 
-#: kram/ui/apply_dialog.py:136
+#: kram/ui/apply_dialog.py:139
 msgid "Recommended package"
 msgstr "추천 패키지"
 
-#: kram/ui/apply_dialog.py:152
+#: kram/ui/apply_dialog.py:155
 #, python-brace-format
 msgid "Recommended by dependencies ({n})"
 msgstr "의존성이 추천함 ({n})"
 
-#: kram/ui/apply_dialog.py:159
+#: kram/ui/apply_dialog.py:162
 msgid ""
 "Pulled in because it complements packages being installed (language support, "
 "plugins)."
 msgstr "설치할 패키지를 보완하므로 함께 설치됩니다 (언어 지원, 플러그인)."
 
-#: kram/ui/apply_dialog.py:173
+#: kram/ui/apply_dialog.py:176
 msgid "still installed: something else requires it"
 msgstr "그래도 설치됩니다: 다른 패키지가 필요로 합니다"
 
-#: kram/ui/apply_dialog.py:180
+#: kram/ui/apply_dialog.py:183
 #, python-brace-format
 msgid "+{size}, {n} package"
 msgid_plural "+{size}, {n} packages"
 msgstr[0] "+{size}, 패키지 {n}개"
 
-#: kram/ui/apply_dialog.py:198 kram/ui/repos_dialog.py:85
+#: kram/ui/apply_dialog.py:201 kram/ui/repos_dialog.py:85
 msgid "Apply changes"
 msgstr "변경 사항 적용"
 
-#: kram/ui/apply_dialog.py:206
+#: kram/ui/apply_dialog.py:209
 msgid "Review the list before applying."
 msgstr "적용하기 전에 목록을 확인하십시오."
 
-#: kram/ui/apply_dialog.py:206
+#: kram/ui/apply_dialog.py:209
 msgid "The following changes will be made."
 msgstr "다음 변경 사항이 적용됩니다."
 
-#: kram/ui/apply_dialog.py:231
+#: kram/ui/apply_dialog.py:234 kram/ui/install_dialog.py:168
 msgid "Equivalent command"
 msgstr "동등한 명령"
 
-#: kram/ui/apply_dialog.py:235
+#: kram/ui/apply_dialog.py:238
 msgid "Download packages only"
 msgstr "패키지만 다운로드"
 
-#: kram/ui/apply_dialog.py:239 kram/ui/main_window.py:138
+#: kram/ui/apply_dialog.py:242 kram/ui/main_window.py:138
 msgid "Apply"
 msgstr "적용"
 
-#: kram/ui/apply_dialog.py:255 kram/ui/install_dialog.py:353
+#: kram/ui/apply_dialog.py:258 kram/ui/install_dialog.py:383
 #, python-brace-format
 msgid "To download: {size}."
 msgstr "다운로드할 크기: {size}."
 
-#: kram/ui/apply_dialog.py:256 kram/ui/install_dialog.py:354
+#: kram/ui/apply_dialog.py:259 kram/ui/install_dialog.py:384
 #, python-brace-format
 msgid "Disk space change: {size}."
 msgstr "디스크 공간 변화: {size}."
 
-#: kram/ui/apply_dialog.py:274 kram/ui/install_dialog.py:176
-#: kram/ui/install_dialog.py:234 kram/ui/main_window.py:900
+#: kram/ui/apply_dialog.py:277 kram/ui/install_dialog.py:191
+#: kram/ui/install_dialog.py:207 kram/ui/install_dialog.py:264
+#: kram/ui/main_window.py:900
 msgid "Resolving dependencies…"
 msgstr "의존성을 해결하는 중…"
 
-#: kram/ui/apply_dialog.py:284 kram/ui/install_dialog.py:251
+#: kram/ui/apply_dialog.py:287 kram/ui/install_dialog.py:281
 msgid "These choices cannot be carried out:"
 msgstr "이 선택은 실행할 수 없습니다:"
 
-#: kram/ui/apply_dialog.py:289 kram/ui/install_dialog.py:228
-#: kram/ui/install_dialog.py:258 kram/ui/main_window.py:902
+#: kram/ui/apply_dialog.py:292 kram/ui/install_dialog.py:258
+#: kram/ui/install_dialog.py:288 kram/ui/main_window.py:902
 #, python-brace-format
 msgid ""
 "Could not resolve the changes:\n"
@@ -460,7 +461,7 @@ msgid "Builds for this system"
 msgstr "이 시스템용 빌드"
 
 #: kram/ui/copr_dialog.py:99 kram/ui/details.py:49
-#: kram/ui/install_dialog.py:139
+#: kram/ui/install_dialog.py:142
 msgid "Description"
 msgstr "설명"
 
@@ -561,15 +562,15 @@ msgstr "상태"
 msgid "General"
 msgstr "일반"
 
-#: kram/ui/details.py:50 kram/ui/install_dialog.py:140
+#: kram/ui/details.py:50 kram/ui/install_dialog.py:143
 msgid "Dependencies"
 msgstr "의존성"
 
-#: kram/ui/details.py:50 kram/ui/install_dialog.py:140
+#: kram/ui/details.py:50 kram/ui/install_dialog.py:143
 msgid "Files"
 msgstr "파일"
 
-#: kram/ui/details.py:51 kram/ui/install_dialog.py:141
+#: kram/ui/details.py:51 kram/ui/install_dialog.py:144
 msgid "Changelog"
 msgstr "변경 기록"
 
@@ -589,19 +590,19 @@ msgstr "사용자가"
 msgid "Candidate repository"
 msgstr "후보 저장소"
 
-#: kram/ui/details.py:73 kram/ui/install_dialog.py:442
+#: kram/ui/details.py:73 kram/ui/install_dialog.py:476
 msgid "License"
 msgstr "라이선스"
 
-#: kram/ui/details.py:74 kram/ui/install_dialog.py:443
+#: kram/ui/details.py:74 kram/ui/install_dialog.py:477
 msgid "Website"
 msgstr "웹사이트"
 
-#: kram/ui/details.py:75 kram/ui/install_dialog.py:444
+#: kram/ui/details.py:75 kram/ui/install_dialog.py:478
 msgid "Vendor"
 msgstr "공급업체"
 
-#: kram/ui/details.py:76 kram/ui/install_dialog.py:445
+#: kram/ui/details.py:76 kram/ui/install_dialog.py:479
 msgid "Packager"
 msgstr "패키저"
 
@@ -609,7 +610,7 @@ msgstr "패키저"
 msgid "Source package"
 msgstr "소스 패키지"
 
-#: kram/ui/details.py:78 kram/ui/install_dialog.py:446
+#: kram/ui/details.py:78 kram/ui/install_dialog.py:480
 msgid "Built"
 msgstr "빌드 날짜"
 
@@ -618,7 +619,7 @@ msgctxt "install date"
 msgid "Installed"
 msgstr "설치 날짜"
 
-#: kram/ui/details.py:81 kram/ui/install_dialog.py:447
+#: kram/ui/details.py:81 kram/ui/install_dialog.py:481
 msgid "Installed size"
 msgstr "설치 크기"
 
@@ -626,15 +627,15 @@ msgstr "설치 크기"
 msgid "Download size"
 msgstr "다운로드 크기"
 
-#: kram/ui/details.py:96 kram/ui/install_dialog.py:486
+#: kram/ui/details.py:96 kram/ui/install_dialog.py:520
 msgid "Requires"
 msgstr "필요로 함"
 
-#: kram/ui/details.py:97 kram/ui/install_dialog.py:487
+#: kram/ui/details.py:97 kram/ui/install_dialog.py:521
 msgid "Recommends"
 msgstr "추천"
 
-#: kram/ui/details.py:98 kram/ui/install_dialog.py:488
+#: kram/ui/details.py:98 kram/ui/install_dialog.py:522
 msgid "Suggests"
 msgstr "제안"
 
@@ -642,15 +643,15 @@ msgstr "제안"
 msgid "Required by installed packages"
 msgstr "설치된 패키지가 필요로 함"
 
-#: kram/ui/details.py:100 kram/ui/install_dialog.py:490
+#: kram/ui/details.py:100 kram/ui/install_dialog.py:524
 msgid "Conflicts"
 msgstr "충돌"
 
-#: kram/ui/details.py:101 kram/ui/install_dialog.py:491
+#: kram/ui/details.py:101 kram/ui/install_dialog.py:525
 msgid "Obsoletes"
 msgstr "대체"
 
-#: kram/ui/details.py:103 kram/ui/install_dialog.py:493
+#: kram/ui/details.py:103 kram/ui/install_dialog.py:527
 msgid "No dependencies"
 msgstr "의존성 없음"
 
@@ -750,122 +751,141 @@ msgstr "출처: 로컬"
 msgid "Unknown origin"
 msgstr "출처 알 수 없음"
 
-#: kram/ui/install_dialog.py:42 kram/ui/install_dialog.py:167
+#: kram/ui/install_dialog.py:45 kram/ui/install_dialog.py:177
 msgid "Install"
 msgstr "설치"
 
-#: kram/ui/install_dialog.py:43
+#: kram/ui/install_dialog.py:46
 msgid "Upgrade"
 msgstr "업그레이드"
 
-#: kram/ui/install_dialog.py:44
+#: kram/ui/install_dialog.py:47
 msgid "Downgrade"
 msgstr "다운그레이드"
 
-#: kram/ui/install_dialog.py:44
+#: kram/ui/install_dialog.py:47
 msgid "Reinstall"
 msgstr "재설치"
 
-#: kram/ui/install_dialog.py:48
+#: kram/ui/install_dialog.py:51
 msgid "contents"
 msgstr "내용"
 
-#: kram/ui/install_dialog.py:48
+#: kram/ui/install_dialog.py:51
 msgid "device"
 msgstr "장치"
 
-#: kram/ui/install_dialog.py:48
+#: kram/ui/install_dialog.py:51
 msgid "permissions"
 msgstr "권한"
 
-#: kram/ui/install_dialog.py:48
+#: kram/ui/install_dialog.py:51
 msgid "size"
 msgstr "크기"
 
-#: kram/ui/install_dialog.py:49 kram/ui/package_model.py:22
+#: kram/ui/install_dialog.py:52 kram/ui/package_model.py:22
 msgid "group"
 msgstr "그룹"
 
-#: kram/ui/install_dialog.py:49
+#: kram/ui/install_dialog.py:52
 msgid "link target"
 msgstr "링크 대상"
 
-#: kram/ui/install_dialog.py:49
+#: kram/ui/install_dialog.py:52
 msgid "modification time"
 msgstr "수정 시각"
 
-#: kram/ui/install_dialog.py:49
+#: kram/ui/install_dialog.py:52
 msgid "owner"
 msgstr "소유자"
 
-#: kram/ui/install_dialog.py:50
+#: kram/ui/install_dialog.py:53
 msgid "capabilities"
 msgstr "capabilities"
 
-#: kram/ui/install_dialog.py:76
+#: kram/ui/install_dialog.py:79
 msgid "Install Package File"
 msgstr "패키지 파일 설치"
 
-#: kram/ui/install_dialog.py:130
+#: kram/ui/install_dialog.py:133
 msgid "What installing it changes"
 msgstr "설치로 바뀌는 것"
 
-#: kram/ui/install_dialog.py:139 kram/ui/progress_dialog.py:82
+#: kram/ui/install_dialog.py:142 kram/ui/progress_dialog.py:82
 msgid "Details"
 msgstr "자세히"
 
-#: kram/ui/install_dialog.py:141
+#: kram/ui/install_dialog.py:144
 msgid "Scripts"
 msgstr "스크립트"
 
-#: kram/ui/install_dialog.py:175
+#: kram/ui/install_dialog.py:185
 #, python-brace-format
 msgid "Reading {file}…"
 msgstr "{file} 읽는 중…"
 
-#: kram/ui/install_dialog.py:194
+#: kram/ui/install_dialog.py:188 kram/ui/main_window.py:410
+msgid "Loading metadata…"
+msgstr "메타데이터를 불러오는 중…"
+
+#: kram/ui/install_dialog.py:215 kram/ui/main_window.py:449
+#, python-brace-format
+msgid ""
+"Could not load the package catalog:\n"
+"\n"
+"{error}"
+msgstr ""
+"패키지 카탈로그를 불러올 수 없습니다:\n"
+"\n"
+"{error}"
+
+#: kram/ui/install_dialog.py:224
 msgid ""
 "This is a source package: it can be used to build the program, not installed."
 msgstr ""
 "소스 패키지입니다. 프로그램을 빌드하는 데 쓸 수 있지만 설치할 수는 없습니다."
 
-#: kram/ui/install_dialog.py:196
+#: kram/ui/install_dialog.py:226
 msgid "The file is damaged: its checksums do not match."
 msgstr "파일이 손상되었습니다. 체크섬이 일치하지 않습니다."
 
-#: kram/ui/install_dialog.py:205
+#: kram/ui/install_dialog.py:235
 #, python-brace-format
 msgid "Could not read the file: {error}"
 msgstr "파일을 읽을 수 없습니다: {error}"
 
-#: kram/ui/install_dialog.py:276
+#: kram/ui/install_dialog.py:306
 #, python-brace-format
 msgid "Checking the installed files of {name}…"
 msgstr "{name}의 설치된 파일을 확인하는 중…"
 
-#: kram/ui/install_dialog.py:299
+#: kram/ui/install_dialog.py:329
 msgid "Cannot be installed."
 msgstr "설치할 수 없습니다."
 
-#: kram/ui/install_dialog.py:302
+#: kram/ui/install_dialog.py:332
 msgid "(the full text is in the Dependencies tab)"
 msgstr "(전체 내용은 의존성 탭에 있습니다)"
 
-#: kram/ui/install_dialog.py:310
+#: kram/ui/install_dialog.py:340
 #, python-brace-format
-msgid "The {repo} repository has a newer version ({version}): the next system update will install it over this one."
-msgstr "{repo} 저장소에 더 새로운 버전({version})이 있습니다. 다음 시스템 업데이트 때 이 버전 대신 설치됩니다."
+msgid ""
+"The {repo} repository has a newer version ({version}): the next system "
+"update will install it over this one."
+msgstr ""
+"{repo} 저장소에 더 새로운 버전({version})이 있습니다. 다음 시스템 업데이트 "
+"때 이 버전 대신 설치됩니다."
 
-#: kram/ui/install_dialog.py:314
+#: kram/ui/install_dialog.py:344
 #, python-brace-format
 msgid "Also available from the {repo} repository (version {version})."
 msgstr "{repo} 저장소에도 있습니다 (버전 {version})."
 
-#: kram/ui/install_dialog.py:317
+#: kram/ui/install_dialog.py:347
 msgid "Adds a repository of its own and gets updates from it."
 msgstr "자체 저장소를 추가하고 그곳에서 업데이트를 받습니다."
 
-#: kram/ui/install_dialog.py:319
+#: kram/ui/install_dialog.py:349
 msgid ""
 "No repository has this package: it gets no updates unless you install a "
 "newer file."
@@ -873,29 +893,29 @@ msgstr ""
 "이 패키지가 있는 저장소가 없습니다. 더 새로운 파일을 설치하지 않으면 업데이트"
 "되지 않습니다."
 
-#: kram/ui/install_dialog.py:322
+#: kram/ui/install_dialog.py:352
 msgid ""
 "Runs scripts as root when it is installed or removed (see the Scripts tab)."
 msgstr ""
 "설치하거나 제거할 때 root 권한으로 스크립트를 실행합니다 (스크립트 탭 참고)."
 
-#: kram/ui/install_dialog.py:328
+#: kram/ui/install_dialog.py:358
 #, python-brace-format
 msgid "{n} installed file is missing or changed (see the Files tab)."
 msgid_plural "{n} installed files are missing or changed (see the Files tab)."
 msgstr[0] "설치된 파일 {n}개가 없거나 바뀌었습니다 (파일 탭 참고)."
 
-#: kram/ui/install_dialog.py:331
+#: kram/ui/install_dialog.py:361
 msgid "The installed files are intact."
 msgstr "설치된 파일이 온전합니다."
 
-#: kram/ui/install_dialog.py:334
+#: kram/ui/install_dialog.py:364
 #, python-brace-format
 msgid "{n} file could not be checked: no permission to read it."
 msgid_plural "{n} files could not be checked: no permission to read them."
 msgstr[0] "파일 {n}개를 확인할 수 없습니다: 읽기 권한이 없습니다."
 
-#: kram/ui/install_dialog.py:339
+#: kram/ui/install_dialog.py:369
 #, python-brace-format
 msgid ""
 "{n} change marked in the main window is not part of this and stays marked."
@@ -904,27 +924,31 @@ msgid_plural ""
 msgstr[0] ""
 "기본 창에서 표시한 변경 {n}개는 여기에 포함되지 않으며 표시된 채로 남습니다."
 
-#: kram/ui/install_dialog.py:350
+#: kram/ui/install_dialog.py:380
 #, python-brace-format
 msgid "Also changes {n} more package, see the Dependencies tab."
 msgid_plural "Also changes {n} more packages, see the Dependencies tab."
 msgstr[0] "다른 패키지 {n}개도 바뀝니다. 의존성 탭을 참고하세요."
 
-#: kram/ui/install_dialog.py:404
+#: kram/ui/install_dialog.py:438
 msgid "Not installed yet."
 msgstr "아직 설치되지 않았습니다."
 
-#: kram/ui/install_dialog.py:406
+#: kram/ui/install_dialog.py:440
 #, python-brace-format
 msgid "Upgrades the installed version {old} to {new}."
 msgstr "설치된 버전 {old}을(를) {new}(으)로 업그레이드합니다."
 
-#: kram/ui/install_dialog.py:408
+#: kram/ui/install_dialog.py:442
 #, python-brace-format
-msgid "Installs next to the installed version {old}: several versions of this package are kept side by side, like kernels."
-msgstr "설치된 버전 {old} 옆에 설치됩니다. 이 패키지는 커널처럼 여러 버전을 나란히 유지합니다."
+msgid ""
+"Installs next to the installed version {old}: several versions of this "
+"package are kept side by side, like kernels."
+msgstr ""
+"설치된 버전 {old} 옆에 설치됩니다. 이 패키지는 커널처럼 여러 버전을 나란히 유"
+"지합니다."
 
-#: kram/ui/install_dialog.py:412
+#: kram/ui/install_dialog.py:446
 #, python-brace-format
 msgid ""
 "A newer version is installed ({old}). Installing this file downgrades it to "
@@ -933,19 +957,19 @@ msgstr ""
 "더 새로운 버전({old})이 설치되어 있습니다. 이 파일을 설치하면 {new}(으)로 다"
 "운그레이드됩니다."
 
-#: kram/ui/install_dialog.py:414
+#: kram/ui/install_dialog.py:448
 msgid ""
 "This version is already installed. Reinstalling puts its files back as they "
 "were packaged."
 msgstr ""
 "이 버전은 이미 설치되어 있습니다. 재설치하면 파일이 패키지 상태로 돌아갑니다."
 
-#: kram/ui/install_dialog.py:421
+#: kram/ui/install_dialog.py:455
 #, python-brace-format
 msgid "Signed by {signer}."
 msgstr "서명: {signer}."
 
-#: kram/ui/install_dialog.py:423
+#: kram/ui/install_dialog.py:457
 #, python-brace-format
 msgid ""
 "Signed with a key this system does not know ({key}). Install it only if you "
@@ -954,76 +978,76 @@ msgstr ""
 "이 시스템이 모르는 키({key})로 서명되었습니다. 파일 출처를 신뢰할 때만 설치하"
 "세요."
 
-#: kram/ui/install_dialog.py:425
+#: kram/ui/install_dialog.py:459
 msgid "Not signed. Install it only if you trust where the file came from."
 msgstr "서명되지 않았습니다. 파일 출처를 신뢰할 때만 설치하세요."
 
-#: kram/ui/install_dialog.py:440
+#: kram/ui/install_dialog.py:474
 msgid "SHA-256"
 msgstr "SHA-256"
 
-#: kram/ui/install_dialog.py:441
+#: kram/ui/install_dialog.py:475
 msgid "Signing key"
 msgstr "서명 키"
 
-#: kram/ui/install_dialog.py:448
+#: kram/ui/install_dialog.py:482
 msgid "File size"
 msgstr "파일 크기"
 
-#: kram/ui/install_dialog.py:458
+#: kram/ui/install_dialog.py:492
 msgid "No changelog"
 msgstr "변경 기록 없음"
 
-#: kram/ui/install_dialog.py:459
+#: kram/ui/install_dialog.py:493
 msgid "This package runs no scripts."
 msgstr "이 패키지는 스크립트를 실행하지 않습니다."
 
-#: kram/ui/install_dialog.py:489
+#: kram/ui/install_dialog.py:523
 msgid "Supplements"
 msgstr "보완"
 
-#: kram/ui/install_dialog.py:502
+#: kram/ui/install_dialog.py:536
 #, python-brace-format
 msgid "installed: {names}"
 msgstr "설치됨: {names}"
 
-#: kram/ui/install_dialog.py:504
+#: kram/ui/install_dialog.py:538
 msgid "provided by this package"
 msgstr "이 패키지가 직접 제공"
 
-#: kram/ui/install_dialog.py:506
+#: kram/ui/install_dialog.py:540
 #, python-brace-format
 msgid "will be installed: {names}"
 msgstr "설치 예정: {names}"
 
-#: kram/ui/install_dialog.py:508
+#: kram/ui/install_dialog.py:542
 msgid "not installed"
 msgstr "설치되지 않음"
 
-#: kram/ui/install_dialog.py:510
+#: kram/ui/install_dialog.py:544
 msgid "unavailable: no package provides it"
 msgstr "사용할 수 없음: 제공하는 패키지가 없습니다"
 
-#: kram/ui/install_dialog.py:521
+#: kram/ui/install_dialog.py:555
 #, python-brace-format
 msgid "Missing: {path}"
 msgstr "없음: {path}"
 
-#: kram/ui/install_dialog.py:524
+#: kram/ui/install_dialog.py:558
 #, python-brace-format
 msgid "Changed ({what}): {path}"
 msgstr "바뀜 ({what}): {path}"
 
-#: kram/ui/install_dialog.py:525
+#: kram/ui/install_dialog.py:559
 msgid "a configuration file"
 msgstr "설정 파일"
 
-#: kram/ui/install_dialog.py:526
+#: kram/ui/install_dialog.py:560
 #, python-brace-format
 msgid "Could not check: {path}"
 msgstr "확인할 수 없음: {path}"
 
-#: kram/ui/install_dialog.py:542
+#: kram/ui/install_dialog.py:573
 #, python-brace-format
 msgid "Installing {name}"
 msgstr "{name} 설치 중"
@@ -1292,10 +1316,6 @@ msgid_plural "{n} marked changes have not been applied. Quit anyway?"
 msgstr[0] ""
 "표시한 변경 사항 {n}개가 아직 적용되지 않았습니다. 그래도 끝내시겠습니까?"
 
-#: kram/ui/main_window.py:410
-msgid "Loading metadata…"
-msgstr "메타데이터를 불러오는 중…"
-
 #: kram/ui/main_window.py:438
 #, python-brace-format
 msgid "{n} repository has no metadata"
@@ -1322,17 +1342,6 @@ msgstr ""
 #, python-brace-format
 msgid "Error: {error}"
 msgstr "오류: {error}"
-
-#: kram/ui/main_window.py:449
-#, python-brace-format
-msgid ""
-"Could not load the package catalog:\n"
-"\n"
-"{error}"
-msgstr ""
-"패키지 카탈로그를 불러올 수 없습니다:\n"
-"\n"
-"{error}"
 
 #: kram/ui/main_window.py:487
 #, python-brace-format
@@ -1757,15 +1766,20 @@ msgstr "완료."
 msgid "Packages downloaded."
 msgstr "패키지를 다운로드했습니다."
 
-#: kram/ui/progress_dialog.py:228 kram/ui/progress_dialog.py:236
+#: kram/ui/progress_dialog.py:228 kram/ui/progress_dialog.py:240
 msgid "unknown error"
 msgstr "알 수 없는 오류"
 
-#: kram/ui/progress_dialog.py:237
+#: kram/ui/progress_dialog.py:230
+#, python-brace-format
+msgid "Another package operation is running: {process}. Try again when it has finished."
+msgstr "다른 패키지 작업이 실행 중입니다: {process}. 끝난 뒤 다시 시도하세요."
+
+#: kram/ui/progress_dialog.py:241
 msgid "Error:"
 msgstr "오류:"
 
-#: kram/ui/progress_dialog.py:239
+#: kram/ui/progress_dialog.py:243
 #, python-brace-format
 msgid "ERROR: {message}"
 msgstr "오류: {message}"

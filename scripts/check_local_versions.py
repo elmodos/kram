@@ -109,6 +109,22 @@ def main() -> None:
     check("another architecture: not installable", not preview.ok, preview)
     print("     " + preview.problems[0].replace("\n", "\n     "))
 
+    # another package operation running: rpm's transaction lock is held, as dnf5 or PackageKit would hold it
+    holder = subprocess.Popen([sys.executable, "-c", (
+        "import fcntl, os, sys, time\n"
+        "os.makedirs('/run/dnf', exist_ok=True)\n"
+        "fd = os.open('/run/dnf/rpmtransaction.lock', os.O_RDWR | os.O_CREAT, 0o644)\n"
+        "fcntl.lockf(fd, fcntl.LOCK_EX)\n"
+        "print('locked', flush=True)\n"
+        "time.sleep(60)")], stdout=subprocess.PIPE, text=True)
+    holder.stdout.readline()
+    done = helper(path=v2, sha256=sha256(v2), action="install")
+    holder.kill()
+    holder.wait()
+    check("another package operation running: a plain error, nothing installed",
+          done.get("stage") == "locked" and f"(pid {holder.pid})" in done.get("process", "")
+          and installed("kramtest") == ["1.0"], done)
+
     repo = WORK / "repo"
     repo.mkdir()
     os.link(v3, repo / os.path.basename(v3))

@@ -74,7 +74,7 @@ def _line(kind: str | None, text: str) -> tuple[str | None, str]:
 
 class InstallDialog(QDialog):
     def __init__(self, path: str, catalog, dnf: DnfThread, helper, basearch: str = "x86_64", marks: int = 0,
-                 parent=None):
+                 parent=None, load_catalog: bool = False):
         super().__init__(parent)
         self.setWindowTitle(_("Install Package File"))
         self.resize(880, 760)
@@ -183,10 +183,14 @@ class InstallDialog(QDialog):
         lay.addLayout(bottom)
 
         self._busy["read"] = _("Reading {file}…").format(file=os.path.basename(self.path))
-        self._busy["resolve"] = _("Resolving dependencies…")
+        catalog, file = self.catalog, self.path
+        if load_catalog:  # on its own (`kram file.rpm`): nobody has loaded the catalog yet
+            self._busy["catalog"] = _("Loading metadata…")
+            self.dnf.submit(catalog.load, self._on_catalog, self._on_catalog_failed)
+        else:
+            self._busy["resolve"] = _("Resolving dependencies…")
         self._render()
         self._reader.submit(lambda: local_rpm.read(self.path), self._on_read, self._on_read_failed)
-        catalog, file = self.catalog, self.path
 
         def first():
             target = catalog.open_local(file)
@@ -194,6 +198,22 @@ class InstallDialog(QDialog):
         self.dnf.submit(first, self._on_target, self._on_resolve_failed)
 
     # ---------------------------------------------------------------- results
+
+    def _on_catalog(self, snapshot) -> None:
+        # the dnf thread runs the first resolve right after this load
+        if self._closed:
+            return
+        self._busy.pop("catalog", None)
+        self._busy["resolve"] = _("Resolving dependencies…")
+        self.changes.set_basearch(snapshot.basearch)
+        self._render()
+
+    def _on_catalog_failed(self, error: BaseException) -> None:
+        if self._closed:
+            return
+        self._busy.pop("catalog", None)
+        self.error = self.error or _("Could not load the package catalog:\n\n{error}").format(error=error)
+        self._render()
 
     def _on_read(self, rpm: LocalRpm) -> None:
         if self._closed:

@@ -375,7 +375,9 @@ resolve. Requests carry `"exclude_weak": [names]` (validated like other specs); 
 
 **Order**: recommended-packages widget in the apply dialog (done) → helper `local_install` with container tests
 (done) → installer dialog inside the main window (done, translated along the way: the tests require complete
-catalogs) → the dialog-only mode and .desktop; the cache dialog later. README and metainfo with the release.
+catalogs) → the dialog-only mode and .desktop (done 2026-11-08: `kram file.rpm` loads the catalog in the dialog;
+the helper refuses with stage "locked" while another process holds rpm's transaction lock, found with F_GETLK,
+because rpm itself then reports "Signature verification failed"); the cache dialog later. README and metainfo with the release.
 
 As built (2026-11-08), beyond the design above: the Dependencies tab marks each requirement as installed (by which
 package), provided by the file itself, coming with this transaction, not installed, or unavailable; a kernel-like

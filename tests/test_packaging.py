@@ -24,6 +24,9 @@ def test_app_id_and_helper_path():
     desktop.optionxform = str
     desktop.read(DATA / f"{kram.APP_ID}.desktop", encoding="utf-8")
     assert desktop["Desktop Entry"]["Icon"] == kram.APP_ID
+    # file managers offer "Open with Kram" for packages, which opens only the installer
+    assert desktop["Desktop Entry"]["Exec"] == "kram %f"
+    assert "application/x-rpm" in desktop["Desktop Entry"]["MimeType"].split(";")
     assert (DATA / f"{kram.APP_ID}.svg").exists()
     assert ET.parse(DATA / f"{kram.APP_ID}.metainfo.xml").find("id").text == kram.APP_ID
 

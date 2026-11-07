@@ -225,7 +225,11 @@ class ProgressDialog(QDialog):
             if self.auto_close.isChecked():
                 self.accept()
         else:
-            self._show_error(ev.get("error", _("unknown error")), ev.get("details") or [])
+            error = ev.get("error", _("unknown error"))
+            if ev.get("stage") == "locked":
+                error = _("Another package operation is running: {process}. Try again when it has finished.").format(
+                    process=ev.get("process", "?"))
+            self._show_error(error, ev.get("details") or [])
 
     def _on_failed(self, message: str) -> None:
         self.running = False

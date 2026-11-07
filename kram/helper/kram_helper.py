@@ -19,6 +19,7 @@ Protocol: one JSON request per line on stdin, JSON event lines on stdout.
   {"op": "answer", "id": N, "yes": bool}                   reply to a "question" event (only while asked)
   {"op": "quit"}
 Events: {"event": "log"|"resolved"|"download"|"rpm"|"question"|"done", ...}; every request ends with "done".
+A "done" with stage "locked" (and "process": "dnf5 (pid 71)") means another package operation holds rpm.
 "log" events carry an English "text" plus a "key" and "params" so the GUI can show them translated
 (pkexec strips the locale from the environment, so the helper does not translate anything itself).
 """
@@ -31,6 +32,7 @@ import pwd
 import re
 import shutil
 import stat
+import struct
 import subprocess
 import sys
 import tempfile
@@ -55,7 +57,9 @@ MAX_LOCAL_RPM = 16 << 30  # bytes; games and IDEs ship rpms of several GB
 FREE_SPACE_MARGIN = 256 << 20
 SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 LOCAL_ACTIONS = ("install", "reinstall", "downgrade")
-FICLONE = 0x40049409  # ioctl: copy-on-write clone (btrfs, XFS)
+FICLONE = 0x40049409
+# held (fcntl write lock) while libdnf5 / rpm run a transaction
+TRANSACTION_LOCKS = ("/run/dnf/rpmtransaction.lock", "/usr/lib/sysimage/rpm/.rpm.lock", "/var/lib/rpm/.rpm.lock")  # ioctl: copy-on-write clone (btrfs, XFS)
 COPY_CHUNK = 1 << 20
 
 PROGRESS_INTERVAL = 0.1  # s; progress callbacks fire hundreds of times per file, the GUI needs ~10/s
@@ -369,8 +373,46 @@ def local_install(req: dict) -> None:
             shutil.rmtree(workdir, ignore_errors=True)
 
 
+def lock_holder() -> str | None:
+    """Another process running a package transaction ("dnf5 (pid 71)"), or None. Only asks (F_GETLK): taking
+    the lock, even briefly, could make that transaction fail. Without this check rpm reports a busy database as
+    "Signature verification failed"."""
+    for path in TRANSACTION_LOCKS:
+        try:
+            fd = os.open(path, os.O_RDONLY | os.O_CLOEXEC)
+        except OSError:
+            continue
+        try:
+            # struct flock: l_type, l_whence, l_start, l_len, l_pid (native alignment, padded to its C size)
+            query = struct.pack("hhqqi", fcntl.F_WRLCK, os.SEEK_SET, 0, 0, 0)
+            query += bytes(struct.calcsize("hhqqi0q") - len(query))
+            answer = fcntl.fcntl(fd, fcntl.F_GETLK, query)
+        except OSError:
+            continue
+        finally:
+            os.close(fd)
+        kind, _whence, _start, _len, pid = struct.unpack_from("hhqqi", answer)
+        if kind != fcntl.F_UNLCK:
+            try:
+                with open(f"/proc/{pid}/comm") as f:
+                    name = f.read().strip()
+            except OSError:
+                name = "?"
+            return f"{name} (pid {pid})"
+    return None
+
+
+def emit_locked(holder: str) -> None:
+    emit("done", ok=False, stage="locked", process=holder,
+         error=f"Another package operation is running: {holder}. Try again when it has finished.")
+
+
 def run_goal(make_goal, test: bool, download_only: bool) -> None:
     import libdnf5
+
+    if (holder := lock_holder()) and not download_only:
+        emit_locked(holder)
+        return
 
     # Keep Python references: the UniquePtr owns only the C++ side, and if the Python object is collected
     # libdnf5 calls into a dead director and aborts the whole process.
@@ -395,6 +437,9 @@ def run_goal(make_goal, test: bool, download_only: bool) -> None:
         emit("done", ok=True, download_only=True)
         return
 
+    if holder := lock_holder():  # it may have started while this one resolved and downloaded
+        emit_locked(holder)
+        return
     tr.set_callbacks(libdnf5.rpm.TransactionCallbacksUniquePtr(rpm_cb))
     tr.set_description("kram")
     result = tr.test() if test else tr.run()

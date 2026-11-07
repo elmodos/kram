@@ -79,6 +79,9 @@ class ChangesTree(QTreeWidget):
         self.setHeaderLabels([_("Package"), _("Version"), _("Repository"), _("Size")])
         _fit_columns(self)
 
+    def set_basearch(self, basearch: str) -> None:
+        self._basearch = basearch
+
     def fill(self, preview: TransactionPreview) -> None:
         self.clear()
         bold = QFont(self.font())
