@@ -1,5 +1,5 @@
 %global appid io.github.elmodos.Kram
-%global base_version 0.1.9
+%global base_version 0.2.0
 
 Name:           kram
 # A tagged release (v%%{base_version}) is plain %%{base_version}. Any other commit gets a snapshot from
@@ -83,6 +83,15 @@ QT_QPA_PLATFORM=offscreen %pytest
 %{_datadir}/icons/hicolor/scalable/apps/%{appid}.svg
 
 %changelog
+* Sun Nov 08 2026 Modo Ltunzher <offnormal@gmail.com> - 0.2.0-1
+- Install a downloaded .rpm file: File > Open Package File, drop it on the window, or Open with Kram;
+  shows install, upgrade, downgrade or reinstall, the signature, scripts run as root, what satisfies
+  each dependency and a newer version in a repository; reinstalling checks the files first (rpm -V)
+- Choose which recommended packages to install, with the size each one adds
+- A running package operation elsewhere is reported plainly instead of as a signature error
+- Progress: replacing a package is no longer logged as removing it; the bar counts packages
+- About: What's New lists the changes of every version
+
 * Fri Nov 06 2026 Modo Ltunzher <offnormal@gmail.com> - 0.1.9-1
 - Toolbar: monochrome icon for Mark All Upgrades; Properties only in the Package menu
 - The package details pane can no longer be collapsed out of sight

@@ -75,6 +75,21 @@
   <content_rating type="oars-1.1"/>
   <translation type="gettext">kram</translation>
   <releases>
+    <release version="0.2.0" date="2026-11-08">
+      <description>
+        <ul>
+          <li>Install a downloaded .rpm file (File → Open Package File…, drop it on the window, or "Open with Kram" in
+            the file manager). Before anything happens it shows whether this installs, upgrades, downgrades or
+            reinstalls, who signed the file, the scripts it runs as root, what satisfies each dependency and whether
+            a repository has a newer version. A reinstall first checks the installed files.</li>
+          <li>Choose which recommended packages to install, with the size each one adds.</li>
+          <li>When another package operation is running, Kram says so instead of reporting a signature error.</li>
+          <li>Replacing a package is no longer logged as removing it, and the progress bar counts packages.</li>
+          <li>The apply dialog's columns fit their contents and widen with the window.</li>
+          <li>About → What's New lists the changes of every version.</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.1.9" date="2026-11-06">
       <description>
         <ul>
