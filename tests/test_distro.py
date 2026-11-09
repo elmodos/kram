@@ -164,3 +164,33 @@ def test_dialog_reports_a_failed_simulation(dialog, monkeypatch):
     monkeypatch.setattr(upgrade_dialog.upgrade_audit, "simulate", fail)
     dialog.start_check()
     assert dialog.status.text() == "Could not check: no network" and dialog.busy.isHidden()
+
+
+def test_a_check_in_progress_is_not_started_twice():
+    pytest.importorskip("libdnf5")
+    pytest.importorskip("PySide6.QtWidgets")
+    os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+    from PySide6.QtWidgets import QApplication
+
+    from kram.core.model import CatalogSnapshot
+    from kram.core.upgrade_audit import AuditResult
+    from kram.ui.upgrade_dialog import UpgradeDialog
+
+    QApplication.instance() or QApplication([])
+
+    class Queue:
+        jobs: list = []
+
+        def submit(self, fn, on_done, on_error=None):
+            self.jobs.append(on_done)
+
+    dnf = Queue()
+    dnf.jobs = []
+    dlg = UpgradeDialog(45, 44, "", CatalogSnapshot([], 0, 0, 0.0), dnf)
+    dlg.start_check()
+    # closing the window does not stop it; the same dialog comes back, still busy
+    dlg.reject()
+    dlg.start_check()
+    assert len(dnf.jobs) == 1 and dlg.running_check and not dlg.check.isEnabled() and not dlg.busy.isHidden()
+    dnf.jobs[0](AuditResult("45", True))
+    assert not dlg.running_check and dlg.check.isEnabled() and dlg.busy.isHidden()

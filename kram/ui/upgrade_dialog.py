@@ -176,7 +176,7 @@ class UpgradeDialog(QDialog):
         self.running_check = True
         self.check.setEnabled(False)
         self.busy.show()
-        self.status.setText(_("Downloading the package lists of Fedora {version}, about a minute…").format(
+        self.status.setText(_("Downloading the package lists of Fedora {version}. This can take a while…").format(
             version=self.target))
         version = str(self.target)
         self._dnf.submit(lambda: upgrade_audit.simulate(version), self._show_result, self._on_failed)

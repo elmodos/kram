@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kram\n"
 "Report-Msgid-Bugs-To: https://github.com/elmodos/kram/issues\n"
-"POT-Creation-Date: 2026-11-09 19:37+0200\n"
+"POT-Creation-Date: 2026-11-09 20:53+0200\n"
 "PO-Revision-Date: 2026-11-04 14:07+0200\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -1717,11 +1717,11 @@ msgstr "Čištění mezipaměti balíčků"
 msgid "Fedora {new} is available, you have {old}"
 msgstr "Je dostupná Fedora {new}, máte {old}"
 
-#: kram/ui/main_window.py:1123
+#: kram/ui/main_window.py:1121
 msgid "Open Package File"
 msgstr "Otevřít soubor balíčku"
 
-#: kram/ui/main_window.py:1124
+#: kram/ui/main_window.py:1122
 msgid "RPM packages (*.rpm)"
 msgstr "Balíčky RPM (*.rpm)"
 
@@ -2044,43 +2044,43 @@ msgstr ""
 "Zatím žádné vlastní filtry.\n"
 "Vytvoříte je pravým tlačítkem myši."
 
-#: kram/ui/upgrade_dialog.py:48
+#: kram/ui/upgrade_dialog.py:59
 #, python-brace-format
 msgid "Fedora {version} is available"
 msgstr "Je dostupná Fedora {version}"
 
-#: kram/ui/upgrade_dialog.py:49
+#: kram/ui/upgrade_dialog.py:60
 #, python-brace-format
 msgid "You have Fedora {version}, supported until {date}."
 msgstr "Máte Fedoru {version}, podporovanou do {date}."
 
-#: kram/ui/upgrade_dialog.py:50
+#: kram/ui/upgrade_dialog.py:61
 #, python-brace-format
 msgid "You have Fedora {version}."
 msgstr "Máte Fedoru {version}."
 
-#: kram/ui/upgrade_dialog.py:51
+#: kram/ui/upgrade_dialog.py:62
 msgid "Kram does not upgrade the system itself."
 msgstr "Kram systém sám neaktualizuje."
 
-#: kram/ui/upgrade_dialog.py:58
+#: kram/ui/upgrade_dialog.py:69
 msgid "Release notes"
 msgstr "Poznámky k vydání"
 
-#: kram/ui/upgrade_dialog.py:59
+#: kram/ui/upgrade_dialog.py:70
 msgid "Upgrade guide"
 msgstr "Průvodce aktualizací"
 
-#: kram/ui/upgrade_dialog.py:65
+#: kram/ui/upgrade_dialog.py:76
 #, python-brace-format
 msgid "Open {program}"
 msgstr "Otevřít {program}"
 
-#: kram/ui/upgrade_dialog.py:73
+#: kram/ui/upgrade_dialog.py:84
 msgid "COPR projects: checking…"
 msgstr "Projekty COPR: kontrola…"
 
-#: kram/ui/upgrade_dialog.py:76
+#: kram/ui/upgrade_dialog.py:87
 #, python-brace-format
 msgid ""
 "Check simulates the upgrade and changes nothing on this system. It downloads "
@@ -2089,88 +2089,89 @@ msgstr ""
 "„Zkontrolovat“ aktualizaci nasimuluje a v systému nic nezmění. Stáhne "
 "seznamy balíčků Fedory {version} (asi 80 MB)."
 
-#: kram/ui/upgrade_dialog.py:86
+#: kram/ui/upgrade_dialog.py:97
 msgid "Check"
 msgstr "Zkontrolovat"
 
-#: kram/ui/upgrade_dialog.py:119
+#: kram/ui/upgrade_dialog.py:128
 #, python-brace-format
 msgid "{project} ({n} installed)"
 msgstr "{project} (nainstalováno: {n})"
 
-#: kram/ui/upgrade_dialog.py:140
+#: kram/ui/upgrade_dialog.py:149
 #, python-brace-format
 msgid "COPR projects without a build for Fedora {version}: {n}"
 msgstr "Projekty COPR bez sestavení pro Fedoru {version}: {n}"
 
-#: kram/ui/upgrade_dialog.py:144
+#: kram/ui/upgrade_dialog.py:153
 msgid "No COPR projects are enabled."
 msgstr "Nejsou povoleny žádné projekty COPR."
 
-#: kram/ui/upgrade_dialog.py:146
+#: kram/ui/upgrade_dialog.py:155
 #, python-brace-format
 msgid "Every enabled COPR project has a build for Fedora {version}."
 msgstr "Každý povolený projekt COPR má sestavení pro Fedoru {version}."
 
-#: kram/ui/upgrade_dialog.py:149
+#: kram/ui/upgrade_dialog.py:158
 #, python-brace-format
 msgid "COPR projects: the rest have a build for Fedora {version}."
 msgstr "Projekty COPR: ostatní mají sestavení pro Fedoru {version}."
 
-#: kram/ui/upgrade_dialog.py:152
+#: kram/ui/upgrade_dialog.py:161
 #, python-brace-format
 msgid "COPR projects that could not be checked: {n}"
 msgstr "Projekty COPR, které se nepodařilo zkontrolovat: {n}"
 
-#: kram/ui/upgrade_dialog.py:170
+#: kram/ui/upgrade_dialog.py:179
 #, python-brace-format
-msgid "Downloading the package lists of Fedora {version}, about a minute…"
-msgstr "Stahování seznamů balíčků Fedory {version}, asi minutu…"
+msgid ""
+"Downloading the package lists of Fedora {version}. This can take a while…"
+msgstr "Stahování seznamů balíčků Fedory {version}. Může to chvíli trvat…"
 
-#: kram/ui/upgrade_dialog.py:182
+#: kram/ui/upgrade_dialog.py:191
 #, python-brace-format
 msgid "Could not check: {error}"
 msgstr "Nepodařilo se zkontrolovat: {error}"
 
-#: kram/ui/upgrade_dialog.py:190
+#: kram/ui/upgrade_dialog.py:199
 #, python-brace-format
 msgid "Problems that stop the upgrade: {n}"
 msgstr "Problémy bránící aktualizaci: {n}"
 
-#: kram/ui/upgrade_dialog.py:191
+#: kram/ui/upgrade_dialog.py:200
 #, python-brace-format
 msgid "Would be removed: {n}"
 msgstr "Bylo by odstraněno: {n}"
 
-#: kram/ui/upgrade_dialog.py:192
+#: kram/ui/upgrade_dialog.py:201
 #, python-brace-format
 msgid "Installed, with no version in Fedora {version}: {n}"
 msgstr "Nainstalované, bez verze ve Fedoře {version}: {n}"
 
-#: kram/ui/upgrade_dialog.py:193
+#: kram/ui/upgrade_dialog.py:202
 #, python-brace-format
 msgid "Would be downgraded: {n}"
 msgstr "Bylo by sníženo: {n}"
 
-#: kram/ui/upgrade_dialog.py:194
+#: kram/ui/upgrade_dialog.py:203
 #, python-brace-format
 msgid "Repositories with nothing for Fedora {version}: {n}"
 msgstr "Repozitáře bez balíčků pro Fedoru {version}: {n}"
 
-#: kram/ui/upgrade_dialog.py:197
+#: kram/ui/upgrade_dialog.py:206
 #, python-brace-format
 msgid "The upgrade to Fedora {version} cannot be worked out as things are."
 msgstr "Aktualizaci na Fedoru {version} za současného stavu nelze vypočítat."
 
-#: kram/ui/upgrade_dialog.py:200
+#: kram/ui/upgrade_dialog.py:209
 msgid "The upgrade works only if packages are removed."
 msgstr "Aktualizace je možná jen po odstranění balíčků."
 
-#: kram/ui/upgrade_dialog.py:200
+#: kram/ui/upgrade_dialog.py:209
 msgid "The upgrade works."
 msgstr "Aktualizace je možná."
 
-#: kram/ui/upgrade_dialog.py:201
+#: kram/ui/upgrade_dialog.py:210
 #, python-brace-format
 msgid ""
 "Upgrades: {upgrades}, new packages: {installs}. To download: {download}. "
@@ -2179,7 +2180,7 @@ msgstr ""
 "Aktualizace: {upgrades}, nové balíčky: {installs}. Ke stažení: {download}. "
 "Potřeba {needed}, volno: {free}."
 
-#: kram/ui/upgrade_dialog.py:204
+#: kram/ui/upgrade_dialog.py:213
 msgid "Not enough free disk space."
 msgstr "Nedostatek volného místa na disku."
 
