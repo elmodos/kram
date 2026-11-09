@@ -53,8 +53,8 @@ def test_fedora_version(text, expected):
     assert distro.fedora_version(distro.parse_os_release(text)) == expected
 
 
-DISCOVER = UpgradeProgram("Discover", ("plasma-discover", "--mode", "Update"))
-GNOME = UpgradeProgram("GNOME Software", ("gnome-software", "--mode=updates"))
+DISCOVER = UpgradeProgram("Discover", ("plasma-discover", "--mode", "Update"), "plasmadiscover")
+GNOME = UpgradeProgram("GNOME Software", ("gnome-software", "--mode=updates"), "org.gnome.Software")
 
 
 @pytest.mark.parametrize(("desktop", "installed", "expected"), [
@@ -367,3 +367,21 @@ def test_without_target_goes_by_name_and_hides_the_running_releases_repo():
                  Pkg("gpg-pubkey")]
     available = [Pkg("libreoffice-help-en", "x86_64")]
     assert _without_target(installed, available) == {"libgit2": "libgit2", "tool": "tool (@commandline)"}
+
+
+def test_check_is_on_top_and_the_program_goes_with_close(monkeypatch):
+    pytest.importorskip("libdnf5")
+    pytest.importorskip("PySide6.QtWidgets")
+    os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+    from PySide6.QtWidgets import QApplication, QDialogButtonBox
+
+    from kram.core.model import CatalogSnapshot
+    from kram.ui import upgrade_dialog as ui
+
+    QApplication.instance() or QApplication([])
+    monkeypatch.setattr(ui.distro, "upgrade_program", lambda _desktop: DISCOVER)
+    dlg = ui.UpgradeDialog(45, 44, "", CatalogSnapshot([], 0, 0, 0.0), Queue())
+    assert isinstance(dlg.open_program.parent(), QDialogButtonBox) and dlg.open_program.text() == "Open Discover"
+    assert not isinstance(dlg.check.parent(), QDialogButtonBox)
+    monkeypatch.setattr(ui.distro, "upgrade_program", lambda _desktop: None)
+    assert ui.UpgradeDialog(45, 44, "", CatalogSnapshot([], 0, 0, 0.0), Queue()).open_program is None

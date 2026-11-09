@@ -21,6 +21,7 @@ class FedoraRelease:
 class UpgradeProgram:
     name: str
     argv: tuple[str, ...]
+    icon: str
 
 
 def parse_os_release(text: str) -> dict[str, str]:
@@ -73,8 +74,8 @@ def choose_target(running: int, releases: list[FedoraRelease]) -> FedoraRelease 
 
 def upgrade_program(desktop: str, which: Callable[[str], str | None] = shutil.which) -> UpgradeProgram | None:
     """The installed program that can upgrade the system, opened on its updates page; the desktop's own one first."""
-    programs = [UpgradeProgram("Discover", ("plasma-discover", "--mode", "Update")),
-                UpgradeProgram("GNOME Software", ("gnome-software", "--mode=updates"))]
+    programs = [UpgradeProgram("Discover", ("plasma-discover", "--mode", "Update"), "plasmadiscover"),
+                UpgradeProgram("GNOME Software", ("gnome-software", "--mode=updates"), "org.gnome.Software")]
     if "gnome" in desktop.lower():
         programs.reverse()
     return next((p for p in programs if which(p.argv[0])), None)

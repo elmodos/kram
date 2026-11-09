@@ -95,12 +95,9 @@ class UpgradeDialog(QDialog):
                        f"<a href='{guide}'>{html.escape(_('Upgrade guide'))}</a>")
         links.setOpenExternalLinks(True)
         row.addWidget(links, 1)
-        self.program = distro.upgrade_program(os.environ.get("XDG_CURRENT_DESKTOP", ""))
-        self.open_program = None
-        if self.program is not None:
-            self.open_program = QPushButton(_("Open {program}").format(program=self.program.name))
-            self.open_program.clicked.connect(self._launch_program)
-            row.addWidget(self.open_program)
+        self.check = QPushButton(QIcon.fromTheme("edit-find"), _("Check"))
+        self.check.clicked.connect(self.start_check)
+        row.addWidget(self.check)
         lay.addLayout(row)
 
         self.tree = QTreeWidget()
@@ -133,8 +130,13 @@ class UpgradeDialog(QDialog):
         self.cancel_button = buttons.button(QDialogButtonBox.Cancel)
         self.cancel_button.hide()
         self.cancel_button.clicked.connect(self.cancel_check)
-        self.check = buttons.addButton(_("Check"), QDialogButtonBox.ActionRole)
-        self.check.clicked.connect(self.start_check)
+        self.program = distro.upgrade_program(os.environ.get("XDG_CURRENT_DESKTOP", ""))
+        self.open_program = None
+        if self.program is not None:
+            self.open_program = buttons.addButton(_("Open {program}").format(program=self.program.name),
+                                                  QDialogButtonBox.ActionRole)
+            self.open_program.setIcon(QIcon.fromTheme(self.program.icon, QIcon.fromTheme("system-software-install")))
+            self.open_program.clicked.connect(self._launch_program)
         buttons.rejected.connect(self.reject)  # no effect during a check, see done()
         lay.addWidget(buttons)
 
