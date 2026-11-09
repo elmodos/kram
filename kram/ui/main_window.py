@@ -1037,7 +1037,8 @@ class MainWindow(QMainWindow):
     def _run_helper(self, request: dict, title: str) -> bool:
         self.act_apply.setEnabled(False)
         self.act_reload.setEnabled(False)
-        dlg = ProgressDialog(self.helper, request, title, self)
+        # a child of the dialog that started it (COPR, Package Cache): as a sibling, that one could be raised over it
+        dlg = ProgressDialog(self.helper, request, title, QApplication.activeModalWidget() or self)
         dlg.exec()
         self.act_reload.setEnabled(True)
         self._update_actions()

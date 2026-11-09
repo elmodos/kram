@@ -41,6 +41,7 @@ HELPER_MESSAGES = {
     "copying_package": N_("Copying {name}…"),
     "files_removed": N_("Files removed: {count}"),
 }
+STAGE_KEYS = ("loading_repos", "refreshing")  # helper messages that also replace the line above the progress bars
 
 
 class ProgressDialog(QDialog):
@@ -118,6 +119,8 @@ class ProgressDialog(QDialog):
         kind = ev.get("event")
         if kind == "log":
             self._append(self._log_text(ev))
+            if ev.get("key") in STAGE_KEYS:  # the password was accepted: say what runs instead
+                self.stage.setText(self._log_text(ev))
         elif kind == "resolved":
             n = len(ev["items"])
             self.stage.setText(ngettext("The transaction has {n} package. Downloading…",
