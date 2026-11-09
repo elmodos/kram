@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kram\n"
 "Report-Msgid-Bugs-To: https://github.com/elmodos/kram/issues\n"
-"POT-Creation-Date: 2026-11-09 13:15+0200\n"
+"POT-Creation-Date: 2026-11-09 14:24+0200\n"
 "PO-Revision-Date: 2026-11-04 14:07+0200\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -398,7 +398,7 @@ msgstr "Alteração do espaço em disco: {size}."
 
 #: kram/ui/apply_dialog.py:277 kram/ui/install_dialog.py:191
 #: kram/ui/install_dialog.py:207 kram/ui/install_dialog.py:264
-#: kram/ui/main_window.py:912
+#: kram/ui/main_window.py:914
 msgid "Resolving dependencies…"
 msgstr "Resolvendo dependências…"
 
@@ -407,7 +407,7 @@ msgid "These choices cannot be carried out:"
 msgstr "Essas escolhas não podem ser aplicadas:"
 
 #: kram/ui/apply_dialog.py:292 kram/ui/install_dialog.py:258
-#: kram/ui/install_dialog.py:288 kram/ui/main_window.py:914
+#: kram/ui/install_dialog.py:288 kram/ui/main_window.py:916
 #, python-brace-format
 msgid ""
 "Could not resolve the changes:\n"
@@ -418,68 +418,72 @@ msgstr ""
 "\n"
 "{error}"
 
-#: kram/ui/cache_dialog.py:15
+#: kram/ui/cache_dialog.py:29
 msgid "DNF: downloaded packages"
 msgstr "DNF: pacotes baixados"
 
-#: kram/ui/cache_dialog.py:15
-msgid "Left by interrupted transactions and “download only”."
-msgstr "Restos de transações interrompidas e de “somente baixar”."
-
-#: kram/ui/cache_dialog.py:16 kram/ui/cache_dialog.py:20
-#: kram/ui/cache_dialog.py:22
+#: kram/ui/cache_dialog.py:30 kram/ui/cache_dialog.py:34
+#: kram/ui/cache_dialog.py:36
 msgid "Clean"
 msgstr "Limpar"
 
-#: kram/ui/cache_dialog.py:17
+#: kram/ui/cache_dialog.py:30
+msgid "Left by interrupted transactions and “download only”."
+msgstr "Restos de transações interrompidas e de “somente baixar”."
+
+#: kram/ui/cache_dialog.py:31
 msgid "DNF: repository metadata"
 msgstr "DNF: metadados dos repositórios"
 
-#: kram/ui/cache_dialog.py:17
-msgid "What Kram and dnf know about the available packages."
-msgstr "O que o Kram e o dnf sabem sobre os pacotes disponíveis."
-
-#: kram/ui/cache_dialog.py:18
+#: kram/ui/cache_dialog.py:32
 msgid "Download Again…"
 msgstr "Baixar novamente…"
 
-#: kram/ui/cache_dialog.py:19
+#: kram/ui/cache_dialog.py:32
+msgid "What Kram and dnf know about the available packages."
+msgstr "O que o Kram e o dnf sabem sobre os pacotes disponíveis."
+
+#: kram/ui/cache_dialog.py:33
 msgid "DNF: cache of your user"
 msgstr "DNF: cache do seu usuário"
 
-#: kram/ui/cache_dialog.py:19
+#: kram/ui/cache_dialog.py:34
 msgid "Written by dnf when it runs without root. Kram does not use it."
 msgstr "Criado pelo dnf quando executado sem root. O Kram não o usa."
 
-#: kram/ui/cache_dialog.py:21
+#: kram/ui/cache_dialog.py:35
 msgid "Discover / GNOME Software"
 msgstr "Discover / GNOME Software"
 
-#: kram/ui/cache_dialog.py:21
+#: kram/ui/cache_dialog.py:36
 msgid "Packages downloaded for offline updates and never removed."
 msgstr "Pacotes baixados para atualizações offline e nunca removidos."
 
-#: kram/ui/cache_dialog.py:43 kram/ui/cache_dialog.py:120
+#: kram/ui/cache_dialog.py:67 kram/ui/cache_dialog.py:199
 msgid "Package Cache"
 msgstr "Cache de pacotes"
 
-#: kram/ui/cache_dialog.py:81
+#: kram/ui/cache_dialog.py:126
+msgid "Open in the file manager"
+msgstr "Abrir no gerenciador de arquivos"
+
+#: kram/ui/cache_dialog.py:155
 #, python-brace-format
 msgid "Could not count the caches: {error}"
 msgstr "Não foi possível contar os caches: {error}"
 
-#: kram/ui/cache_dialog.py:91
+#: kram/ui/cache_dialog.py:169
 #, python-brace-format
 msgid "{n} file"
 msgid_plural "{n} files"
 msgstr[0] "{n} arquivo"
 msgstr[1] "{n} arquivos"
 
-#: kram/ui/cache_dialog.py:110
+#: kram/ui/cache_dialog.py:189
 msgid "Download metadata again"
 msgstr "Baixar os metadados novamente"
 
-#: kram/ui/cache_dialog.py:111
+#: kram/ui/cache_dialog.py:190
 msgid ""
 "Delete the repository metadata and download it again?\n"
 "\n"
@@ -491,7 +495,7 @@ msgstr ""
 "É preciso ter internet e pode levar alguns minutos. Se o download falhar, os "
 "pacotes disponíveis somem do Kram até que “Recarregar” funcione."
 
-#: kram/ui/cache_dialog.py:120
+#: kram/ui/cache_dialog.py:199
 #, python-brace-format
 msgid "Could not clean the cache: {error}"
 msgstr "Não foi possível limpar o cache: {error}"
@@ -911,7 +915,7 @@ msgstr "Instalar arquivo de pacote"
 msgid "What installing it changes"
 msgstr "O que a instalação muda"
 
-#: kram/ui/install_dialog.py:142 kram/ui/progress_dialog.py:87
+#: kram/ui/install_dialog.py:142 kram/ui/progress_dialog.py:88
 msgid "Details"
 msgstr "Detalhes"
 
@@ -1464,7 +1468,7 @@ msgstr ""
 "exemplo, por ainda não ter pacotes para esta versão do Fedora), desative-o "
 "em Configurações → Repositórios."
 
-#: kram/ui/main_window.py:453 kram/ui/main_window.py:780
+#: kram/ui/main_window.py:453 kram/ui/main_window.py:782
 #, python-brace-format
 msgid "Error: {error}"
 msgstr "Erro: {error}"
@@ -1539,7 +1543,7 @@ msgstr "Distribuído sob a Licença MIT."
 msgid "What's New"
 msgstr "Novidades"
 
-#: kram/ui/main_window.py:762
+#: kram/ui/main_window.py:764
 #, python-brace-format
 msgid ""
 "{n} installed package depends on the packages marked for removal and has to "
@@ -1554,26 +1558,26 @@ msgstr[1] ""
 "{n} pacotes instalados dependem dos pacotes marcados para remoção e também "
 "precisam ser removidos:"
 
-#: kram/ui/main_window.py:768
+#: kram/ui/main_window.py:770
 msgid "Mark"
 msgstr "Marcar"
 
-#: kram/ui/main_window.py:798
+#: kram/ui/main_window.py:800
 #, python-brace-format
 msgid "{n} package marked for upgrade"
 msgid_plural "{n} packages marked for upgrade"
 msgstr[0] "{n} pacote marcado para atualização"
 msgstr[1] "{n} pacotes marcados para atualização"
 
-#: kram/ui/main_window.py:804 kram/ui/main_window.py:812
+#: kram/ui/main_window.py:806 kram/ui/main_window.py:814
 msgid "Save Markings"
 msgstr "Salvar marcações"
 
-#: kram/ui/main_window.py:806 kram/ui/main_window.py:822
+#: kram/ui/main_window.py:808 kram/ui/main_window.py:824
 msgid "Text files (*.txt);;All files (*)"
 msgstr "Arquivos de texto (*.txt);;Todos os arquivos (*)"
 
-#: kram/ui/main_window.py:812
+#: kram/ui/main_window.py:814
 #, python-brace-format
 msgid ""
 "Could not save {path}:\n"
@@ -1584,19 +1588,19 @@ msgstr ""
 "\n"
 "{error}"
 
-#: kram/ui/main_window.py:817
+#: kram/ui/main_window.py:819
 #, python-brace-format
 msgid "{n} marking saved to {path}"
 msgid_plural "{n} markings saved to {path}"
 msgstr[0] "{n} marcação salva em {path}"
 msgstr[1] "{n} marcações salvas em {path}"
 
-#: kram/ui/main_window.py:821 kram/ui/main_window.py:831
-#: kram/ui/main_window.py:853
+#: kram/ui/main_window.py:823 kram/ui/main_window.py:833
+#: kram/ui/main_window.py:855
 msgid "Read Markings"
 msgstr "Ler marcações"
 
-#: kram/ui/main_window.py:831
+#: kram/ui/main_window.py:833
 #, python-brace-format
 msgid ""
 "Could not read {path}:\n"
@@ -1607,14 +1611,14 @@ msgstr ""
 "\n"
 "{error}"
 
-#: kram/ui/main_window.py:841
+#: kram/ui/main_window.py:843
 #, python-brace-format
 msgid "{n} package marked"
 msgid_plural "{n} packages marked"
 msgstr[0] "{n} pacote marcado"
 msgstr[1] "{n} pacotes marcados"
 
-#: kram/ui/main_window.py:846
+#: kram/ui/main_window.py:848
 #, python-brace-format
 msgid ""
 "{n} marking no longer applies (package not found, already in that state, …):"
@@ -1626,63 +1630,63 @@ msgstr[1] ""
 "{n} marcações não se aplicam mais (pacotes não encontrados, já nesse estado, "
 "…):"
 
-#: kram/ui/main_window.py:850
+#: kram/ui/main_window.py:852
 #, python-brace-format
 msgid "{n} line is not a valid marking: {lines}"
 msgid_plural "{n} lines are not valid markings: {lines}"
 msgstr[0] "{n} linha não é uma marcação válida: {lines}"
 msgstr[1] "{n} linhas não são marcações válidas: {lines}"
 
-#: kram/ui/main_window.py:854
+#: kram/ui/main_window.py:856
 #, python-brace-format
 msgid "{n} package marked."
 msgid_plural "{n} packages marked."
 msgstr[0] "{n} pacote marcado."
 msgstr[1] "{n} pacotes marcados."
 
-#: kram/ui/main_window.py:872
+#: kram/ui/main_window.py:874
 msgid "(loading…)"
 msgstr "(carregando…)"
 
-#: kram/ui/main_window.py:879
+#: kram/ui/main_window.py:881
 msgid "No older versions in the repositories"
 msgstr "Nenhuma versão anterior nos repositórios"
 
-#: kram/ui/main_window.py:919
+#: kram/ui/main_window.py:921
 msgid "Cannot apply changes"
 msgstr "Não é possível aplicar as alterações"
 
-#: kram/ui/main_window.py:920
+#: kram/ui/main_window.py:922
 msgid "The marked changes cannot be carried out. Unmark or change them."
 msgstr ""
 "As alterações marcadas não podem ser realizadas. Desmarque-as ou modifique-"
 "as."
 
-#: kram/ui/main_window.py:935
+#: kram/ui/main_window.py:937
 msgid "Applying changes"
 msgstr "Aplicando alterações"
 
-#: kram/ui/main_window.py:943
+#: kram/ui/main_window.py:945
 msgid "Refreshing metadata"
 msgstr "Atualizando metadados"
 
-#: kram/ui/main_window.py:959
+#: kram/ui/main_window.py:961
 msgid "Changing repositories"
 msgstr "Alterando repositórios"
 
-#: kram/ui/main_window.py:987
+#: kram/ui/main_window.py:989
 msgid "Downloading metadata again"
 msgstr "Baixando os metadados novamente"
 
-#: kram/ui/main_window.py:989
+#: kram/ui/main_window.py:991
 msgid "Cleaning the package cache"
 msgstr "Limpando o cache de pacotes"
 
-#: kram/ui/main_window.py:1021
+#: kram/ui/main_window.py:1023
 msgid "Open Package File"
 msgstr "Abrir arquivo de pacote"
 
-#: kram/ui/main_window.py:1022
+#: kram/ui/main_window.py:1024
 msgid "RPM packages (*.rpm)"
 msgstr "Pacotes RPM (*.rpm)"
 
@@ -1841,54 +1845,54 @@ msgstr "Copiando {name}…"
 msgid "Files removed: {count}"
 msgstr "Arquivos removidos: {count}"
 
-#: kram/ui/progress_dialog.py:67
+#: kram/ui/progress_dialog.py:68
 msgid "Waiting for authentication…"
 msgstr "Aguardando autenticação…"
 
-#: kram/ui/progress_dialog.py:70
+#: kram/ui/progress_dialog.py:71
 msgid "Download"
 msgstr "Download"
 
-#: kram/ui/progress_dialog.py:72
+#: kram/ui/progress_dialog.py:73
 msgid "Installation"
 msgstr "Instalação"
 
-#: kram/ui/progress_dialog.py:91
+#: kram/ui/progress_dialog.py:92
 msgid "Close when finished successfully"
 msgstr "Fechar ao concluir com sucesso"
 
-#: kram/ui/progress_dialog.py:123
+#: kram/ui/progress_dialog.py:126
 #, python-brace-format
 msgid "The transaction has {n} package. Downloading…"
 msgid_plural "The transaction has {n} packages. Downloading…"
 msgstr[0] "A transação tem {n} pacote. Baixando…"
 msgstr[1] "A transação tem {n} pacotes. Baixando…"
 
-#: kram/ui/progress_dialog.py:152
+#: kram/ui/progress_dialog.py:155
 #, python-brace-format
 msgid "Downloading {name}"
 msgstr "Baixando {name}"
 
-#: kram/ui/progress_dialog.py:157
+#: kram/ui/progress_dialog.py:160
 #, python-brace-format
 msgid "Download failed: {error}"
 msgstr "O download falhou: {error}"
 
-#: kram/ui/progress_dialog.py:165
+#: kram/ui/progress_dialog.py:168
 #, python-brace-format
 msgid "Downloaded {done} of {total}"
 msgstr "Baixado {done} de {total}"
 
-#: kram/ui/progress_dialog.py:173
+#: kram/ui/progress_dialog.py:176
 msgid "Preparing the rpm transaction…"
 msgstr "Preparando a transação rpm…"
 
-#: kram/ui/progress_dialog.py:201
+#: kram/ui/progress_dialog.py:204
 #, python-brace-format
 msgid "Package {index} of {count}"
 msgstr "Pacote {index} de {count}"
 
-#: kram/ui/progress_dialog.py:209
+#: kram/ui/progress_dialog.py:212
 #, python-brace-format
 msgid ""
 "Import the OpenPGP key used to verify packages?\n"
@@ -1905,33 +1909,33 @@ msgstr ""
 "Criada: {created}\n"
 "Origem: {url}"
 
-#: kram/ui/progress_dialog.py:212
+#: kram/ui/progress_dialog.py:215
 msgid "Import key"
 msgstr "Importar chave"
 
-#: kram/ui/progress_dialog.py:213
+#: kram/ui/progress_dialog.py:216
 #, python-brace-format
 msgid "Key {key_id}: importing"
 msgstr "Chave {key_id}: importando"
 
-#: kram/ui/progress_dialog.py:213
+#: kram/ui/progress_dialog.py:216
 #, python-brace-format
 msgid "Key {key_id}: rejected"
 msgstr "Chave {key_id}: rejeitada"
 
-#: kram/ui/progress_dialog.py:228 kram/ui/progress_dialog.py:229
+#: kram/ui/progress_dialog.py:231 kram/ui/progress_dialog.py:232
 msgid "Done."
 msgstr "Concluído."
 
-#: kram/ui/progress_dialog.py:228
+#: kram/ui/progress_dialog.py:231
 msgid "Packages downloaded."
 msgstr "Pacotes baixados."
 
-#: kram/ui/progress_dialog.py:233 kram/ui/progress_dialog.py:247
+#: kram/ui/progress_dialog.py:236 kram/ui/progress_dialog.py:250
 msgid "unknown error"
 msgstr "erro desconhecido"
 
-#: kram/ui/progress_dialog.py:235
+#: kram/ui/progress_dialog.py:238
 #, python-brace-format
 msgid ""
 "Another package operation is running: {process}. Try again when it has "
@@ -1940,11 +1944,11 @@ msgstr ""
 "Outra operação de pacotes está em andamento: {process}. Tente novamente "
 "quando ela terminar."
 
-#: kram/ui/progress_dialog.py:248
+#: kram/ui/progress_dialog.py:251
 msgid "Error:"
 msgstr "Erro:"
 
-#: kram/ui/progress_dialog.py:250
+#: kram/ui/progress_dialog.py:253
 #, python-brace-format
 msgid "ERROR: {message}"
 msgstr "ERRO: {message}"

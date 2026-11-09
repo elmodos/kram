@@ -1,8 +1,9 @@
 """Settings → Package Cache: the size of each package cache and a button to clean it."""
+import html
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from PySide6.QtCore import QSize, Qt
+from PySide6.QtCore import QSize, Qt, QUrl
 from PySide6.QtGui import QIcon, QPalette
 from PySide6.QtWidgets import (
     QDialog,
@@ -53,6 +54,7 @@ def _themed_icon(names: tuple[str, ...]) -> QIcon:
 class _Row:
     frame: QWidget
     separator: QFrame
+    path: QLabel
     size: QLabel
     files: QLabel
     button: QPushButton
@@ -118,6 +120,11 @@ class CacheDialog(QDialog):
         details = _dimmed(QLabel(description))
         details.setWordWrap(True)
         text.addWidget(details)
+        path = QLabel()
+        path.setTextInteractionFlags(Qt.TextBrowserInteraction)  # a link that can also be selected and copied
+        path.setOpenExternalLinks(True)
+        path.setToolTip(_("Open in the file manager"))
+        text.addWidget(path)
         lay.addLayout(text, 1)
 
         numbers = QVBoxLayout()
@@ -130,7 +137,7 @@ class CacheDialog(QDialog):
 
         push = QPushButton(button)
         lay.addWidget(push, 0, Qt.AlignVCenter)
-        return _Row(frame, separator, size, files, push)
+        return _Row(frame, separator, path, size, files, push)
 
     def _show_separators(self) -> None:
         """A line between visible rows only: none above the first one, whichever that is."""
@@ -148,11 +155,15 @@ class CacheDialog(QDialog):
             _("Could not count the caches: {error}").format(error=e)))
 
     def _show(self, report: CacheReport) -> None:
+        locations = report.locations()
         for target, row in self.rows.items():
             usage = getattr(report, target)
             row.frame.setHidden(usage is None)
             if usage is None:
                 continue
+            shown, folder = locations[target]
+            row.path.setText(f"<a href='{html.escape(QUrl.fromLocalFile(folder).toString(), quote=True)}'>"
+                             f"{html.escape(shown)}</a>")
             row.size.setText(f"<b>{human_size(usage.size)}</b>")
             if target not in (METADATA, USER):  # a pile of small repodata files: the number says nothing
                 row.files.setText(ngettext("{n} file", "{n} files", usage.files).format(n=usage.files))

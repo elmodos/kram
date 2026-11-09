@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kram\n"
 "Report-Msgid-Bugs-To: https://github.com/elmodos/kram/issues\n"
-"POT-Creation-Date: 2026-11-09 13:15+0200\n"
+"POT-Creation-Date: 2026-11-09 14:24+0200\n"
 "PO-Revision-Date: 2026-11-04 14:07+0200\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -392,7 +392,7 @@ msgstr "디스크 공간 변화: {size}."
 
 #: kram/ui/apply_dialog.py:277 kram/ui/install_dialog.py:191
 #: kram/ui/install_dialog.py:207 kram/ui/install_dialog.py:264
-#: kram/ui/main_window.py:912
+#: kram/ui/main_window.py:914
 msgid "Resolving dependencies…"
 msgstr "의존성을 해결하는 중…"
 
@@ -401,7 +401,7 @@ msgid "These choices cannot be carried out:"
 msgstr "이 선택은 실행할 수 없습니다:"
 
 #: kram/ui/apply_dialog.py:292 kram/ui/install_dialog.py:258
-#: kram/ui/install_dialog.py:288 kram/ui/main_window.py:914
+#: kram/ui/install_dialog.py:288 kram/ui/main_window.py:916
 #, python-brace-format
 msgid ""
 "Could not resolve the changes:\n"
@@ -412,67 +412,71 @@ msgstr ""
 "\n"
 "{error}"
 
-#: kram/ui/cache_dialog.py:15
+#: kram/ui/cache_dialog.py:29
 msgid "DNF: downloaded packages"
 msgstr "DNF: 내려받은 패키지"
 
-#: kram/ui/cache_dialog.py:15
-msgid "Left by interrupted transactions and “download only”."
-msgstr "중단된 트랜잭션과 '내려받기만'에서 남은 파일입니다."
-
-#: kram/ui/cache_dialog.py:16 kram/ui/cache_dialog.py:20
-#: kram/ui/cache_dialog.py:22
+#: kram/ui/cache_dialog.py:30 kram/ui/cache_dialog.py:34
+#: kram/ui/cache_dialog.py:36
 msgid "Clean"
 msgstr "비우기"
 
-#: kram/ui/cache_dialog.py:17
+#: kram/ui/cache_dialog.py:30
+msgid "Left by interrupted transactions and “download only”."
+msgstr "중단된 트랜잭션과 '내려받기만'에서 남은 파일입니다."
+
+#: kram/ui/cache_dialog.py:31
 msgid "DNF: repository metadata"
 msgstr "DNF: 저장소 메타데이터"
 
-#: kram/ui/cache_dialog.py:17
-msgid "What Kram and dnf know about the available packages."
-msgstr "Kram과 dnf가 알고 있는 사용 가능한 패키지 정보입니다."
-
-#: kram/ui/cache_dialog.py:18
+#: kram/ui/cache_dialog.py:32
 msgid "Download Again…"
 msgstr "다시 내려받기…"
 
-#: kram/ui/cache_dialog.py:19
+#: kram/ui/cache_dialog.py:32
+msgid "What Kram and dnf know about the available packages."
+msgstr "Kram과 dnf가 알고 있는 사용 가능한 패키지 정보입니다."
+
+#: kram/ui/cache_dialog.py:33
 msgid "DNF: cache of your user"
 msgstr "DNF: 현재 사용자의 캐시"
 
-#: kram/ui/cache_dialog.py:19
+#: kram/ui/cache_dialog.py:34
 msgid "Written by dnf when it runs without root. Kram does not use it."
 msgstr "root 없이 실행한 dnf가 기록합니다. Kram은 사용하지 않습니다."
 
-#: kram/ui/cache_dialog.py:21
+#: kram/ui/cache_dialog.py:35
 msgid "Discover / GNOME Software"
 msgstr "Discover / GNOME Software"
 
-#: kram/ui/cache_dialog.py:21
+#: kram/ui/cache_dialog.py:36
 msgid "Packages downloaded for offline updates and never removed."
 msgstr "오프라인 업데이트용으로 내려받은 뒤 삭제되지 않은 패키지입니다."
 
-#: kram/ui/cache_dialog.py:43 kram/ui/cache_dialog.py:120
+#: kram/ui/cache_dialog.py:67 kram/ui/cache_dialog.py:199
 msgid "Package Cache"
 msgstr "패키지 캐시"
 
-#: kram/ui/cache_dialog.py:81
+#: kram/ui/cache_dialog.py:126
+msgid "Open in the file manager"
+msgstr "파일 관리자에서 열기"
+
+#: kram/ui/cache_dialog.py:155
 #, python-brace-format
 msgid "Could not count the caches: {error}"
 msgstr "캐시를 집계할 수 없습니다: {error}"
 
-#: kram/ui/cache_dialog.py:91
+#: kram/ui/cache_dialog.py:169
 #, python-brace-format
 msgid "{n} file"
 msgid_plural "{n} files"
 msgstr[0] "파일 {n}개"
 
-#: kram/ui/cache_dialog.py:110
+#: kram/ui/cache_dialog.py:189
 msgid "Download metadata again"
 msgstr "메타데이터 다시 내려받기"
 
-#: kram/ui/cache_dialog.py:111
+#: kram/ui/cache_dialog.py:190
 msgid ""
 "Delete the repository metadata and download it again?\n"
 "\n"
@@ -484,7 +488,7 @@ msgstr ""
 "인터넷이 필요하며 몇 분 걸릴 수 있습니다. 내려받기에 실패하면 '다시 불러오"
 "기'가 성공할 때까지 사용 가능한 패키지가 Kram에서 사라집니다."
 
-#: kram/ui/cache_dialog.py:120
+#: kram/ui/cache_dialog.py:199
 #, python-brace-format
 msgid "Could not clean the cache: {error}"
 msgstr "캐시를 비울 수 없습니다: {error}"
@@ -896,7 +900,7 @@ msgstr "패키지 파일 설치"
 msgid "What installing it changes"
 msgstr "설치로 바뀌는 것"
 
-#: kram/ui/install_dialog.py:142 kram/ui/progress_dialog.py:87
+#: kram/ui/install_dialog.py:142 kram/ui/progress_dialog.py:88
 msgid "Details"
 msgstr "자세히"
 
@@ -1431,7 +1435,7 @@ msgstr ""
 "다시 불러오기로 내려받으십시오. 저장소가 계속 실패하면 (예: 이 Fedora 릴리스"
 "용 패키지가 아직 없는 경우) 설정 → 저장소에서 비활성화하십시오."
 
-#: kram/ui/main_window.py:453 kram/ui/main_window.py:780
+#: kram/ui/main_window.py:453 kram/ui/main_window.py:782
 #, python-brace-format
 msgid "Error: {error}"
 msgstr "오류: {error}"
@@ -1505,7 +1509,7 @@ msgstr "MIT 라이선스로 배포됩니다."
 msgid "What's New"
 msgstr "새로운 기능"
 
-#: kram/ui/main_window.py:762
+#: kram/ui/main_window.py:764
 #, python-brace-format
 msgid ""
 "{n} installed package depends on the packages marked for removal and has to "
@@ -1516,25 +1520,25 @@ msgid_plural ""
 msgstr[0] ""
 "설치된 패키지 {n}개가 제거로 표시한 패키지에 의존하므로 함께 제거해야 합니다:"
 
-#: kram/ui/main_window.py:768
+#: kram/ui/main_window.py:770
 msgid "Mark"
 msgstr "표시"
 
-#: kram/ui/main_window.py:798
+#: kram/ui/main_window.py:800
 #, python-brace-format
 msgid "{n} package marked for upgrade"
 msgid_plural "{n} packages marked for upgrade"
 msgstr[0] "패키지 {n}개를 업그레이드로 표시했습니다"
 
-#: kram/ui/main_window.py:804 kram/ui/main_window.py:812
+#: kram/ui/main_window.py:806 kram/ui/main_window.py:814
 msgid "Save Markings"
 msgstr "표시 저장"
 
-#: kram/ui/main_window.py:806 kram/ui/main_window.py:822
+#: kram/ui/main_window.py:808 kram/ui/main_window.py:824
 msgid "Text files (*.txt);;All files (*)"
 msgstr "텍스트 파일 (*.txt);;모든 파일 (*)"
 
-#: kram/ui/main_window.py:812
+#: kram/ui/main_window.py:814
 #, python-brace-format
 msgid ""
 "Could not save {path}:\n"
@@ -1545,18 +1549,18 @@ msgstr ""
 "\n"
 "{error}"
 
-#: kram/ui/main_window.py:817
+#: kram/ui/main_window.py:819
 #, python-brace-format
 msgid "{n} marking saved to {path}"
 msgid_plural "{n} markings saved to {path}"
 msgstr[0] "표시 {n}개를 {path}에 저장했습니다"
 
-#: kram/ui/main_window.py:821 kram/ui/main_window.py:831
-#: kram/ui/main_window.py:853
+#: kram/ui/main_window.py:823 kram/ui/main_window.py:833
+#: kram/ui/main_window.py:855
 msgid "Read Markings"
 msgstr "표시 읽기"
 
-#: kram/ui/main_window.py:831
+#: kram/ui/main_window.py:833
 #, python-brace-format
 msgid ""
 "Could not read {path}:\n"
@@ -1567,13 +1571,13 @@ msgstr ""
 "\n"
 "{error}"
 
-#: kram/ui/main_window.py:841
+#: kram/ui/main_window.py:843
 #, python-brace-format
 msgid "{n} package marked"
 msgid_plural "{n} packages marked"
 msgstr[0] "패키지 {n}개를 표시했습니다"
 
-#: kram/ui/main_window.py:846
+#: kram/ui/main_window.py:848
 #, python-brace-format
 msgid ""
 "{n} marking no longer applies (package not found, already in that state, …):"
@@ -1583,59 +1587,59 @@ msgstr[0] ""
 "표시 {n}개가 더 이상 적용되지 않습니다 (패키지를 찾을 수 없음, 이미 그 상태"
 "임 등):"
 
-#: kram/ui/main_window.py:850
+#: kram/ui/main_window.py:852
 #, python-brace-format
 msgid "{n} line is not a valid marking: {lines}"
 msgid_plural "{n} lines are not valid markings: {lines}"
 msgstr[0] "{n}개 줄이 올바른 표시가 아닙니다: {lines}"
 
-#: kram/ui/main_window.py:854
+#: kram/ui/main_window.py:856
 #, python-brace-format
 msgid "{n} package marked."
 msgid_plural "{n} packages marked."
 msgstr[0] "패키지 {n}개를 표시했습니다."
 
-#: kram/ui/main_window.py:872
+#: kram/ui/main_window.py:874
 msgid "(loading…)"
 msgstr "(불러오는 중…)"
 
-#: kram/ui/main_window.py:879
+#: kram/ui/main_window.py:881
 msgid "No older versions in the repositories"
 msgstr "저장소에 이전 버전이 없습니다"
 
-#: kram/ui/main_window.py:919
+#: kram/ui/main_window.py:921
 msgid "Cannot apply changes"
 msgstr "변경 사항을 적용할 수 없습니다"
 
-#: kram/ui/main_window.py:920
+#: kram/ui/main_window.py:922
 msgid "The marked changes cannot be carried out. Unmark or change them."
 msgstr "표시한 변경 사항을 수행할 수 없습니다. 표시를 해제하거나 변경하십시오."
 
-#: kram/ui/main_window.py:935
+#: kram/ui/main_window.py:937
 msgid "Applying changes"
 msgstr "변경 사항 적용 중"
 
-#: kram/ui/main_window.py:943
+#: kram/ui/main_window.py:945
 msgid "Refreshing metadata"
 msgstr "메타데이터 새로 고치는 중"
 
-#: kram/ui/main_window.py:959
+#: kram/ui/main_window.py:961
 msgid "Changing repositories"
 msgstr "저장소 변경 중"
 
-#: kram/ui/main_window.py:987
+#: kram/ui/main_window.py:989
 msgid "Downloading metadata again"
 msgstr "메타데이터를 다시 내려받는 중"
 
-#: kram/ui/main_window.py:989
+#: kram/ui/main_window.py:991
 msgid "Cleaning the package cache"
 msgstr "패키지 캐시를 비우는 중"
 
-#: kram/ui/main_window.py:1021
+#: kram/ui/main_window.py:1023
 msgid "Open Package File"
 msgstr "패키지 파일 열기"
 
-#: kram/ui/main_window.py:1022
+#: kram/ui/main_window.py:1024
 msgid "RPM packages (*.rpm)"
 msgstr "RPM 패키지 (*.rpm)"
 
@@ -1791,53 +1795,53 @@ msgstr "{name} 복사 중…"
 msgid "Files removed: {count}"
 msgstr "삭제한 파일: {count}"
 
-#: kram/ui/progress_dialog.py:67
+#: kram/ui/progress_dialog.py:68
 msgid "Waiting for authentication…"
 msgstr "인증을 기다리는 중…"
 
-#: kram/ui/progress_dialog.py:70
+#: kram/ui/progress_dialog.py:71
 msgid "Download"
 msgstr "다운로드"
 
-#: kram/ui/progress_dialog.py:72
+#: kram/ui/progress_dialog.py:73
 msgid "Installation"
 msgstr "설치"
 
-#: kram/ui/progress_dialog.py:91
+#: kram/ui/progress_dialog.py:92
 msgid "Close when finished successfully"
 msgstr "성공적으로 끝나면 닫기"
 
-#: kram/ui/progress_dialog.py:123
+#: kram/ui/progress_dialog.py:126
 #, python-brace-format
 msgid "The transaction has {n} package. Downloading…"
 msgid_plural "The transaction has {n} packages. Downloading…"
 msgstr[0] "트랜잭션에 패키지 {n}개가 있습니다. 다운로드 중…"
 
-#: kram/ui/progress_dialog.py:152
+#: kram/ui/progress_dialog.py:155
 #, python-brace-format
 msgid "Downloading {name}"
 msgstr "{name} 다운로드 중"
 
-#: kram/ui/progress_dialog.py:157
+#: kram/ui/progress_dialog.py:160
 #, python-brace-format
 msgid "Download failed: {error}"
 msgstr "다운로드 실패: {error}"
 
-#: kram/ui/progress_dialog.py:165
+#: kram/ui/progress_dialog.py:168
 #, python-brace-format
 msgid "Downloaded {done} of {total}"
 msgstr "{total} 중 {done} 다운로드함"
 
-#: kram/ui/progress_dialog.py:173
+#: kram/ui/progress_dialog.py:176
 msgid "Preparing the rpm transaction…"
 msgstr "rpm 트랜잭션 준비 중…"
 
-#: kram/ui/progress_dialog.py:201
+#: kram/ui/progress_dialog.py:204
 #, python-brace-format
 msgid "Package {index} of {count}"
 msgstr "패키지 {index} / {count}"
 
-#: kram/ui/progress_dialog.py:209
+#: kram/ui/progress_dialog.py:212
 #, python-brace-format
 msgid ""
 "Import the OpenPGP key used to verify packages?\n"
@@ -1854,44 +1858,44 @@ msgstr ""
 "생성일: {created}\n"
 "출처: {url}"
 
-#: kram/ui/progress_dialog.py:212
+#: kram/ui/progress_dialog.py:215
 msgid "Import key"
 msgstr "키 가져오기"
 
-#: kram/ui/progress_dialog.py:213
+#: kram/ui/progress_dialog.py:216
 #, python-brace-format
 msgid "Key {key_id}: importing"
 msgstr "키 {key_id}: 가져오는 중"
 
-#: kram/ui/progress_dialog.py:213
+#: kram/ui/progress_dialog.py:216
 #, python-brace-format
 msgid "Key {key_id}: rejected"
 msgstr "키 {key_id}: 거부됨"
 
-#: kram/ui/progress_dialog.py:228 kram/ui/progress_dialog.py:229
+#: kram/ui/progress_dialog.py:231 kram/ui/progress_dialog.py:232
 msgid "Done."
 msgstr "완료."
 
-#: kram/ui/progress_dialog.py:228
+#: kram/ui/progress_dialog.py:231
 msgid "Packages downloaded."
 msgstr "패키지를 다운로드했습니다."
 
-#: kram/ui/progress_dialog.py:233 kram/ui/progress_dialog.py:247
+#: kram/ui/progress_dialog.py:236 kram/ui/progress_dialog.py:250
 msgid "unknown error"
 msgstr "알 수 없는 오류"
 
-#: kram/ui/progress_dialog.py:235
+#: kram/ui/progress_dialog.py:238
 #, python-brace-format
 msgid ""
 "Another package operation is running: {process}. Try again when it has "
 "finished."
 msgstr "다른 패키지 작업이 실행 중입니다: {process}. 끝난 뒤 다시 시도하세요."
 
-#: kram/ui/progress_dialog.py:248
+#: kram/ui/progress_dialog.py:251
 msgid "Error:"
 msgstr "오류:"
 
-#: kram/ui/progress_dialog.py:250
+#: kram/ui/progress_dialog.py:253
 #, python-brace-format
 msgid "ERROR: {message}"
 msgstr "오류: {message}"

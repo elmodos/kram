@@ -31,6 +31,19 @@ class CacheReport:
     user: Usage | None
     packagekit: Usage | None
     packagekit_blocker: str | None
+    dnf_dir: str = ""
+    user_dir: str = ""
+
+    def locations(self) -> dict[str, tuple[str, str]]:
+        """Field name -> (where its files are, the folder to open). The packages are spread over a folder per
+        repository, and the path says so."""
+        pk = kram_helper.PACKAGEKIT_CACHE
+        return {
+            "dnf_packages": (os.path.join(self.dnf_dir, "*", "packages"), self.dnf_dir),
+            "dnf_metadata": (self.dnf_dir, self.dnf_dir),
+            "user": (self.user_dir, self.user_dir),
+            "packagekit": (os.path.join(pk, "*", "metadata", "*", "packages"), pk),
+        }
 
 
 def _files(root: str) -> Iterator[tuple[str, int]]:
@@ -78,7 +91,8 @@ def measure() -> CacheReport:
     packages, metadata = scan_dnf(config.system_cachedir)
     # root has one cache, the system one: the "user" row would clean the same files with other words
     user = None if config.cachedir == config.system_cachedir else scan_tree(config.cachedir)
-    return CacheReport(packages, metadata, user, scan_packagekit(), kram_helper.packagekit_blocker())
+    return CacheReport(packages, metadata, user, scan_packagekit(), kram_helper.packagekit_blocker(),
+                       config.system_cachedir, config.cachedir)
 
 
 def clean_user_cache() -> None:

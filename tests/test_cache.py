@@ -109,7 +109,8 @@ def test_dialog_shows_the_report(monkeypatch):
         def submit(self, fn, on_done, on_error=None):
             on_done(fn())
 
-    report = cache.CacheReport(cache.Usage(), cache.Usage(5, 2), None, cache.Usage(2048, 2), "offline")
+    report = cache.CacheReport(cache.Usage(), cache.Usage(5, 2), None, cache.Usage(2048, 2), "offline",
+                               "/var/cache/libdnf5", "/home/u/.cache/libdnf5")
     monkeypatch.setattr(cache_dialog, "measure", lambda: report)
     dlg = cache_dialog.CacheDialog(Inline(), lambda _target: None)
     rows = dlg.rows
@@ -122,3 +123,16 @@ def test_dialog_shows_the_report(monkeypatch):
     assert not rows["packagekit"].button.isEnabled()    # an offline update is prepared
     assert rows["packagekit"].files.text() == "2 files"
     assert not dlg.note.isHidden()
+    # the path says where the files are, the link opens a folder that exists
+    assert "/var/cache/libdnf5/*/packages</a>" in rows["dnf_packages"].path.text()
+    assert "href='file:///var/cache/libdnf5'" in rows["dnf_packages"].path.text()
+    assert rows["dnf_packages"].path.openExternalLinks()
+
+
+def test_locations_open_real_folders(monkeypatch):
+    monkeypatch.setattr(helper, "PACKAGEKIT_CACHE", "/var/cache/PackageKit")
+    report = cache.CacheReport(None, None, None, None, None, "/var/cache/libdnf5", "/home/u/.cache/libdnf5")
+    locations = report.locations()
+    assert locations["user"] == ("/home/u/.cache/libdnf5", "/home/u/.cache/libdnf5")
+    assert locations["packagekit"] == ("/var/cache/PackageKit/*/metadata/*/packages", "/var/cache/PackageKit")
+    assert not any("*" in folder for _shown, folder in locations.values())

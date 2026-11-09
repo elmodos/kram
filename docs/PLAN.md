@@ -339,7 +339,12 @@ size, file count where it means something, and its own button. Not on the toolba
   only if the name already has an owner, so the check does not start the daemon (with a real daemon in a container:
   `ao 0` when idle, refused during `pkcon refresh force`). `dnf5 clean packages` and `clean metadata dbcache` also
   empty the directories of repositories that no longer exist. `scripts/container_check.sh` covers the helper's three
-  targets and cleaning a user's cache.
+  targets and cleaning a user's cache. Each row also shows where its files are: a link that opens the folder in the
+  file manager (`*/packages` for the packages, spread over a folder per repository, opens the cache's top folder).
+- **Rules for dialogs that came out of this** (`tests/test_main_window.py`): an action that needs the catalog is
+  disabled until it has loaded, not silently ignored; a progress dialog is a child of the dialog that started it, so
+  the window manager keeps it on top; the line above the bars stops saying "Waiting for authentication" as soon as
+  the helper reports work.
 
 No per-version pruning ("remove already upgraded packages"): with `keepcache=False` dnf keeps none, and for
 PackageKit cleaning all its rpms is simpler.
