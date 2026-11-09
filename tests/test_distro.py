@@ -148,7 +148,7 @@ def test_dialog_shows_the_simulation(dialog, monkeypatch):
                          needed=4096, free=1)
     monkeypatch.setattr(upgrade_dialog.upgrade_audit, "simulate", lambda v, _cancel, _report: asked.append(v) or result)
     dialog.start_check()
-    assert asked == ["45"] and not dialog.running_check and dialog.check.isEnabled()
+    assert asked == ["45"] and not dialog.running_check and not dialog.check.isHidden()
     wanted = ["Problems that stop the upgrade: 1", "Would be removed: 1",
               "Stay as they are, with no updates from Fedora 45: 1", "Replaced by other packages: 1",
               "Would be downgraded: 1", "Repositories with nothing for Fedora 45: 1"]
@@ -202,7 +202,7 @@ def test_the_dialog_stays_open_during_a_check(queued):
     dlg.start_check()
     dlg.start_check()
     assert len(dnf.jobs) == 1  # not started twice
-    assert not dlg.close_button.isEnabled() and not dlg.check.isEnabled()
+    assert not dlg.close_button.isEnabled() and dlg.check.isHidden()
     assert dlg.cancel_button.isVisible() and dlg.cancel_button.isEnabled() and dlg.busy.isVisible()
     dlg.reject()  # Esc, and the window's own close button
     assert dlg.isVisible() and dlg.running_check
@@ -211,6 +211,20 @@ def test_the_dialog_stays_open_during_a_check(queued):
     assert dlg.busy.isHidden()
     dlg.reject()
     assert not dlg.isVisible()
+
+
+def test_cancel_takes_the_place_of_check(queued):
+    from PySide6.QtWidgets import QApplication
+
+    dlg, _dnf = queued
+    QApplication.processEvents()
+    assert dlg.check.isVisible() and dlg.cancel_button.isHidden()
+    place = dlg.check.geometry()
+    dlg.start_check()
+    QApplication.processEvents()
+    assert dlg.check.isHidden() and dlg.cancel_button.isVisible()
+    # same spot and size; the height of the panel follows the text beside it
+    assert (dlg.cancel_button.x(), dlg.cancel_button.size()) == (place.x(), place.size())
 
 
 def test_cancel_stops_the_check_and_returns_to_the_start(queued):
@@ -223,7 +237,7 @@ def test_cancel_stops_the_check_and_returns_to_the_start(queued):
     assert dlg._cancel.is_set() and not dlg.cancel_button.isEnabled() and dlg.status.text() == "Cancelling…"
     assert dlg.running_check  # until the transfers have really stopped
     dnf.jobs[0][2](Cancelled())
-    assert dlg.status.text() == intro and not dlg.running_check and dlg.check.isEnabled()
+    assert dlg.status.text() == intro and not dlg.running_check and dlg.check.isVisible()
     assert dlg.close_button.isEnabled()
     dlg.start_check()  # and it can be started again, not cancelled from the start
     assert not dlg._cancel.is_set()

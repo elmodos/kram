@@ -94,6 +94,14 @@ class UpgradeDialog(QDialog):
         self.check.setDefault(True)  # the main action here
         self.check.clicked.connect(self.start_check)
         panel.addWidget(self.check)
+        self.cancel_button = QPushButton(QIcon.fromTheme("dialog-cancel"), _("Cancel"))
+        self.cancel_button.setAutoDefault(False)
+        self.cancel_button.clicked.connect(self.cancel_check)
+        self.cancel_button.hide()  # takes the place of Check while one runs
+        panel.addWidget(self.cancel_button)
+        width = max(self.check.sizeHint().width(), self.cancel_button.sizeHint().width())
+        self.check.setMinimumWidth(width)  # the text beside them does not jump
+        self.cancel_button.setMinimumWidth(width)
         self._intro = _("Check simulates the upgrade and changes nothing on this system. It downloads the "
                         "package lists of Fedora {version} (about 80 MB).").format(version=target)
         self.status = QLabel(self._intro)
@@ -121,11 +129,8 @@ class UpgradeDialog(QDialog):
         self.busy.hide()
         lay.addWidget(self.busy)
 
-        buttons = QDialogButtonBox(QDialogButtonBox.Close | QDialogButtonBox.Cancel)
+        buttons = QDialogButtonBox(QDialogButtonBox.Close)
         self.close_button = buttons.button(QDialogButtonBox.Close)
-        self.cancel_button = buttons.button(QDialogButtonBox.Cancel)
-        self.cancel_button.hide()
-        self.cancel_button.clicked.connect(self.cancel_check)
         buttons.rejected.connect(self.reject)  # no effect during a check, see done()
         bottom = QHBoxLayout()
         self.notes_button = self._link_button("documentinfo", _("Release notes"),
@@ -237,7 +242,7 @@ class UpgradeDialog(QDialog):
             return
         self.running_check = True
         self._cancel.clear()
-        self.check.setEnabled(False)
+        self.check.hide()
         self.close_button.setEnabled(False)
         self.cancel_button.setEnabled(True)
         self.cancel_button.show()
@@ -278,7 +283,7 @@ class UpgradeDialog(QDialog):
 
     def _finished(self) -> None:
         self.running_check = False
-        self.check.setEnabled(True)
+        self.check.show()
         self.close_button.setEnabled(True)
         self.cancel_button.hide()
         self.busy.hide()
