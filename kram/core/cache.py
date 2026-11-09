@@ -33,16 +33,22 @@ class CacheReport:
     packagekit_blocker: str | None
     dnf_dir: str = ""
     user_dir: str = ""
+    packagekit_release: str = ""  # its only release folder; empty when there are several
 
     def locations(self) -> dict[str, tuple[str, str]]:
         """Field name -> (where its files are, the folder to open). The packages are spread over a folder per
         repository, and the path says so."""
         pk = kram_helper.PACKAGEKIT_CACHE
+        if self.packagekit_release:
+            metadata = os.path.join(pk, self.packagekit_release, "metadata")
+            packagekit = (os.path.join(metadata, "*", "packages"), metadata)
+        else:
+            packagekit = (os.path.join(pk, "*", "metadata", "*", "packages"), pk)
         return {
             "dnf_packages": (os.path.join(self.dnf_dir, "*", "packages"), self.dnf_dir),
             "dnf_metadata": (self.dnf_dir, self.dnf_dir),
             "user": (self.user_dir, self.user_dir),
-            "packagekit": (os.path.join(pk, "*", "metadata", "*", "packages"), pk),
+            "packagekit": packagekit,
         }
 
 
@@ -84,6 +90,16 @@ def scan_packagekit() -> Usage | None:
     return _usage([size for _path, size in kram_helper.packagekit_rpms()])
 
 
+def packagekit_release() -> str:
+    """The name of PackageKit's only release folder ("44"), "" if there is none or several (after a system upgrade)."""
+    try:
+        with os.scandir(kram_helper.PACKAGEKIT_CACHE) as entries:
+            folders = [entry.name for entry in entries if entry.is_dir(follow_symlinks=False)]
+    except OSError:
+        return ""
+    return folders[0] if len(folders) == 1 else ""
+
+
 def measure() -> CacheReport:
     config_base = libdnf5.base.Base()
     config_base.load_config()
@@ -92,7 +108,7 @@ def measure() -> CacheReport:
     # root has one cache, the system one: the "user" row would clean the same files with other words
     user = None if config.cachedir == config.system_cachedir else scan_tree(config.cachedir)
     return CacheReport(packages, metadata, user, scan_packagekit(), kram_helper.packagekit_blocker(),
-                       config.system_cachedir, config.cachedir)
+                       config.system_cachedir, config.cachedir, packagekit_release())
 
 
 def clean_user_cache() -> None:

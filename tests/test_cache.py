@@ -2,6 +2,7 @@
 import io
 import json
 import os
+import shutil
 
 import pytest
 
@@ -136,3 +137,17 @@ def test_locations_open_real_folders(monkeypatch):
     assert locations["user"] == ("/home/u/.cache/libdnf5", "/home/u/.cache/libdnf5")
     assert locations["packagekit"] == ("/var/cache/PackageKit/*/metadata/*/packages", "/var/cache/PackageKit")
     assert not any("*" in folder for _shown, folder in locations.values())
+
+
+def test_a_single_packagekit_release_is_named_in_the_path(packagekit):
+    assert cache.packagekit_release() == ""  # the fixture has 43 and 44
+    shutil.rmtree(packagekit / "43")
+    assert cache.packagekit_release() == "44"
+    report = cache.CacheReport(None, None, None, None, None, "/d", "/u", "44")
+    metadata = str(packagekit / "44/metadata")
+    assert report.locations()["packagekit"] == (f"{metadata}/*/packages", metadata)
+
+
+def test_packagekit_release_without_the_cache(tmp_path, monkeypatch):
+    monkeypatch.setattr(helper, "PACKAGEKIT_CACHE", str(tmp_path / "none"))
+    assert cache.packagekit_release() == ""
