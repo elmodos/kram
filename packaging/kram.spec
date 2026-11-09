@@ -1,5 +1,5 @@
 %global appid io.github.elmodos.Kram
-%global base_version 0.3.0
+%global base_version 0.3.1
 
 Name:           kram
 # A tagged release (v%%{base_version}) is plain %%{base_version}. Any other commit gets a snapshot from
@@ -83,6 +83,10 @@ QT_QPA_PLATFORM=offscreen %pytest
 %{_datadir}/icons/hicolor/scalable/apps/%{appid}.svg
 
 %changelog
+* Mon Nov 09 2026 Modo Ltunzher <offnormal@gmail.com> - 0.3.1-1
+- Custom filters: new Provides condition, e.g. application() for packages with a menu entry
+- Apply dialog: the equivalent command changes with "Download packages only"
+
 * Mon Nov 09 2026 Modo Ltunzher <offnormal@gmail.com> - 0.3.0-1
 - Settings > Package Cache: how much space the package caches take, where they are, and cleaning them,
   including the packages Discover and GNOME Software downloaded and left behind
