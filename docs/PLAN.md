@@ -309,18 +309,47 @@ in Kram. Source: commits that change something a user can notice end with `Chang
 trailers (from c4ed714 on), read with `git log vA..vB --format='%(trailers:key=Changelog,valueonly)'`; the
 release step will collect them into a file shipped with the package (and the metainfo `<release>` notes).
 
-**Cache** (after the MVP, planned 2026-11-07): a small dialog that shows the size of each package cache and
-cleans it through the helper.
-- `/var/cache/libdnf5`: the system dnf cache. With `keepcache=False` (the default) downloaded packages go away
-  after a successful transaction; leftovers come from interrupted ones. Actions: "clean packages"
-  (`dnf clean packages`), "clean metadata" (the next load downloads it again).
-- `~/.cache/libdnf5`: metadata for non-root runs (Kram itself, `dnf` as the user); cleaned without the helper.
-- `/var/cache/PackageKit`: rpms that Discover / GNOME Software download for offline updates and do not clean
-  up (3.5 GB, 467 rpms on the author's laptop, 2026-11-07). Never clean it while an offline update is prepared
-  (`/system-update`, `/var/lib/PackageKit/prepared-update`): say so and leave it alone. The helper checks that
-  again itself.
+**Cache** (after the MVP, planned 2026-11-07, designed 2026-11-09): Settings → "Package Cache…", a small dialog
+with one row per cache in a framed list, cells separated by lines as in Discover: icon, name, one-line description,
+size, file count where it means something, and its own button. Not on the toolbar. It opens wide enough for one
+line per description and can shrink: the text wraps, and the list scrolls when the window is too low.
+- **Sizes need no password**: every cache is readable by a normal user (except PackageKit's `tmpdir.*`
+  directories, which are left out of the count). They are counted on a background thread and again after each
+  clean. A row whose directory does not exist is hidden; an empty cache disables its button.
+- **DNF: downloaded packages** (`/var/cache/libdnf5/*/packages`): `dnf5 clean packages` through the helper. With
+  `keepcache=False` (the default) packages go away after a successful transaction; what is here comes from
+  interrupted transactions and "download only".
+- **DNF: repository metadata** (the rest of `/var/cache/libdnf5`): one action, "Download Again…", with a
+  confirmation (traffic, needs the internet): `dnf5 clean metadata dbcache`, then the normal refresh, then a
+  catalog reload. It cannot be a plain clean: the catalog reads only this cache (`cacheonly="all"`), so without
+  metadata every available package disappears. Marks survive the reload; if the download fails (no network),
+  marks on packages that are no longer available are dropped and the usual "N repositories have no metadata"
+  warning shows. For a damaged cache and leftovers of removed repositories; normal updating stays in "Reload".
+- **DNF cache of your user** (`~/.cache/libdnf5`): `dnf5 clean all` without the helper. Only `dnf` run as the user
+  writes here; Kram itself reads the system cache.
+- **Discover / GNOME Software** (`/var/cache/PackageKit`): rpms they download for offline updates and do not clean
+  up (3.5 GB, 467 rpms on the author's laptop, 2026-11-07). Removes only `*/metadata/*/packages/*.rpm` (3.3 of those
+  3.5 GB): the metadata stays intact for a running daemon and Discover. Regular files only, no symlinks followed.
+  Disabled with an explanation while an offline update or upgrade is prepared (`/system-update`,
+  `/var/lib/PackageKit/prepared-update`, `/var/lib/PackageKit/prepared-upgrade`) or PackageKit runs a transaction.
+- **Helper**: `{"op": "clean_cache", "target": "dnf_packages"|"dnf_metadata"|"packagekit"}`. No paths from the GUI.
+  It checks `lock_holder()` first (stage "locked") and repeats the PackageKit checks itself.
+- **Buttons per row, not checkboxes and one Clean**: the actions differ (root or not, one downloads again).
+  Only the metadata action asks for confirmation: the rest is harmless and `pkexec` already asks for the password.
+- **As built (2026-11-09)**: an active PackageKit transaction is found with `GetTransactionList` over D-Bus, asked
+  only if the name already has an owner, so the check does not start the daemon (with a real daemon in a container:
+  `ao 0` when idle, refused during `pkcon refresh force`). `dnf5 clean packages` and `clean metadata dbcache` also
+  empty the directories of repositories that no longer exist. `scripts/container_check.sh` covers the helper's three
+  targets and cleaning a user's cache. Each row also shows where its files are: a link that opens the folder in the
+  file manager (`*/packages` for the packages, spread over a folder per repository, opens the cache's top folder;
+  PackageKit's path names its release folder when there is only one).
+- **Rules for dialogs that came out of this** (`tests/test_main_window.py`): an action that needs the catalog is
+  disabled until it has loaded, not silently ignored; a progress dialog is a child of the dialog that started it, so
+  the window manager keeps it on top; the line above the bars stops saying "Waiting for authentication" as soon as
+  the helper reports work.
+
 No per-version pruning ("remove already upgraded packages"): with `keepcache=False` dnf keeps none, and for
-PackageKit cleaning everything is simpler.
+PackageKit cleaning all its rpms is simpler.
 
 **Local .rpm installer** (designed 2026-11-07, target 0.2.0; was postponed for security reasons on 2026-11-05).
 A gdebi-style dialog for one package file.

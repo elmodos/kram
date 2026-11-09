@@ -45,8 +45,11 @@ def test_rejects_bad_input():
         '{"op": "local_install", "path": "/tmp/fish.rpm", "sha256": "' + "A" * 64 + '"}',
         '{"op": "local_install", "path": "/tmp/fish.rpm", "sha256": "' + "0" * 64 + '", "action": "remove"}',
         '{"op": "local_install", "path": "/tmp/fish.rpm", "sha256": "' + "0" * 64 + '", "exclude_weak": ["a/b"]}',
+        '{"op": "clean_cache"}',
+        '{"op": "clean_cache", "target": "/var/cache"}',
+        '{"op": "clean_cache", "target": ["packagekit"]}',
     )
-    assert len(events) == 26
+    assert len(events) == 29
     assert all(ev["event"] == "done" and ev["ok"] is False and ev["stage"] == "protocol" for ev in events)
 
 

@@ -16,6 +16,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
+from ..core.cache import PACKAGEKIT_BLOCKED
 from ..i18n import N_, _, ngettext
 from ..ipc.client import HelperClient
 from .package_model import human_size
@@ -38,7 +39,9 @@ HELPER_MESSAGES = {
     "script_error": N_("Scriptlet {script} of {nevra} failed with exit code {code}"),
     "key_imported": N_("Imported key {key_id}"),
     "copying_package": N_("Copying {name}…"),
+    "files_removed": N_("Files removed: {count}"),
 }
+STAGE_KEYS = ("loading_repos", "refreshing")  # helper messages that also replace the line above the progress bars
 
 
 class ProgressDialog(QDialog):
@@ -74,6 +77,9 @@ class ProgressDialog(QDialog):
         installs = request.get("op") in ("transaction", "local_install")
         self.rpm_label.setVisible(installs)
         self.rpm_bar.setVisible(installs)
+        only_deletes = request.get("op") == "clean_cache" and request.get("target") != "dnf_metadata"
+        self.download_label.setVisible(not only_deletes)
+        self.download_bar.setVisible(not only_deletes)
         self.download_bar.setRange(0, 0)  # busy until the first download reports its size
 
         self.log = QPlainTextEdit()
@@ -113,6 +119,8 @@ class ProgressDialog(QDialog):
         kind = ev.get("event")
         if kind == "log":
             self._append(self._log_text(ev))
+            if ev.get("key") in STAGE_KEYS:  # the password was accepted: say what runs instead
+                self.stage.setText(self._log_text(ev))
         elif kind == "resolved":
             n = len(ev["items"])
             self.stage.setText(ngettext("The transaction has {n} package. Downloading…",
@@ -229,6 +237,8 @@ class ProgressDialog(QDialog):
             if ev.get("stage") == "locked":
                 error = _("Another package operation is running: {process}. Try again when it has finished.").format(
                     process=ev.get("process", "?"))
+            elif ev.get("stage") == "packagekit" and ev.get("reason") in PACKAGEKIT_BLOCKED:
+                error = _(PACKAGEKIT_BLOCKED[ev["reason"]])
             self._show_error(error, ev.get("details") or [])
 
     def _on_failed(self, message: str) -> None:

@@ -28,6 +28,10 @@ Built on libdnf5 (the same library as `dnf5`) and Qt 6. See [docs/PLAN.md](docs/
 |---|---|
 | ![Install a package file](docs/screenshots/install-file.png) | ![Dependencies of a package file](docs/screenshots/install-dependencies.png) |
 
+| What the package caches take |
+|---|
+| ![Package Cache](docs/screenshots/package-cache.png) |
+
 ## Features
 
 - Every package of the enabled repositories in one table: status, origin (Fedora / COPR / third-party /
@@ -47,6 +51,8 @@ Built on libdnf5 (the same library as `dnf5`) and Qt 6. See [docs/PLAN.md](docs/
   saw (checked by its SHA-256), read with your own permissions.
 - Description, dependencies (clickable), files, all versions and the changelog of every package.
 - Enable and disable repositories; enable, disable and remove COPR projects, search Copr.
+- See what the package caches take and where they are, and clean them, including the packages Discover and
+  GNOME Software downloaded and left behind (Settings → Package Cache).
 - One password per session (polkit); browsing and searching need none.
 - In 13 languages ([Translations](#translations)).
 

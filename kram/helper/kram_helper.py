@@ -16,14 +16,17 @@ Protocol: one JSON request per line on stdin, JSON event lines on stdout.
    "exclude_weak": [...], "test": false}                  one package file; see local_install()
   {"op": "repo_set_enabled", "repos": {"<repo id>": bool}}  persist via dnf5 config-manager, then load metadata
   {"op": "copr", "action": "enable"|"disable"|"remove", "project": "owner/name", "hub": "<host>"}
+  {"op": "clean_cache", "target": "dnf_packages"|"dnf_metadata"|"packagekit"}   see clean_cache()
   {"op": "answer", "id": N, "yes": bool}                   reply to a "question" event (only while asked)
   {"op": "quit"}
 Events: {"event": "log"|"resolved"|"download"|"rpm"|"question"|"done", ...}; every request ends with "done".
 A "done" with stage "locked" (and "process": "dnf5 (pid 71)") means another package operation holds rpm.
+A "done" with stage "packagekit" (and "reason": "offline"|"transaction") means its cache must not be touched now.
 "log" events carry an English "text" plus a "key" and "params" so the GUI can show them translated
 (pkexec strips the locale from the environment, so the helper does not translate anything itself).
 """
 import fcntl
+import glob
 import hashlib
 import hmac
 import json
@@ -61,6 +64,13 @@ FICLONE = 0x40049409
 # held (fcntl write lock) while libdnf5 / rpm run a transaction
 TRANSACTION_LOCKS = ("/run/dnf/rpmtransaction.lock", "/usr/lib/sysimage/rpm/.rpm.lock", "/var/lib/rpm/.rpm.lock")  # ioctl: copy-on-write clone (btrfs, XFS)
 COPY_CHUNK = 1 << 20
+
+CLEAN_TARGETS = ("dnf_packages", "dnf_metadata", "packagekit")
+PACKAGEKIT_CACHE = "/var/cache/PackageKit"
+PACKAGEKIT_BUS_NAME = "org.freedesktop.PackageKit"
+# an offline update or system upgrade is waiting for a reboot and will install rpms from PackageKit's cache
+OFFLINE_MARKERS = ("/system-update", "/var/lib/PackageKit/prepared-update", "/var/lib/PackageKit/prepared-upgrade")
+BUS_TIMEOUT = 5  # s
 
 PROGRESS_INTERVAL = 0.1  # s; progress callbacks fire hundreds of times per file, the GUI needs ~10/s
 
@@ -340,6 +350,79 @@ def copr(req: dict) -> None:
     emit("done", ok=True)
 
 
+def packagekit_rpms() -> list[tuple[str, int]]:
+    """(path, size) of the downloaded packages in PackageKit's cache. Its metadata is left alone: a running daemon
+    and Discover keep using it. Shared with the GUI, so the size it shows is what cleaning frees."""
+    found = []
+    for path in glob.glob(os.path.join(PACKAGEKIT_CACHE, "*", "metadata", "*", "packages", "*.rpm")):
+        try:
+            st = os.lstat(path)
+        except OSError:
+            continue
+        if stat.S_ISREG(st.st_mode):
+            found.append((path, st.st_size))
+    return found
+
+
+def _bus_call(*args: str) -> str | None:
+    """Reply of a system bus method as busctl prints it ("b true"), None if the call failed."""
+    try:
+        proc = subprocess.run(["busctl", "--system", "call", *args], stdin=subprocess.DEVNULL, capture_output=True,
+                              text=True, timeout=BUS_TIMEOUT, check=False)
+    except (OSError, subprocess.SubprocessError):
+        return None
+    return proc.stdout.strip() if proc.returncode == 0 else None
+
+
+def packagekit_blocker() -> str | None:
+    """Why PackageKit's cache must not be cleaned now: "offline", "transaction", or None. Shared with the GUI."""
+    if any(os.path.lexists(marker) for marker in OFFLINE_MARKERS):
+        return "offline"
+    # only a daemon that already runs is asked: the method call alone would start it through D-Bus activation
+    if _bus_call("org.freedesktop.DBus", "/org/freedesktop/DBus", "org.freedesktop.DBus", "NameHasOwner", "s",
+                 PACKAGEKIT_BUS_NAME) != "b true":
+        return None
+    running = _bus_call(PACKAGEKIT_BUS_NAME, "/org/freedesktop/PackageKit", PACKAGEKIT_BUS_NAME, "GetTransactionList")
+    return None if running == "ao 0" else "transaction"
+
+
+def clean_packagekit() -> None:
+    if reason := packagekit_blocker():
+        emit("done", ok=False, stage="packagekit", reason=reason, error=f"PackageKit's cache is in use: {reason}")
+        return
+    removed, failed = 0, []
+    for path, _size in packagekit_rpms():
+        try:
+            os.unlink(path)
+        except OSError as e:
+            failed.append(f"{path}: {e.strerror}")
+        else:
+            removed += 1
+    log("files_removed", "Files removed: {count}", count=removed)
+    if failed:
+        emit("done", ok=False, stage="clean", error=f"could not remove {len(failed)} files", details=failed)
+    else:
+        emit("done", ok=True)
+
+
+def clean_cache(req: dict) -> None:
+    """Clean one of a fixed set of caches; the GUI never names a path. "dnf_metadata" downloads the metadata again
+    right away, because the GUI reads only this cache and would have no available packages without it."""
+    target = req.get("target")
+    if target not in CLEAN_TARGETS:
+        raise ProtocolError(f"target: expected one of {', '.join(CLEAN_TARGETS)}")
+    if holder := lock_holder():
+        emit_locked(holder)
+    elif target == "packagekit":
+        clean_packagekit()
+    elif not run_command(["dnf5", "clean", *(("packages",) if target == "dnf_packages" else ("metadata", "dbcache"))]):
+        emit("done", ok=False, stage="clean", error="dnf5 clean failed")
+    elif target == "dnf_metadata":
+        refresh()
+    else:
+        emit("done", ok=True)
+
+
 def run_transaction(req: dict) -> None:
     validate(req)  # before the slow repo loading
     run_goal(lambda base: build_goal(base, req), test=bool(req.get("test")),
@@ -616,11 +699,11 @@ def main() -> int:
             op = req.get("op")
             if op == "ping":
                 emit("done", ok=True, uid=os.geteuid())
-            elif op in ("transaction", "local_install", "refresh", "repo_set_enabled", "copr"):
+            elif op in ("transaction", "local_install", "refresh", "repo_set_enabled", "copr", "clean_cache"):
                 if "DownloadProgress" not in globals():
                     DownloadProgress, RpmProgress, KeyImport = _callbacks()
                 {"transaction": run_transaction, "local_install": local_install, "refresh": lambda _r: refresh(),
-                 "repo_set_enabled": set_repos_enabled, "copr": copr}[op](req)
+                 "repo_set_enabled": set_repos_enabled, "copr": copr, "clean_cache": clean_cache}[op](req)
             elif op == "quit":
                 return 0
             else:
