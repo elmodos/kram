@@ -472,3 +472,13 @@ def test_dialog_shows_progress_and_still_downloading(queued):
     assert dlg.busy.maximum() == 0  # all known bytes are in, the rest is still to come
     dlg._on_report("still_downloading", {"items": [("Fedora 45", 1024, 2048), ("Slow", 0, 0)]})
     assert dlg.log.toPlainText().split("  ", 1)[1] == "Still downloading: Fedora 45: 1.0 kB of 2.0 kB; Slow"
+
+
+def test_removed_packages_say_what_they_need(dialog):
+    from kram.core.upgrade_audit import AuditResult
+
+    needs = {"simpleaudio": ["python(abi) = 3.14"], "vbox": ["a", "b", "c", "d"]}
+    result = AuditResult("45", True, removed=["simpleaudio", "vbox", "plain"], removal_needs=needs)
+    assert dialog._removal_line("simpleaudio", result) == "simpleaudio — needs python(abi) = 3.14"
+    assert dialog._removal_line("vbox", result) == "vbox — needs a, b, c, …"
+    assert dialog._removal_line("plain", result) == "plain"  # removed for another reason: nothing to claim

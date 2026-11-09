@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kram\n"
 "Report-Msgid-Bugs-To: https://github.com/elmodos/kram/issues\n"
-"POT-Creation-Date: 2026-11-09 22:45+0200\n"
+"POT-Creation-Date: 2026-11-09 22:57+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1757,7 +1757,7 @@ msgstr ""
 msgid "Refreshing repository metadata…"
 msgstr ""
 
-#: kram/ui/progress_dialog.py:38 kram/ui/upgrade_dialog.py:40
+#: kram/ui/progress_dialog.py:38 kram/ui/upgrade_dialog.py:41
 #, python-brace-format
 msgid "Mirror unavailable: {url}: {error}"
 msgstr ""
@@ -1805,12 +1805,12 @@ msgid_plural "The transaction has {n} packages. Downloading…"
 msgstr[0] ""
 msgstr[1] ""
 
-#: kram/ui/progress_dialog.py:155 kram/ui/upgrade_dialog.py:37
+#: kram/ui/progress_dialog.py:155 kram/ui/upgrade_dialog.py:38
 #, python-brace-format
 msgid "Downloading {name}"
 msgstr ""
 
-#: kram/ui/progress_dialog.py:160 kram/ui/upgrade_dialog.py:39
+#: kram/ui/progress_dialog.py:160 kram/ui/upgrade_dialog.py:40
 #, python-brace-format
 msgid "Download failed: {error}"
 msgstr ""
@@ -1855,7 +1855,7 @@ msgid "Key {key_id}: rejected"
 msgstr ""
 
 #: kram/ui/progress_dialog.py:233 kram/ui/progress_dialog.py:234
-#: kram/ui/upgrade_dialog.py:294
+#: kram/ui/upgrade_dialog.py:296
 msgid "Done."
 msgstr ""
 
@@ -1937,34 +1937,34 @@ msgid ""
 "Right-click to create one."
 msgstr ""
 
-#: kram/ui/upgrade_dialog.py:38
+#: kram/ui/upgrade_dialog.py:39
 #, python-brace-format
 msgid "Downloaded {name} ({size})"
 msgstr ""
 
-#: kram/ui/upgrade_dialog.py:41
+#: kram/ui/upgrade_dialog.py:42
 msgid "Working out the upgrade…"
 msgstr ""
 
-#: kram/ui/upgrade_dialog.py:42
+#: kram/ui/upgrade_dialog.py:43
 msgid "It does not work as it is. Trying again with removing packages allowed…"
 msgstr ""
 
-#: kram/ui/upgrade_dialog.py:43
+#: kram/ui/upgrade_dialog.py:44
 msgid "Deleting the downloaded package lists…"
-msgstr ""
-
-#: kram/ui/upgrade_dialog.py:84
-#, python-brace-format
-msgid "Fedora {version} is available"
 msgstr ""
 
 #: kram/ui/upgrade_dialog.py:85
 #, python-brace-format
-msgid "You have Fedora {version}, supported until {date}."
+msgid "Fedora {version} is available"
 msgstr ""
 
 #: kram/ui/upgrade_dialog.py:86
+#, python-brace-format
+msgid "You have Fedora {version}, supported until {date}."
+msgstr ""
+
+#: kram/ui/upgrade_dialog.py:87
 #, python-brace-format
 msgid "You have Fedora {version}."
 msgstr ""
@@ -1973,140 +1973,145 @@ msgstr ""
 msgid "Kram does not upgrade the system itself."
 msgstr ""
 
-#: kram/ui/upgrade_dialog.py:91
+#: kram/ui/upgrade_dialog.py:93
 msgid "Check"
 msgstr ""
 
-#: kram/ui/upgrade_dialog.py:100
-msgid "COPR projects: checking…"
-msgstr ""
-
-#: kram/ui/upgrade_dialog.py:112
+#: kram/ui/upgrade_dialog.py:97
 #, python-brace-format
 msgid ""
 "Check simulates the upgrade and changes nothing on this system. It downloads "
 "the package lists of Fedora {version} (about 80 MB)."
 msgstr ""
 
-#: kram/ui/upgrade_dialog.py:129
+#: kram/ui/upgrade_dialog.py:107
+msgid "COPR projects: checking…"
+msgstr ""
+
+#: kram/ui/upgrade_dialog.py:131
 msgid "Release notes"
 msgstr ""
 
-#: kram/ui/upgrade_dialog.py:132
+#: kram/ui/upgrade_dialog.py:134
 msgid "Upgrade guide"
 msgstr ""
 
-#: kram/ui/upgrade_dialog.py:138
+#: kram/ui/upgrade_dialog.py:140
 #, python-brace-format
 msgid "Open {program}"
 msgstr ""
 
-#: kram/ui/upgrade_dialog.py:182
+#: kram/ui/upgrade_dialog.py:184
 #, python-brace-format
 msgid "{project} ({n} installed)"
 msgstr ""
 
-#: kram/ui/upgrade_dialog.py:204
+#: kram/ui/upgrade_dialog.py:206
 #, python-brace-format
 msgid "COPR projects without a build for Fedora {version}: {n}"
 msgstr ""
 
-#: kram/ui/upgrade_dialog.py:209
+#: kram/ui/upgrade_dialog.py:211
 msgid "No COPR projects are enabled."
 msgstr ""
 
-#: kram/ui/upgrade_dialog.py:212
+#: kram/ui/upgrade_dialog.py:214
 #, python-brace-format
 msgid "Every enabled COPR project has a build for Fedora {version}."
 msgstr ""
 
-#: kram/ui/upgrade_dialog.py:216
+#: kram/ui/upgrade_dialog.py:218
 #, python-brace-format
 msgid "COPR projects: the rest have a build for Fedora {version}."
 msgstr ""
 
-#: kram/ui/upgrade_dialog.py:220
+#: kram/ui/upgrade_dialog.py:222
 #, python-brace-format
 msgid "COPR projects that could not be checked: {n}"
 msgstr ""
 
-#: kram/ui/upgrade_dialog.py:246
+#: kram/ui/upgrade_dialog.py:248
 #, python-brace-format
 msgid ""
 "Downloading the package lists of Fedora {version}. This can take a while…"
 msgstr ""
 
-#: kram/ui/upgrade_dialog.py:263
+#: kram/ui/upgrade_dialog.py:265
 #, python-brace-format
 msgid "{name}: {done} of {total}"
 msgstr ""
 
-#: kram/ui/upgrade_dialog.py:265
+#: kram/ui/upgrade_dialog.py:267
 #, python-brace-format
 msgid "Still downloading: {items}"
 msgstr ""
 
-#: kram/ui/upgrade_dialog.py:274 kram/ui/upgrade_dialog.py:275
+#: kram/ui/upgrade_dialog.py:276 kram/ui/upgrade_dialog.py:277
 msgid "Cancelling…"
 msgstr ""
 
-#: kram/ui/upgrade_dialog.py:289
+#: kram/ui/upgrade_dialog.py:291
 #, python-brace-format
 msgid "Could not check: {error}"
 msgstr ""
 
-#: kram/ui/upgrade_dialog.py:299
+#: kram/ui/upgrade_dialog.py:301
 #, python-brace-format
 msgid "Problems that stop the upgrade: {n}"
 msgstr ""
 
-#: kram/ui/upgrade_dialog.py:300
+#: kram/ui/upgrade_dialog.py:302
 #, python-brace-format
 msgid "Would be removed: {n}"
 msgstr ""
 
-#: kram/ui/upgrade_dialog.py:301
+#: kram/ui/upgrade_dialog.py:303
 #, python-brace-format
 msgid "Stay as they are, with no updates from Fedora {version}: {n}"
 msgstr ""
 
-#: kram/ui/upgrade_dialog.py:303
+#: kram/ui/upgrade_dialog.py:305
 #, python-brace-format
 msgid "Replaced by other packages: {n}"
 msgstr ""
 
-#: kram/ui/upgrade_dialog.py:304
+#: kram/ui/upgrade_dialog.py:306
 #, python-brace-format
 msgid "Would be downgraded: {n}"
 msgstr ""
 
-#: kram/ui/upgrade_dialog.py:305
+#: kram/ui/upgrade_dialog.py:307
 #, python-brace-format
 msgid "Repositories with nothing for Fedora {version}: {n}"
 msgstr ""
 
-#: kram/ui/upgrade_dialog.py:308
+#: kram/ui/upgrade_dialog.py:310
 #, python-brace-format
 msgid "The upgrade to Fedora {version} cannot be worked out as things are."
 msgstr ""
 
-#: kram/ui/upgrade_dialog.py:311
+#: kram/ui/upgrade_dialog.py:313
 msgid "The upgrade works only if packages are removed."
 msgstr ""
 
-#: kram/ui/upgrade_dialog.py:311
+#: kram/ui/upgrade_dialog.py:313
 msgid "The upgrade works."
 msgstr ""
 
-#: kram/ui/upgrade_dialog.py:312
+#: kram/ui/upgrade_dialog.py:314
 #, python-brace-format
 msgid ""
 "Upgrades: {upgrades}, new packages: {installs}. To download: {download}. "
 "Needs {needed}, free: {free}."
 msgstr ""
 
-#: kram/ui/upgrade_dialog.py:315
+#: kram/ui/upgrade_dialog.py:317
 msgid "Not enough free disk space."
+msgstr ""
+
+#: kram/ui/upgrade_dialog.py:326
+#, python-brace-format
+msgid "{name} — needs {what}"
 msgstr ""
 
 #: kram/ui/whats_new.py:16

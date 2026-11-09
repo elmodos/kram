@@ -31,6 +31,8 @@ class AuditResult:
     upgrades: int = 0
     installs: int = 0
     removed: list[str] = field(default_factory=list)
+    # removed name -> what it requires that the target does not provide
+    removal_needs: dict[str, list[str]] = field(default_factory=dict)
     downgrades: list[str] = field(default_factory=list)  # "name 1.2-3 → 1.1-9"
     replaced: list[str] = field(default_factory=list)   # "name → the package taking over"
     orphaned: list[str] = field(default_factory=list)   # no package of that name in the target, nothing takes over
@@ -173,7 +175,7 @@ def _simulate(target: str, cache: str, cancel: threading.Event, report: Report) 
         transaction = _resolve(base, allow_erasing=True)
     if _ok(transaction):
         result.resolved = True
-        _describe(transaction, installed, without_target, result)
+        _describe(transaction, installed, available, without_target, result)
     else:
         result.orphaned = sorted(without_target.values())
     report("cleanup", {})
@@ -211,7 +213,24 @@ def sort_out(without_target: dict[str, str], removed: list[str],
     return replaced, staying
 
 
-def _describe(transaction, installed, without_target: dict[str, str], result: AuditResult) -> None:
+def _unmet(package, installed, available) -> list[str]:
+    """What `package` requires that the target does not provide: why it cannot stay. Its own capabilities do not
+    count, nor do file paths and rich dependencies, which this query cannot judge."""
+    unmet = []
+    for requirement in map(str, package.get_requires()):
+        if requirement.startswith(("rpmlib(", "/", "(")):
+            continue
+        provided = libdnf5.rpm.PackageQuery(available)
+        provided.filter_provides([requirement])
+        own = libdnf5.rpm.PackageQuery(installed)
+        own.filter_name([package.get_name()])
+        own.filter_provides([requirement])
+        if provided.empty() and own.empty():
+            unmet.append(requirement)
+    return unmet
+
+
+def _describe(transaction, installed, available, without_target: dict[str, str], result: AuditResult) -> None:
     to_string = libdnf5.base.transaction.transaction_item_action_to_string
     versions = {p.get_name(): p.get_evr() for p in installed}
     packages = list(transaction.get_transaction_packages())
@@ -230,6 +249,9 @@ def _describe(transaction, installed, without_target: dict[str, str], result: Au
         for old in tp.get_replaces():
             if old.get_name() != tp.get_package().get_name():
                 successors.setdefault(old.get_name(), set()).add(tp.get_package().get_name())
+    result.removal_needs = {p.get_name(): needs for action, p in items
+                            if action == "Remove" and p.get_name() in result.removed
+                            and (needs := _unmet(p, installed, available))}
     result.replaced, result.orphaned = sort_out(without_target, result.removed, successors)
     result.downgrades = sorted(f"{p.get_name()} {versions.get(p.get_name(), '?')} → {p.get_evr()}"
                                for action, p in items if action == "Downgrade")

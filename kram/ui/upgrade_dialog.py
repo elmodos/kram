@@ -32,6 +32,7 @@ from .package_model import human_size
 
 COPR_TIMEOUT_MS = 30000
 LOG_HEIGHT = 150
+MAX_SHOWN_NEEDS = 3
 # keys of the simulation's reports (upgrade_audit.Report)
 AUDIT_MESSAGES = {
     "downloading": N_("Downloading {name}"),
@@ -298,7 +299,8 @@ class UpgradeDialog(QDialog):
         self._result_items = []
         version = self.target
         self._category(ERROR, _("Problems that stop the upgrade: {n}"), r.blockers, expanded=True)
-        self._category(WARN, _("Would be removed: {n}"), r.removed, expanded=True)
+        self._category(WARN, _("Would be removed: {n}"), [self._removal_line(name, r) for name in r.removed],
+                       expanded=True)
         self._category(WARN, _("Stay as they are, with no updates from Fedora {version}: {n}"), r.orphaned,
                        expanded=True)
         self._category(INFO, _("Replaced by other packages: {n}"), r.replaced, expanded=False)
@@ -315,6 +317,14 @@ class UpgradeDialog(QDialog):
                                             needed=human_size(r.needed), free=human_size(r.free))
         warning = " ⚠ " + _("Not enough free disk space.") if r.free < r.needed else ""
         self.status.setText(f"{verdict} {details}{warning}")
+
+    @staticmethod
+    def _removal_line(name: str, r: AuditResult) -> str:
+        needs = r.removal_needs.get(name)
+        if not needs:
+            return name
+        what = ", ".join(needs[:MAX_SHOWN_NEEDS]) + (", …" if len(needs) > MAX_SHOWN_NEEDS else "")
+        return _("{name} — needs {what}").format(name=name, what=what)
 
     def _category(self, kind: str | None, title: str, lines: list[str], expanded: bool) -> None:
         if not lines:

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kram\n"
 "Report-Msgid-Bugs-To: https://github.com/elmodos/kram/issues\n"
-"POT-Creation-Date: 2026-11-09 22:39+0200\n"
+"POT-Creation-Date: 2026-11-09 22:57+0200\n"
 "PO-Revision-Date: 2026-11-04 14:07+0200\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -1796,7 +1796,7 @@ msgstr "저장소를 불러오는 중…"
 msgid "Refreshing repository metadata…"
 msgstr "저장소 메타데이터를 새로 고치는 중…"
 
-#: kram/ui/progress_dialog.py:38 kram/ui/upgrade_dialog.py:40
+#: kram/ui/progress_dialog.py:38 kram/ui/upgrade_dialog.py:41
 #, python-brace-format
 msgid "Mirror unavailable: {url}: {error}"
 msgstr "미러를 사용할 수 없음: {url}: {error}"
@@ -1843,12 +1843,12 @@ msgid "The transaction has {n} package. Downloading…"
 msgid_plural "The transaction has {n} packages. Downloading…"
 msgstr[0] "트랜잭션에 패키지 {n}개가 있습니다. 다운로드 중…"
 
-#: kram/ui/progress_dialog.py:155 kram/ui/upgrade_dialog.py:37
+#: kram/ui/progress_dialog.py:155 kram/ui/upgrade_dialog.py:38
 #, python-brace-format
 msgid "Downloading {name}"
 msgstr "{name} 다운로드 중"
 
-#: kram/ui/progress_dialog.py:160 kram/ui/upgrade_dialog.py:39
+#: kram/ui/progress_dialog.py:160 kram/ui/upgrade_dialog.py:40
 #, python-brace-format
 msgid "Download failed: {error}"
 msgstr "다운로드 실패: {error}"
@@ -1899,7 +1899,7 @@ msgid "Key {key_id}: rejected"
 msgstr "키 {key_id}: 거부됨"
 
 #: kram/ui/progress_dialog.py:233 kram/ui/progress_dialog.py:234
-#: kram/ui/upgrade_dialog.py:285
+#: kram/ui/upgrade_dialog.py:296
 msgid "Done."
 msgstr "완료."
 
@@ -1982,59 +1982,47 @@ msgstr ""
 "아직 사용자 정의 필터가 없습니다.\n"
 "마우스 오른쪽 단추를 눌러 만드십시오."
 
-#: kram/ui/upgrade_dialog.py:38
+#: kram/ui/upgrade_dialog.py:39
 #, python-brace-format
 msgid "Downloaded {name} ({size})"
 msgstr "{name} 내려받음 ({size})"
 
-#: kram/ui/upgrade_dialog.py:41
+#: kram/ui/upgrade_dialog.py:42
 msgid "Working out the upgrade…"
 msgstr "업그레이드를 계산하는 중…"
 
-#: kram/ui/upgrade_dialog.py:42
+#: kram/ui/upgrade_dialog.py:43
 msgid "It does not work as it is. Trying again with removing packages allowed…"
 msgstr "이대로는 되지 않습니다. 패키지 삭제를 허용하고 다시 시도하는 중…"
 
-#: kram/ui/upgrade_dialog.py:43
+#: kram/ui/upgrade_dialog.py:44
 msgid "Deleting the downloaded package lists…"
 msgstr "내려받은 패키지 목록을 삭제하는 중…"
 
-#: kram/ui/upgrade_dialog.py:84
+#: kram/ui/upgrade_dialog.py:85
 #, python-brace-format
 msgid "Fedora {version} is available"
 msgstr "Fedora {version} 사용 가능"
 
-#: kram/ui/upgrade_dialog.py:85
+#: kram/ui/upgrade_dialog.py:86
 #, python-brace-format
 msgid "You have Fedora {version}, supported until {date}."
 msgstr "현재 Fedora {version}이며 {date}까지 지원됩니다."
 
-#: kram/ui/upgrade_dialog.py:86
+#: kram/ui/upgrade_dialog.py:87
 #, python-brace-format
 msgid "You have Fedora {version}."
 msgstr "현재 Fedora {version}입니다."
 
-#: kram/ui/upgrade_dialog.py:87
+#: kram/ui/upgrade_dialog.py:88
 msgid "Kram does not upgrade the system itself."
 msgstr "Kram은 시스템을 직접 업그레이드하지 않습니다."
 
-#: kram/ui/upgrade_dialog.py:94
-msgid "Release notes"
-msgstr "릴리스 노트"
-
-#: kram/ui/upgrade_dialog.py:95
-msgid "Upgrade guide"
-msgstr "업그레이드 안내서"
-
-#: kram/ui/upgrade_dialog.py:98
+#: kram/ui/upgrade_dialog.py:93
 msgid "Check"
 msgstr "확인"
 
-#: kram/ui/upgrade_dialog.py:107
-msgid "COPR projects: checking…"
-msgstr "COPR 프로젝트: 확인 중…"
-
-#: kram/ui/upgrade_dialog.py:119
+#: kram/ui/upgrade_dialog.py:97
 #, python-brace-format
 msgid ""
 "Check simulates the upgrade and changes nothing on this system. It downloads "
@@ -2043,110 +2031,122 @@ msgstr ""
 "'확인'은 업그레이드를 시뮬레이션하며 시스템을 변경하지 않습니다. Fedora "
 "{version} 패키지 목록(약 80 MB)을 내려받습니다."
 
-#: kram/ui/upgrade_dialog.py:137
+#: kram/ui/upgrade_dialog.py:107
+msgid "COPR projects: checking…"
+msgstr "COPR 프로젝트: 확인 중…"
+
+#: kram/ui/upgrade_dialog.py:131
+msgid "Release notes"
+msgstr "릴리스 노트"
+
+#: kram/ui/upgrade_dialog.py:134
+msgid "Upgrade guide"
+msgstr "업그레이드 안내서"
+
+#: kram/ui/upgrade_dialog.py:140
 #, python-brace-format
 msgid "Open {program}"
 msgstr "{program} 열기"
 
-#: kram/ui/upgrade_dialog.py:174
+#: kram/ui/upgrade_dialog.py:184
 #, python-brace-format
 msgid "{project} ({n} installed)"
 msgstr "{project} ({n}개 설치됨)"
 
-#: kram/ui/upgrade_dialog.py:196
+#: kram/ui/upgrade_dialog.py:206
 #, python-brace-format
 msgid "COPR projects without a build for Fedora {version}: {n}"
 msgstr "Fedora {version} 빌드가 없는 COPR 프로젝트: {n}"
 
-#: kram/ui/upgrade_dialog.py:201
+#: kram/ui/upgrade_dialog.py:211
 msgid "No COPR projects are enabled."
 msgstr "활성화된 COPR 프로젝트가 없습니다."
 
-#: kram/ui/upgrade_dialog.py:204
+#: kram/ui/upgrade_dialog.py:214
 #, python-brace-format
 msgid "Every enabled COPR project has a build for Fedora {version}."
 msgstr "활성화된 모든 COPR 프로젝트에 Fedora {version} 빌드가 있습니다."
 
-#: kram/ui/upgrade_dialog.py:208
+#: kram/ui/upgrade_dialog.py:218
 #, python-brace-format
 msgid "COPR projects: the rest have a build for Fedora {version}."
 msgstr "COPR 프로젝트: 나머지는 Fedora {version} 빌드가 있습니다."
 
-#: kram/ui/upgrade_dialog.py:212
+#: kram/ui/upgrade_dialog.py:222
 #, python-brace-format
 msgid "COPR projects that could not be checked: {n}"
 msgstr "확인하지 못한 COPR 프로젝트: {n}"
 
-#: kram/ui/upgrade_dialog.py:238
+#: kram/ui/upgrade_dialog.py:248
 #, python-brace-format
 msgid ""
 "Downloading the package lists of Fedora {version}. This can take a while…"
 msgstr ""
 "Fedora {version} 패키지 목록을 내려받는 중입니다. 시간이 걸릴 수 있습니다…"
 
-#: kram/ui/upgrade_dialog.py:254
+#: kram/ui/upgrade_dialog.py:265
 #, python-brace-format
 msgid "{name}: {done} of {total}"
 msgstr "{name}: {done} / {total}"
 
-#: kram/ui/upgrade_dialog.py:256
+#: kram/ui/upgrade_dialog.py:267
 #, python-brace-format
 msgid "Still downloading: {items}"
 msgstr "아직 내려받는 중: {items}"
 
-#: kram/ui/upgrade_dialog.py:265 kram/ui/upgrade_dialog.py:266
+#: kram/ui/upgrade_dialog.py:276 kram/ui/upgrade_dialog.py:277
 msgid "Cancelling…"
 msgstr "취소하는 중…"
 
-#: kram/ui/upgrade_dialog.py:280
+#: kram/ui/upgrade_dialog.py:291
 #, python-brace-format
 msgid "Could not check: {error}"
 msgstr "확인할 수 없습니다: {error}"
 
-#: kram/ui/upgrade_dialog.py:290
+#: kram/ui/upgrade_dialog.py:301
 #, python-brace-format
 msgid "Problems that stop the upgrade: {n}"
 msgstr "업그레이드를 막는 문제: {n}"
 
-#: kram/ui/upgrade_dialog.py:291
+#: kram/ui/upgrade_dialog.py:302
 #, python-brace-format
 msgid "Would be removed: {n}"
 msgstr "삭제될 항목: {n}"
 
-#: kram/ui/upgrade_dialog.py:292
+#: kram/ui/upgrade_dialog.py:303
 #, python-brace-format
 msgid "Stay as they are, with no updates from Fedora {version}: {n}"
 msgstr "그대로 남고 Fedora {version} 업데이트가 없는 항목: {n}"
 
-#: kram/ui/upgrade_dialog.py:294
+#: kram/ui/upgrade_dialog.py:305
 #, python-brace-format
 msgid "Replaced by other packages: {n}"
 msgstr "다른 패키지로 대체되는 항목: {n}"
 
-#: kram/ui/upgrade_dialog.py:295
+#: kram/ui/upgrade_dialog.py:306
 #, python-brace-format
 msgid "Would be downgraded: {n}"
 msgstr "다운그레이드될 항목: {n}"
 
-#: kram/ui/upgrade_dialog.py:296
+#: kram/ui/upgrade_dialog.py:307
 #, python-brace-format
 msgid "Repositories with nothing for Fedora {version}: {n}"
 msgstr "Fedora {version} 패키지가 없는 저장소: {n}"
 
-#: kram/ui/upgrade_dialog.py:299
+#: kram/ui/upgrade_dialog.py:310
 #, python-brace-format
 msgid "The upgrade to Fedora {version} cannot be worked out as things are."
 msgstr "현재 상태로는 Fedora {version} 업그레이드를 계산할 수 없습니다."
 
-#: kram/ui/upgrade_dialog.py:302
+#: kram/ui/upgrade_dialog.py:313
 msgid "The upgrade works only if packages are removed."
 msgstr "패키지를 삭제해야만 업그레이드할 수 있습니다."
 
-#: kram/ui/upgrade_dialog.py:302
+#: kram/ui/upgrade_dialog.py:313
 msgid "The upgrade works."
 msgstr "업그레이드할 수 있습니다."
 
-#: kram/ui/upgrade_dialog.py:303
+#: kram/ui/upgrade_dialog.py:314
 #, python-brace-format
 msgid ""
 "Upgrades: {upgrades}, new packages: {installs}. To download: {download}. "
@@ -2155,9 +2155,14 @@ msgstr ""
 "업그레이드: {upgrades}, 새 패키지: {installs}. 내려받을 크기: {download}. 필"
 "요: {needed}, 여유: {free}."
 
-#: kram/ui/upgrade_dialog.py:306
+#: kram/ui/upgrade_dialog.py:317
 msgid "Not enough free disk space."
 msgstr "디스크 여유 공간이 부족합니다."
+
+#: kram/ui/upgrade_dialog.py:326
+#, python-brace-format
+msgid "{name} — needs {what}"
+msgstr "{name} — {what} 필요"
 
 #: kram/ui/whats_new.py:16
 msgid "What's New in Kram"
