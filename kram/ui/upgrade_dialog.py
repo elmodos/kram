@@ -84,15 +84,21 @@ class UpgradeDialog(QDialog):
         lay.addWidget(QLabel("<b>" + html.escape(_("Fedora {version} is available").format(version=target)) + "</b>"))
         have = _("You have Fedora {version}, supported until {date}.").format(version=running, date=running_eol) \
             if running_eol else _("You have Fedora {version}.").format(version=running)
-        row = QHBoxLayout()
         info = QLabel(have + " " + _("Kram does not upgrade the system itself."))
         info.setWordWrap(True)
-        row.addWidget(info, 1)
+        lay.addWidget(info)
+
+        panel = QHBoxLayout()
         self.check = QPushButton(QIcon.fromTheme("security-high", QIcon.fromTheme("edit-find")), _("Check"))
         self.check.setDefault(True)  # the main action here
         self.check.clicked.connect(self.start_check)
-        row.addWidget(self.check)
-        lay.addLayout(row)
+        panel.addWidget(self.check)
+        self._intro = _("Check simulates the upgrade and changes nothing on this system. It downloads the "
+                        "package lists of Fedora {version} (about 80 MB).").format(version=target)
+        self.status = QLabel(self._intro)
+        self.status.setWordWrap(True)
+        panel.addWidget(self.status, 1)
+        lay.addLayout(panel)
 
         self.tree = QTreeWidget()
         self.tree.setHeaderHidden(True)
@@ -109,11 +115,6 @@ class UpgradeDialog(QDialog):
         lay.addWidget(self.log)
         self._reported.connect(self._on_report)
 
-        self._intro = _("Check simulates the upgrade and changes nothing on this system. It downloads the "
-                        "package lists of Fedora {version} (about 80 MB).").format(version=target)
-        self.status = QLabel(self._intro)
-        self.status.setWordWrap(True)
-        lay.addWidget(self.status)
         self.busy = QProgressBar()
         self.busy.setRange(0, 0)
         self.busy.hide()

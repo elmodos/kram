@@ -392,6 +392,8 @@ def test_the_three_links_sit_at_the_bottom_left(monkeypatch):
     assert xs == sorted(xs)
     assert len({b.y() for b in (dlg.notes_button, dlg.guide_button, dlg.open_program)}) == 1
     assert dlg.check.y() < dlg.tree.y() < dlg.notes_button.y()
+    assert dlg.check.x() + dlg.check.width() <= dlg.status.x()  # what Check does, right beside it
+    assert dlg.check.geometry().center().y() == dlg.status.geometry().center().y()
     assert dlg.open_program.text() == "Open Discover"
     dlg.notes_button.click()
     dlg.guide_button.click()
