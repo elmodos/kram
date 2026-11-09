@@ -355,6 +355,48 @@ line per description and can shrink: the text wraps, and the list scrolls when t
 No per-version pruning ("remove already upgraded packages"): with `keepcache=False` dnf keeps none, and for
 PackageKit cleaning all its rpms is simpler.
 
+**New Fedora release** (designed 2026-11-09): Kram tells that a new major release exists and audits what moving to it
+would do. It never offers the upgrade itself: that is too much responsibility.
+- **Setting**: Settings → "Watch Fedora Releases", a checkbox, on by default. Its tooltip says Kram asks Bodhi.
+- **Source of truth**: Bodhi, `https://bodhi.fedoraproject.org/releases/?rows_per_page=100&exclude_archived=true` (under
+  a second, 12 kB). Keep `id_prefix == "FEDORA"`, `state == "current"` and a numeric `version`: 43, 44 and 45 on
+  2026-11-09, while F46 is `pending`. `eol` gives the end of support. `fedoraproject.org/releases.json` mixes in "45 Beta".
+- **When**: only on Reload, not on "Reload from cache" and not at start. From the GUI process with
+  `QNetworkAccessManager`, as the Copr search does; no helper. A failed request is silent and the last result stays.
+- **Which systems**: `/etc/os-release` with `ID=fedora` and a numeric `VERSION_ID`; nothing on Rawhide, ELN or derivatives.
+- **Target**: the newest current release above the running one, at most +2, the longest jump Fedora supports.
+- **Toolbar button**: after COPR, hidden unless there is a target, text "Fedora 45", tooltip "Fedora 45 is available, you
+  have 44". Icon `fedora-logo-icon` (fedora-logos), falling back to `system-upgrade`. The result is kept between runs in
+  the settings and goes away when the system reaches that release or the setting is turned off.
+- **Dialog**: the end of support of the running release, then the audit. Kram has no upgrade action of its own and no
+  command to copy: links to the official upgrade guide and release notes, and a button beside them, at the bottom left, that hands over to the program
+  that can upgrade, opened on its updates page: "Open Discover" (`plasma-discover --mode Update`) or "Open GNOME Software"
+  (`gnome-software --mode=updates`). If both are installed, the one matching `XDG_CURRENT_DESKTOP`; if neither, no button.
+- **Audit, COPR part**: runs when the dialog opens. For each enabled COPR project, whether it has a `fedora-45-<arch>`
+  chroot, with its installed package count (`/api_3/project`, 4 projects in 4.3 s).
+- **Audit, simulation**: starts with a "Check" button, because it downloads metadata (82 MB and 68 s on the author's
+  laptop; resolving takes 2 s). A separate libdnf5 Base on the dnf thread with `releasever` set to the target and its
+  own cache directory, unprivileged, `Goal.add_rpm_distro_sync()`, resolved and never run: first without
+  `allow_erasing`, whose problems are the blockers, then with it for what the upgrade would do. It shows blockers, what
+  is removed (without the rotation of old kernels; each with what it requires that the target does not provide),
+  packages the target has no package of that name for, told apart by
+  what really happens (replaced by another package through Obsoletes, as libgit2 by libgit2_1.9, or staying as they are
+  with no updates; a mere change of arch is an upgrade), downgrades,
+  enabled repositories without packages for the target, and the download size against free disk space.
+  The result stays in memory for the session; the metadata is deleted when the dialog closes.
+- **Prototype on the author's laptop** (Fedora 44 → 45): all 16 repositories and 4 COPR projects have builds, yet the
+  upgrade does not resolve without erasing: `VirtualBox-7.2` needs `libvpx.so.9`. With erasing: 2993 upgrades, 50 installs,
+  20 downgrades, 5366 MB, and 18 installed packages have nothing in 45. So the COPR check alone would have said "fine".
+- **As built (2026-11-09)**: `kram/core/distro.py` (Bodhi, the target, the upgrade program), `kram/core/upgrade_audit.py`
+  (the simulation; it deletes its metadata as soon as it has the answer, not when the dialog closes, so closing the dialog
+  during a check leaves nothing behind), `kram/ui/upgrade_dialog.py` (kept for the session, so a finished check stays).
+  A check holds the dnf thread for as long as its download takes, so the dialog cannot be closed meanwhile (it is modal:
+  the rest of Kram waits with it, and nothing looks broken for no visible reason). Cancel stops the transfers through
+  libdnf5's download callbacks and deletes the metadata, in 3 s against a server that accepts and then says nothing; the
+  last seconds, reading and resolving, cannot be interrupted. A log under the results follows it, as in the progress
+  dialog: each repository started and finished, mirror failures and the steps of the resolve. After 5 s of silence it says
+  what is still downloading, and the bar shows the known bytes.
+
 **Local .rpm installer** (designed 2026-11-07, target 0.2.0; was postponed for security reasons on 2026-11-05).
 A gdebi-style dialog for one package file.
 - **Opening it**: File → "Open Package File…" and dropping an `.rpm` on the main window (window-modal over it);

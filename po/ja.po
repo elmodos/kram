@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kram\n"
 "Report-Msgid-Bugs-To: https://github.com/elmodos/kram/issues\n"
-"POT-Creation-Date: 2026-11-09 18:22+0200\n"
+"POT-Creation-Date: 2026-11-09 23:05+0200\n"
 "PO-Revision-Date: 2026-11-04 14:07+0200\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -380,7 +380,7 @@ msgstr "同等のコマンド"
 msgid "Download packages only"
 msgstr "パッケージのダウンロードのみ"
 
-#: kram/ui/apply_dialog.py:243 kram/ui/main_window.py:142
+#: kram/ui/apply_dialog.py:243 kram/ui/main_window.py:148
 msgid "Apply"
 msgstr "適用"
 
@@ -396,7 +396,7 @@ msgstr "ディスク使用量の変化: {size}。"
 
 #: kram/ui/apply_dialog.py:281 kram/ui/install_dialog.py:191
 #: kram/ui/install_dialog.py:207 kram/ui/install_dialog.py:264
-#: kram/ui/main_window.py:939
+#: kram/ui/main_window.py:957
 msgid "Resolving dependencies…"
 msgstr "依存関係を解決しています…"
 
@@ -405,7 +405,7 @@ msgid "These choices cannot be carried out:"
 msgstr "この選択は実行できません:"
 
 #: kram/ui/apply_dialog.py:296 kram/ui/install_dialog.py:258
-#: kram/ui/install_dialog.py:288 kram/ui/main_window.py:941
+#: kram/ui/install_dialog.py:288 kram/ui/main_window.py:959
 #, python-brace-format
 msgid ""
 "Could not resolve the changes:\n"
@@ -792,7 +792,7 @@ msgid "text"
 msgstr "テキスト"
 
 #: kram/ui/filters_dialog.py:134 kram/ui/filters_dialog.py:333
-#: kram/ui/main_window.py:690
+#: kram/ui/main_window.py:707
 msgid "Custom Filters"
 msgstr "カスタムフィルター"
 
@@ -800,7 +800,7 @@ msgstr "カスタムフィルター"
 msgid "New"
 msgstr "新規"
 
-#: kram/ui/filters_dialog.py:153 kram/ui/main_window.py:687
+#: kram/ui/filters_dialog.py:153 kram/ui/main_window.py:704
 msgid "New filter"
 msgstr "新しいフィルター"
 
@@ -931,11 +931,11 @@ msgstr "スクリプト"
 msgid "Reading {file}…"
 msgstr "{file} を読み込み中…"
 
-#: kram/ui/install_dialog.py:188 kram/ui/main_window.py:416
+#: kram/ui/install_dialog.py:188 kram/ui/main_window.py:433
 msgid "Loading metadata…"
 msgstr "メタデータを読み込んでいます…"
 
-#: kram/ui/install_dialog.py:215 kram/ui/main_window.py:458
+#: kram/ui/install_dialog.py:215 kram/ui/main_window.py:475
 #, python-brace-format
 msgid ""
 "Could not load the package catalog:\n"
@@ -1168,250 +1168,263 @@ msgstr "確認できません: {path}"
 msgid "Installing {name}"
 msgstr "{name} をインストール中"
 
-#: kram/ui/main_window.py:54
+#: kram/ui/main_window.py:56
 msgid "Coming in a later version"
 msgstr "今後のバージョンで対応予定"
 
-#: kram/ui/main_window.py:58
+#: kram/ui/main_window.py:61
 msgid "Follow System Settings"
 msgstr "システム設定に従う"
 
-#: kram/ui/main_window.py:59
+#: kram/ui/main_window.py:62
 msgid "Text Under Icons"
 msgstr "アイコンの下にテキスト"
 
-#: kram/ui/main_window.py:60
+#: kram/ui/main_window.py:63
 msgid "Compact: Text Beside Icons"
 msgstr "コンパクト: アイコンの横にテキスト"
 
-#: kram/ui/main_window.py:61
+#: kram/ui/main_window.py:64
 msgid "Icons Only"
 msgstr "アイコンのみ"
 
-#: kram/ui/main_window.py:67
+#: kram/ui/main_window.py:70
 msgid "Metadata: unknown age"
 msgstr "メタデータ: 経過時間不明"
 
-#: kram/ui/main_window.py:69
+#: kram/ui/main_window.py:72
 #, python-brace-format
 msgid "Metadata: {minutes} min ago"
 msgstr "メタデータ: {minutes} 分前"
 
-#: kram/ui/main_window.py:71
+#: kram/ui/main_window.py:74
 #, python-brace-format
 msgid "Metadata: {hours} h {minutes} min ago"
 msgstr "メタデータ: {hours} 時間 {minutes} 分前"
 
-#: kram/ui/main_window.py:72
+#: kram/ui/main_window.py:75
 #, python-brace-format
 msgid "Metadata: {days} d ago"
 msgstr "メタデータ: {days} 日前"
 
-#: kram/ui/main_window.py:80
+#: kram/ui/main_window.py:83
 msgid "Package Manager"
 msgstr "パッケージマネージャー"
 
-#: kram/ui/main_window.py:132
+#: kram/ui/main_window.py:138
 msgid "Reload"
 msgstr "再読み込み"
 
-#: kram/ui/main_window.py:133
+#: kram/ui/main_window.py:139
 msgid "Refresh repository metadata and reload the catalog (needs a password)"
 msgstr ""
 "リポジトリのメタデータを更新してカタログを再読み込み (パスワードが必要)"
 
-#: kram/ui/main_window.py:134
+#: kram/ui/main_window.py:140
 msgid "Reload from cache"
 msgstr "キャッシュから再読み込み"
 
-#: kram/ui/main_window.py:135
+#: kram/ui/main_window.py:141
 msgid "Reload the catalog from the local cache, without network or password"
 msgstr ""
 "ローカルキャッシュからカタログを再読み込み (ネットワークもパスワードも不要)"
 
-#: kram/ui/main_window.py:137
+#: kram/ui/main_window.py:143
 msgid "Mark All Upgrades"
 msgstr "すべてのアップグレードを指定"
 
-#: kram/ui/main_window.py:138
+#: kram/ui/main_window.py:144
 msgid "Mark every package that has a newer version for upgrade"
 msgstr "新しいバージョンがあるすべてのパッケージをアップグレード指定"
 
-#: kram/ui/main_window.py:143
+#: kram/ui/main_window.py:149
 msgid "Review and apply the marked changes"
 msgstr "指定した変更を確認して適用"
 
-#: kram/ui/main_window.py:145
+#: kram/ui/main_window.py:151
 msgid "Unmark All"
 msgstr "すべての指定を解除"
 
-#: kram/ui/main_window.py:146
+#: kram/ui/main_window.py:152
 msgid "Discard all marked changes"
 msgstr "指定したすべての変更を破棄"
 
-#: kram/ui/main_window.py:148
+#: kram/ui/main_window.py:154
 msgid "Properties"
 msgstr "プロパティ"
 
-#: kram/ui/main_window.py:150 kram/ui/repos_dialog.py:30
+#: kram/ui/main_window.py:156 kram/ui/repos_dialog.py:30
 msgid "Repositories"
 msgstr "リポジトリ"
 
-#: kram/ui/main_window.py:151
+#: kram/ui/main_window.py:157
 msgid "Enable or disable software repositories"
 msgstr "ソフトウェアリポジトリを有効化または無効化"
 
-#: kram/ui/main_window.py:152
+#: kram/ui/main_window.py:158
 msgid "Custom Filters…"
 msgstr "カスタムフィルター…"
 
-#: kram/ui/main_window.py:153
+#: kram/ui/main_window.py:159
 msgid "Create and edit your own filters for the sidebar"
 msgstr "サイドバー用の独自フィルターを作成・編集"
 
-#: kram/ui/main_window.py:154
+#: kram/ui/main_window.py:160
 msgid "New Filter from Current View…"
 msgstr "現在の表示から新しいフィルター…"
 
-#: kram/ui/main_window.py:156
+#: kram/ui/main_window.py:162
 msgid "A custom filter with the current sidebar selection and search"
 msgstr "サイドバーの現在の選択と検索からカスタムフィルターを作成"
 
-#: kram/ui/main_window.py:157
+#: kram/ui/main_window.py:163
 msgid "COPR"
 msgstr "COPR"
 
-#: kram/ui/main_window.py:158
+#: kram/ui/main_window.py:164
 msgid "Manage COPR projects: community repositories"
 msgstr "COPR プロジェクトを管理: コミュニティのリポジトリ"
 
-#: kram/ui/main_window.py:159
+#: kram/ui/main_window.py:165
 msgid "Package Cache…"
 msgstr "パッケージキャッシュ…"
 
-#: kram/ui/main_window.py:160
+#: kram/ui/main_window.py:166
 msgid "See how much space the package caches take and clean them"
 msgstr "パッケージキャッシュの使用量を確認して消去します"
 
-#: kram/ui/main_window.py:161
+#: kram/ui/main_window.py:167
+msgid "Watch Fedora Releases"
+msgstr "Fedora のリリースを監視"
+
+#: kram/ui/main_window.py:168
+msgid "On Reload, ask Fedora's Bodhi service whether a new release is out"
+msgstr ""
+"再読み込み時に Fedora の Bodhi サービスに新しいリリースの有無を問い合わせます"
+
+#: kram/ui/main_window.py:172
+msgid "A new Fedora release"
+msgstr "新しい Fedora リリース"
+
+#: kram/ui/main_window.py:175
 msgid "Find"
 msgstr "検索"
 
-#: kram/ui/main_window.py:163
+#: kram/ui/main_window.py:177
 msgid "Back"
 msgstr "戻る"
 
-#: kram/ui/main_window.py:164
+#: kram/ui/main_window.py:178
 msgid "Go back to the previous package (after following a dependency)"
 msgstr "前のパッケージに戻る (依存関係をたどった後)"
 
-#: kram/ui/main_window.py:165
+#: kram/ui/main_window.py:179
 msgid "Save Markings As…"
 msgstr "指定を名前を付けて保存…"
 
-#: kram/ui/main_window.py:166
+#: kram/ui/main_window.py:180
 msgid "Save the marked changes to a text file"
 msgstr "指定した変更をテキストファイルに保存"
 
-#: kram/ui/main_window.py:168
+#: kram/ui/main_window.py:182
 msgid "Read Markings…"
 msgstr "指定を読み込み…"
 
-#: kram/ui/main_window.py:169
+#: kram/ui/main_window.py:183
 msgid "Mark the changes listed in a saved markings file"
 msgstr "保存した指定ファイルに記載された変更を指定"
 
-#: kram/ui/main_window.py:171
+#: kram/ui/main_window.py:185
 msgid "Open Package File…"
 msgstr "パッケージファイルを開く…"
 
-#: kram/ui/main_window.py:172
+#: kram/ui/main_window.py:186
 msgid "Install a downloaded .rpm file (you can also drop it on the window)"
 msgstr ""
 "ダウンロードした .rpm ファイルをインストールします (ウィンドウにドロップする"
 "こともできます)"
 
-#: kram/ui/main_window.py:174
+#: kram/ui/main_window.py:188
 msgid "Quit"
 msgstr "終了"
 
-#: kram/ui/main_window.py:175
+#: kram/ui/main_window.py:189
 msgid "Copy Name"
 msgstr "名前をコピー"
 
-#: kram/ui/main_window.py:176
+#: kram/ui/main_window.py:190
 msgid "Copy name-version-release.arch"
 msgstr "名前-バージョン-リリース.アーキテクチャ をコピー"
 
-#: kram/ui/main_window.py:182 kram/ui/main_window.py:728
+#: kram/ui/main_window.py:196 kram/ui/main_window.py:745
 msgid "About Kram"
 msgstr "Kram について"
 
-#: kram/ui/main_window.py:186
+#: kram/ui/main_window.py:200
 msgid "Mark for Installation"
 msgstr "インストール指定"
 
-#: kram/ui/main_window.py:187
+#: kram/ui/main_window.py:201
 msgid "Mark for Upgrade"
 msgstr "アップグレード指定"
 
-#: kram/ui/main_window.py:188
+#: kram/ui/main_window.py:202
 msgid "Mark for Reinstallation"
 msgstr "再インストール指定"
 
-#: kram/ui/main_window.py:189
+#: kram/ui/main_window.py:203
 msgid "Mark for Removal"
 msgstr "削除指定"
 
-#: kram/ui/main_window.py:190
+#: kram/ui/main_window.py:204
 msgid "Mark as Installed by User"
 msgstr "ユーザーがインストールしたものとしてマーク"
 
-#: kram/ui/main_window.py:191
+#: kram/ui/main_window.py:205
 msgid "Mark as Dependency"
 msgstr "依存関係としてマーク"
 
-#: kram/ui/main_window.py:197
+#: kram/ui/main_window.py:211
 msgid "Downgrade to Version"
 msgstr "バージョンをダウングレード"
 
-#: kram/ui/main_window.py:200
+#: kram/ui/main_window.py:214
 msgid "Unmark"
 msgstr "指定解除"
 
-#: kram/ui/main_window.py:201
+#: kram/ui/main_window.py:215
 msgid "Unmark the selected packages"
 msgstr "選択したパッケージの指定を解除"
 
-#: kram/ui/main_window.py:236
+#: kram/ui/main_window.py:250
 msgid "&File"
 msgstr "ファイル(&F)"
 
-#: kram/ui/main_window.py:244
+#: kram/ui/main_window.py:258
 msgid "&Edit"
 msgstr "編集(&E)"
 
-#: kram/ui/main_window.py:250
+#: kram/ui/main_window.py:264
 msgid "&Package"
 msgstr "パッケージ(&P)"
 
-#: kram/ui/main_window.py:254
+#: kram/ui/main_window.py:268
 msgid "&Settings"
 msgstr "設定(&S)"
 
-#: kram/ui/main_window.py:259
+#: kram/ui/main_window.py:274
 msgid "Toolbar"
 msgstr "ツールバー"
 
-#: kram/ui/main_window.py:260
+#: kram/ui/main_window.py:275
 msgid "&Help"
 msgstr "ヘルプ(&H)"
 
-#: kram/ui/main_window.py:264
+#: kram/ui/main_window.py:279
 msgid "Main toolbar"
 msgstr "メインツールバー"
 
-#: kram/ui/main_window.py:278
+#: kram/ui/main_window.py:293
 msgid ""
 "Name / Name + summary / Description: instant ranked search.\n"
 "Provides: packages providing a capability (libvulkan.so.1, "
@@ -1430,27 +1443,27 @@ msgstr ""
 "複数の語: すべてが一致する必要があります。^先頭、末尾$、* と ? はワイルドカー"
 "ドです。"
 
-#: kram/ui/main_window.py:285
+#: kram/ui/main_window.py:300
 msgid "Search (Ctrl+F)"
 msgstr "検索 (Ctrl+F)"
 
-#: kram/ui/main_window.py:309
+#: kram/ui/main_window.py:324
 msgid "The list is filtered by the search text"
 msgstr "一覧は検索テキストで絞り込まれています"
 
-#: kram/ui/main_window.py:402
+#: kram/ui/main_window.py:419
 #, python-brace-format
 msgid "{n} marked change has not been applied. Quit anyway?"
 msgid_plural "{n} marked changes have not been applied. Quit anyway?"
 msgstr[0] "指定した変更 {n} 件がまだ適用されていません。終了しますか？"
 
-#: kram/ui/main_window.py:447
+#: kram/ui/main_window.py:464
 #, python-brace-format
 msgid "{n} repository has no metadata"
 msgid_plural "{n} repositories have no metadata"
 msgstr[0] "{n} 個のリポジトリにメタデータがありません"
 
-#: kram/ui/main_window.py:450
+#: kram/ui/main_window.py:467
 #, python-brace-format
 msgid ""
 "Not loaded, so their packages are missing from the list:\n"
@@ -1467,81 +1480,81 @@ msgstr ""
 "えば、この Fedora リリース向けのパッケージがまだない場合) は、設定 → リポジト"
 "リで無効にしてください。"
 
-#: kram/ui/main_window.py:457 kram/ui/main_window.py:807
+#: kram/ui/main_window.py:474 kram/ui/main_window.py:825
 #, python-brace-format
 msgid "Error: {error}"
 msgstr "エラー: {error}"
 
-#: kram/ui/main_window.py:496
+#: kram/ui/main_window.py:513
 #, python-brace-format
 msgid "Searching “{text}” ({mode})…"
 msgstr "「{text}」を検索しています ({mode})…"
 
-#: kram/ui/main_window.py:550
+#: kram/ui/main_window.py:567
 #, python-brace-format
 msgid "{n} upgrade"
 msgid_plural "{n} upgrades"
 msgstr[0] "アップグレード {n} 件"
 
-#: kram/ui/main_window.py:552
+#: kram/ui/main_window.py:569
 #, python-brace-format
 msgid "{shown} listed, {installed} installed, {upgrades}."
 msgstr "表示 {shown} 件、インストール済み {installed} 件、{upgrades}。"
 
-#: kram/ui/main_window.py:554
+#: kram/ui/main_window.py:571
 #, python-brace-format
 msgid "{install} to install/upgrade, {remove} to remove."
 msgstr "インストール/アップグレード {install} 件、削除 {remove} 件。"
 
-#: kram/ui/main_window.py:557
+#: kram/ui/main_window.py:574
 #, python-brace-format
 msgid "Catalog: {load:.2f} s, filter and search: {ms:.0f} ms"
 msgstr "カタログ: {load:.2f} 秒、フィルターと検索: {ms:.0f} ミリ秒"
 
-#: kram/ui/main_window.py:594
+#: kram/ui/main_window.py:611
 #, python-brace-format
 msgid "Nothing provides “{what}”"
 msgstr "「{what}」を提供するものはありません"
 
-#: kram/ui/main_window.py:607
+#: kram/ui/main_window.py:624
 #, python-brace-format
 msgid "Package {name} not found in the catalog"
 msgstr "パッケージ {name} はカタログに見つかりません"
 
-#: kram/ui/main_window.py:690
+#: kram/ui/main_window.py:707
 #, python-brace-format
 msgid "Delete the filter “{name}”?"
 msgstr "フィルター「{name}」を削除しますか？"
 
-#: kram/ui/main_window.py:711
+#: kram/ui/main_window.py:728
 msgid "Edit Filter…"
 msgstr "フィルターを編集…"
 
-#: kram/ui/main_window.py:712
+#: kram/ui/main_window.py:729
 msgid "Delete Filter"
 msgstr "フィルターを削除"
 
-#: kram/ui/main_window.py:717
+#: kram/ui/main_window.py:734
 msgid "Remove from History"
 msgstr "履歴から削除"
 
-#: kram/ui/main_window.py:719
+#: kram/ui/main_window.py:736
 msgid "Clear Search History"
 msgstr "検索履歴を消去"
 
-#: kram/ui/main_window.py:729
+#: kram/ui/main_window.py:746
 msgid "A Synaptic-style package manager for Fedora."
 msgstr "Synaptic スタイルの Fedora 向けパッケージマネージャー。"
 
-#: kram/ui/main_window.py:731
+#: kram/ui/main_window.py:748
 msgid "Released under the MIT License."
 msgstr "MIT ライセンスの下で公開されています。"
 
-#: kram/ui/main_window.py:734
+#: kram/ui/main_window.py:751
 msgid "What's New"
 msgstr "新機能"
 
-#: kram/ui/main_window.py:789
+#: kram/ui/main_window.py:807
 #, python-brace-format
 msgid ""
 "{n} installed package depends on the packages marked for removal and has to "
@@ -1553,25 +1566,25 @@ msgstr[0] ""
 "{n} 個のインストール済みパッケージが削除指定したパッケージに依存しているた"
 "め、一緒に削除する必要があります:"
 
-#: kram/ui/main_window.py:795
+#: kram/ui/main_window.py:813
 msgid "Mark"
 msgstr "指定する"
 
-#: kram/ui/main_window.py:825
+#: kram/ui/main_window.py:843
 #, python-brace-format
 msgid "{n} package marked for upgrade"
 msgid_plural "{n} packages marked for upgrade"
 msgstr[0] "{n} 個のパッケージをアップグレード指定しました"
 
-#: kram/ui/main_window.py:831 kram/ui/main_window.py:839
+#: kram/ui/main_window.py:849 kram/ui/main_window.py:857
 msgid "Save Markings"
 msgstr "指定を保存"
 
-#: kram/ui/main_window.py:833 kram/ui/main_window.py:849
+#: kram/ui/main_window.py:851 kram/ui/main_window.py:867
 msgid "Text files (*.txt);;All files (*)"
 msgstr "テキストファイル (*.txt);;すべてのファイル (*)"
 
-#: kram/ui/main_window.py:839
+#: kram/ui/main_window.py:857
 #, python-brace-format
 msgid ""
 "Could not save {path}:\n"
@@ -1582,18 +1595,18 @@ msgstr ""
 "\n"
 "{error}"
 
-#: kram/ui/main_window.py:844
+#: kram/ui/main_window.py:862
 #, python-brace-format
 msgid "{n} marking saved to {path}"
 msgid_plural "{n} markings saved to {path}"
 msgstr[0] "{n} 件の指定を {path} に保存しました"
 
-#: kram/ui/main_window.py:848 kram/ui/main_window.py:858
-#: kram/ui/main_window.py:880
+#: kram/ui/main_window.py:866 kram/ui/main_window.py:876
+#: kram/ui/main_window.py:898
 msgid "Read Markings"
 msgstr "指定を読み込む"
 
-#: kram/ui/main_window.py:858
+#: kram/ui/main_window.py:876
 #, python-brace-format
 msgid ""
 "Could not read {path}:\n"
@@ -1604,13 +1617,13 @@ msgstr ""
 "\n"
 "{error}"
 
-#: kram/ui/main_window.py:868
+#: kram/ui/main_window.py:886
 #, python-brace-format
 msgid "{n} package marked"
 msgid_plural "{n} packages marked"
 msgstr[0] "{n} 個のパッケージを指定しました"
 
-#: kram/ui/main_window.py:873
+#: kram/ui/main_window.py:891
 #, python-brace-format
 msgid ""
 "{n} marking no longer applies (package not found, already in that state, …):"
@@ -1620,59 +1633,64 @@ msgstr[0] ""
 "{n} 件の指定はもう適用できません (パッケージが見つからない、すでにその状態で"
 "ある、など):"
 
-#: kram/ui/main_window.py:877
+#: kram/ui/main_window.py:895
 #, python-brace-format
 msgid "{n} line is not a valid marking: {lines}"
 msgid_plural "{n} lines are not valid markings: {lines}"
 msgstr[0] "{n} 行は有効な指定ではありません: {lines}"
 
-#: kram/ui/main_window.py:881
+#: kram/ui/main_window.py:899
 #, python-brace-format
 msgid "{n} package marked."
 msgid_plural "{n} packages marked."
 msgstr[0] "{n} 個のパッケージを指定しました。"
 
-#: kram/ui/main_window.py:899
+#: kram/ui/main_window.py:917
 msgid "(loading…)"
 msgstr "(読み込み中…)"
 
-#: kram/ui/main_window.py:906
+#: kram/ui/main_window.py:924
 msgid "No older versions in the repositories"
 msgstr "リポジトリに古いバージョンはありません"
 
-#: kram/ui/main_window.py:946
+#: kram/ui/main_window.py:964
 msgid "Cannot apply changes"
 msgstr "変更を適用できません"
 
-#: kram/ui/main_window.py:947
+#: kram/ui/main_window.py:965
 msgid "The marked changes cannot be carried out. Unmark or change them."
 msgstr "指定した変更を実行できません。指定を解除するか変更してください。"
 
-#: kram/ui/main_window.py:962
+#: kram/ui/main_window.py:980
 msgid "Applying changes"
 msgstr "変更を適用しています"
 
-#: kram/ui/main_window.py:970
+#: kram/ui/main_window.py:988
 msgid "Refreshing metadata"
 msgstr "メタデータを更新しています"
 
-#: kram/ui/main_window.py:986
+#: kram/ui/main_window.py:1005
 msgid "Changing repositories"
 msgstr "リポジトリを変更しています"
 
-#: kram/ui/main_window.py:1014
+#: kram/ui/main_window.py:1033
 msgid "Downloading metadata again"
 msgstr "メタデータを再ダウンロードしています"
 
-#: kram/ui/main_window.py:1016
+#: kram/ui/main_window.py:1035
 msgid "Cleaning the package cache"
 msgstr "パッケージキャッシュを消去しています"
 
-#: kram/ui/main_window.py:1048
+#: kram/ui/main_window.py:1056
+#, python-brace-format
+msgid "Fedora {new} is available, you have {old}"
+msgstr "Fedora {new} が利用可能です（現在は {old}）"
+
+#: kram/ui/main_window.py:1121
 msgid "Open Package File"
 msgstr "パッケージファイルを開く"
 
-#: kram/ui/main_window.py:1049
+#: kram/ui/main_window.py:1122
 msgid "RPM packages (*.rpm)"
 msgstr "RPM パッケージ (*.rpm)"
 
@@ -1804,7 +1822,7 @@ msgstr "リポジトリを読み込んでいます…"
 msgid "Refreshing repository metadata…"
 msgstr "リポジトリのメタデータを更新しています…"
 
-#: kram/ui/progress_dialog.py:38
+#: kram/ui/progress_dialog.py:38 kram/ui/upgrade_dialog.py:41
 #, python-brace-format
 msgid "Mirror unavailable: {url}: {error}"
 msgstr "ミラーを利用できません: {url}: {error}"
@@ -1852,31 +1870,31 @@ msgid_plural "The transaction has {n} packages. Downloading…"
 msgstr[0] ""
 "トランザクションには {n} 個のパッケージがあります。ダウンロードしています…"
 
-#: kram/ui/progress_dialog.py:155
+#: kram/ui/progress_dialog.py:155 kram/ui/upgrade_dialog.py:38
 #, python-brace-format
 msgid "Downloading {name}"
 msgstr "{name} をダウンロードしています"
 
-#: kram/ui/progress_dialog.py:160
+#: kram/ui/progress_dialog.py:160 kram/ui/upgrade_dialog.py:40
 #, python-brace-format
 msgid "Download failed: {error}"
 msgstr "ダウンロードに失敗しました: {error}"
 
-#: kram/ui/progress_dialog.py:168
+#: kram/ui/progress_dialog.py:170
 #, python-brace-format
 msgid "Downloaded {done} of {total}"
 msgstr "{total} 中 {done} をダウンロード済み"
 
-#: kram/ui/progress_dialog.py:176
+#: kram/ui/progress_dialog.py:178
 msgid "Preparing the rpm transaction…"
 msgstr "rpm トランザクションを準備しています…"
 
-#: kram/ui/progress_dialog.py:204
+#: kram/ui/progress_dialog.py:206
 #, python-brace-format
 msgid "Package {index} of {count}"
 msgstr "パッケージ {index} / {count}"
 
-#: kram/ui/progress_dialog.py:212
+#: kram/ui/progress_dialog.py:214
 #, python-brace-format
 msgid ""
 "Import the OpenPGP key used to verify packages?\n"
@@ -1893,33 +1911,34 @@ msgstr ""
 "作成日: {created}\n"
 "取得元: {url}"
 
-#: kram/ui/progress_dialog.py:215
+#: kram/ui/progress_dialog.py:217
 msgid "Import key"
 msgstr "鍵をインポート"
 
-#: kram/ui/progress_dialog.py:216
+#: kram/ui/progress_dialog.py:218
 #, python-brace-format
 msgid "Key {key_id}: importing"
 msgstr "鍵 {key_id}: インポートしています"
 
-#: kram/ui/progress_dialog.py:216
+#: kram/ui/progress_dialog.py:218
 #, python-brace-format
 msgid "Key {key_id}: rejected"
 msgstr "鍵 {key_id}: 拒否しました"
 
-#: kram/ui/progress_dialog.py:231 kram/ui/progress_dialog.py:232
+#: kram/ui/progress_dialog.py:233 kram/ui/progress_dialog.py:234
+#: kram/ui/upgrade_dialog.py:301
 msgid "Done."
 msgstr "完了しました。"
 
-#: kram/ui/progress_dialog.py:231
+#: kram/ui/progress_dialog.py:233
 msgid "Packages downloaded."
 msgstr "パッケージをダウンロードしました。"
 
-#: kram/ui/progress_dialog.py:236 kram/ui/progress_dialog.py:250
+#: kram/ui/progress_dialog.py:238 kram/ui/progress_dialog.py:254
 msgid "unknown error"
 msgstr "不明なエラー"
 
-#: kram/ui/progress_dialog.py:238
+#: kram/ui/progress_dialog.py:240
 #, python-brace-format
 msgid ""
 "Another package operation is running: {process}. Try again when it has "
@@ -1928,11 +1947,11 @@ msgstr ""
 "別のパッケージ操作が実行中です: {process}。終了してからもう一度お試しくださ"
 "い。"
 
-#: kram/ui/progress_dialog.py:251
+#: kram/ui/progress_dialog.py:255
 msgid "Error:"
 msgstr "エラー:"
 
-#: kram/ui/progress_dialog.py:253
+#: kram/ui/progress_dialog.py:257
 #, python-brace-format
 msgid "ERROR: {message}"
 msgstr "エラー: {message}"
@@ -1991,6 +2010,195 @@ msgid ""
 msgstr ""
 "カスタムフィルターはまだありません。\n"
 "右クリックして作成します。"
+
+#: kram/ui/upgrade_dialog.py:39
+#, python-brace-format
+msgid "Downloaded {name} ({size})"
+msgstr "{name} をダウンロードしました（{size}）"
+
+#: kram/ui/upgrade_dialog.py:42
+msgid "Working out the upgrade…"
+msgstr "アップグレードを算出しています…"
+
+#: kram/ui/upgrade_dialog.py:43
+msgid "It does not work as it is. Trying again with removing packages allowed…"
+msgstr ""
+"このままでは実行できません。パッケージの削除を許可して再試行しています…"
+
+#: kram/ui/upgrade_dialog.py:44
+msgid "Deleting the downloaded package lists…"
+msgstr "ダウンロードしたパッケージ一覧を削除しています…"
+
+#: kram/ui/upgrade_dialog.py:85
+#, python-brace-format
+msgid "Fedora {version} is available"
+msgstr "Fedora {version} が利用可能です"
+
+#: kram/ui/upgrade_dialog.py:86
+#, python-brace-format
+msgid "You have Fedora {version}, supported until {date}."
+msgstr "現在は Fedora {version} で、{date} までサポートされます。"
+
+#: kram/ui/upgrade_dialog.py:87
+#, python-brace-format
+msgid "You have Fedora {version}."
+msgstr "現在は Fedora {version} です。"
+
+#: kram/ui/upgrade_dialog.py:88
+msgid "Kram does not upgrade the system itself."
+msgstr "Kram 自体はシステムをアップグレードしません。"
+
+#: kram/ui/upgrade_dialog.py:93
+msgid "Check"
+msgstr "確認"
+
+#: kram/ui/upgrade_dialog.py:97
+msgid "Cancel"
+msgstr "キャンセル"
+
+#: kram/ui/upgrade_dialog.py:105
+#, python-brace-format
+msgid ""
+"Check simulates the upgrade and changes nothing on this system. It downloads "
+"the package lists of Fedora {version} (about 80 MB)."
+msgstr ""
+"「確認」はアップグレードをシミュレートするだけで、システムは変更しません。"
+"Fedora {version} のパッケージ一覧（約 80 MB）をダウンロードします。"
+
+#: kram/ui/upgrade_dialog.py:115
+msgid "COPR projects: checking…"
+msgstr "COPR プロジェクト: 確認中…"
+
+#: kram/ui/upgrade_dialog.py:136
+msgid "Release notes"
+msgstr "リリースノート"
+
+#: kram/ui/upgrade_dialog.py:139
+msgid "Upgrade guide"
+msgstr "アップグレードガイド"
+
+#: kram/ui/upgrade_dialog.py:145
+#, python-brace-format
+msgid "Open {program}"
+msgstr "{program} を開く"
+
+#: kram/ui/upgrade_dialog.py:189
+#, python-brace-format
+msgid "{project} ({n} installed)"
+msgstr "{project}（インストール済み: {n}）"
+
+#: kram/ui/upgrade_dialog.py:211
+#, python-brace-format
+msgid "COPR projects without a build for Fedora {version}: {n}"
+msgstr "Fedora {version} のビルドがない COPR プロジェクト: {n}"
+
+#: kram/ui/upgrade_dialog.py:216
+msgid "No COPR projects are enabled."
+msgstr "有効な COPR プロジェクトはありません。"
+
+#: kram/ui/upgrade_dialog.py:219
+#, python-brace-format
+msgid "Every enabled COPR project has a build for Fedora {version}."
+msgstr ""
+"有効なすべての COPR プロジェクトに Fedora {version} のビルドがあります。"
+
+#: kram/ui/upgrade_dialog.py:223
+#, python-brace-format
+msgid "COPR projects: the rest have a build for Fedora {version}."
+msgstr "COPR プロジェクト: 残りには Fedora {version} のビルドがあります。"
+
+#: kram/ui/upgrade_dialog.py:227
+#, python-brace-format
+msgid "COPR projects that could not be checked: {n}"
+msgstr "確認できなかった COPR プロジェクト: {n}"
+
+#: kram/ui/upgrade_dialog.py:253
+#, python-brace-format
+msgid ""
+"Downloading the package lists of Fedora {version}. This can take a while…"
+msgstr ""
+"Fedora {version} のパッケージ一覧をダウンロードしています。しばらく時間がかか"
+"る場合があります…"
+
+#: kram/ui/upgrade_dialog.py:270
+#, python-brace-format
+msgid "{name}: {done} of {total}"
+msgstr "{name}: {done} / {total}"
+
+#: kram/ui/upgrade_dialog.py:272
+#, python-brace-format
+msgid "Still downloading: {items}"
+msgstr "ダウンロード中: {items}"
+
+#: kram/ui/upgrade_dialog.py:281 kram/ui/upgrade_dialog.py:282
+msgid "Cancelling…"
+msgstr "キャンセルしています…"
+
+#: kram/ui/upgrade_dialog.py:296
+#, python-brace-format
+msgid "Could not check: {error}"
+msgstr "確認できませんでした: {error}"
+
+#: kram/ui/upgrade_dialog.py:306
+#, python-brace-format
+msgid "Problems that stop the upgrade: {n}"
+msgstr "アップグレードを妨げる問題: {n}"
+
+#: kram/ui/upgrade_dialog.py:307
+#, python-brace-format
+msgid "Would be removed: {n}"
+msgstr "削除されるもの: {n}"
+
+#: kram/ui/upgrade_dialog.py:309
+#, python-brace-format
+msgid "Stay as they are, with no updates from Fedora {version}: {n}"
+msgstr "現状のままで Fedora {version} の更新がないもの: {n}"
+
+#: kram/ui/upgrade_dialog.py:311
+#, python-brace-format
+msgid "Replaced by other packages: {n}"
+msgstr "別のパッケージに置き換えられるもの: {n}"
+
+#: kram/ui/upgrade_dialog.py:312
+#, python-brace-format
+msgid "Would be downgraded: {n}"
+msgstr "ダウングレードされるもの: {n}"
+
+#: kram/ui/upgrade_dialog.py:313
+#, python-brace-format
+msgid "Repositories with nothing for Fedora {version}: {n}"
+msgstr "Fedora {version} のパッケージがないリポジトリ: {n}"
+
+#: kram/ui/upgrade_dialog.py:316
+#, python-brace-format
+msgid "The upgrade to Fedora {version} cannot be worked out as things are."
+msgstr "現状では Fedora {version} へのアップグレードを算出できません。"
+
+#: kram/ui/upgrade_dialog.py:319
+msgid "The upgrade works only if packages are removed."
+msgstr "パッケージを削除しないとアップグレードできません。"
+
+#: kram/ui/upgrade_dialog.py:319
+msgid "The upgrade works."
+msgstr "アップグレードできます。"
+
+#: kram/ui/upgrade_dialog.py:320
+#, python-brace-format
+msgid ""
+"Upgrades: {upgrades}, new packages: {installs}. To download: {download}. "
+"Needs {needed}, free: {free}."
+msgstr ""
+"アップグレード: {upgrades}、新規パッケージ: {installs}。ダウンロード: "
+"{download}。必要: {needed}、空き: {free}。"
+
+#: kram/ui/upgrade_dialog.py:323
+msgid "Not enough free disk space."
+msgstr "ディスクの空き容量が足りません。"
+
+#: kram/ui/upgrade_dialog.py:332
+#, python-brace-format
+msgid "{name} — needs {what}"
+msgstr "{name} — {what} が必要"
 
 #: kram/ui/whats_new.py:16
 msgid "What's New in Kram"

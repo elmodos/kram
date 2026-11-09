@@ -1,0 +1,342 @@
+"""The toolbar's "Fedora N" button: what moving to that release would do. Kram itself never upgrades the system."""
+import html
+import json
+import os
+import threading
+from datetime import datetime
+
+from PySide6.QtCore import QProcess, QUrl, QUrlQuery, Signal
+from PySide6.QtGui import QDesktopServices, QFontDatabase, QIcon
+from PySide6.QtNetwork import QNetworkAccessManager, QNetworkReply, QNetworkRequest
+from PySide6.QtWidgets import (
+    QAbstractItemView,
+    QDialog,
+    QDialogButtonBox,
+    QHBoxLayout,
+    QLabel,
+    QPlainTextEdit,
+    QProgressBar,
+    QPushButton,
+    QTreeWidget,
+    QTreeWidgetItem,
+    QVBoxLayout,
+)
+
+from .. import __version__
+from ..core import copr, distro, upgrade_audit
+from ..core.model import CatalogSnapshot
+from ..core.upgrade_audit import AuditResult
+from ..i18n import N_, _
+from .install_dialog import ERROR, ICONS, INFO, OK, WARN
+from .package_model import human_size
+
+COPR_TIMEOUT_MS = 30000
+LOG_HEIGHT = 150
+MAX_SHOWN_NEEDS = 3
+# keys of the simulation's reports (upgrade_audit.Report)
+AUDIT_MESSAGES = {
+    "downloading": N_("Downloading {name}"),
+    "downloaded": N_("Downloaded {name} ({size})"),
+    "download_failed": N_("Download failed: {error}"),
+    "mirror_failure": N_("Mirror unavailable: {url}: {error}"),
+    "resolving": N_("Working out the upgrade…"),
+    "retry_erasing": N_("It does not work as it is. Trying again with removing packages allowed…"),
+    "cleanup": N_("Deleting the downloaded package lists…"),
+}
+
+
+def api_request(url: QUrl, timeout_ms: int) -> QNetworkRequest:
+    """A request that says what it is. Qt's default User-Agent, "Mozilla/5.0", looks like a browser, and Bodhi answers
+    browsers with an HTML bot check instead of JSON."""
+    request = QNetworkRequest(url)
+    request.setTransferTimeout(timeout_ms)
+    request.setHeader(QNetworkRequest.UserAgentHeader, f"Kram/{__version__}")
+    request.setRawHeader(b"Accept", b"application/json")
+    return request
+
+
+def _state_icon(kind: str | None) -> QIcon:
+    """The same OK / warning / error / information marks as the package file dialog."""
+    name, fallback = ICONS[kind]
+    return QIcon.fromTheme(name, QIcon.fromTheme(fallback))
+
+
+class UpgradeDialog(QDialog):
+    """Kept by the main window for the session, so a finished check is not repeated when it is opened again."""
+
+    _reported = Signal(str, object)  # from the dnf thread
+
+    def __init__(self, target: int, running: int, running_eol: str, snapshot: CatalogSnapshot, dnf, parent=None):
+        super().__init__(parent)
+        self.target = target
+        self.setWindowTitle(f"Fedora {target}")
+        self.resize(760, 600)
+        self._dnf = dnf
+        self._net = QNetworkAccessManager(self)
+        self._waiting = 0
+        self._copr_missing: list[str] = []
+        self._copr_failed: list[str] = []
+        self._copr_total = 0
+        self._result_items: list[QTreeWidgetItem] = []
+        self.running_check = False
+        self._cancel = threading.Event()
+
+        lay = QVBoxLayout(self)
+        lay.addWidget(QLabel("<b>" + html.escape(_("Fedora {version} is available").format(version=target)) + "</b>"))
+        have = _("You have Fedora {version}, supported until {date}.").format(version=running, date=running_eol) \
+            if running_eol else _("You have Fedora {version}.").format(version=running)
+        info = QLabel(have + " " + _("Kram does not upgrade the system itself."))
+        info.setWordWrap(True)
+        lay.addWidget(info)
+
+        panel = QHBoxLayout()
+        self.check = QPushButton(QIcon.fromTheme("security-high", QIcon.fromTheme("edit-find")), _("Check"))
+        self.check.setDefault(True)  # the main action here
+        self.check.clicked.connect(self.start_check)
+        panel.addWidget(self.check)
+        self.cancel_button = QPushButton(QIcon.fromTheme("dialog-cancel"), _("Cancel"))
+        self.cancel_button.setAutoDefault(False)
+        self.cancel_button.clicked.connect(self.cancel_check)
+        self.cancel_button.hide()  # takes the place of Check while one runs
+        panel.addWidget(self.cancel_button)
+        width = max(self.check.sizeHint().width(), self.cancel_button.sizeHint().width())
+        self.check.setMinimumWidth(width)  # the text beside them does not jump
+        self.cancel_button.setMinimumWidth(width)
+        self._intro = _("Check simulates the upgrade and changes nothing on this system. It downloads the "
+                        "package lists of Fedora {version} (about 80 MB).").format(version=target)
+        self.status = QLabel(self._intro)
+        self.status.setWordWrap(True)
+        panel.addWidget(self.status, 1)
+        lay.addLayout(panel)
+
+        self.tree = QTreeWidget()
+        self.tree.setHeaderHidden(True)
+        self.tree.setSelectionMode(QAbstractItemView.NoSelection)
+        self.copr_item = QTreeWidgetItem(self.tree, [_("COPR projects: checking…")])
+        self.copr_item.setIcon(0, _state_icon(INFO))
+        lay.addWidget(self.tree, 1)
+
+        self.log = QPlainTextEdit()
+        self.log.setReadOnly(True)
+        self.log.setFont(QFontDatabase.systemFont(QFontDatabase.FixedFont))
+        self.log.setFixedHeight(LOG_HEIGHT)
+        self.log.hide()  # nothing to show before the first check
+        lay.addWidget(self.log)
+        self._reported.connect(self._on_report)
+
+        self.busy = QProgressBar()
+        self.busy.setRange(0, 0)
+        self.busy.hide()
+        lay.addWidget(self.busy)
+
+        buttons = QDialogButtonBox(QDialogButtonBox.Close)
+        self.close_button = buttons.button(QDialogButtonBox.Close)
+        buttons.rejected.connect(self.reject)  # no effect during a check, see done()
+        bottom = QHBoxLayout()
+        self.notes_button = self._link_button("documentinfo", _("Release notes"),
+                                              distro.RELEASE_NOTES_URL.format(version=target))
+        bottom.addWidget(self.notes_button)
+        self.guide_button = self._link_button("help-contents", _("Upgrade guide"), distro.UPGRADE_GUIDE_URL)
+        bottom.addWidget(self.guide_button)
+        self.program = distro.upgrade_program(os.environ.get("XDG_CURRENT_DESKTOP", ""))
+        self.open_program = None
+        if self.program is not None:
+            icon = QIcon.fromTheme(self.program.icon, QIcon.fromTheme("system-software-install"))
+            self.open_program = QPushButton(icon, _("Open {program}").format(program=self.program.name))
+            self.open_program.clicked.connect(self._launch_program)
+            bottom.addWidget(self.open_program)
+        bottom.addStretch(1)
+        bottom.addWidget(buttons)
+        lay.addLayout(bottom)
+
+        self._ask_copr(snapshot)
+
+    @staticmethod
+    def _link_button(icon: str, text: str, url: str) -> QPushButton:
+        button = QPushButton(QIcon.fromTheme(icon, QIcon.fromTheme("help-about")), text)
+        button.setAutoDefault(False)
+        button.clicked.connect(lambda: QDesktopServices.openUrl(QUrl(url)))
+        return button
+
+    def done(self, result: int) -> None:
+        if not self.running_check:  # Esc and the window's close button too: a check is left with Cancel
+            super().done(result)
+
+    def _launch_program(self) -> None:
+        QProcess.startDetached(self.program.argv[0], list(self.program.argv[1:]))
+
+    # ---------------------------------------------------------------- COPR
+
+    def _ask_copr(self, snapshot: CatalogSnapshot) -> None:
+        arch = snapshot.basearch
+        installed = {}
+        for r in snapshot.rows:
+            if r.installed and r.from_repo_id:
+                installed[r.from_repo_id] = installed.get(r.from_repo_id, 0) + 1
+        for repo in snapshot.repos:
+            ref = copr.parse_repo_id(repo.id) if repo.enabled else None
+            if ref is None:
+                continue
+            self._copr_total += 1
+            self._waiting += 1
+            owner, _slash, name = ref.project.partition("/")
+            url = QUrl(copr.PROJECT_URL.format(hub=ref.hub))
+            query = QUrlQuery()
+            query.addQueryItem("ownername", owner)
+            query.addQueryItem("projectname", name)
+            url.setQuery(query)
+            reply = self._net.get(api_request(url, COPR_TIMEOUT_MS))
+            label = _("{project} ({n} installed)").format(project=ref.project, n=installed.get(repo.id, 0))
+            reply.finished.connect(lambda r=reply, chroot=f"fedora-{self.target}-{arch}", text=label:
+                                   self._on_copr(r, chroot, text))
+        if not self._waiting:
+            self._show_copr()
+
+    def _on_copr(self, reply: QNetworkReply, chroot: str, label: str) -> None:
+        reply.deleteLater()
+        self._waiting -= 1
+        try:
+            if reply.error() != QNetworkReply.NoError:
+                raise ValueError(reply.errorString())
+            if chroot not in copr.parse_chroots(json.loads(bytes(reply.readAll()))):
+                self._copr_missing.append(label)
+        except ValueError:
+            self._copr_failed.append(label)
+        if not self._waiting:
+            self._show_copr()
+
+    def _show_copr(self) -> None:
+        if self._copr_missing:
+            kind = WARN
+            self.copr_item.setText(0, _("COPR projects without a build for Fedora {version}: {n}").format(
+                version=self.target, n=len(self._copr_missing)))
+            self._children(self.copr_item, self._copr_missing)
+        elif not self._copr_total:
+            kind = INFO
+            self.copr_item.setText(0, _("No COPR projects are enabled."))
+        elif not self._copr_failed:
+            kind = OK
+            self.copr_item.setText(0, _("Every enabled COPR project has a build for Fedora {version}.").format(
+                version=self.target))
+        else:
+            kind = OK
+            self.copr_item.setText(0, _("COPR projects: the rest have a build for Fedora {version}.").format(
+                version=self.target))
+        self.copr_item.setIcon(0, _state_icon(kind))
+        if self._copr_failed:
+            failed = QTreeWidgetItem(self.tree, [_("COPR projects that could not be checked: {n}").format(
+                n=len(self._copr_failed))])
+            failed.setIcon(0, _state_icon(WARN))
+            self._children(failed, self._copr_failed)
+
+    @staticmethod
+    def _children(parent: QTreeWidgetItem, lines: list[str]) -> None:
+        for line in lines:
+            QTreeWidgetItem(parent, [line])
+        parent.setExpanded(True)
+
+    # ---------------------------------------------------------------- simulation
+
+    def start_check(self) -> None:
+        if self.running_check:
+            return
+        self.running_check = True
+        self._cancel.clear()
+        self.check.hide()
+        self.close_button.setEnabled(False)
+        self.cancel_button.setEnabled(True)
+        self.cancel_button.show()
+        self.busy.setRange(0, 0)
+        self.busy.show()
+        self.log.clear()
+        self.log.show()
+        self.status.setText(_("Downloading the package lists of Fedora {version}. This can take a while…").format(
+            version=self.target))
+        version = str(self.target)
+        cancel = self._cancel
+        report = self._reported.emit
+        self._dnf.submit(lambda: upgrade_audit.simulate(version, cancel, report), self._show_result, self._on_failed)
+
+    def _append(self, text: str) -> None:
+        self.log.appendPlainText(f"{datetime.now():%H:%M:%S}  {text}")
+
+    def _on_report(self, key: str, params: dict) -> None:
+        if key == "progress":  # not a line of the log
+            self.busy.setRange(0, 0 if params["done"] >= params["total"] else 1000)
+            self.busy.setValue(int(1000 * params["done"] / params["total"]))
+            return
+        if key == "still_downloading":
+            items = "; ".join(
+                _("{name}: {done} of {total}").format(name=name, done=human_size(done), total=human_size(size))
+                if size else name for name, done, size in params["items"])
+            self._append(_("Still downloading: {items}").format(items=items))
+            return
+        values = {**params, "size": human_size(params["size"])} if "size" in params else params
+        self._append(_(AUDIT_MESSAGES[key]).format(**values))
+
+    def cancel_check(self) -> None:
+        if self.running_check:
+            self._cancel.set()
+            self.cancel_button.setEnabled(False)
+            self.status.setText(_("Cancelling…"))
+            self._append(_("Cancelling…"))
+
+    def _finished(self) -> None:
+        self.running_check = False
+        self.check.show()
+        self.close_button.setEnabled(True)
+        self.cancel_button.hide()
+        self.busy.hide()
+
+    def _on_failed(self, error: BaseException) -> None:
+        self._finished()
+        if isinstance(error, upgrade_audit.Cancelled):
+            self.status.setText(self._intro)
+            return
+        self.status.setText(_("Could not check: {error}").format(error=error))
+        self._append(self.status.text())
+
+    def _show_result(self, r: AuditResult) -> None:
+        self._finished()
+        self._append(_("Done."))
+        for item in self._result_items:
+            self.tree.takeTopLevelItem(self.tree.indexOfTopLevelItem(item))
+        self._result_items = []
+        version = self.target
+        self._category(ERROR, _("Problems that stop the upgrade: {n}"), r.blockers, expanded=True)
+        self._category(WARN, _("Would be removed: {n}"), [self._removal_line(name, r) for name in r.removed],
+                       expanded=True)
+        self._category(WARN, _("Stay as they are, with no updates from Fedora {version}: {n}"), r.orphaned,
+                       expanded=True)
+        self._category(INFO, _("Replaced by other packages: {n}"), r.replaced, expanded=False)
+        self._category(INFO, _("Would be downgraded: {n}"), r.downgrades, expanded=False)
+        self._category(WARN, _("Repositories with nothing for Fedora {version}: {n}"), r.empty_repos, expanded=True)
+
+        if not r.resolved:
+            self.status.setText(_("The upgrade to Fedora {version} cannot be worked out as things are.").format(
+                version=version))
+            return
+        verdict = _("The upgrade works only if packages are removed.") if r.blockers else _("The upgrade works.")
+        details = _("Upgrades: {upgrades}, new packages: {installs}. To download: {download}. Needs {needed}, "
+                    "free: {free}.").format(upgrades=r.upgrades, installs=r.installs, download=human_size(r.download),
+                                            needed=human_size(r.needed), free=human_size(r.free))
+        warning = " ⚠ " + _("Not enough free disk space.") if r.free < r.needed else ""
+        self.status.setText(f"{verdict} {details}{warning}")
+
+    @staticmethod
+    def _removal_line(name: str, r: AuditResult) -> str:
+        needs = r.removal_needs.get(name)
+        if not needs:
+            return name
+        what = ", ".join(needs[:MAX_SHOWN_NEEDS]) + (", …" if len(needs) > MAX_SHOWN_NEEDS else "")
+        return _("{name} — needs {what}").format(name=name, what=what)
+
+    def _category(self, kind: str | None, title: str, lines: list[str], expanded: bool) -> None:
+        if not lines:
+            return
+        item = QTreeWidgetItem(self.tree, [title.format(n=len(lines), version=self.target)])
+        item.setIcon(0, _state_icon(kind))
+        self._result_items.append(item)
+        for line in lines:
+            QTreeWidgetItem(item, [line])
+        item.setExpanded(expanded)

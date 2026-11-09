@@ -163,7 +163,9 @@ class ProgressDialog(QDialog):
         done = sum(d for d, _ in self._downloads.values())
         total = sum(t for _, t in self._downloads.values())
         if total > 0:
-            self.download_bar.setRange(0, 1000)
+            # a full bar reads as "finished": the servers that have not said their size yet are not in `total`, and
+            # the metadata still has to be read afterwards
+            self.download_bar.setRange(0, 0 if done >= total else 1000)
             self.download_bar.setValue(int(1000 * done / total))
             self.download_label.setText(_("Downloaded {done} of {total}").format(done=human_size(int(done)),
                                                                                   total=human_size(int(total))))
@@ -247,6 +249,8 @@ class ProgressDialog(QDialog):
         self._show_error(message, [])
 
     def _show_error(self, message: str, details: list[str]) -> None:
+        self.download_bar.setRange(0, 1)  # stops the busy animation
+        self.download_bar.setValue(0)
         first = html.escape((message.splitlines() or [_("unknown error")])[0])
         self.stage.setText(f"<span style='color:#c03030'><b>{_('Error:')}</b> {first}</span>")
         self.stage.setTextFormat(Qt.RichText)
