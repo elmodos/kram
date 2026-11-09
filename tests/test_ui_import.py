@@ -91,6 +91,16 @@ def test_apply_dialog_unchecks_a_recommendation(app):
     item.setCheckState(0, Qt.Checked)
     assert "exclude_weak" not in asked[-1]
 
+    # the equivalent command follows the checkbox, and survives a new resolve
+    assert "--downloadonly" not in dlg.cmd.toPlainText()
+    dlg.download_only.setChecked(True)
+    assert "--downloadonly" in dlg.cmd.toPlainText()
+    dlg.recs.topLevelItem(0).setCheckState(0, Qt.Unchecked)
+    assert "--downloadonly" in dlg.cmd.toPlainText()
+    assert "download_only" not in asked[-1]  # the preview still resolves the whole transaction
+    dlg.download_only.setChecked(False)
+    assert "--downloadonly" not in dlg.cmd.toPlainText()
+
 
 def test_install_dialog(app, monkeypatch):
     import time

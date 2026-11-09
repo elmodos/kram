@@ -101,6 +101,14 @@ def test_command_shows_unchecked_recommendations():
         "sudo dnf5 remove fish.x86_64"]
 
 
+def test_command_for_download_only():
+    req = {"install": ["fish.x86_64"], "remove": ["veyon.x86_64"], "mark_dep": ["bash.x86_64"],
+           "exclude_weak": ["kvm"], "download_only": True}
+    assert dnf5_command(req) == "sudo dnf5 install --downloadonly --setopt=exclude_from_weak=kvm fish.x86_64"
+    assert dnf5_command({"remove": ["veyon.x86_64"], "download_only": True}) == ""
+    assert dnf5_command({"upgrade": ["a.x86_64"], "download_only": False}) == "sudo dnf5 upgrade a.x86_64"
+
+
 def test_command_for_a_package_file():
     req = {"op": "local_install", "path": "/home/me/My Downloads/tool.rpm", "sha256": "0" * 64, "action": "reinstall"}
     assert dnf5_command(req) == "sudo dnf5 reinstall '/home/me/My Downloads/tool.rpm'"

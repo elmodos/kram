@@ -236,6 +236,7 @@ class ApplyDialog(QDialog):
         lay.addWidget(box)
 
         self.download_only = QCheckBox(_("Download packages only"))
+        self.download_only.toggled.connect(self._show_command)
         lay.addWidget(self.download_only)
 
         buttons = QDialogButtonBox()
@@ -261,7 +262,10 @@ class ApplyDialog(QDialog):
         warning = removal_warning(preview)
         self.warning.setText(warning)
         self.warning.setVisible(bool(warning))
-        self.cmd.setPlainText(dnf5_command(self.request))
+        self._show_command()
+
+    def _show_command(self) -> None:
+        self.cmd.setPlainText(dnf5_command({**self.request, "download_only": self.download_only.isChecked()}))
 
     def _rec_toggled(self) -> None:
         request = {k: v for k, v in self.request.items() if k != "exclude_weak"}

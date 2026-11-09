@@ -116,11 +116,16 @@ def dnf5_command(request: dict[str, list[str]]) -> str:
     option = f" --setopt=exclude_from_weak={','.join(weak)}" if weak else ""
     if request.get("op") == "local_install":
         return f"sudo dnf5 {request.get('action', 'install')}{option} {shlex.quote(request['path'])}"
+    downloading = ("install", "upgrade", "reinstall", "downgrade")
+    only_download = bool(request.get("download_only"))
+    if only_download:
+        option = f" --downloadonly{option}"
     verbs = [("install", "install"), ("upgrade", "upgrade"), ("reinstall", "reinstall"),
              ("downgrade", "downgrade"), ("remove", "remove"),
              ("mark_user", "mark user"), ("mark_dep", "mark dependency")]
-    return "\n".join(f"sudo dnf5 {verb}{option if k in ('install', 'upgrade', 'reinstall', 'downgrade') else ''}"
-                     f" {' '.join(request[k])}" for k, verb in verbs if request.get(k))
+    # a download-only run removes nothing and changes no reasons, so those commands are not part of it
+    return "\n".join(f"sudo dnf5 {verb}{option if k in downloading else ''} {' '.join(request[k])}"
+                     for k, verb in verbs if request.get(k) and (k in downloading or not only_download))
 
 
 MARKINGS_HEADER = "# Kram markings: <action> <name>.<arch> [<version>]"
