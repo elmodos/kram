@@ -287,7 +287,7 @@ def test_every_report_has_a_message():
 
     source = (Path(__file__).parent.parent / "kram/core/upgrade_audit.py").read_text()
     keys = set(re.findall(r'report\("(\w+)"', source)) | set(re.findall(r'_say\("(\w+)"', source))
-    assert keys == set(AUDIT_MESSAGES)
+    assert keys - {"progress", "still_downloading"} == set(AUDIT_MESSAGES)  # those two are handled on their own
 
 
 def test_a_failing_report_cannot_escape_into_libdnf5():
@@ -385,3 +385,75 @@ def test_check_is_on_top_and_the_program_goes_with_close(monkeypatch):
     assert not isinstance(dlg.check.parent(), QDialogButtonBox)
     monkeypatch.setattr(ui.distro, "upgrade_program", lambda _desktop: None)
     assert ui.UpgradeDialog(45, 44, "", CatalogSnapshot([], 0, 0, 0.0), Queue()).open_program is None
+
+
+class Clock:
+    def __init__(self):
+        self.now = 1000.0
+
+    def __call__(self):
+        return self.now
+
+
+@pytest.fixture
+def downloads(monkeypatch):
+    pytest.importorskip("libdnf5")
+    import threading
+
+    from kram.core import upgrade_audit
+
+    clock = Clock()
+    monkeypatch.setattr(upgrade_audit.time, "monotonic", clock)
+    said = []
+    return upgrade_audit._Downloads(threading.Event(), lambda key, params: said.append((key, params))), clock, said
+
+
+def test_a_quiet_log_says_what_is_still_being_waited_for(downloads):
+    d, clock, said = downloads
+    handle = d.add_new_download(None, "Fedora 45", 0)
+    d.progress(handle, 39, 12)
+    clock.now += 4
+    d.progress(handle, 39, 12)
+    assert not [s for s in said if s[0] == "still_downloading"]
+    clock.now += 1.5
+    d.progress(handle, 39, 12)  # a stalled server: the same numbers, and the line still comes
+    assert said[-1] == ("still_downloading", {"items": [("Fedora 45", 12, 39)]})
+    d.progress(handle, 39, 12)
+    assert len([s for s in said if s[0] == "still_downloading"]) == 1  # and not with every call
+    d.end(handle, d.TransferStatus_SUCCESSFUL, "")
+    clock.now += 60
+    d.progress(handle, 39, 39)
+    assert len([s for s in said if s[0] == "still_downloading"]) == 1  # nothing is left to wait for
+
+
+def test_it_names_the_largest_downloads_only(downloads):
+    d, clock, said = downloads
+    for i, size in enumerate((1, 50, 9, 30), 1):
+        assert d.add_new_download(None, f"r{i}", 0) == i
+        d.progress(i, size, 0)
+    clock.now += 6
+    d.progress(1, 1, 0)
+    assert [item[0] for item in said[-1][1]["items"]] == ["r2", "r4", "r3"]
+
+
+def test_progress_sums_every_transfer_and_is_throttled(downloads):
+    d, clock, said = downloads
+    d.add_new_download(None, "a", 0)
+    d.add_new_download(None, "b", 0)
+    d.progress(1, 100, 40)
+    d.progress(2, 100, 10)
+    clock.now += 0.3
+    d.progress(2, 100, 20)
+    assert [p for k, p in said if k == "progress"] == [{"done": 40, "total": 100}, {"done": 60, "total": 200}]
+
+
+def test_dialog_shows_progress_and_still_downloading(queued):
+    dlg, _dnf = queued
+    dlg.start_check()
+    assert dlg.busy.maximum() == 0
+    dlg._on_report("progress", {"done": 5, "total": 10})
+    assert dlg.busy.maximum() == 1000 and dlg.busy.value() == 500
+    dlg._on_report("progress", {"done": 10, "total": 10})
+    assert dlg.busy.maximum() == 0  # all known bytes are in, the rest is still to come
+    dlg._on_report("still_downloading", {"items": [("Fedora 45", 1024, 2048), ("Slow", 0, 0)]})
+    assert dlg.log.toPlainText().split("  ", 1)[1] == "Still downloading: Fedora 45: 1.0 kB of 2.0 kB; Slow"

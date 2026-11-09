@@ -7,6 +7,7 @@ import os
 import re
 import shutil
 import threading
+import time
 from collections import Counter
 from collections.abc import Callable
 from dataclasses import dataclass, field
@@ -14,6 +15,9 @@ from dataclasses import dataclass, field
 import libdnf5
 
 Report = Callable[[str, dict], None]  # (message key, its parameters); called on the thread that runs the simulation
+PROGRESS_INTERVAL = 0.25  # s between progress reports
+QUIET_INTERVAL = 5  # s of silence in the log before it says what is still being waited for
+MAX_NAMED_DOWNLOADS = 3
 INBOUND = ("Install", "Upgrade", "Downgrade", "Reinstall")
 OUTBOUND = ("Remove", "Replaced")
 HASHED_REPO_ID = re.compile(r"^[0-9a-f]{32}$")  # dnf5 records some packages under an id nobody can read
@@ -49,8 +53,14 @@ class _Downloads(libdnf5.repo.DownloadCallbacks):
         self._report = report
         self._names: dict[int, str] = {}
         self._sizes: dict[int, int] = {}
+        self._done: dict[int, int] = {}
+        self._open: set[int] = set()
+        self._last_said = time.monotonic()
+        self._last_progress = 0.0
 
     def _say(self, key: str, **params) -> None:
+        if key != "progress":
+            self._last_said = time.monotonic()
         try:
             self._report(key, params)
         except Exception:  # noqa: BLE001 - an exception leaving a SWIG callback aborts the whole process
@@ -59,15 +69,32 @@ class _Downloads(libdnf5.repo.DownloadCallbacks):
     def add_new_download(self, _user_data, description, _total):
         handle = len(self._names) + 1
         self._names[handle] = description or "?"
+        self._open.add(handle)
         self._say("downloading", name=self._names[handle])
         return handle
 
-    def progress(self, handle, total, _downloaded):
+    def progress(self, handle, total, downloaded):
         if total > 0:
             self._sizes[handle] = int(total)
+            self._done[handle] = int(downloaded)
+        self._tick()  # libdnf5 keeps calling this about once a second even when a server sends nothing
         return self.ABORT if self._cancel.is_set() else self.OK
 
+    def _tick(self) -> None:
+        now = time.monotonic()
+        total = sum(self._sizes.values())
+        if total and now - self._last_progress >= PROGRESS_INTERVAL:
+            self._last_progress = now
+            self._say("progress", done=sum(self._done.values()), total=total)
+        if self._open and now - self._last_said >= QUIET_INTERVAL:
+            largest = sorted(self._open, key=lambda h: self._sizes.get(h, 0), reverse=True)[:MAX_NAMED_DOWNLOADS]
+            self._say("still_downloading", items=[(self._names[h], self._done.get(h, 0), self._sizes.get(h, 0))
+                                                  for h in largest])
+
     def end(self, handle, status, message):
+        self._open.discard(handle)
+        if handle in self._sizes:
+            self._done[handle] = self._sizes[handle]
         if self._cancel.is_set():
             return self.OK
         name = self._names.get(handle, "?")

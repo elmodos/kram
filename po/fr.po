@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kram\n"
 "Report-Msgid-Bugs-To: https://github.com/elmodos/kram/issues\n"
-"POT-Creation-Date: 2026-11-09 21:56+0200\n"
+"POT-Creation-Date: 2026-11-09 22:39+0200\n"
 "PO-Revision-Date: 2026-11-04 14:07+0200\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -1971,7 +1971,7 @@ msgid "Key {key_id}: rejected"
 msgstr "Clé {key_id} : refusée"
 
 #: kram/ui/progress_dialog.py:233 kram/ui/progress_dialog.py:234
-#: kram/ui/upgrade_dialog.py:272
+#: kram/ui/upgrade_dialog.py:285
 msgid "Done."
 msgstr "Terminé."
 
@@ -2102,16 +2102,15 @@ msgstr "Notes de version"
 msgid "Upgrade guide"
 msgstr "Guide de mise à niveau"
 
-#: kram/ui/upgrade_dialog.py:101
-#, python-brace-format
-msgid "Open {program}"
-msgstr "Ouvrir {program}"
+#: kram/ui/upgrade_dialog.py:98
+msgid "Check"
+msgstr "Vérifier"
 
-#: kram/ui/upgrade_dialog.py:109
+#: kram/ui/upgrade_dialog.py:107
 msgid "COPR projects: checking…"
 msgstr "Projets COPR : vérification…"
 
-#: kram/ui/upgrade_dialog.py:121
+#: kram/ui/upgrade_dialog.py:119
 #, python-brace-format
 msgid ""
 "Check simulates the upgrade and changes nothing on this system. It downloads "
@@ -2120,40 +2119,41 @@ msgstr ""
 "« Vérifier » simule la mise à niveau et ne change rien au système. Les "
 "listes de paquets de Fedora {version} sont téléchargées (environ 80 Mo)."
 
-#: kram/ui/upgrade_dialog.py:136
-msgid "Check"
-msgstr "Vérifier"
+#: kram/ui/upgrade_dialog.py:137
+#, python-brace-format
+msgid "Open {program}"
+msgstr "Ouvrir {program}"
 
-#: kram/ui/upgrade_dialog.py:171
+#: kram/ui/upgrade_dialog.py:174
 #, python-brace-format
 msgid "{project} ({n} installed)"
 msgstr "{project} ({n} installés)"
 
-#: kram/ui/upgrade_dialog.py:193
+#: kram/ui/upgrade_dialog.py:196
 #, python-brace-format
 msgid "COPR projects without a build for Fedora {version}: {n}"
 msgstr "Projets COPR sans build pour Fedora {version} : {n}"
 
-#: kram/ui/upgrade_dialog.py:198
+#: kram/ui/upgrade_dialog.py:201
 msgid "No COPR projects are enabled."
 msgstr "Aucun projet COPR activé."
 
-#: kram/ui/upgrade_dialog.py:201
+#: kram/ui/upgrade_dialog.py:204
 #, python-brace-format
 msgid "Every enabled COPR project has a build for Fedora {version}."
 msgstr "Chaque projet COPR activé a un build pour Fedora {version}."
 
-#: kram/ui/upgrade_dialog.py:205
+#: kram/ui/upgrade_dialog.py:208
 #, python-brace-format
 msgid "COPR projects: the rest have a build for Fedora {version}."
 msgstr "Projets COPR : les autres ont un build pour Fedora {version}."
 
-#: kram/ui/upgrade_dialog.py:209
+#: kram/ui/upgrade_dialog.py:212
 #, python-brace-format
 msgid "COPR projects that could not be checked: {n}"
 msgstr "Projets COPR impossibles à vérifier : {n}"
 
-#: kram/ui/upgrade_dialog.py:234
+#: kram/ui/upgrade_dialog.py:238
 #, python-brace-format
 msgid ""
 "Downloading the package lists of Fedora {version}. This can take a while…"
@@ -2161,60 +2161,70 @@ msgstr ""
 "Téléchargement des listes de paquets de Fedora {version}. Cela peut prendre "
 "un certain temps…"
 
-#: kram/ui/upgrade_dialog.py:252 kram/ui/upgrade_dialog.py:253
+#: kram/ui/upgrade_dialog.py:254
+#, python-brace-format
+msgid "{name}: {done} of {total}"
+msgstr "{name} : {done} sur {total}"
+
+#: kram/ui/upgrade_dialog.py:256
+#, python-brace-format
+msgid "Still downloading: {items}"
+msgstr "Toujours en téléchargement : {items}"
+
+#: kram/ui/upgrade_dialog.py:265 kram/ui/upgrade_dialog.py:266
 msgid "Cancelling…"
 msgstr "Annulation…"
 
-#: kram/ui/upgrade_dialog.py:267
+#: kram/ui/upgrade_dialog.py:280
 #, python-brace-format
 msgid "Could not check: {error}"
 msgstr "Vérification impossible : {error}"
 
-#: kram/ui/upgrade_dialog.py:277
+#: kram/ui/upgrade_dialog.py:290
 #, python-brace-format
 msgid "Problems that stop the upgrade: {n}"
 msgstr "Problèmes empêchant la mise à niveau : {n}"
 
-#: kram/ui/upgrade_dialog.py:278
+#: kram/ui/upgrade_dialog.py:291
 #, python-brace-format
 msgid "Would be removed: {n}"
 msgstr "Seraient supprimés : {n}"
 
-#: kram/ui/upgrade_dialog.py:279
+#: kram/ui/upgrade_dialog.py:292
 #, python-brace-format
 msgid "Stay as they are, with no updates from Fedora {version}: {n}"
 msgstr "Restent tels quels, sans mises à jour de Fedora {version} : {n}"
 
-#: kram/ui/upgrade_dialog.py:280
+#: kram/ui/upgrade_dialog.py:294
 #, python-brace-format
 msgid "Replaced by other packages: {n}"
 msgstr "Remplacés par d’autres paquets : {n}"
 
-#: kram/ui/upgrade_dialog.py:281
+#: kram/ui/upgrade_dialog.py:295
 #, python-brace-format
 msgid "Would be downgraded: {n}"
 msgstr "Seraient rétrogradés : {n}"
 
-#: kram/ui/upgrade_dialog.py:282
+#: kram/ui/upgrade_dialog.py:296
 #, python-brace-format
 msgid "Repositories with nothing for Fedora {version}: {n}"
 msgstr "Dépôts sans paquets pour Fedora {version} : {n}"
 
-#: kram/ui/upgrade_dialog.py:285
+#: kram/ui/upgrade_dialog.py:299
 #, python-brace-format
 msgid "The upgrade to Fedora {version} cannot be worked out as things are."
 msgstr ""
 "La mise à niveau vers Fedora {version} ne peut pas être calculée en l’état."
 
-#: kram/ui/upgrade_dialog.py:288
+#: kram/ui/upgrade_dialog.py:302
 msgid "The upgrade works only if packages are removed."
 msgstr "La mise à niveau n’est possible qu’en supprimant des paquets."
 
-#: kram/ui/upgrade_dialog.py:288
+#: kram/ui/upgrade_dialog.py:302
 msgid "The upgrade works."
 msgstr "La mise à niveau est possible."
 
-#: kram/ui/upgrade_dialog.py:289
+#: kram/ui/upgrade_dialog.py:303
 #, python-brace-format
 msgid ""
 "Upgrades: {upgrades}, new packages: {installs}. To download: {download}. "
@@ -2223,7 +2233,7 @@ msgstr ""
 "Mises à jour : {upgrades}, nouveaux paquets : {installs}. À télécharger : "
 "{download}. Nécessaire : {needed}, libre : {free}."
 
-#: kram/ui/upgrade_dialog.py:292
+#: kram/ui/upgrade_dialog.py:306
 msgid "Not enough free disk space."
 msgstr "Espace disque insuffisant."
 

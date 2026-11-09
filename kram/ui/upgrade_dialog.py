@@ -231,6 +231,7 @@ class UpgradeDialog(QDialog):
         self.close_button.setEnabled(False)
         self.cancel_button.setEnabled(True)
         self.cancel_button.show()
+        self.busy.setRange(0, 0)
         self.busy.show()
         self.log.clear()
         self.log.show()
@@ -245,6 +246,16 @@ class UpgradeDialog(QDialog):
         self.log.appendPlainText(f"{datetime.now():%H:%M:%S}  {text}")
 
     def _on_report(self, key: str, params: dict) -> None:
+        if key == "progress":  # not a line of the log
+            self.busy.setRange(0, 0 if params["done"] >= params["total"] else 1000)
+            self.busy.setValue(int(1000 * params["done"] / params["total"]))
+            return
+        if key == "still_downloading":
+            items = "; ".join(
+                _("{name}: {done} of {total}").format(name=name, done=human_size(done), total=human_size(size))
+                if size else name for name, done, size in params["items"])
+            self._append(_("Still downloading: {items}").format(items=items))
+            return
         values = {**params, "size": human_size(params["size"])} if "size" in params else params
         self._append(_(AUDIT_MESSAGES[key]).format(**values))
 
