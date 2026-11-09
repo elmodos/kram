@@ -28,6 +28,10 @@ Built on libdnf5 (the same library as `dnf5`) and Qt 6. See [docs/PLAN.md](docs/
 |---|---|
 | ![Install a package file](docs/screenshots/install-file.png) | ![Dependencies of a package file](docs/screenshots/install-dependencies.png) |
 
+| What the package caches take |
+|---|
+| ![Package Cache](docs/screenshots/package-cache.png) |
+
 ## Features
 
 - Every package of the enabled repositories in one table: status, origin (Fedora / COPR / third-party /
