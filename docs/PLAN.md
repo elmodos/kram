@@ -390,7 +390,8 @@ would do. It never offers the upgrade itself: that is too much responsibility.
   A check holds the dnf thread for as long as its download takes, so the dialog cannot be closed meanwhile (it is modal:
   the rest of Kram waits with it, and nothing looks broken for no visible reason). Cancel stops the transfers through
   libdnf5's download callbacks and deletes the metadata, in 3 s against a server that accepts and then says nothing; the
-  last seconds, reading and resolving, cannot be interrupted.
+  last seconds, reading and resolving, cannot be interrupted. A log under the results follows it, as in the progress
+  dialog: each repository started and finished, mirror failures and the steps of the resolve.
 
 **Local .rpm installer** (designed 2026-11-07, target 0.2.0; was postponed for security reasons on 2026-11-05).
 A gdebi-style dialog for one package file.

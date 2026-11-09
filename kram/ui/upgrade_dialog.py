@@ -3,8 +3,10 @@ import html
 import json
 import os
 import threading
+from datetime import datetime
 
-from PySide6.QtCore import QProcess, QUrl, QUrlQuery
+from PySide6.QtCore import QProcess, QUrl, QUrlQuery, Signal
+from PySide6.QtGui import QFontDatabase
 from PySide6.QtNetwork import QNetworkAccessManager, QNetworkReply, QNetworkRequest
 from PySide6.QtWidgets import (
     QAbstractItemView,
@@ -12,6 +14,7 @@ from PySide6.QtWidgets import (
     QDialogButtonBox,
     QHBoxLayout,
     QLabel,
+    QPlainTextEdit,
     QProgressBar,
     QPushButton,
     QTreeWidget,
@@ -23,10 +26,21 @@ from .. import __version__
 from ..core import copr, distro, upgrade_audit
 from ..core.model import CatalogSnapshot
 from ..core.upgrade_audit import AuditResult
-from ..i18n import _
+from ..i18n import N_, _
 from .package_model import human_size
 
 COPR_TIMEOUT_MS = 30000
+LOG_HEIGHT = 150
+# keys of the simulation's reports (upgrade_audit.Report)
+AUDIT_MESSAGES = {
+    "downloading": N_("Downloading {name}"),
+    "downloaded": N_("Downloaded {name} ({size})"),
+    "download_failed": N_("Download failed: {error}"),
+    "mirror_failure": N_("Mirror unavailable: {url}: {error}"),
+    "resolving": N_("Working out the upgrade…"),
+    "retry_erasing": N_("It does not work as it is. Trying again with removing packages allowed…"),
+    "cleanup": N_("Deleting the downloaded package lists…"),
+}
 
 
 def api_request(url: QUrl, timeout_ms: int) -> QNetworkRequest:
@@ -41,6 +55,8 @@ def api_request(url: QUrl, timeout_ms: int) -> QNetworkRequest:
 
 class UpgradeDialog(QDialog):
     """Kept by the main window for the session, so a finished check is not repeated when it is opened again."""
+
+    _reported = Signal(str, object)  # from the dnf thread
 
     def __init__(self, target: int, running: int, running_eol: str, snapshot: CatalogSnapshot, dnf, parent=None):
         super().__init__(parent)
@@ -85,6 +101,14 @@ class UpgradeDialog(QDialog):
         self.tree.setSelectionMode(QAbstractItemView.NoSelection)
         self.copr_item = QTreeWidgetItem(self.tree, [_("COPR projects: checking…")])
         lay.addWidget(self.tree, 1)
+
+        self.log = QPlainTextEdit()
+        self.log.setReadOnly(True)
+        self.log.setFont(QFontDatabase.systemFont(QFontDatabase.FixedFont))
+        self.log.setFixedHeight(LOG_HEIGHT)
+        self.log.hide()  # nothing to show before the first check
+        lay.addWidget(self.log)
+        self._reported.connect(self._on_report)
 
         self._intro = _("Check simulates the upgrade and changes nothing on this system. It downloads the "
                         "package lists of Fedora {version} (about 80 MB).").format(version=target)
@@ -191,17 +215,28 @@ class UpgradeDialog(QDialog):
         self.cancel_button.setEnabled(True)
         self.cancel_button.show()
         self.busy.show()
+        self.log.clear()
+        self.log.show()
         self.status.setText(_("Downloading the package lists of Fedora {version}. This can take a while…").format(
             version=self.target))
         version = str(self.target)
         cancel = self._cancel
-        self._dnf.submit(lambda: upgrade_audit.simulate(version, cancel), self._show_result, self._on_failed)
+        report = self._reported.emit
+        self._dnf.submit(lambda: upgrade_audit.simulate(version, cancel, report), self._show_result, self._on_failed)
+
+    def _append(self, text: str) -> None:
+        self.log.appendPlainText(f"{datetime.now():%H:%M:%S}  {text}")
+
+    def _on_report(self, key: str, params: dict) -> None:
+        values = {**params, "size": human_size(params["size"])} if "size" in params else params
+        self._append(_(AUDIT_MESSAGES[key]).format(**values))
 
     def cancel_check(self) -> None:
         if self.running_check:
             self._cancel.set()
             self.cancel_button.setEnabled(False)
             self.status.setText(_("Cancelling…"))
+            self._append(_("Cancelling…"))
 
     def _finished(self) -> None:
         self.running_check = False
@@ -216,9 +251,11 @@ class UpgradeDialog(QDialog):
             self.status.setText(self._intro)
             return
         self.status.setText(_("Could not check: {error}").format(error=error))
+        self._append(self.status.text())
 
     def _show_result(self, r: AuditResult) -> None:
         self._finished()
+        self._append(_("Done."))
         for item in self._result_items:
             self.tree.takeTopLevelItem(self.tree.indexOfTopLevelItem(item))
         self._result_items = []

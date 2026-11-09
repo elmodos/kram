@@ -8,10 +8,12 @@ import re
 import shutil
 import threading
 from collections import Counter
+from collections.abc import Callable
 from dataclasses import dataclass, field
 
 import libdnf5
 
+Report = Callable[[str, dict], None]  # (message key, its parameters); called on the thread that runs the simulation
 INBOUND = ("Install", "Upgrade", "Downgrade", "Reinstall")
 OUTBOUND = ("Remove", "Replaced")
 HASHED_REPO_ID = re.compile(r"^[0-9a-f]{32}$")  # dnf5 records some packages under an id nobody can read
@@ -37,24 +39,48 @@ class Cancelled(Exception):
     pass
 
 
-class _CancelDownloads(libdnf5.repo.DownloadCallbacks):
-    """libdnf5 asks about every transfer while it runs; the answer can stop it."""
+class _Downloads(libdnf5.repo.DownloadCallbacks):
+    """libdnf5 tells about every transfer and asks whether to go on: what is reported, and how Cancel works."""
 
-    def __init__(self, cancel: threading.Event):
+    def __init__(self, cancel: threading.Event, report: Report):
         super().__init__()
         self._cancel = cancel
+        self._report = report
+        self._names: dict[int, str] = {}
+        self._sizes: dict[int, int] = {}
 
-    def progress(self, _user_data, _total, _downloaded):
+    def _say(self, key: str, **params) -> None:
+        try:
+            self._report(key, params)
+        except Exception:  # noqa: BLE001 - an exception leaving a SWIG callback aborts the whole process
+            pass
+
+    def add_new_download(self, _user_data, description, _total):
+        handle = len(self._names) + 1
+        self._names[handle] = description or "?"
+        self._say("downloading", name=self._names[handle])
+        return handle
+
+    def progress(self, handle, total, _downloaded):
+        if total > 0:
+            self._sizes[handle] = int(total)
         return self.ABORT if self._cancel.is_set() else self.OK
 
-    def add_new_download(self, _user_data, _description, _total):
-        return 0
-
-    def end(self, _user_data, _status, _message):
+    def end(self, handle, status, message):
+        if self._cancel.is_set():
+            return self.OK
+        name = self._names.get(handle, "?")
+        if status == self.TransferStatus_ERROR:
+            self._say("download_failed", error=f"{name}: {message}")
+        else:
+            self._say("downloaded", name=name, size=self._sizes.get(handle, 0))
         return self.OK
 
-    def mirror_failure(self, _user_data, _message, _url, _metadata):
-        return self.ABORT if self._cancel.is_set() else self.OK
+    def mirror_failure(self, _handle, message, url, _metadata):
+        if self._cancel.is_set():
+            return self.ABORT
+        self._say("mirror_failure", url=url, error=message)
+        return self.OK
 
 
 def cache_dir() -> str:
@@ -62,14 +88,15 @@ def cache_dir() -> str:
     return os.path.join(base, "kram", "upgrade-audit")
 
 
-def simulate(target: str, cancel: threading.Event | None = None) -> AuditResult:
-    """Raises Cancelled once `cancel` is set and the transfers have stopped."""
+def simulate(target: str, cancel: threading.Event | None = None, report: Report | None = None) -> AuditResult:
+    """Raises Cancelled once `cancel` is set and the transfers have stopped. `report` follows what is going on."""
     cancel = cancel or threading.Event()
+    report = report or (lambda _key, _params: None)
     cache = cache_dir()
     shutil.rmtree(cache, ignore_errors=True)  # left behind if Kram was killed during a check
     os.makedirs(cache, exist_ok=True)
     try:
-        result = _simulate(target, cache, cancel)
+        result = _simulate(target, cache, cancel, report)
     except Exception:
         if cancel.is_set():  # however the aborted transfers surfaced
             raise Cancelled from None
@@ -82,13 +109,13 @@ def simulate(target: str, cancel: threading.Event | None = None) -> AuditResult:
         shutil.rmtree(cache, ignore_errors=True)
 
 
-def _simulate(target: str, cache: str, cancel: threading.Event) -> AuditResult:
+def _simulate(target: str, cache: str, cancel: threading.Event, report: Report) -> AuditResult:
     base = libdnf5.base.Base()
     base.load_config()
     base.get_config().cachedir = cache
     base.get_vars().set("releasever", target)
     base.setup()
-    downloads = _CancelDownloads(cancel)  # stays referenced: libdnf5 only owns the C++ side
+    downloads = _Downloads(cancel, report)  # stays referenced: libdnf5 only owns the C++ side
     base.set_download_callbacks(libdnf5.repo.DownloadCallbacksUniquePtr(downloads))
     sack = base.get_repo_sack()
     sack.create_repos_from_system_configuration()
@@ -110,13 +137,16 @@ def _simulate(target: str, cache: str, cancel: threading.Event) -> AuditResult:
     result.empty_repos = sorted(r.get_id() for r in libdnf5.repo.RepoQuery(base)
                                 if r.is_enabled() and r.get_id() != "@System" and not packages_per_repo[r.get_id()])
 
+    report("resolving", {})
     transaction = _resolve(base, allow_erasing=False)
     if not _ok(transaction):
         result.blockers = list(transaction.get_resolve_logs_as_strings())
+        report("retry_erasing", {})
         transaction = _resolve(base, allow_erasing=True)
     if _ok(transaction):
         result.resolved = True
         _describe(transaction, installed, result)
+    report("cleanup", {})
     return result
 
 

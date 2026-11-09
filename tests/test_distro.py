@@ -145,7 +145,7 @@ def test_dialog_shows_the_simulation(dialog, monkeypatch):
     result = AuditResult("45", True, blockers=["needs libvpx"], upgrades=10, installs=2, removed=["vbox"],
                          downgrades=["a 2 → 1"], orphaned=["b"], empty_repos=["gone"], download=2048, needed=4096,
                          free=1)
-    monkeypatch.setattr(upgrade_dialog.upgrade_audit, "simulate", lambda v, _cancel: asked.append(v) or result)
+    monkeypatch.setattr(upgrade_dialog.upgrade_audit, "simulate", lambda v, _cancel, _report: asked.append(v) or result)
     dialog.start_check()
     assert asked == ["45"] and not dialog.running_check and dialog.check.isEnabled()
     wanted = ["Problems that stop the upgrade: 1", "Would be removed: 1", "Installed, with no version in Fedora 45: 1",
@@ -159,7 +159,7 @@ def test_dialog_shows_the_simulation(dialog, monkeypatch):
 def test_dialog_reports_a_failed_simulation(dialog, monkeypatch):
     from kram.ui import upgrade_dialog
 
-    def fail(_version, _cancel):
+    def fail(_version, _cancel, _report):
         raise RuntimeError("no network")
     monkeypatch.setattr(upgrade_dialog.upgrade_audit, "simulate", fail)
     dialog.start_check()
@@ -236,7 +236,7 @@ def test_simulate_raises_cancelled_and_leaves_no_cache(monkeypatch, tmp_path):
     monkeypatch.setenv("XDG_CACHE_HOME", str(tmp_path))
     cancel = threading.Event()
 
-    def interrupted(_target, cache, event):
+    def interrupted(_target, cache, event, _report):
         assert os.path.isdir(cache)
         event.set()
         raise RuntimeError("Download aborted")
@@ -254,3 +254,48 @@ def test_a_failure_that_is_not_a_cancel_is_reported(monkeypatch, tmp_path):
     monkeypatch.setattr(upgrade_audit, "_simulate", lambda *_a: (_ for _ in ()).throw(RuntimeError("no network")))
     with pytest.raises(RuntimeError, match="no network"):
         upgrade_audit.simulate("45")
+
+
+def test_the_log_follows_the_check(queued):
+    from kram.core.upgrade_audit import AuditResult
+
+    dlg, dnf = queued
+    assert dlg.log.isHidden()  # nothing to show before the first check
+    dlg.start_check()
+    assert dlg.log.isVisible() and dlg.log.toPlainText() == ""
+    dlg._on_report("downloading", {"name": "Fedora 45"})
+    dlg._on_report("downloaded", {"name": "Fedora 45", "size": 2048})
+    dlg._on_report("mirror_failure", {"url": "http://m", "error": "timeout"})
+    dlg._on_report("resolving", {})
+    dnf.jobs[0][1](AuditResult("45", True))
+    lines = [line.split("  ", 1)[1] for line in dlg.log.toPlainText().splitlines()]
+    assert lines == ["Downloading Fedora 45", "Downloaded Fedora 45 (2.0 kB)", "Mirror unavailable: http://m: timeout",
+                     "Working out the upgrade…", "Done."]
+    dlg.start_check()  # a new check starts a new log
+    assert dlg.log.toPlainText() == ""
+
+
+def test_every_report_has_a_message():
+    pytest.importorskip("libdnf5")
+    pytest.importorskip("PySide6.QtWidgets")
+    import re
+    from pathlib import Path
+
+    from kram.ui.upgrade_dialog import AUDIT_MESSAGES
+
+    source = (Path(__file__).parent.parent / "kram/core/upgrade_audit.py").read_text()
+    keys = set(re.findall(r'report\("(\w+)"', source)) | set(re.findall(r'_say\("(\w+)"', source))
+    assert keys == set(AUDIT_MESSAGES)
+
+
+def test_a_failing_report_cannot_escape_into_libdnf5():
+    pytest.importorskip("libdnf5")
+    import threading
+
+    from kram.core import upgrade_audit
+
+    def broken(_key, _params):
+        raise RuntimeError("the dialog is gone")
+    downloads = upgrade_audit._Downloads(threading.Event(), broken)
+    assert downloads.add_new_download(None, "Fedora", 0) == 1
+    assert downloads.end(1, downloads.TransferStatus_SUCCESSFUL, "") == downloads.OK
