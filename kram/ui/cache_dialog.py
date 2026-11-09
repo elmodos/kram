@@ -2,38 +2,60 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QDialog, QDialogButtonBox, QGridLayout, QLabel, QMessageBox, QPushButton, QVBoxLayout
+from PySide6.QtCore import QSize, Qt
+from PySide6.QtGui import QIcon, QPalette
+from PySide6.QtWidgets import (
+    QDialog,
+    QDialogButtonBox,
+    QFrame,
+    QHBoxLayout,
+    QLabel,
+    QMessageBox,
+    QPushButton,
+    QVBoxLayout,
+    QWidget,
+)
 
 from ..core.cache import PACKAGEKIT_BLOCKED, CacheReport, clean_user_cache, measure
 from ..i18n import N_, _, ngettext
 from .package_model import human_size
 
 METADATA, USER, PACKAGEKIT = "dnf_metadata", "user", "packagekit"
-# the field of CacheReport, which is also the helper's target (except USER, cleaned without the helper)
+ICON_SIZE = QSize(32, 32)
+# the field of CacheReport, which is also the helper's target (except USER, cleaned without the helper); icon names
+# in the order to try: not every theme has them, and a system with GNOME Software has no Discover logo
 CACHES = (
-    ("dnf_packages", N_("DNF: downloaded packages"), N_("Left by interrupted transactions and “download only”."),
-     N_("Clean")),
-    (METADATA, N_("DNF: repository metadata"), N_("What Kram and dnf know about the available packages."),
-     N_("Download Again…")),
-    (USER, N_("DNF: cache of your user"), N_("Written by dnf when it runs without root. Kram does not use it."),
-     N_("Clean")),
-    (PACKAGEKIT, N_("Discover / GNOME Software"), N_("Packages downloaded for offline updates and never removed."),
-     N_("Clean")),
+    ("dnf_packages", ("package-x-generic",), N_("DNF: downloaded packages"),
+     N_("Left by interrupted transactions and “download only”."), N_("Clean")),
+    (METADATA, ("application-x-sqlite3", "text-x-generic"), N_("DNF: repository metadata"),
+     N_("What Kram and dnf know about the available packages."), N_("Download Again…")),
+    (USER, ("user-identity", "system-users"), N_("DNF: cache of your user"),
+     N_("Written by dnf when it runs without root. Kram does not use it."), N_("Clean")),
+    (PACKAGEKIT, ("plasmadiscover", "system-software-install"), N_("Discover / GNOME Software"),
+     N_("Packages downloaded for offline updates and never removed."), N_("Clean")),
 )
+
+
+def _dimmed(label: QLabel) -> QLabel:
+    palette = label.palette()
+    color = palette.color(QPalette.WindowText)
+    color.setAlpha(170)
+    palette.setColor(QPalette.WindowText, color)
+    label.setPalette(palette)
+    return label
+
+
+def _themed_icon(names: tuple[str, ...]) -> QIcon:
+    return next((QIcon.fromTheme(name) for name in names if QIcon.hasThemeIcon(name)), QIcon())
 
 
 @dataclass
 class _Row:
-    title: QLabel
-    description: QLabel
+    frame: QWidget
+    separator: QFrame
     size: QLabel
     files: QLabel
     button: QPushButton
-
-    def set_visible(self, visible: bool) -> None:
-        for widget in (self.title, self.description, self.size, self.files, self.button):
-            widget.setVisible(visible)
 
 
 class CacheDialog(QDialog):
@@ -41,26 +63,29 @@ class CacheDialog(QDialog):
         """`clean_system(target)` runs the helper's clean_cache and returns when it has finished."""
         super().__init__(parent)
         self.setWindowTitle(_("Package Cache"))
-        self.setMinimumWidth(680)
+        self.setMinimumWidth(840)
         self._dnf = dnf
         self._clean_system = clean_system
         self.rows: dict[str, _Row] = {}
 
         lay = QVBoxLayout(self)
-        grid = QGridLayout()
-        grid.setColumnStretch(0, 1)
-        grid.setHorizontalSpacing(18)
-        for i, (target, title, description, button) in enumerate(CACHES):
-            row = self.rows[target] = _Row(QLabel(f"<b>{_(title)}</b>"), QLabel(_(description)), QLabel(), QLabel(),
-                                           QPushButton(_(button)))
-            row.description.setWordWrap(True)
+        card = QFrame()
+        card.setFrameShape(QFrame.StyledPanel)
+        card.setAutoFillBackground(True)
+        card.setBackgroundRole(QPalette.Base)
+        column = QVBoxLayout(card)
+        column.setContentsMargins(0, 0, 0, 0)
+        column.setSpacing(0)
+        for target, icons, title, description, button in CACHES:
+            row = self.rows[target] = self._build_row(icons, _(title), _(description), _(button))
             row.button.clicked.connect(lambda _checked=False, t=target: self._clean(t))
-            grid.addWidget(row.title, i * 2, 0)
-            grid.addWidget(row.description, i * 2 + 1, 0, 1, 3)
-            grid.addWidget(row.size, i * 2, 1, Qt.AlignRight)
-            grid.addWidget(row.files, i * 2, 2, Qt.AlignRight)
-            grid.addWidget(row.button, i * 2, 3, 2, 1, Qt.AlignVCenter)
-        lay.addLayout(grid)
+            column.addWidget(row.separator)
+            column.addWidget(row.frame)
+        # the same width in every row, whatever the longest label is in this language
+        width = max(row.button.sizeHint().width() for row in self.rows.values())
+        for row in self.rows.values():
+            row.button.setFixedWidth(width)
+        lay.addWidget(card)
 
         self.note = QLabel()
         self.note.setWordWrap(True)
@@ -69,7 +94,50 @@ class CacheDialog(QDialog):
         buttons = QDialogButtonBox(QDialogButtonBox.Close)
         buttons.rejected.connect(self.reject)
         lay.addWidget(buttons)
+        self._show_separators()
         self.refresh()
+
+    def _build_row(self, icons: tuple[str, ...], title: str, description: str, button: str) -> _Row:
+        separator = QFrame()
+        separator.setFrameShape(QFrame.HLine)
+        separator.setFrameShadow(QFrame.Plain)
+        separator.setStyleSheet("color: palette(midlight);")
+
+        frame = QWidget()
+        lay = QHBoxLayout(frame)
+        lay.setContentsMargins(14, 12, 14, 12)
+        lay.setSpacing(14)
+        picture = QLabel()
+        picture.setPixmap(_themed_icon(icons).pixmap(ICON_SIZE, self.devicePixelRatioF()))
+        picture.setFixedSize(ICON_SIZE)
+        lay.addWidget(picture, 0, Qt.AlignVCenter)
+
+        text = QVBoxLayout()
+        text.setSpacing(2)
+        text.addWidget(QLabel(f"<b>{title}</b>"))
+        details = _dimmed(QLabel(description))
+        details.setWordWrap(True)
+        text.addWidget(details)
+        lay.addLayout(text, 1)
+
+        numbers = QVBoxLayout()
+        numbers.setSpacing(2)
+        size, files = QLabel(), _dimmed(QLabel())
+        for label in (size, files):
+            label.setAlignment(Qt.AlignRight)
+            numbers.addWidget(label)
+        lay.addLayout(numbers)
+
+        push = QPushButton(button)
+        lay.addWidget(push, 0, Qt.AlignVCenter)
+        return _Row(frame, separator, size, files, push)
+
+    def _show_separators(self) -> None:
+        """A line between visible rows only: none above the first one, whichever that is."""
+        first = True
+        for row in self.rows.values():
+            row.separator.setVisible(not first and not row.frame.isHidden())
+            first = first and row.frame.isHidden()
 
     def refresh(self) -> None:
         for row in self.rows.values():
@@ -82,13 +150,14 @@ class CacheDialog(QDialog):
     def _show(self, report: CacheReport) -> None:
         for target, row in self.rows.items():
             usage = getattr(report, target)
-            row.set_visible(usage is not None)
+            row.frame.setHidden(usage is None)
             if usage is None:
                 continue
-            row.size.setText(human_size(usage.size))
+            row.size.setText(f"<b>{human_size(usage.size)}</b>")
             if target not in (METADATA, USER):  # a pile of small repodata files: the number says nothing
                 row.files.setText(ngettext("{n} file", "{n} files", usage.files).format(n=usage.files))
             row.button.setEnabled(target == METADATA or usage.files > 0)
+        self._show_separators()
         blocked = report.packagekit_blocker if report.packagekit is not None else None
         if blocked:
             self.rows[PACKAGEKIT].button.setEnabled(False)

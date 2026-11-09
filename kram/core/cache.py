@@ -83,6 +83,7 @@ def measure() -> CacheReport:
 
 def clean_user_cache() -> None:
     """Empty ~/.cache/libdnf5. Run as the normal user, so `dnf5 clean` works on that cache and needs no root."""
-    proc = subprocess.run(["dnf5", "clean", "all"], stdin=subprocess.DEVNULL, capture_output=True, text=True, check=False)
+    proc = subprocess.run(["dnf5", "clean", "all"], stdin=subprocess.DEVNULL, capture_output=True, text=True,
+                          check=False)
     if proc.returncode != 0:
         raise RuntimeError(proc.stderr.strip() or f"dnf5 clean: exit code {proc.returncode}")

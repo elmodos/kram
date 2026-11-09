@@ -310,7 +310,8 @@ trailers (from c4ed714 on), read with `git log vA..vB --format='%(trailers:key=C
 release step will collect them into a file shipped with the package (and the metainfo `<release>` notes).
 
 **Cache** (after the MVP, planned 2026-11-07, designed 2026-11-09): Settings → "Package Cache…", a small dialog
-with one row per cache: size, file count where it means something, and its own button. Not on the toolbar.
+with one row per cache in a framed list, cells separated by lines as in Discover: icon, name, one-line description,
+size, file count where it means something, and its own button. Not on the toolbar.
 - **Sizes need no password**: every cache is readable by a normal user (except PackageKit's `tmpdir.*`
   directories, which are left out of the count). They are counted on a background thread and again after each
   clean. A row whose directory does not exist is hidden; an empty cache disables its button.

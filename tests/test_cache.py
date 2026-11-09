@@ -115,7 +115,10 @@ def test_dialog_shows_the_report(monkeypatch):
     rows = dlg.rows
     assert not rows["dnf_packages"].button.isEnabled()  # empty
     assert rows["dnf_metadata"].button.isEnabled()      # usable even when empty, here not
-    assert rows["user"].button.isHidden()               # this system has no such cache
+    assert rows["user"].frame.isHidden()                # this system has no such cache
+    assert rows["user"].separator.isHidden()
+    assert rows["dnf_packages"].separator.isHidden()    # no line above the first row
+    assert not rows["packagekit"].separator.isHidden()
     assert not rows["packagekit"].button.isEnabled()    # an offline update is prepared
     assert rows["packagekit"].files.text() == "2 files"
     assert not dlg.note.isHidden()
