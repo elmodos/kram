@@ -334,9 +334,11 @@ with one row per cache: size, file count where it means something, and its own b
   It checks `lock_holder()` first (stage "locked") and repeats the PackageKit checks itself.
 - **Buttons per row, not checkboxes and one Clean**: the actions differ (root or not, one downloads again).
   Only the metadata action asks for confirmation: the rest is harmless and `pkexec` already asks for the password.
-- **To check in a container when building**: detecting an active PackageKit transaction (`GetTransactionList` over
-  D-Bus only if the name already has an owner, so the check does not start the daemon), and whether `dnf5 clean`
-  covers the directories of repositories that no longer exist.
+- **As built (2026-11-09)**: an active PackageKit transaction is found with `GetTransactionList` over D-Bus, asked
+  only if the name already has an owner, so the check does not start the daemon (with a real daemon in a container:
+  `ao 0` when idle, refused during `pkcon refresh force`). `dnf5 clean packages` and `clean metadata dbcache` also
+  empty the directories of repositories that no longer exist. `scripts/container_check.sh` covers the helper's three
+  targets and cleaning a user's cache.
 
 No per-version pruning ("remove already upgraded packages"): with `keepcache=False` dnf keeps none, and for
 PackageKit cleaning all its rpms is simpler.

@@ -40,6 +40,7 @@ from .dnf_thread import DnfThread
 from .filters_dialog import FiltersDialog
 from .install_dialog import InstallDialog
 from .package_model import COL_NAME, COL_STATUS, HEADERS, HIDEABLE, PackageTableModel
+from .cache_dialog import CacheDialog
 from .progress_dialog import ProgressDialog
 from .repos_dialog import ReposDialog
 from .sidebar import Sidebar
@@ -154,6 +155,8 @@ class MainWindow(QMainWindow):
                                            tip=_("A custom filter with the current sidebar selection and search"))
         self.act_copr = self._action(_("COPR"), "folder-cloud", slot=self.open_copr,
                                      tip=_("Manage COPR projects: community repositories"))
+        self.act_cache = self._action(_("Package Cache…"), "edit-clear-all", slot=self.open_cache,
+                                      tip=_("See how much space the package caches take and clean them"))
         self.act_find = self._action(_("Find"), "edit-find", QKeySequence.Find,
                                      lambda: (self.search.setFocus(), self.search.selectAll()))
         self.act_back = self._action(_("Back"), "go-previous", "Alt+Left", self.go_back,
@@ -248,7 +251,7 @@ class MainWindow(QMainWindow):
         m.addSeparator()
         m.addActions([self.act_properties, self.act_back])
         m = mb.addMenu(_("&Settings"))
-        m.addActions([self.act_repos, self.act_copr])
+        m.addActions([self.act_repos, self.act_copr, self.act_cache])
         m.addSeparator()
         m.addActions([self.act_filters, self.act_new_filter])
         m.addSeparator()
@@ -972,6 +975,18 @@ class MainWindow(QMainWindow):
         dlg.showPackages.connect(show_packages)
         dlg.exec()
         self.catalogLoaded.disconnect(refresh)
+
+    def open_cache(self):
+        if not self.snapshot or self.helper.busy:
+            return
+        CacheDialog(self.dnf, self._clean_cache, self).exec()
+
+    def _clean_cache(self, target: str) -> None:
+        request = {"op": "clean_cache", "target": target}
+        if target == "dnf_metadata":
+            self.run_helper_and_reload(request, _("Downloading metadata again"))
+        else:
+            self._run_helper(request, _("Cleaning the package cache"))
 
     # ---------------------------------------------------------------- package files
 
