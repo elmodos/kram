@@ -95,7 +95,8 @@ class UpgradeDialog(QDialog):
                        f"<a href='{guide}'>{html.escape(_('Upgrade guide'))}</a>")
         links.setOpenExternalLinks(True)
         row.addWidget(links, 1)
-        self.check = QPushButton(QIcon.fromTheme("edit-find"), _("Check"))
+        self.check = QPushButton(QIcon.fromTheme("security-high", QIcon.fromTheme("edit-find")), _("Check"))
+        self.check.setDefault(True)  # the main action here
         self.check.clicked.connect(self.start_check)
         row.addWidget(self.check)
         lay.addLayout(row)
