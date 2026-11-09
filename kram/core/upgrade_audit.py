@@ -28,7 +28,8 @@ class AuditResult:
     installs: int = 0
     removed: list[str] = field(default_factory=list)
     downgrades: list[str] = field(default_factory=list)  # "name 1.2-3 → 1.1-9"
-    orphaned: list[str] = field(default_factory=list)   # installed, no version in the target; "name (repo)"
+    replaced: list[str] = field(default_factory=list)   # "name → the package taking over"
+    orphaned: list[str] = field(default_factory=list)   # no package of that name in the target, nothing takes over
     empty_repos: list[str] = field(default_factory=list)
     download: int = 0
     needed: int = 0                                 # download plus what the installed system grows by
@@ -130,7 +131,7 @@ def _simulate(target: str, cache: str, cancel: threading.Event, report: Report) 
     installed.filter_installed()
     available = libdnf5.rpm.PackageQuery(base)
     available.filter_available()
-    result.orphaned = _orphaned(installed, available)
+    without_target = _without_target(installed, available)
     packages_per_repo = Counter(p.get_repo_id() for p in available)
     if not packages_per_repo:  # otherwise "nothing to do" would read as "the upgrade works"
         raise RuntimeError(f"no enabled repository has packages for Fedora {target}")
@@ -145,7 +146,9 @@ def _simulate(target: str, cache: str, cancel: threading.Event, report: Report) 
         transaction = _resolve(base, allow_erasing=True)
     if _ok(transaction):
         result.resolved = True
-        _describe(transaction, installed, result)
+        _describe(transaction, installed, without_target, result)
+    else:
+        result.orphaned = sorted(without_target.values())
     report("cleanup", {})
     return result
 
@@ -161,20 +164,31 @@ def _ok(transaction) -> bool:
     return transaction.get_problems() == libdnf5.base.GoalProblem_NO_PROBLEM
 
 
-def _orphaned(installed, available) -> list[str]:
-    known = {(p.get_name(), p.get_arch()) for p in available}
-    found = set()
-    for p in installed:
-        if (p.get_name(), p.get_arch()) not in known and p.get_name() != "gpg-pubkey":
-            repo = p.get_from_repo_id()
-            found.add(p.get_name() if not repo or HASHED_REPO_ID.match(repo) else f"{p.get_name()} ({repo})")
-    return sorted(found)
+def _without_target(installed, available) -> dict[str, str]:
+    """Installed packages whose name the target does not have (name -> how to show it). By name, not by arch: a package
+    that only changes arch, noarch to x86_64 say, is an ordinary upgrade."""
+    known = {p.get_name() for p in available}
+    # the repo a package came from is one of the running release's, misleading in a list about the target
+    return {p.get_name(): f"{p.get_name()} (@commandline)" if p.get_from_repo_id() == "@commandline" else p.get_name()
+            for p in installed if p.get_name() not in known and p.get_name() != "gpg-pubkey"}
 
 
-def _describe(transaction, installed, result: AuditResult) -> None:
+def sort_out(without_target: dict[str, str], removed: list[str],
+             successors: dict[str, set[str]]) -> tuple[list[str], list[str]]:
+    """What really happens to the packages the target has no package of that name for: (replaced, staying as they
+    are). The removed ones are reported as removed."""
+    replaced = [f"{name} → {', '.join(sorted(successors[name]))}"
+                for name in sorted(without_target) if name in successors]
+    staying = [label for name, label in sorted(without_target.items())
+               if name not in successors and name not in removed]
+    return replaced, staying
+
+
+def _describe(transaction, installed, without_target: dict[str, str], result: AuditResult) -> None:
     to_string = libdnf5.base.transaction.transaction_item_action_to_string
     versions = {p.get_name(): p.get_evr() for p in installed}
-    items = [(to_string(tp.get_action()), tp.get_package()) for tp in transaction.get_transaction_packages()]
+    packages = list(transaction.get_transaction_packages())
+    items = [(to_string(tp.get_action()), tp.get_package()) for tp in packages]
     counts = Counter(action for action, _package in items)
     result.upgrades, result.installs = counts["Upgrade"], counts["Install"]
     result.download = sum(p.get_download_size() for action, p in items if action in INBOUND)
@@ -184,5 +198,11 @@ def _describe(transaction, installed, result: AuditResult) -> None:
     # the rotation of old kernels is a removal too, but that package stays
     staying = {p.get_name() for action, p in items if action in INBOUND}
     result.removed = sorted({p.get_name() for action, p in items if action == "Remove"} - staying)
+    successors: dict[str, set[str]] = {}
+    for tp in packages:
+        for old in tp.get_replaces():
+            if old.get_name() != tp.get_package().get_name():
+                successors.setdefault(old.get_name(), set()).add(tp.get_package().get_name())
+    result.replaced, result.orphaned = sort_out(without_target, result.removed, successors)
     result.downgrades = sorted(f"{p.get_name()} {versions.get(p.get_name(), '?')} → {p.get_evr()}"
                                for action, p in items if action == "Downgrade")

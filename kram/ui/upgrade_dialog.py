@@ -276,7 +276,9 @@ class UpgradeDialog(QDialog):
         version = self.target
         self._category(ERROR, _("Problems that stop the upgrade: {n}"), r.blockers, expanded=True)
         self._category(WARN, _("Would be removed: {n}"), r.removed, expanded=True)
-        self._category(WARN, _("Installed, with no version in Fedora {version}: {n}"), r.orphaned, expanded=False)
+        self._category(WARN, _("Stay as they are, with no updates from Fedora {version}: {n}"), r.orphaned,
+                       expanded=True)
+        self._category(INFO, _("Replaced by other packages: {n}"), r.replaced, expanded=False)
         self._category(INFO, _("Would be downgraded: {n}"), r.downgrades, expanded=False)
         self._category(WARN, _("Repositories with nothing for Fedora {version}: {n}"), r.empty_repos, expanded=True)
 

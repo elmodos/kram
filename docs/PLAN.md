@@ -378,7 +378,9 @@ would do. It never offers the upgrade itself: that is too much responsibility.
   laptop; resolving takes 2 s). A separate libdnf5 Base on the dnf thread with `releasever` set to the target and its
   own cache directory, unprivileged, `Goal.add_rpm_distro_sync()`, resolved and never run: first without
   `allow_erasing`, whose problems are the blockers, then with it for what the upgrade would do. It shows blockers, what
-  is removed (without the rotation of old kernels), installed packages nothing in the target provides, downgrades,
+  is removed (without the rotation of old kernels), packages the target has no package of that name for, told apart by
+  what really happens (replaced by another package through Obsoletes, as libgit2 by libgit2_1.9, or staying as they are
+  with no updates; a mere change of arch is an upgrade), downgrades,
   enabled repositories without packages for the target, and the download size against free disk space.
   The result stays in memory for the session; the metadata is deleted when the dialog closes.
 - **Prototype on the author's laptop** (Fedora 44 → 45): all 16 repositories and 4 COPR projects have builds, yet the

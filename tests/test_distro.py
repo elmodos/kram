@@ -143,12 +143,14 @@ def test_dialog_shows_the_simulation(dialog, monkeypatch):
 
     asked = []
     result = AuditResult("45", True, blockers=["needs libvpx"], upgrades=10, installs=2, removed=["vbox"],
-                         downgrades=["a 2 → 1"], orphaned=["b"], empty_repos=["gone"], download=2048, needed=4096,
-                         free=1)
+                         downgrades=["a 2 → 1"], orphaned=["b"], replaced=["c → d"], empty_repos=["gone"],
+                         download=2048,
+                         needed=4096, free=1)
     monkeypatch.setattr(upgrade_dialog.upgrade_audit, "simulate", lambda v, _cancel, _report: asked.append(v) or result)
     dialog.start_check()
     assert asked == ["45"] and not dialog.running_check and dialog.check.isEnabled()
-    wanted = ["Problems that stop the upgrade: 1", "Would be removed: 1", "Installed, with no version in Fedora 45: 1",
+    wanted = ["Problems that stop the upgrade: 1", "Would be removed: 1",
+              "Stay as they are, with no updates from Fedora 45: 1", "Replaced by other packages: 1",
               "Would be downgraded: 1", "Repositories with nothing for Fedora 45: 1"]
     assert titles(dialog) == ["No COPR projects are enabled.", *wanted]
     assert "only if packages are removed" in dialog.status.text() and "Not enough free" in dialog.status.text()
@@ -310,9 +312,10 @@ def test_rows_carry_the_state_marks(dialog, monkeypatch):
     kinds = []
     monkeypatch.setattr(ui, "_state_icon", lambda kind: kinds.append(kind) or QIcon())
     monkeypatch.setattr(ui.upgrade_audit, "simulate", lambda *_a: AuditResult(
-        "45", True, blockers=["b"], removed=["r"], orphaned=["o"], downgrades=["d"], empty_repos=["e"]))
+        "45", True, blockers=["b"], removed=["r"], orphaned=["o"], replaced=["p"], downgrades=["d"],
+        empty_repos=["e"]))
     dialog.start_check()
-    assert kinds == [ui.ERROR, ui.WARN, ui.WARN, ui.INFO, ui.WARN]
+    assert kinds == [ui.ERROR, ui.WARN, ui.WARN, ui.INFO, ui.INFO, ui.WARN]
     assert set(ui.ICONS) >= {ui.OK, ui.WARN, ui.ERROR, ui.INFO}
 
 
@@ -328,3 +331,39 @@ def test_copr_row_mark_follows_the_answer(dialog, monkeypatch):
     dialog._copr_missing = ["a/b"]
     dialog._show_copr()
     assert kinds == [ui.OK, ui.WARN]
+
+
+def test_sort_out_tells_replaced_from_staying():
+    pytest.importorskip("libdnf5")
+    from kram.core.upgrade_audit import sort_out
+
+    without_target = {"libgit2": "libgit2", "claude-desktop": "claude-desktop (@commandline)",
+                      "VirtualBox-7.2": "VirtualBox-7.2", "libcollection": "libcollection"}
+    replaced, staying = sort_out(without_target, ["VirtualBox-7.2"],
+                                 {"libgit2": {"libgit2_1.9"}, "libcollection": {"libini_config"}})
+    assert replaced == ["libcollection → libini_config", "libgit2 → libgit2_1.9"]
+    assert staying == ["claude-desktop (@commandline)"]  # the removed one is reported as removed, not here too
+
+
+class Pkg:
+    def __init__(self, name, arch="x86_64", repo="updates"):
+        self.name, self.arch, self.repo = name, arch, repo
+
+    def get_name(self):
+        return self.name
+
+    def get_arch(self):
+        return self.arch
+
+    def get_from_repo_id(self):
+        return self.repo
+
+
+def test_without_target_goes_by_name_and_hides_the_running_releases_repo():
+    pytest.importorskip("libdnf5")
+    from kram.core.upgrade_audit import _without_target
+
+    installed = [Pkg("libreoffice-help-en", "noarch"), Pkg("libgit2"), Pkg("tool", repo="@commandline"),
+                 Pkg("gpg-pubkey")]
+    available = [Pkg("libreoffice-help-en", "x86_64")]
+    assert _without_target(installed, available) == {"libgit2": "libgit2", "tool": "tool (@commandline)"}
