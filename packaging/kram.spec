@@ -1,5 +1,5 @@
 %global appid io.github.elmodos.Kram
-%global base_version 0.3.1
+%global base_version 0.4.0
 
 Name:           kram
 # A tagged release (v%%{base_version}) is plain %%{base_version}. Any other commit gets a snapshot from
@@ -83,6 +83,11 @@ QT_QPA_PLATFORM=offscreen %pytest
 %{_datadir}/icons/hicolor/scalable/apps/%{appid}.svg
 
 %changelog
+* Mon Nov 09 2026 Modo Ltunzher <offnormal@gmail.com> - 0.4.0-1
+- A toolbar button tells when a new Fedora release is out (Settings > Watch Fedora Releases)
+- Its dialog works out what the upgrade would block, remove and need, without changing anything
+- The progress bar keeps moving while waiting for a slow server, instead of sitting at 100%
+
 * Mon Nov 09 2026 Modo Ltunzher <offnormal@gmail.com> - 0.3.1-1
 - Custom filters: new Provides condition, e.g. application() for packages with a menu entry
 - Apply dialog: the equivalent command changes with "Download packages only"
