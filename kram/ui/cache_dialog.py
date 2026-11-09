@@ -13,6 +13,7 @@ from PySide6.QtWidgets import (
     QLabel,
     QMessageBox,
     QPushButton,
+    QScrollArea,
     QVBoxLayout,
     QWidget,
 )
@@ -23,6 +24,8 @@ from .package_model import human_size
 
 METADATA, USER, PACKAGEKIT = "dnf_metadata", "user", "packagekit"
 ICON_SIZE = QSize(32, 32)
+PREFERRED_WIDTH = 820  # the description of every row fits on one line
+MINIMUM_HEIGHT = 120  # about one row
 # the field of CacheReport, which is also the helper's target (except USER, cleaned without the helper); icon names
 # in the order to try: not every theme has them, and a system with GNOME Software has no Discover logo
 CACHES = (
@@ -50,6 +53,24 @@ def _themed_icon(names: tuple[str, ...]) -> QIcon:
     return next((QIcon.fromTheme(name) for name in names if QIcon.hasThemeIcon(name)), QIcon())
 
 
+class _RowsArea(QScrollArea):
+    """The list of caches: as wide as the window, its text wraps, and only the height scrolls."""
+
+    def __init__(self):
+        super().__init__()
+        self.setWidgetResizable(True)
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+
+    def sizeHint(self) -> QSize:  # every row in full when the dialog opens; the default is a fixed guess
+        height = self.widget().layout().totalHeightForWidth(PREFERRED_WIDTH)
+        return QSize(PREFERRED_WIDTH, height + 2 * self.frameWidth())
+
+    def minimumSizeHint(self) -> QSize:
+        """Not narrower than the rows can get once their text wraps: nothing scrolls sideways."""
+        return QSize(self.widget().minimumSizeHint().width() + self.verticalScrollBar().sizeHint().width()
+                     + 2 * self.frameWidth(), MINIMUM_HEIGHT)
+
+
 @dataclass
 class _Row:
     frame: QWidget
@@ -65,17 +86,15 @@ class CacheDialog(QDialog):
         """`clean_system(target)` runs the helper's clean_cache and returns when it has finished."""
         super().__init__(parent)
         self.setWindowTitle(_("Package Cache"))
-        self.setMinimumWidth(840)
         self._dnf = dnf
         self._clean_system = clean_system
         self.rows: dict[str, _Row] = {}
 
         lay = QVBoxLayout(self)
-        card = QFrame()
-        card.setFrameShape(QFrame.StyledPanel)
-        card.setAutoFillBackground(True)
-        card.setBackgroundRole(QPalette.Base)
-        column = QVBoxLayout(card)
+        content = QWidget()
+        content.setAutoFillBackground(True)
+        content.setBackgroundRole(QPalette.Base)
+        column = QVBoxLayout(content)
         column.setContentsMargins(0, 0, 0, 0)
         column.setSpacing(0)
         for target, icons, title, description, button in CACHES:
@@ -87,7 +106,10 @@ class CacheDialog(QDialog):
         width = max(row.button.sizeHint().width() for row in self.rows.values())
         for row in self.rows.values():
             row.button.setFixedWidth(width)
-        lay.addWidget(card)
+        column.addStretch(1)
+        self.scroll = _RowsArea()
+        self.scroll.setWidget(content)
+        lay.addWidget(self.scroll, 1)
 
         self.note = QLabel()
         self.note.setWordWrap(True)
@@ -116,11 +138,14 @@ class CacheDialog(QDialog):
 
         text = QVBoxLayout()
         text.setSpacing(2)
-        text.addWidget(QLabel(f"<b>{title}</b>"))
+        heading = QLabel(f"<b>{title}</b>")
+        heading.setWordWrap(True)
+        text.addWidget(heading)
         details = _dimmed(QLabel(description))
         details.setWordWrap(True)
         text.addWidget(details)
         path = QLabel()
+        path.setWordWrap(True)
         path.setTextInteractionFlags(Qt.TextBrowserInteraction)  # a link that can also be selected and copied
         path.setOpenExternalLinks(True)
         path.setToolTip(_("Open in the file manager"))
@@ -169,6 +194,7 @@ class CacheDialog(QDialog):
                 row.files.setText(ngettext("{n} file", "{n} files", usage.files).format(n=usage.files))
             row.button.setEnabled(target == METADATA or usage.files > 0)
         self._show_separators()
+        self.scroll.updateGeometry()  # the numbers changed how narrow the rows can get
         blocked = report.packagekit_blocker if report.packagekit is not None else None
         if blocked:
             self.rows[PACKAGEKIT].button.setEnabled(False)

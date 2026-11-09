@@ -311,7 +311,8 @@ release step will collect them into a file shipped with the package (and the met
 
 **Cache** (after the MVP, planned 2026-11-07, designed 2026-11-09): Settings → "Package Cache…", a small dialog
 with one row per cache in a framed list, cells separated by lines as in Discover: icon, name, one-line description,
-size, file count where it means something, and its own button. Not on the toolbar.
+size, file count where it means something, and its own button. Not on the toolbar. It opens wide enough for one
+line per description and can shrink: the text wraps, and the list scrolls when the window is too low.
 - **Sizes need no password**: every cache is readable by a normal user (except PackageKit's `tmpdir.*`
   directories, which are left out of the count). They are counted on a background thread and again after each
   clean. A row whose directory does not exist is hidden; an empty cache disables its button.

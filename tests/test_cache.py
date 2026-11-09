@@ -130,6 +130,49 @@ def test_dialog_shows_the_report(monkeypatch):
     assert rows["dnf_packages"].path.openExternalLinks()
 
 
+def test_dialog_shrinks_with_wrapped_text_and_scrolls(monkeypatch):
+    pytest.importorskip("PySide6.QtWidgets")
+    os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+    from PySide6.QtCore import Qt
+    from PySide6.QtWidgets import QApplication, QLabel
+
+    from kram.ui import cache_dialog
+
+    app = QApplication.instance() or QApplication([])
+
+    class Later:  # as the real thread does: the numbers arrive after the window has appeared
+        pending = None
+
+        def submit(self, fn, on_done, on_error=None):
+            self.pending = lambda: on_done(fn())
+
+    def settle():
+        for _ in range(5):
+            app.processEvents()
+
+    usage = cache.Usage(3 << 30, 467)
+    report = cache.CacheReport(usage, usage, usage, usage, None, "/var/cache/libdnf5", "/home/someone/.cache/libdnf5")
+    monkeypatch.setattr(cache_dialog, "measure", lambda: report)
+    dnf = Later()
+    dlg = cache_dialog.CacheDialog(dnf, lambda _target: None)
+    dlg.show()
+    settle()
+    dnf.pending()
+    settle()
+
+    assert dlg.scroll.horizontalScrollBarPolicy() == Qt.ScrollBarAlwaysOff
+    narrowest = dlg.minimumSizeHint().width()
+    assert narrowest < 600
+    dlg.resize(narrowest, 180)
+    settle()
+    content = dlg.scroll.widget()
+    assert content.width() <= dlg.scroll.viewport().width()     # nothing is cut off on the right
+    assert dlg.scroll.verticalScrollBar().maximum() > 0         # the rest scrolls
+    for label in content.findChildren(QLabel):
+        if label.wordWrap() and label.text():
+            assert label.height() >= label.heightForWidth(label.width()), label.text()
+
+
 def test_locations_open_real_folders(monkeypatch):
     monkeypatch.setattr(helper, "PACKAGEKIT_CACHE", "/var/cache/PackageKit")
     report = cache.CacheReport(None, None, None, None, None, "/var/cache/libdnf5", "/home/u/.cache/libdnf5")
