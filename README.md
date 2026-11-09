@@ -32,6 +32,14 @@ Built on libdnf5 (the same library as `dnf5`) and Qt 6. See [docs/PLAN.md](docs/
 |---|
 | ![Package Cache](docs/screenshots/package-cache.png) |
 
+| A new Fedora release on the toolbar | What moving to it would do |
+|---|---|
+| ![Fedora 45 button](docs/screenshots/fedora-release-button.png) | ![Result of the check](docs/screenshots/fedora-release-result.png) |
+
+| Before the check | While it runs |
+|---|---|
+| ![Before the check](docs/screenshots/fedora-release-start.png) | ![The check running](docs/screenshots/fedora-release-running.png) |
+
 ## Features
 
 - Every package of the enabled repositories in one table: status, origin (Fedora / COPR / third-party /
