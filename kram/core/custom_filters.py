@@ -4,7 +4,7 @@ A filter is stored as plain JSON-able data and compiled against a catalog snapsh
 predicate the built-in filters use, so counting and filtering stay in-memory and instant.
 """
 import fnmatch
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
 from enum import Enum
 
@@ -21,6 +21,7 @@ class Field(Enum):
     NAME = "name"
     NAME_SUMMARY = "name_summary"
     DESCRIPTION = "description"
+    PROVIDES = "provides"
     STATUS = "status"
     ORIGIN = "origin"
     REPO = "repo"
@@ -47,6 +48,7 @@ FIELD_LABELS = {
     Field.NAME: _("Name"),
     Field.NAME_SUMMARY: _("Name or summary"),
     Field.DESCRIPTION: pgettext("filter field", "Description"),
+    Field.PROVIDES: _("Provides"),
     Field.STATUS: _("Status"),
     Field.ORIGIN: _("Origin"),
     Field.REPO: _("Repository"),
@@ -88,6 +90,8 @@ ORIGIN_CHOICES = {
 def ops_for(f: Field) -> list[Op]:
     if f in TEXT_FIELDS:
         return [Op.CONTAINS, Op.NOT_CONTAINS, Op.MATCHES, Op.IS]
+    if f is Field.PROVIDES:
+        return [Op.IS, Op.IS_NOT, Op.MATCHES]
     if f is Field.SIZE:
         return [Op.GREATER, Op.LESS]
     return [Op.IS, Op.IS_NOT]
@@ -95,6 +99,8 @@ def ops_for(f: Field) -> list[Op]:
 
 def choices(f: Field, snap: CatalogSnapshot | None) -> list[tuple[str, str]] | None:
     """(value, label) for fields with a fixed set of values; None for free text/number fields."""
+    if f is Field.PROVIDES:
+        return None
     if f is Field.STATUS:
         return [(v, _(label)) for v, label in STATUS_CHOICES.items()]
     if f is Field.REASON:
@@ -153,6 +159,15 @@ class CustomFilter:
         return lambda r: any(p(r) for p in preds)
 
 
+def provides_query(c: Condition) -> tuple[str, bool]:
+    """What to ask libdnf5 for a Provides condition: (capability, is a glob); the key of CatalogSnapshot.provides."""
+    return c.value.strip(), c.op is Op.MATCHES
+
+
+def provides_queries(filters: Iterable[CustomFilter]) -> set[tuple[str, bool]]:
+    return {provides_query(c) for f in filters for c in f.conditions if c.field is Field.PROVIDES and c.value.strip()}
+
+
 def load_filters(data: list) -> list[CustomFilter]:
     """Filters from settings; entries that are malformed (e.g. from a newer version) are skipped."""
     out = []
@@ -188,6 +203,12 @@ def _compile(c: Condition, snap: CatalogSnapshot) -> Predicate:
             return lambda r: test(r.name) or test(r.summary)
         descriptions = {r.key: d for r, d in zip(snap.rows, snap.descriptions, strict=False)}
         return lambda r: test(descriptions.get(r.key, ""))
+
+    if c.field is Field.PROVIDES:
+        keys = snap.provides.get(provides_query(c))
+        if keys is None:  # not answered yet: nothing matches, whichever way the condition is put
+            return lambda _r: False
+        return (lambda r: r.key not in keys) if c.op is Op.IS_NOT else (lambda r: r.key in keys)
 
     if c.field is Field.SIZE:
         try:
@@ -241,6 +262,8 @@ def conditions_for_view(entry_id: str, search: str, search_field: Field | None) 
         out.append(Condition(Field.GROUP, Op.IS, value))
     elif kind == "custom":
         pass  # the caller copies that filter's own conditions
-    if search and search_field is not None:
+    if search and search_field is Field.PROVIDES:
+        out.append(Condition(search_field, Op.MATCHES if any(ch in search for ch in "*?[") else Op.IS, search))
+    elif search and search_field is not None:
         out.append(Condition(search_field, Op.CONTAINS, search))
     return out

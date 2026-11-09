@@ -37,8 +37,9 @@ Built on libdnf5 (the same library as `dnf5`) and Qt 6. See [docs/PLAN.md](docs/
 - Every package of the enabled repositories in one table: status, origin (Fedora / COPR / third-party /
   local), installed and latest version, repository, size.
 - Filters by status, origin and repository, comps group, and earlier searches; your own custom filters
-  (name, summary, description, status, origin, repository, group, install reason, architecture, size),
-  e.g. "installed by user from COPR" or "unneeded dependencies over 50 MB".
+  (name, summary, description, provided capability, status, origin, repository, group, install reason,
+  architecture, size),
+  e.g. "installed by user from COPR" or "unneeded dependencies over 50 MB" or, with `application()`, only what has a menu entry.
 - Search ranked by relevance: by name, name and summary, description, provided capability or file.
 - Mark for installation, upgrade, reinstallation, downgrade to a chosen version, removal, or change the
   install reason; review the whole transaction (with dependencies and the equivalent `dnf5` command) before

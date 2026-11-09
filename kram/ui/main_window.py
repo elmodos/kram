@@ -1,6 +1,7 @@
 """Main window: Synaptic layout — browse, mark, preview, apply."""
 import json
 import time
+from collections.abc import Callable
 from pathlib import Path
 
 from PySide6.QtCore import QSettings, QSize, QStandardPaths, Qt, QTimer, Signal
@@ -25,7 +26,7 @@ from PySide6.QtWidgets import (
 from .. import HOMEPAGE, __version__
 from ..core import releases
 from ..core.catalog import Catalog
-from ..core.custom_filters import CustomFilter, Field, conditions_for_view, load_filters
+from ..core.custom_filters import CustomFilter, Field, conditions_for_view, load_filters, provides_queries
 from ..core.evr import evr_cmp
 from ..core.filters import FilterEntry
 from ..core.marks import Action, allowed_actions, dump_marks, parse_marks
@@ -149,9 +150,9 @@ class MainWindow(QMainWindow):
         self.act_repos = self._action(_("Repositories"), "configure", slot=self.open_repos, enabled=False,
                                       tip=_("Enable or disable software repositories"))
         self.act_filters = self._action(_("Custom Filters…"), "view-filter", slot=lambda: self.edit_filters(),
-                                        tip=_("Create and edit your own filters for the sidebar"))
+                                        enabled=False, tip=_("Create and edit your own filters for the sidebar"))
         self.act_new_filter = self._action(_("New Filter from Current View…"), "list-add",
-                                           slot=self.new_filter_from_view,
+                                           slot=self.new_filter_from_view, enabled=False,
                                            tip=_("A custom filter with the current sidebar selection and search"))
         self.act_copr = self._action(_("COPR"), "folder-cloud", slot=self.open_copr, enabled=False,
                                      tip=_("Manage COPR projects: community repositories"))
@@ -414,7 +415,8 @@ class MainWindow(QMainWindow):
     def reload(self):
         self.status.setText(_("Loading metadata…"))
         self.act_reload.setEnabled(False)
-        self.dnf.submit(self.catalog.load, self._on_loaded, self._on_error)
+        queries = provides_queries(self.sidebar.custom)
+        self.dnf.submit(lambda: self.catalog.load(queries), self._on_loaded, self._on_error)
 
     def _on_loaded(self, snap: CatalogSnapshot):
         keep = self._current_key()
@@ -433,6 +435,8 @@ class MainWindow(QMainWindow):
         self.sidebar.select(view, entry)  # emits filterChanged -> apply_filter
         if keep:
             self._select_key(keep)
+        if missing := self._missing_provides():  # a filter was edited while this catalog was loading
+            self._resolve_provides(missing, lambda: self.sidebar.set_view(self.sidebar.current_view))
 
     def _show_repo_warning(self, snap: CatalogSnapshot) -> None:
         missing = snap.unavailable_repos
@@ -633,24 +637,45 @@ class MainWindow(QMainWindow):
         QSettings().setValue("filters/custom", json.dumps([f.to_dict() for f in self.sidebar.custom],
                                                           ensure_ascii=False))
 
+    def _missing_provides(self) -> set[tuple[str, bool]]:
+        return provides_queries(self.sidebar.custom) - self.snapshot.provides.keys()
+
+    def _resolve_provides(self, queries: set[tuple[str, bool]], done: Callable[[], None]) -> None:
+        """Ask libdnf5 on its own thread; the filters themselves run on this one, from the snapshot's answers."""
+        snap = self.snapshot
+
+        def store(found):
+            snap.provides.update(found)
+            done()
+        self.dnf.submit(lambda: {q: self.catalog.provides_keys(*q) for q in queries}, store)
+
     def edit_filters(self, select: str | None = None, new: CustomFilter | None = None) -> None:
-        d = FiltersDialog(self.sidebar.custom, self.snapshot, self, select=select, new=new)
+        if self.snapshot is None:
+            return
+        d = FiltersDialog(self.sidebar.custom, self.snapshot, self, select=select, new=new,
+                          resolve_provides=self._resolve_provides)
         if not d.exec():
             return
         self.sidebar.custom = d.filters()
         self._save_custom_filters()
         name = d.current_name()
-        if name is not None:
-            self.sidebar.select("custom", f"custom:{name}")
-        elif self.sidebar.current_view == "custom":
-            self.sidebar.set_view("custom")
+
+        def show():
+            if name is not None:
+                self.sidebar.select("custom", f"custom:{name}")
+            elif self.sidebar.current_view == "custom":
+                self.sidebar.set_view("custom")
+        if missing := self._missing_provides():  # closed before the count came back
+            self._resolve_provides(missing, show)
+        else:
+            show()
 
     def new_filter_from_view(self) -> None:
         entry_id = self.sidebar.current_entry_id or ""
         text = self.search.text().strip()
         mode = Mode(self.search_mode.currentIndex())
         search_field = {Mode.NAME: Field.NAME, Mode.NAME_SUMMARY: Field.NAME_SUMMARY,
-                        Mode.DESCRIPTION: Field.DESCRIPTION}.get(mode)
+                        Mode.DESCRIPTION: Field.DESCRIPTION, Mode.PROVIDES: Field.PROVIDES}.get(mode)
         conditions = conditions_for_view(entry_id, text, search_field)
         if entry_id.startswith("custom:"):
             base = next((f for f in self.sidebar.custom if f"custom:{f.name}" == entry_id), None)
@@ -727,7 +752,7 @@ class MainWindow(QMainWindow):
         self.act_unmark_all.setEnabled(n > 0)
         self.act_save_marks.setEnabled(n > 0)
         self.act_read_marks.setEnabled(self.snapshot is not None)
-        for needs_catalog in (self.act_repos, self.act_copr, self.act_cache):
+        for needs_catalog in (self.act_repos, self.act_copr, self.act_cache, self.act_filters, self.act_new_filter):
             needs_catalog.setEnabled(self.snapshot is not None)
         self.act_open_file.setEnabled(self._can_open_file())
         self.act_mark_upgrades.setEnabled(bool(self.snapshot and self.snapshot.n_upgradable))

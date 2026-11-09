@@ -1,3 +1,6 @@
+import os
+from dataclasses import replace
+
 import pytest
 
 from kram.core.custom_filters import (
@@ -6,9 +9,11 @@ from kram.core.custom_filters import (
     CustomFilter,
     Field,
     Op,
+    choices,
     conditions_for_view,
     load_filters,
     ops_for,
+    provides_queries,
 )
 from kram.core.filters import custom_filter_entries
 from kram.core.model import CatalogSnapshot, GroupInfo, Origin, PkgRow, Status
@@ -101,3 +106,67 @@ def test_conditions_for_view():
         Condition(Field.REPO, Op.IS, COPR), Condition(Field.NAME_SUMMARY, Op.CONTAINS, "term")]
     assert conditions_for_view("origin:all", "x", Field.NAME) == [Condition(Field.NAME, Op.CONTAINS, "x")]
     assert conditions_for_view("group:term", "", None) == [Condition(Field.GROUP, Op.IS, "term")]
+
+
+PROVIDES_SNAP = replace(SNAP, provides={
+    ("application()", False): frozenset({("wezterm", "x86_64"), ("kitty", "x86_64")}),
+    ("python3dist(*)", True): frozenset({("python3-foo", "x86_64")})})
+
+
+@pytest.mark.parametrize(("cond", "expected"), [
+    (Condition(Field.PROVIDES, Op.IS, "application()"), ["wezterm", "kitty"]),
+    (Condition(Field.PROVIDES, Op.IS, " application() "), ["wezterm", "kitty"]),
+    (Condition(Field.PROVIDES, Op.IS_NOT, "application()"),
+     ["python3-requests", "python3-foo", "kernel", "kernel-devel"]),
+    (Condition(Field.PROVIDES, Op.MATCHES, "python3dist(*)"), ["python3-foo"]),
+    (Condition(Field.PROVIDES, Op.IS, "not asked yet"), []),
+    (Condition(Field.PROVIDES, Op.IS_NOT, "not asked yet"), []),  # not "everything" while the answer is on its way
+    (Condition(Field.PROVIDES, Op.IS, ""), []),
+])
+def test_provides(cond, expected):
+    pred = CustomFilter("t", [cond]).compile(PROVIDES_SNAP)
+    assert [r.name for r in ROWS if pred(r)] == expected
+
+
+def test_provides_queries():
+    filters = [CustomFilter("a", [Condition(Field.PROVIDES, Op.IS, " application() "),
+                                  Condition(Field.PROVIDES, Op.IS_NOT, "application()"),
+                                  Condition(Field.PROVIDES, Op.IS, " "),
+                                  Condition(Field.NAME, Op.IS, "x")]),
+               CustomFilter("b", [Condition(Field.PROVIDES, Op.MATCHES, "python3dist(*)")])]
+    assert provides_queries(filters) == {("application()", False), ("python3dist(*)", True)}
+
+
+def test_provides_options_and_saving():
+    assert ops_for(Field.PROVIDES) == [Op.IS, Op.IS_NOT, Op.MATCHES]
+    assert choices(Field.PROVIDES, None) is None  # free text, with or without a catalog
+    f = CustomFilter("Apps", [Condition(Field.PROVIDES, Op.IS, "application()")])
+    assert load_filters([f.to_dict()]) == [f]
+
+
+def test_view_with_a_provides_search():
+    assert conditions_for_view("status:all", "application()", Field.PROVIDES) == [
+        Condition(Field.PROVIDES, Op.IS, "application()")]
+    assert conditions_for_view("status:all", "python3dist(*)", Field.PROVIDES) == [
+        Condition(Field.PROVIDES, Op.MATCHES, "python3dist(*)")]
+
+
+def test_editor_counts_after_the_answer_arrives():
+    pytest.importorskip("PySide6.QtWidgets")
+    os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+    from PySide6.QtWidgets import QApplication
+
+    from kram.ui.filters_dialog import FiltersDialog
+
+    QApplication.instance() or QApplication([])
+    snap = replace(SNAP, provides={})
+    asked = []
+    f = CustomFilter("Apps", [Condition(Field.PROVIDES, Op.IS, "application()")])
+    dlg = FiltersDialog([f], snap, resolve_provides=lambda q, done: asked.append((q, done)))
+    assert dlg.count.text() == "Counting…"
+    assert [q for q, _done in asked] == [{("application()", False)}]
+    dlg._update_count()
+    assert len(asked) == 1  # one question, however many recounts happen while it is on its way
+    snap.provides[("application()", False)] = frozenset({("kitty", "x86_64")})
+    asked[0][1]()
+    assert dlg.count.text() == "1 package matches"

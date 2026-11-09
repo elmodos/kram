@@ -5,6 +5,7 @@ Not thread-safe: every method must be called from the same single worker thread.
 import functools
 import time
 from collections import Counter
+from collections.abc import Iterable
 
 import libdnf5
 import rpm
@@ -74,7 +75,8 @@ class Catalog:
         self._system_base = None
         self._local: dict[str, object] = {}  # package file path -> its Package in @commandline
 
-    def load(self) -> CatalogSnapshot:
+    def load(self, provides: Iterable[tuple[str, bool]] = ()) -> CatalogSnapshot:
+        """`provides`: the (capability, is a glob) questions of the custom filters, answered in the snapshot."""
         t0 = time.monotonic()
         base = libdnf5.base.Base()
         base.load_config()
@@ -178,7 +180,8 @@ class Catalog:
         descriptions = [(pkgs[r.key][0] or pkgs[r.key][1]).get_description() for r in rows]
         return CatalogSnapshot(rows, n_installed, n_upgradable, time.monotonic() - t0,
                                basearch=basearch, releasever=base.get_vars().get_value("releasever"),
-                               repos=self._repos(), descriptions=descriptions, groups=self._groups())
+                               repos=self._repos(), descriptions=descriptions, groups=self._groups(),
+                               provides={q: self.provides_keys(*q) for q in provides})
 
     def _groups(self) -> list[GroupInfo]:
         # an installed group shows up twice (system state + repo metadata): merge by id
@@ -272,6 +275,12 @@ class Catalog:
         if exact or len(text) < MIN_SUBSTRING_QUERY:
             return exact
         return self._keys(lambda q: q.filter_provides([f"*{text}*"], libdnf5.common.QueryCmp_GLOB))
+
+    def provides_keys(self, capability: str, glob: bool) -> frozenset[tuple[str, str]]:
+        """Keys of the packages providing exactly `capability`, or a capability matching it as a glob."""
+        if glob:
+            return frozenset(self._keys(lambda q: q.filter_provides([capability], libdnf5.common.QueryCmp_GLOB)))
+        return frozenset(self._keys(lambda q: q.filter_provides([capability])))
 
     def search_files(self, text: str) -> list[tuple[str, str]]:
         """Packages owning a file. "/usr/bin/7z" is exact, "7z" means any path ending in /7z, globs pass through.

@@ -37,7 +37,7 @@ class FakeClient(QObject):
 
 
 def test_catalog_actions_are_disabled_until_it_is_loaded(window):
-    actions = (window.act_repos, window.act_copr, window.act_cache)
+    actions = (window.act_repos, window.act_copr, window.act_cache, window.act_filters, window.act_new_filter)
     assert not any(a.isEnabled() for a in actions)
     window.snapshot = SimpleNamespace(n_upgradable=0)
     window._update_actions()

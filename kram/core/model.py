@@ -90,6 +90,9 @@ class CatalogSnapshot:
     repos: list[RepoInfo] = field(default_factory=list)
     descriptions: list[str] = field(default_factory=list)   # aligned with rows
     groups: list[GroupInfo] = field(default_factory=list)   # user-visible comps groups, sorted by name
+    # (capability, is a glob) -> keys of the packages providing it; only what custom filters asked for (libdnf5 knows
+    # the rest, but filters run on the GUI thread)
+    provides: dict[tuple[str, bool], frozenset[tuple[str, str]]] = field(default_factory=dict)
 
     @property
     def unavailable_repos(self) -> list[RepoInfo]:

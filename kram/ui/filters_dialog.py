@@ -30,6 +30,7 @@ from ..core.custom_filters import (
     Op,
     choices,
     ops_for,
+    provides_queries,
 )
 from ..core.model import CatalogSnapshot
 from ..i18n import _, ngettext
@@ -92,6 +93,8 @@ class ConditionRow(QWidget):
             if f is Field.SIZE:
                 w.setValidator(QDoubleValidator(0, 1e9, 2, w))
                 w.setPlaceholderText(_("megabytes"))
+            elif f is Field.PROVIDES:
+                w.setPlaceholderText(_("capability, e.g. application()"))
             else:
                 w.setPlaceholderText(_("text"))
             w.textChanged.connect(lambda _t: self.changed.emit())
@@ -125,11 +128,14 @@ class FiltersDialog(QDialog):
     """Edits a copy of the filters; `filters()` returns the result after accept()."""
 
     def __init__(self, filters: list[CustomFilter], snap: CatalogSnapshot | None, parent=None,
-                 select: str | None = None, new: CustomFilter | None = None):
+                 select: str | None = None, new: CustomFilter | None = None, resolve_provides=None):
+        """`resolve_provides(queries, done)` adds the answers to `snap.provides` in the background, then calls done."""
         super().__init__(parent)
         self.setWindowTitle(_("Custom Filters"))
         self.resize(980, 560)
         self._snap = snap
+        self._resolve_provides = resolve_provides
+        self._asked: set[tuple[str, bool]] = set()
         self._filters = copy.deepcopy(filters)
         self._current = -1
         self._rows: list[ConditionRow] = []
@@ -304,7 +310,14 @@ class FiltersDialog(QDialog):
         if self._snap is None or not 0 <= self._current < len(self._filters):
             self.count.clear()
             return
-        pred = self._filters[self._current].compile(self._snap)
+        current = self._filters[self._current]
+        if missing := provides_queries([current]) - self._snap.provides.keys():
+            self.count.setText(_("Counting…"))
+            if self._resolve_provides is not None and (new := missing - self._asked):
+                self._asked |= new
+                self._resolve_provides(new, self._update_count)
+            return
+        pred = current.compile(self._snap)
         n = sum(1 for r in self._snap.rows if pred(r))
         self.count.setText(ngettext("{n} package matches", "{n} packages match", n).format(n=n))
 

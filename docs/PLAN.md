@@ -296,10 +296,14 @@ COPR project: https://copr.fedorainfracloud.org/coprs/elmodos/Kram/ (2026-11-04)
 through Kram itself. README screenshots (`docs/screenshots/`) are real Plasma screenshots.
 
 **Custom filters (2026-11-04)**: ✅ Settings → Custom Filters (or right-click the sidebar): named filters of
-conditions on name, name or summary, description, status, origin, repository, group, install reason,
+conditions on name, name or summary, description, provided capability, status, origin, repository, group, install reason,
 architecture and installed size, matching all or any; a live count while editing; "New Filter from Current
 View" turns the sidebar selection plus the search into conditions. Stored as JSON in kram.conf
 (`filters/custom`), compiled to in-memory predicates (`kram/core/custom_filters.py`).
+A Provides condition (exact, "is not", or a glob; added 2026-11-09) needs libdnf5, which lives on its own thread, while
+filters run on the GUI thread: the catalog load answers the saved filters' capabilities into `CatalogSnapshot.provides`,
+and the editor asks for new ones in the background ("Counting…"). `application()` is what rpm-build gives a package with
+a `.desktop` file in `/usr/share/applications`: it means "has a menu entry", so it leaves out terminal programs.
 
 **After the MVP**: versionlock (🔒), offline system upgrades
 (`dnf5 offline`), dnf-automatic settings, in-app language override.
