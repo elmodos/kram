@@ -1,5 +1,5 @@
 %global appid io.github.elmodos.Kram
-%global base_version 0.2.0
+%global base_version 0.3.0
 
 Name:           kram
 # A tagged release (v%%{base_version}) is plain %%{base_version}. Any other commit gets a snapshot from
@@ -83,6 +83,13 @@ QT_QPA_PLATFORM=offscreen %pytest
 %{_datadir}/icons/hicolor/scalable/apps/%{appid}.svg
 
 %changelog
+* Mon Nov 09 2026 Modo Ltunzher <offnormal@gmail.com> - 0.3.0-1
+- Settings > Package Cache: how much space the package caches take, where they are, and cleaning them,
+  including the packages Discover and GNOME Software downloaded and left behind
+- Repositories and COPR are greyed out until the package list has loaded
+- The progress window stays on top of the COPR dialog that started it
+- The progress window no longer says "Waiting for authentication" while metadata downloads
+
 * Sun Nov 08 2026 Modo Ltunzher <offnormal@gmail.com> - 0.2.0-1
 - Install a downloaded .rpm file: File > Open Package File, drop it on the window, or Open with Kram;
   shows install, upgrade, downgrade or reinstall, the signature, scripts run as root, what satisfies
