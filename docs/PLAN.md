@@ -369,7 +369,7 @@ would do. It never offers the upgrade itself: that is too much responsibility.
   have 44". Icon `fedora-logo-icon` (fedora-logos), falling back to `system-upgrade`. The result is kept between runs in
   the settings and goes away when the system reaches that release or the setting is turned off.
 - **Dialog**: the end of support of the running release, then the audit. Kram has no upgrade action of its own and no
-  command to copy: links to the official upgrade guide and release notes, and a button next to Close that hands over to the program
+  command to copy: links to the official upgrade guide and release notes, and a button beside them, at the bottom left, that hands over to the program
   that can upgrade, opened on its updates page: "Open Discover" (`plasma-discover --mode Update`) or "Open GNOME Software"
   (`gnome-software --mode=updates`). If both are installed, the one matching `XDG_CURRENT_DESKTOP`; if neither, no button.
 - **Audit, COPR part**: runs when the dialog opens. For each enabled COPR project, whether it has a `fedora-45-<arch>`

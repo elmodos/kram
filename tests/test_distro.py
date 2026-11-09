@@ -369,20 +369,33 @@ def test_without_target_goes_by_name_and_hides_the_running_releases_repo():
     assert _without_target(installed, available) == {"libgit2": "libgit2", "tool": "tool (@commandline)"}
 
 
-def test_check_is_on_top_and_the_program_goes_with_close(monkeypatch):
+def test_the_three_links_sit_at_the_bottom_left(monkeypatch):
     pytest.importorskip("libdnf5")
     pytest.importorskip("PySide6.QtWidgets")
     os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
-    from PySide6.QtWidgets import QApplication, QDialogButtonBox
+    from PySide6.QtCore import QPoint
+    from PySide6.QtWidgets import QApplication
 
     from kram.core.model import CatalogSnapshot
     from kram.ui import upgrade_dialog as ui
 
     QApplication.instance() or QApplication([])
     monkeypatch.setattr(ui.distro, "upgrade_program", lambda _desktop: DISCOVER)
+    opened = []
+    monkeypatch.setattr(ui.QDesktopServices, "openUrl", lambda url: opened.append(url.toString()))
     dlg = ui.UpgradeDialog(45, 44, "", CatalogSnapshot([], 0, 0, 0.0), Queue())
-    assert isinstance(dlg.open_program.parent(), QDialogButtonBox) and dlg.open_program.text() == "Open Discover"
-    assert not isinstance(dlg.check.parent(), QDialogButtonBox)
+    dlg.resize(760, 600)
+    dlg.show()
+    QApplication.processEvents()
+    row = [dlg.notes_button, dlg.guide_button, dlg.open_program, dlg.close_button]
+    xs = [b.mapTo(dlg, QPoint(0, 0)).x() for b in row]  # Close lives inside its button box
+    assert xs == sorted(xs)
+    assert len({b.y() for b in (dlg.notes_button, dlg.guide_button, dlg.open_program)}) == 1
+    assert dlg.check.y() < dlg.tree.y() < dlg.notes_button.y()
+    assert dlg.open_program.text() == "Open Discover"
+    dlg.notes_button.click()
+    dlg.guide_button.click()
+    assert opened == [ui.distro.RELEASE_NOTES_URL.format(version=45), ui.distro.UPGRADE_GUIDE_URL]
     monkeypatch.setattr(ui.distro, "upgrade_program", lambda _desktop: None)
     assert ui.UpgradeDialog(45, 44, "", CatalogSnapshot([], 0, 0, 0.0), Queue()).open_program is None
 

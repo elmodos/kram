@@ -6,7 +6,7 @@ import threading
 from datetime import datetime
 
 from PySide6.QtCore import QProcess, QUrl, QUrlQuery, Signal
-from PySide6.QtGui import QFontDatabase, QIcon
+from PySide6.QtGui import QDesktopServices, QFontDatabase, QIcon
 from PySide6.QtNetwork import QNetworkAccessManager, QNetworkReply, QNetworkRequest
 from PySide6.QtWidgets import (
     QAbstractItemView,
@@ -84,17 +84,10 @@ class UpgradeDialog(QDialog):
         lay.addWidget(QLabel("<b>" + html.escape(_("Fedora {version} is available").format(version=target)) + "</b>"))
         have = _("You have Fedora {version}, supported until {date}.").format(version=running, date=running_eol) \
             if running_eol else _("You have Fedora {version}.").format(version=running)
+        row = QHBoxLayout()
         info = QLabel(have + " " + _("Kram does not upgrade the system itself."))
         info.setWordWrap(True)
-        lay.addWidget(info)
-
-        row = QHBoxLayout()
-        notes = html.escape(distro.RELEASE_NOTES_URL.format(version=target), quote=True)
-        guide = html.escape(distro.UPGRADE_GUIDE_URL, quote=True)
-        links = QLabel(f"<a href='{notes}'>{html.escape(_('Release notes'))}</a> &nbsp; "
-                       f"<a href='{guide}'>{html.escape(_('Upgrade guide'))}</a>")
-        links.setOpenExternalLinks(True)
-        row.addWidget(links, 1)
+        row.addWidget(info, 1)
         self.check = QPushButton(QIcon.fromTheme("security-high", QIcon.fromTheme("edit-find")), _("Check"))
         self.check.setDefault(True)  # the main action here
         self.check.clicked.connect(self.start_check)
@@ -131,17 +124,32 @@ class UpgradeDialog(QDialog):
         self.cancel_button = buttons.button(QDialogButtonBox.Cancel)
         self.cancel_button.hide()
         self.cancel_button.clicked.connect(self.cancel_check)
+        buttons.rejected.connect(self.reject)  # no effect during a check, see done()
+        bottom = QHBoxLayout()
+        self.notes_button = self._link_button("documentinfo", _("Release notes"),
+                                              distro.RELEASE_NOTES_URL.format(version=target))
+        bottom.addWidget(self.notes_button)
+        self.guide_button = self._link_button("help-contents", _("Upgrade guide"), distro.UPGRADE_GUIDE_URL)
+        bottom.addWidget(self.guide_button)
         self.program = distro.upgrade_program(os.environ.get("XDG_CURRENT_DESKTOP", ""))
         self.open_program = None
         if self.program is not None:
-            self.open_program = buttons.addButton(_("Open {program}").format(program=self.program.name),
-                                                  QDialogButtonBox.ActionRole)
-            self.open_program.setIcon(QIcon.fromTheme(self.program.icon, QIcon.fromTheme("system-software-install")))
+            icon = QIcon.fromTheme(self.program.icon, QIcon.fromTheme("system-software-install"))
+            self.open_program = QPushButton(icon, _("Open {program}").format(program=self.program.name))
             self.open_program.clicked.connect(self._launch_program)
-        buttons.rejected.connect(self.reject)  # no effect during a check, see done()
-        lay.addWidget(buttons)
+            bottom.addWidget(self.open_program)
+        bottom.addStretch(1)
+        bottom.addWidget(buttons)
+        lay.addLayout(bottom)
 
         self._ask_copr(snapshot)
+
+    @staticmethod
+    def _link_button(icon: str, text: str, url: str) -> QPushButton:
+        button = QPushButton(QIcon.fromTheme(icon, QIcon.fromTheme("help-about")), text)
+        button.setAutoDefault(False)
+        button.clicked.connect(lambda: QDesktopServices.openUrl(QUrl(url)))
+        return button
 
     def done(self, result: int) -> None:
         if not self.running_check:  # Esc and the window's close button too: a check is left with Cancel
