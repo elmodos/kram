@@ -3,7 +3,7 @@ import html
 import json
 import os
 
-from PySide6.QtCore import QProcess, QUrl, QUrlQuery
+from PySide6.QtCore import QProcess, QUrl, QUrlQuery, Signal
 from PySide6.QtNetwork import QNetworkAccessManager, QNetworkReply, QNetworkRequest
 from PySide6.QtWidgets import (
     QAbstractItemView,
@@ -40,6 +40,8 @@ def api_request(url: QUrl, timeout_ms: int) -> QNetworkRequest:
 
 class UpgradeDialog(QDialog):
     """Kept by the main window for the session, so a finished check is not repeated when it is opened again."""
+
+    checkChanged = Signal()  # a check started or finished; `running_check` says which
 
     def __init__(self, target: int, running: int, running_eol: str, snapshot: CatalogSnapshot, dnf, parent=None):
         super().__init__(parent)
@@ -174,6 +176,7 @@ class UpgradeDialog(QDialog):
         if self.running_check:
             return
         self.running_check = True
+        self.checkChanged.emit()
         self.check.setEnabled(False)
         self.busy.show()
         self.status.setText(_("Downloading the package lists of Fedora {version}. This can take a while…").format(
@@ -183,6 +186,7 @@ class UpgradeDialog(QDialog):
 
     def _finished(self) -> None:
         self.running_check = False
+        self.checkChanged.emit()
         self.check.setEnabled(True)
         self.busy.hide()
 

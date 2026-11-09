@@ -194,3 +194,14 @@ def test_a_check_in_progress_is_not_started_twice():
     assert len(dnf.jobs) == 1 and dlg.running_check and not dlg.check.isEnabled() and not dlg.busy.isHidden()
     dnf.jobs[0](AuditResult("45", True))
     assert not dlg.running_check and dlg.check.isEnabled() and dlg.busy.isHidden()
+
+
+def test_dialog_announces_a_check(dialog, monkeypatch):
+    from kram.core.upgrade_audit import AuditResult
+    from kram.ui import upgrade_dialog
+
+    seen = []
+    dialog.checkChanged.connect(lambda: seen.append(dialog.running_check))
+    monkeypatch.setattr(upgrade_dialog.upgrade_audit, "simulate", lambda _v: AuditResult("45", True))
+    dialog.start_check()
+    assert seen == [True, False]
