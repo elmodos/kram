@@ -2,8 +2,9 @@
 import html
 import json
 import os
+import threading
 
-from PySide6.QtCore import QProcess, QUrl, QUrlQuery, Signal
+from PySide6.QtCore import QProcess, QUrl, QUrlQuery
 from PySide6.QtNetwork import QNetworkAccessManager, QNetworkReply, QNetworkRequest
 from PySide6.QtWidgets import (
     QAbstractItemView,
@@ -41,8 +42,6 @@ def api_request(url: QUrl, timeout_ms: int) -> QNetworkRequest:
 class UpgradeDialog(QDialog):
     """Kept by the main window for the session, so a finished check is not repeated when it is opened again."""
 
-    checkChanged = Signal()  # a check started or finished; `running_check` says which
-
     def __init__(self, target: int, running: int, running_eol: str, snapshot: CatalogSnapshot, dnf, parent=None):
         super().__init__(parent)
         self.target = target
@@ -56,6 +55,7 @@ class UpgradeDialog(QDialog):
         self._copr_total = 0
         self._result_items: list[QTreeWidgetItem] = []
         self.running_check = False
+        self._cancel = threading.Event()
 
         lay = QVBoxLayout(self)
         lay.addWidget(QLabel("<b>" + html.escape(_("Fedora {version} is available").format(version=target)) + "</b>"))
@@ -86,8 +86,9 @@ class UpgradeDialog(QDialog):
         self.copr_item = QTreeWidgetItem(self.tree, [_("COPR projects: checking…")])
         lay.addWidget(self.tree, 1)
 
-        self.status = QLabel(_("Check simulates the upgrade and changes nothing on this system. It downloads the "
-                               "package lists of Fedora {version} (about 80 MB).").format(version=target))
+        self._intro = _("Check simulates the upgrade and changes nothing on this system. It downloads the "
+                        "package lists of Fedora {version} (about 80 MB).").format(version=target)
+        self.status = QLabel(self._intro)
         self.status.setWordWrap(True)
         lay.addWidget(self.status)
         self.busy = QProgressBar()
@@ -95,13 +96,21 @@ class UpgradeDialog(QDialog):
         self.busy.hide()
         lay.addWidget(self.busy)
 
-        buttons = QDialogButtonBox(QDialogButtonBox.Close)
+        buttons = QDialogButtonBox(QDialogButtonBox.Close | QDialogButtonBox.Cancel)
+        self.close_button = buttons.button(QDialogButtonBox.Close)
+        self.cancel_button = buttons.button(QDialogButtonBox.Cancel)
+        self.cancel_button.hide()
+        self.cancel_button.clicked.connect(self.cancel_check)
         self.check = buttons.addButton(_("Check"), QDialogButtonBox.ActionRole)
         self.check.clicked.connect(self.start_check)
-        buttons.rejected.connect(self.reject)
+        buttons.rejected.connect(self.reject)  # no effect during a check, see done()
         lay.addWidget(buttons)
 
         self._ask_copr(snapshot)
+
+    def done(self, result: int) -> None:
+        if not self.running_check:  # Esc and the window's close button too: a check is left with Cancel
+            super().done(result)
 
     def _launch_program(self) -> None:
         QProcess.startDetached(self.program.argv[0], list(self.program.argv[1:]))
@@ -176,22 +185,36 @@ class UpgradeDialog(QDialog):
         if self.running_check:
             return
         self.running_check = True
-        self.checkChanged.emit()
+        self._cancel.clear()
         self.check.setEnabled(False)
+        self.close_button.setEnabled(False)
+        self.cancel_button.setEnabled(True)
+        self.cancel_button.show()
         self.busy.show()
         self.status.setText(_("Downloading the package lists of Fedora {version}. This can take a while…").format(
             version=self.target))
         version = str(self.target)
-        self._dnf.submit(lambda: upgrade_audit.simulate(version), self._show_result, self._on_failed)
+        cancel = self._cancel
+        self._dnf.submit(lambda: upgrade_audit.simulate(version, cancel), self._show_result, self._on_failed)
+
+    def cancel_check(self) -> None:
+        if self.running_check:
+            self._cancel.set()
+            self.cancel_button.setEnabled(False)
+            self.status.setText(_("Cancelling…"))
 
     def _finished(self) -> None:
         self.running_check = False
-        self.checkChanged.emit()
         self.check.setEnabled(True)
+        self.close_button.setEnabled(True)
+        self.cancel_button.hide()
         self.busy.hide()
 
     def _on_failed(self, error: BaseException) -> None:
         self._finished()
+        if isinstance(error, upgrade_audit.Cancelled):
+            self.status.setText(self._intro)
+            return
         self.status.setText(_("Could not check: {error}").format(error=error))
 
     def _show_result(self, r: AuditResult) -> None:

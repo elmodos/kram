@@ -387,8 +387,10 @@ would do. It never offers the upgrade itself: that is too much responsibility.
 - **As built (2026-11-09)**: `kram/core/distro.py` (Bodhi, the target, the upgrade program), `kram/core/upgrade_audit.py`
   (the simulation; it deletes its metadata as soon as it has the answer, not when the dialog closes, so closing the dialog
   during a check leaves nothing behind), `kram/ui/upgrade_dialog.py` (kept for the session, so a finished check stays).
-  While a check runs it holds the dnf thread, so Reload, Apply, Repositories, COPR, Package Cache, filters and opening a
-  file are disabled and the status bar says why; the "Fedora N" button stays, to get back to it.
+  A check holds the dnf thread for as long as its download takes, so the dialog cannot be closed meanwhile (it is modal:
+  the rest of Kram waits with it, and nothing looks broken for no visible reason). Cancel stops the transfers through
+  libdnf5's download callbacks and deletes the metadata, in 3 s against a server that accepts and then says nothing; the
+  last seconds, reading and resolving, cannot be interrupted.
 
 **Local .rpm installer** (designed 2026-11-07, target 0.2.0; was postponed for security reasons on 2026-11-05).
 A gdebi-style dialog for one package file.

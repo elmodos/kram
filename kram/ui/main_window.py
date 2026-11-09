@@ -112,9 +112,6 @@ class MainWindow(QMainWindow):
         self.repo_warning.setVisible(False)
         self.repo_warning.linkActivated.connect(lambda _link: self.open_repos())
         self.statusBar().addPermanentWidget(self.repo_warning)
-        self.audit_note = QLabel()  # says why Reload and the settings are greyed out for a while
-        self.audit_note.setVisible(False)
-        self.statusBar().addPermanentWidget(self.audit_note)
         self.age = QLabel()
         self.statusBar().addPermanentWidget(self.age)
 
@@ -441,7 +438,7 @@ class MainWindow(QMainWindow):
     def _on_loaded(self, snap: CatalogSnapshot):
         keep = self._current_key()
         self.snapshot = snap
-        self._enable_reload()
+        self.act_reload.setEnabled(True)
         self.model.set_rows(snap.rows, snap.basearch)
         self.index = SearchIndex(snap.rows, snap.descriptions)
         self.key_index = {r.key: i for i, r in enumerate(snap.rows)}
@@ -473,7 +470,7 @@ class MainWindow(QMainWindow):
                 names="\n".join(f"• {r.name} ({r.id})" for r in missing)))
 
     def _on_error(self, e: BaseException):
-        self._enable_reload()
+        self.act_reload.setEnabled(True)
         self.status.setText(_("Error: {error}").format(error=e))
         QMessageBox.critical(self, "Kram", _("Could not load the package catalog:\n\n{error}").format(error=e))
 
@@ -670,7 +667,7 @@ class MainWindow(QMainWindow):
         self.dnf.submit(lambda: {q: self.catalog.provides_keys(*q) for q in queries}, store)
 
     def edit_filters(self, select: str | None = None, new: CustomFilter | None = None) -> None:
-        if self.snapshot is None or self._audit_running():
+        if self.snapshot is None:
             return
         d = FiltersDialog(self.sidebar.custom, self.snapshot, self, select=select, new=new,
                           resolve_provides=self._resolve_provides)
@@ -768,15 +765,13 @@ class MainWindow(QMainWindow):
         self.downgrade_menu.setEnabled(len(rows) == 1 and rows[0].installed)
         self.act_unmark.setEnabled(any(r.key in self.model.marks for r in rows))
         n = len(self.model.marks)
-        audit = self._audit_running()
-        self.act_apply.setEnabled(n > 0 and not self.helper.busy and not audit)
+        self.act_apply.setEnabled(n > 0 and not self.helper.busy)
         self.act_unmark_all.setEnabled(n > 0)
         self.act_save_marks.setEnabled(n > 0)
         self.act_read_marks.setEnabled(self.snapshot is not None)
-        # these wait for the dnf thread, which the upgrade check has for as long as its download takes
-        for needs_catalog in (self.act_repos, self.act_copr, self.act_cache, self.act_filters, self.act_new_filter):
-            needs_catalog.setEnabled(self.snapshot is not None and not audit)
-        self.act_upgrade.setEnabled(self.snapshot is not None)  # the way back to the check in progress
+        for needs_catalog in (self.act_repos, self.act_copr, self.act_cache, self.act_filters, self.act_new_filter,
+                              self.act_upgrade):
+            needs_catalog.setEnabled(self.snapshot is not None)
         self.act_open_file.setEnabled(self._can_open_file())
         self.act_mark_upgrades.setEnabled(bool(self.snapshot and self.snapshot.n_upgradable))
 
@@ -1000,7 +995,7 @@ class MainWindow(QMainWindow):
         return ok
 
     def open_repos(self):
-        if not self.snapshot or self.helper.busy or self._audit_running():
+        if not self.snapshot or self.helper.busy:
             return
         self.dnf.submit(self.catalog.repo_package_counts, self._show_repos)
 
@@ -1091,33 +1086,14 @@ class MainWindow(QMainWindow):
         if self._upgrade_dialog is None or self._upgrade_dialog.target != target:
             self._upgrade_dialog = UpgradeDialog(target, self.running_fedora, QSettings().value("distro/running_eol", ""),
                                                  self.snapshot, self.dnf, self)
-            self._upgrade_dialog.checkChanged.connect(self._on_audit_state)
         self._upgrade_dialog.exec()
-
-    def _audit_running(self) -> bool:
-        return self._upgrade_dialog is not None and self._upgrade_dialog.running_check
-
-    def _enable_reload(self) -> None:
-        on = not self._audit_running()
-        self.act_reload.setEnabled(on)
-        self.act_reload_cache.setEnabled(on)
-
-    def _on_audit_state(self) -> None:
-        running = self._audit_running()
-        if running:
-            self.audit_note.setText(_("Checking the upgrade to Fedora {version}…").format(
-                version=self._upgrade_dialog.target) + "  ")
-        self.audit_note.setVisible(running)
-        self._enable_reload()
-        self._update_actions()
 
     # ---------------------------------------------------------------- package files
 
     def _can_open_file(self) -> bool:
         """Not while another dialog or a transaction is running: a dropped file or a stray shortcut then does
         nothing, whatever Qt's modality lets through."""
-        return self.snapshot is not None and not self.helper.busy and QApplication.activeModalWidget() is None \
-            and not self._audit_running()
+        return self.snapshot is not None and not self.helper.busy and QApplication.activeModalWidget() is None
 
     @staticmethod
     def _dropped_rpm(mime) -> str | None:
@@ -1162,6 +1138,6 @@ class MainWindow(QMainWindow):
         # a child of the dialog that started it (COPR, Package Cache): as a sibling, that one could be raised over it
         dlg = ProgressDialog(self.helper, request, title, QApplication.activeModalWidget() or self)
         dlg.exec()
-        self._enable_reload()
+        self.act_reload.setEnabled(True)
         self._update_actions()
         return dlg.ok

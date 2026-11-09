@@ -145,7 +145,7 @@ def test_dialog_shows_the_simulation(dialog, monkeypatch):
     result = AuditResult("45", True, blockers=["needs libvpx"], upgrades=10, installs=2, removed=["vbox"],
                          downgrades=["a 2 → 1"], orphaned=["b"], empty_repos=["gone"], download=2048, needed=4096,
                          free=1)
-    monkeypatch.setattr(upgrade_dialog.upgrade_audit, "simulate", lambda v: asked.append(v) or result)
+    monkeypatch.setattr(upgrade_dialog.upgrade_audit, "simulate", lambda v, _cancel: asked.append(v) or result)
     dialog.start_check()
     assert asked == ["45"] and not dialog.running_check and dialog.check.isEnabled()
     wanted = ["Problems that stop the upgrade: 1", "Would be removed: 1", "Installed, with no version in Fedora 45: 1",
@@ -159,49 +159,98 @@ def test_dialog_shows_the_simulation(dialog, monkeypatch):
 def test_dialog_reports_a_failed_simulation(dialog, monkeypatch):
     from kram.ui import upgrade_dialog
 
-    def fail(_version):
+    def fail(_version, _cancel):
         raise RuntimeError("no network")
     monkeypatch.setattr(upgrade_dialog.upgrade_audit, "simulate", fail)
     dialog.start_check()
     assert dialog.status.text() == "Could not check: no network" and dialog.busy.isHidden()
 
 
-def test_a_check_in_progress_is_not_started_twice():
+class Queue:
+    """Runs nothing until told to, as the real thread does while a download takes its time."""
+
+    def __init__(self):
+        self.jobs = []
+
+    def submit(self, fn, on_done, on_error=None):
+        self.jobs.append((fn, on_done, on_error))
+
+
+@pytest.fixture
+def queued():
     pytest.importorskip("libdnf5")
     pytest.importorskip("PySide6.QtWidgets")
     os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
     from PySide6.QtWidgets import QApplication
 
     from kram.core.model import CatalogSnapshot
-    from kram.core.upgrade_audit import AuditResult
     from kram.ui.upgrade_dialog import UpgradeDialog
 
     QApplication.instance() or QApplication([])
-
-    class Queue:
-        jobs: list = []
-
-        def submit(self, fn, on_done, on_error=None):
-            self.jobs.append(on_done)
-
     dnf = Queue()
-    dnf.jobs = []
     dlg = UpgradeDialog(45, 44, "", CatalogSnapshot([], 0, 0, 0.0), dnf)
-    dlg.start_check()
-    # closing the window does not stop it; the same dialog comes back, still busy
-    dlg.reject()
-    dlg.start_check()
-    assert len(dnf.jobs) == 1 and dlg.running_check and not dlg.check.isEnabled() and not dlg.busy.isHidden()
-    dnf.jobs[0](AuditResult("45", True))
-    assert not dlg.running_check and dlg.check.isEnabled() and dlg.busy.isHidden()
+    dlg.show()
+    return dlg, dnf
 
 
-def test_dialog_announces_a_check(dialog, monkeypatch):
+def test_the_dialog_stays_open_during_a_check(queued):
     from kram.core.upgrade_audit import AuditResult
-    from kram.ui import upgrade_dialog
 
-    seen = []
-    dialog.checkChanged.connect(lambda: seen.append(dialog.running_check))
-    monkeypatch.setattr(upgrade_dialog.upgrade_audit, "simulate", lambda _v: AuditResult("45", True))
-    dialog.start_check()
-    assert seen == [True, False]
+    dlg, dnf = queued
+    dlg.start_check()
+    dlg.start_check()
+    assert len(dnf.jobs) == 1  # not started twice
+    assert not dlg.close_button.isEnabled() and not dlg.check.isEnabled()
+    assert dlg.cancel_button.isVisible() and dlg.cancel_button.isEnabled() and dlg.busy.isVisible()
+    dlg.reject()  # Esc, and the window's own close button
+    assert dlg.isVisible() and dlg.running_check
+    dnf.jobs[0][1](AuditResult("45", True))
+    assert not dlg.running_check and dlg.close_button.isEnabled() and dlg.cancel_button.isHidden()
+    assert dlg.busy.isHidden()
+    dlg.reject()
+    assert not dlg.isVisible()
+
+
+def test_cancel_stops_the_check_and_returns_to_the_start(queued):
+    from kram.core.upgrade_audit import Cancelled
+
+    dlg, dnf = queued
+    intro = dlg.status.text()
+    dlg.start_check()
+    dlg.cancel_check()
+    assert dlg._cancel.is_set() and not dlg.cancel_button.isEnabled() and dlg.status.text() == "Cancelling…"
+    assert dlg.running_check  # until the transfers have really stopped
+    dnf.jobs[0][2](Cancelled())
+    assert dlg.status.text() == intro and not dlg.running_check and dlg.check.isEnabled()
+    assert dlg.close_button.isEnabled()
+    dlg.start_check()  # and it can be started again, not cancelled from the start
+    assert not dlg._cancel.is_set()
+
+
+def test_simulate_raises_cancelled_and_leaves_no_cache(monkeypatch, tmp_path):
+    pytest.importorskip("libdnf5")
+    import threading
+
+    from kram.core import upgrade_audit
+
+    monkeypatch.setenv("XDG_CACHE_HOME", str(tmp_path))
+    cancel = threading.Event()
+
+    def interrupted(_target, cache, event):
+        assert os.path.isdir(cache)
+        event.set()
+        raise RuntimeError("Download aborted")
+    monkeypatch.setattr(upgrade_audit, "_simulate", interrupted)
+    with pytest.raises(upgrade_audit.Cancelled):
+        upgrade_audit.simulate("45", cancel)
+    assert not os.path.exists(upgrade_audit.cache_dir())
+
+
+def test_a_failure_that_is_not_a_cancel_is_reported(monkeypatch, tmp_path):
+    pytest.importorskip("libdnf5")
+    from kram.core import upgrade_audit
+
+    monkeypatch.setenv("XDG_CACHE_HOME", str(tmp_path))
+    monkeypatch.setattr(upgrade_audit, "_simulate", lambda *_a: (_ for _ in ()).throw(RuntimeError("no network")))
+    with pytest.raises(RuntimeError, match="no network"):
+        upgrade_audit.simulate("45")

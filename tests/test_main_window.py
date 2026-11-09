@@ -188,22 +188,6 @@ def test_not_fedora_has_no_setting_and_no_check(fedora, monkeypatch):
     assert not fedora.act_upgrade.isVisible()
 
 
-def test_upgrade_check_blocks_what_would_wait_for_it(window):
-    window.snapshot = SimpleNamespace(n_upgradable=0)
-    window.model.marks.clear()
-    blocked = (window.act_reload, window.act_reload_cache, window.act_repos, window.act_copr, window.act_cache,
-               window.act_filters, window.act_new_filter, window.act_open_file)
-    window.act_upgrade.setVisible(True)  # Qt reports a hidden action as disabled
-    window._upgrade_dialog = SimpleNamespace(running_check=True, target=45)
-    window._on_audit_state()
-    assert not any(a.isEnabled() for a in blocked)
-    assert window.act_upgrade.isEnabled()  # the way back to the running check
-    assert not window.audit_note.isHidden() and "45" in window.audit_note.text()
-    window._upgrade_dialog.running_check = False
-    window._on_audit_state()
-    assert all(a.isEnabled() for a in blocked) and window.audit_note.isHidden()
-
-
 def test_a_full_download_bar_keeps_moving_until_the_end(app):
     dlg = ProgressDialog(FakeClient(), {"op": "refresh"}, "t")
     dlg._on_event({"event": "download", "id": 1, "name": "a", "total": 10, "done": 0})

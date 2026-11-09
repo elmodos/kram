@@ -6,6 +6,7 @@ are. Call it on the dnf thread. The metadata is deleted as soon as the answer is
 import os
 import re
 import shutil
+import threading
 from collections import Counter
 from dataclasses import dataclass, field
 
@@ -32,32 +33,70 @@ class AuditResult:
     free: int = 0
 
 
+class Cancelled(Exception):
+    pass
+
+
+class _CancelDownloads(libdnf5.repo.DownloadCallbacks):
+    """libdnf5 asks about every transfer while it runs; the answer can stop it."""
+
+    def __init__(self, cancel: threading.Event):
+        super().__init__()
+        self._cancel = cancel
+
+    def progress(self, _user_data, _total, _downloaded):
+        return self.ABORT if self._cancel.is_set() else self.OK
+
+    def add_new_download(self, _user_data, _description, _total):
+        return 0
+
+    def end(self, _user_data, _status, _message):
+        return self.OK
+
+    def mirror_failure(self, _user_data, _message, _url, _metadata):
+        return self.ABORT if self._cancel.is_set() else self.OK
+
+
 def cache_dir() -> str:
     base = os.environ.get("XDG_CACHE_HOME") or os.path.expanduser("~/.cache")
     return os.path.join(base, "kram", "upgrade-audit")
 
 
-def simulate(target: str) -> AuditResult:
+def simulate(target: str, cancel: threading.Event | None = None) -> AuditResult:
+    """Raises Cancelled once `cancel` is set and the transfers have stopped."""
+    cancel = cancel or threading.Event()
     cache = cache_dir()
     shutil.rmtree(cache, ignore_errors=True)  # left behind if Kram was killed during a check
     os.makedirs(cache, exist_ok=True)
     try:
-        return _simulate(target, cache)
+        result = _simulate(target, cache, cancel)
+    except Exception:
+        if cancel.is_set():  # however the aborted transfers surfaced
+            raise Cancelled from None
+        raise
+    else:
+        if cancel.is_set():
+            raise Cancelled
+        return result
     finally:  # the Base is gone by now: nothing has these files open
         shutil.rmtree(cache, ignore_errors=True)
 
 
-def _simulate(target: str, cache: str) -> AuditResult:
+def _simulate(target: str, cache: str, cancel: threading.Event) -> AuditResult:
     base = libdnf5.base.Base()
     base.load_config()
     base.get_config().cachedir = cache
     base.get_vars().set("releasever", target)
     base.setup()
+    downloads = _CancelDownloads(cancel)  # stays referenced: libdnf5 only owns the C++ side
+    base.set_download_callbacks(libdnf5.repo.DownloadCallbacksUniquePtr(downloads))
     sack = base.get_repo_sack()
     sack.create_repos_from_system_configuration()
     for repo in libdnf5.repo.RepoQuery(base):
         repo.get_config().skip_if_unavailable = True  # one repo without this release is a finding, not an error
     sack.load_repos()
+    if cancel.is_set():
+        raise Cancelled
 
     result = AuditResult(target, resolved=False, free=shutil.disk_usage("/var").free)
     installed = libdnf5.rpm.PackageQuery(base)
