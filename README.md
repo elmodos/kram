@@ -54,6 +54,9 @@ Built on libdnf5 (the same library as `dnf5`) and Qt 6. See [docs/PLAN.md](docs/
 - Enable and disable repositories; enable, disable and remove COPR projects, search Copr.
 - See what the package caches take and where they are, and clean them, including the packages Discover and
   GNOME Software downloaded and left behind (Settings → Package Cache).
+- Tells you when a new Fedora release is out (a toolbar button, checked on Reload against Fedora's Bodhi) and works
+  out what moving to it would do: what blocks it, what would be removed, COPR projects without a build, the disk
+  space. It only reports: the upgrade itself stays with Discover or GNOME Software.
 - One password per session (polkit); browsing and searching need none.
 - In 13 languages ([Translations](#translations)).
 

@@ -384,8 +384,9 @@ would do. It never offers the upgrade itself: that is too much responsibility.
 - **Prototype on the author's laptop** (Fedora 44 → 45): all 16 repositories and 4 COPR projects have builds, yet the
   upgrade does not resolve without erasing: `VirtualBox-7.2` needs `libvpx.so.9`. With erasing: 2993 upgrades, 50 installs,
   20 downgrades, 5366 MB, and 18 installed packages have nothing in 45. So the COPR check alone would have said "fine".
-- **Order**: parsing Bodhi and choosing the target, with tests → setting and button → audit core → dialog → translations,
-  README and metainfo.
+- **As built (2026-11-09)**: `kram/core/distro.py` (Bodhi, the target, the upgrade program), `kram/core/upgrade_audit.py`
+  (the simulation; it deletes its metadata as soon as it has the answer, not when the dialog closes, so closing the dialog
+  during a check leaves nothing behind), `kram/ui/upgrade_dialog.py` (kept for the session, so a finished check stays).
 
 **Local .rpm installer** (designed 2026-11-07, target 0.2.0; was postponed for security reasons on 2026-11-05).
 A gdebi-style dialog for one package file.

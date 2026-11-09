@@ -4,8 +4,9 @@ import time
 from collections.abc import Callable
 from pathlib import Path
 
-from PySide6.QtCore import QSettings, QSize, QStandardPaths, Qt, QTimer, Signal
+from PySide6.QtCore import QSettings, QSize, QStandardPaths, Qt, QTimer, QUrl, Signal
 from PySide6.QtGui import QAction, QActionGroup, QGuiApplication, QIcon, QKeySequence
+from PySide6.QtNetwork import QNetworkAccessManager, QNetworkReply
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QApplication,
@@ -24,7 +25,7 @@ from PySide6.QtWidgets import (
 )
 
 from .. import HOMEPAGE, __version__
-from ..core import releases
+from ..core import distro, releases
 from ..core.catalog import Catalog
 from ..core.custom_filters import CustomFilter, Field, conditions_for_view, load_filters, provides_queries
 from ..core.evr import evr_cmp
@@ -45,6 +46,7 @@ from .cache_dialog import CacheDialog
 from .progress_dialog import ProgressDialog
 from .repos_dialog import ReposDialog
 from .sidebar import Sidebar
+from .upgrade_dialog import UpgradeDialog, api_request
 from .whats_new import WhatsNewDialog
 
 # bumped when columns change: an old saved state would put widths and hidden flags on the wrong columns
@@ -52,6 +54,7 @@ HEADER_STATE_KEY = "table/header-v2"
 COLUMN_WIDTHS = [26, 24, 230, 175, 110, 175, 150, 80]
 HISTORY_IDLE_MS = 1500  # a search left alone this long goes into the history
 NOT_YET = _("Coming in a later version")
+RELEASE_CHECK_TIMEOUT_MS = 15000
 # toolbar styles (Settings → Toolbar, or right-click the toolbar): id, label, button style, icon size
 # (an invalid size means the style's default, which on Plasma follows System Settings)
 TOOLBAR_STYLES = [
@@ -93,6 +96,9 @@ class MainWindow(QMainWindow):
         self._last_count = 0
         self._details: PkgDetails | None = None  # details of the current row, once loaded
         self.helper = HelperClient(self)
+        self.running_fedora = distro.running_release()
+        self._net = QNetworkAccessManager(self)
+        self._upgrade_dialog: UpgradeDialog | None = None
 
         self._build_actions()
         self._build_menus()
@@ -158,6 +164,14 @@ class MainWindow(QMainWindow):
                                      tip=_("Manage COPR projects: community repositories"))
         self.act_cache = self._action(_("Package Cache…"), "edit-clear-all", slot=self.open_cache, enabled=False,
                                       tip=_("See how much space the package caches take and clean them"))
+        self.act_watch_releases = QAction(_("Watch Fedora Releases"), self, checkable=True)
+        self.act_watch_releases.setToolTip(_("On Reload, ask Fedora's Bodhi service whether a new release is out"))
+        self.act_watch_releases.setStatusTip(self.act_watch_releases.toolTip())
+        self.act_watch_releases.setVisible(self.running_fedora is not None)
+        self.act_watch_releases.toggled.connect(self._on_watch_releases)
+        self.act_upgrade = self._action("Fedora", slot=self.open_upgrade, enabled=False, tip=_("A new Fedora release"))
+        self.act_upgrade.setIcon(QIcon.fromTheme("fedora-logo-icon", QIcon.fromTheme("system-upgrade")))
+        self.act_upgrade.setVisible(False)
         self.act_find = self._action(_("Find"), "edit-find", QKeySequence.Find,
                                      lambda: (self.search.setFocus(), self.search.selectAll()))
         self.act_back = self._action(_("Back"), "go-previous", "Alt+Left", self.go_back,
@@ -256,6 +270,7 @@ class MainWindow(QMainWindow):
         m.addSeparator()
         m.addActions([self.act_filters, self.act_new_filter])
         m.addSeparator()
+        m.addAction(self.act_watch_releases)
         m.addMenu(_("Toolbar")).addActions(self.toolbar_styles.actions())
         m = mb.addMenu(_("&Help"))
         m.addAction(self.act_about)
@@ -268,7 +283,7 @@ class MainWindow(QMainWindow):
         self.set_toolbar_style(TOOLBAR_STYLES[0][0])
         tb.addActions([self.act_reload, self.act_mark_upgrades, self.act_apply])
         tb.addSeparator()
-        tb.addActions([self.act_repos, self.act_copr])
+        tb.addActions([self.act_repos, self.act_copr, self.act_upgrade])
         spacer = QWidget()
         spacer.setSizePolicy(spacer.sizePolicy().Policy.Expanding, spacer.sizePolicy().Policy.Preferred)
         tb.addWidget(spacer)
@@ -359,6 +374,8 @@ class MainWindow(QMainWindow):
     def _restore_settings(self):
         s = QSettings()
         self.set_toolbar_style(s.value("toolbar/style", TOOLBAR_STYLES[0][0]))
+        self.act_watch_releases.setChecked(s.value("distro/watch", True, type=bool))
+        self._update_upgrade_button()
         if geom := s.value("window/geometry"):
             self.restoreGeometry(geom)
         for key, splitter in (("window/hsplit", self.hsplit), ("window/vsplit", self.vsplit)):
@@ -752,7 +769,8 @@ class MainWindow(QMainWindow):
         self.act_unmark_all.setEnabled(n > 0)
         self.act_save_marks.setEnabled(n > 0)
         self.act_read_marks.setEnabled(self.snapshot is not None)
-        for needs_catalog in (self.act_repos, self.act_copr, self.act_cache, self.act_filters, self.act_new_filter):
+        for needs_catalog in (self.act_repos, self.act_copr, self.act_cache, self.act_filters, self.act_new_filter,
+                              self.act_upgrade):
             needs_catalog.setEnabled(self.snapshot is not None)
         self.act_open_file.setEnabled(self._can_open_file())
         self.act_mark_upgrades.setEnabled(bool(self.snapshot and self.snapshot.n_upgradable))
@@ -968,6 +986,7 @@ class MainWindow(QMainWindow):
         if self.helper.busy:
             return
         self._run_helper({"op": "refresh"}, _("Refreshing metadata"))
+        self._check_fedora_release()
         self.reload()
 
     def run_helper_and_reload(self, request: dict, title: str) -> bool:
@@ -1014,6 +1033,60 @@ class MainWindow(QMainWindow):
             self.run_helper_and_reload(request, _("Downloading metadata again"))
         else:
             self._run_helper(request, _("Cleaning the package cache"))
+
+    # ---------------------------------------------------------------- new Fedora release
+
+    def _on_watch_releases(self, on: bool) -> None:
+        QSettings().setValue("distro/watch", on)
+        self._update_upgrade_button()
+
+    def _upgrade_target(self) -> int | None:
+        """The release the button offers, from the last check. Gone once the system has reached it."""
+        target = QSettings().value("distro/target", 0, type=int)
+        running = self.running_fedora
+        if running is None or not self.act_watch_releases.isChecked():
+            return None
+        return target if running < target <= running + distro.MAX_RELEASE_JUMP else None
+
+    def _update_upgrade_button(self) -> None:
+        target = self._upgrade_target()
+        self.act_upgrade.setVisible(target is not None)
+        if target is not None:
+            self.act_upgrade.setText(f"Fedora {target}")
+            tip = _("Fedora {new} is available, you have {old}").format(new=target, old=self.running_fedora)
+            self.act_upgrade.setToolTip(tip)
+            self.act_upgrade.setStatusTip(tip)
+
+    def _check_fedora_release(self) -> None:
+        if self.running_fedora is None or not self.act_watch_releases.isChecked():
+            return
+        reply = self._net.get(api_request(QUrl(distro.BODHI_RELEASES_URL), RELEASE_CHECK_TIMEOUT_MS))
+        reply.finished.connect(lambda: self._on_release_check(reply))
+
+    def _on_release_check(self, reply: QNetworkReply) -> None:
+        reply.deleteLater()
+        if reply.error() != QNetworkReply.NoError:
+            return  # no network is no news: the last result stays
+        try:
+            releases = distro.parse_releases(json.loads(bytes(reply.readAll())))
+        except ValueError:
+            return
+        if not releases:
+            return
+        target = distro.choose_target(self.running_fedora, releases)
+        settings = QSettings()
+        settings.setValue("distro/target", target.version if target else 0)
+        settings.setValue("distro/running_eol", next((r.eol for r in releases if r.version == self.running_fedora), ""))
+        self._update_upgrade_button()
+
+    def open_upgrade(self) -> None:
+        target = self._upgrade_target()
+        if target is None or self.snapshot is None:
+            return
+        if self._upgrade_dialog is None or self._upgrade_dialog.target != target:
+            self._upgrade_dialog = UpgradeDialog(target, self.running_fedora, QSettings().value("distro/running_eol", ""),
+                                                 self.snapshot, self.dnf, self)
+        self._upgrade_dialog.exec()
 
     # ---------------------------------------------------------------- package files
 

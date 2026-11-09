@@ -48,6 +48,16 @@ exec podman run --rm -v "$src:/src:ro,Z" "registry.fedoraproject.org/fedora:$rel
     runuser -u kramuser -- dnf5 clean all
     test -z "$(find /home/kramuser/.cache/libdnf5 -type f | head -1)"
     dnf5 -q --cacheonly repoquery fish | grep -q fish
+    echo "### simulate an upgrade to the next release: as a normal user, nothing changes, the metadata is deleted"
+    before=$(rpm -qa | sort | sha256sum)
+    runuser -u kramuser -- env HOME=/home/kramuser PYTHONPATH=/src python3 -c "
+from kram.core.upgrade_audit import cache_dir, simulate
+import os
+r = simulate(str($(rpm -E %fedora) + 1))
+print(\"resolved\", r.resolved, \"upgrades\", r.upgrades, \"download\", r.download, \"blockers\", len(r.blockers))
+assert r.resolved and r.upgrades > 0 and r.download > 0 and r.free > 0
+assert not os.path.exists(cache_dir())"
+    test "$before" = "$(rpm -qa | sort | sha256sum)"
     echo "### refresh metadata"
     $d "{\"op\":\"refresh\"}"
     echo "### disable and re-enable a repository (dnf5 config-manager setopt)"
