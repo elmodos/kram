@@ -6,7 +6,7 @@ import threading
 from datetime import datetime
 
 from PySide6.QtCore import QProcess, QUrl, QUrlQuery, Signal
-from PySide6.QtGui import QFontDatabase
+from PySide6.QtGui import QFontDatabase, QIcon
 from PySide6.QtNetwork import QNetworkAccessManager, QNetworkReply, QNetworkRequest
 from PySide6.QtWidgets import (
     QAbstractItemView,
@@ -27,6 +27,7 @@ from ..core import copr, distro, upgrade_audit
 from ..core.model import CatalogSnapshot
 from ..core.upgrade_audit import AuditResult
 from ..i18n import N_, _
+from .install_dialog import ERROR, ICONS, INFO, OK, WARN
 from .package_model import human_size
 
 COPR_TIMEOUT_MS = 30000
@@ -51,6 +52,12 @@ def api_request(url: QUrl, timeout_ms: int) -> QNetworkRequest:
     request.setHeader(QNetworkRequest.UserAgentHeader, f"Kram/{__version__}")
     request.setRawHeader(b"Accept", b"application/json")
     return request
+
+
+def _state_icon(kind: str | None) -> QIcon:
+    """The same OK / warning / error / information marks as the package file dialog."""
+    name, fallback = ICONS[kind]
+    return QIcon.fromTheme(name, QIcon.fromTheme(fallback))
 
 
 class UpgradeDialog(QDialog):
@@ -100,6 +107,7 @@ class UpgradeDialog(QDialog):
         self.tree.setHeaderHidden(True)
         self.tree.setSelectionMode(QAbstractItemView.NoSelection)
         self.copr_item = QTreeWidgetItem(self.tree, [_("COPR projects: checking…")])
+        self.copr_item.setIcon(0, _state_icon(INFO))
         lay.addWidget(self.tree, 1)
 
         self.log = QPlainTextEdit()
@@ -181,20 +189,26 @@ class UpgradeDialog(QDialog):
 
     def _show_copr(self) -> None:
         if self._copr_missing:
+            kind = WARN
             self.copr_item.setText(0, _("COPR projects without a build for Fedora {version}: {n}").format(
                 version=self.target, n=len(self._copr_missing)))
             self._children(self.copr_item, self._copr_missing)
         elif not self._copr_total:
+            kind = INFO
             self.copr_item.setText(0, _("No COPR projects are enabled."))
         elif not self._copr_failed:
+            kind = OK
             self.copr_item.setText(0, _("Every enabled COPR project has a build for Fedora {version}.").format(
                 version=self.target))
         else:
+            kind = OK
             self.copr_item.setText(0, _("COPR projects: the rest have a build for Fedora {version}.").format(
                 version=self.target))
+        self.copr_item.setIcon(0, _state_icon(kind))
         if self._copr_failed:
             failed = QTreeWidgetItem(self.tree, [_("COPR projects that could not be checked: {n}").format(
                 n=len(self._copr_failed))])
+            failed.setIcon(0, _state_icon(WARN))
             self._children(failed, self._copr_failed)
 
     @staticmethod
@@ -260,11 +274,11 @@ class UpgradeDialog(QDialog):
             self.tree.takeTopLevelItem(self.tree.indexOfTopLevelItem(item))
         self._result_items = []
         version = self.target
-        self._category(_("Problems that stop the upgrade: {n}"), r.blockers, expanded=True)
-        self._category(_("Would be removed: {n}"), r.removed, expanded=True)
-        self._category(_("Installed, with no version in Fedora {version}: {n}"), r.orphaned, expanded=False)
-        self._category(_("Would be downgraded: {n}"), r.downgrades, expanded=False)
-        self._category(_("Repositories with nothing for Fedora {version}: {n}"), r.empty_repos, expanded=True)
+        self._category(ERROR, _("Problems that stop the upgrade: {n}"), r.blockers, expanded=True)
+        self._category(WARN, _("Would be removed: {n}"), r.removed, expanded=True)
+        self._category(WARN, _("Installed, with no version in Fedora {version}: {n}"), r.orphaned, expanded=False)
+        self._category(INFO, _("Would be downgraded: {n}"), r.downgrades, expanded=False)
+        self._category(WARN, _("Repositories with nothing for Fedora {version}: {n}"), r.empty_repos, expanded=True)
 
         if not r.resolved:
             self.status.setText(_("The upgrade to Fedora {version} cannot be worked out as things are.").format(
@@ -277,10 +291,11 @@ class UpgradeDialog(QDialog):
         warning = " ⚠ " + _("Not enough free disk space.") if r.free < r.needed else ""
         self.status.setText(f"{verdict} {details}{warning}")
 
-    def _category(self, title: str, lines: list[str], expanded: bool) -> None:
+    def _category(self, kind: str | None, title: str, lines: list[str], expanded: bool) -> None:
         if not lines:
             return
         item = QTreeWidgetItem(self.tree, [title.format(n=len(lines), version=self.target)])
+        item.setIcon(0, _state_icon(kind))
         self._result_items.append(item)
         for line in lines:
             QTreeWidgetItem(item, [line])

@@ -299,3 +299,32 @@ def test_a_failing_report_cannot_escape_into_libdnf5():
     downloads = upgrade_audit._Downloads(threading.Event(), broken)
     assert downloads.add_new_download(None, "Fedora", 0) == 1
     assert downloads.end(1, downloads.TransferStatus_SUCCESSFUL, "") == downloads.OK
+
+
+def test_rows_carry_the_state_marks(dialog, monkeypatch):
+    from PySide6.QtGui import QIcon
+
+    from kram.core.upgrade_audit import AuditResult
+    from kram.ui import upgrade_dialog as ui
+
+    kinds = []
+    monkeypatch.setattr(ui, "_state_icon", lambda kind: kinds.append(kind) or QIcon())
+    monkeypatch.setattr(ui.upgrade_audit, "simulate", lambda *_a: AuditResult(
+        "45", True, blockers=["b"], removed=["r"], orphaned=["o"], downgrades=["d"], empty_repos=["e"]))
+    dialog.start_check()
+    assert kinds == [ui.ERROR, ui.WARN, ui.WARN, ui.INFO, ui.WARN]
+    assert set(ui.ICONS) >= {ui.OK, ui.WARN, ui.ERROR, ui.INFO}
+
+
+def test_copr_row_mark_follows_the_answer(dialog, monkeypatch):
+    from PySide6.QtGui import QIcon
+
+    from kram.ui import upgrade_dialog as ui
+
+    kinds = []
+    monkeypatch.setattr(ui, "_state_icon", lambda kind: kinds.append(kind) or QIcon())
+    dialog._copr_total = 1
+    dialog._show_copr()
+    dialog._copr_missing = ["a/b"]
+    dialog._show_copr()
+    assert kinds == [ui.OK, ui.WARN]
