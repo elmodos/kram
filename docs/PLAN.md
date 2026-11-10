@@ -96,7 +96,7 @@ po/                # kram.pot + one <lang>.po per translation
 data/              # .desktop, AppStream metainfo, polkit policy, icon
 packaging/kram.spec
 .copr/Makefile     # SRPM for COPR's "make srpm" build method
-scripts/           # i18n.sh, container_check.sh, rpm_check.sh, helper_driver.py, m0_helper_check.py
+scripts/           # i18n.sh, container_check.sh, rpm_check.sh, helper_driver.py, check_local_*.py
 tests/
 docs/              # this plan, COPR notes, README screenshots
 ```
