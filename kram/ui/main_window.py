@@ -142,9 +142,13 @@ class MainWindow(QMainWindow):
                                                    "password"))
         self.act_mark_upgrades = self._action(_("Mark All Upgrades"), None, "Ctrl+U", self.mark_all_upgrades,
                                               tip=_("Mark every package that has a newer version for upgrade"))
-        # Breeze's monochrome update glyph matches the other toolbar icons; system-software-update is a colour
-        # app icon there, kept as the fallback for themes without update-none
-        self.act_mark_upgrades.setIcon(QIcon.fromTheme("update-none", QIcon.fromTheme("system-software-update")))
+        # Breeze's monochrome update glyphs match the other toolbar icons; system-software-update is a colour app
+        # icon there, kept as the fallback. With upgrades to mark the button shows update-medium; update-none says
+        # "nothing to update" and its dim grey is exactly right for the disabled button, but would make an enabled
+        # one look disabled
+        fallback = QIcon.fromTheme("system-software-update")
+        self._upgrade_icons = {True: QIcon.fromTheme("update-medium", fallback),
+                               False: QIcon.fromTheme("update-none", fallback)}
         self.act_apply = self._action(_("Apply"), "dialog-ok-apply", "Ctrl+P", self.apply,
                                       tip=_("Review and apply the marked changes"))
         self.act_apply.setEnabled(False)
@@ -215,7 +219,7 @@ class MainWindow(QMainWindow):
                                        tip=_("Unmark the selected packages"))
         self.removeAction(self.act_unmark)
         self.act_unmark.setShortcutContext(Qt.WidgetWithChildrenShortcut)
-        self.act_mark_upgrades.setEnabled(False)
+        self._set_upgrades_available(False)
         self.toolbar_styles = QActionGroup(self)
         for style_id, label, _button, _size in TOOLBAR_STYLES:
             a = self.toolbar_styles.addAction(label)
@@ -755,6 +759,10 @@ class MainWindow(QMainWindow):
 
     # ---------------------------------------------------------------- marking
 
+    def _set_upgrades_available(self, available: bool) -> None:
+        self.act_mark_upgrades.setEnabled(available)
+        self.act_mark_upgrades.setIcon(self._upgrade_icons[available])
+
     def _update_actions(self, *_args):
         rows = self._selected_rows()
         allowed = set()
@@ -773,7 +781,7 @@ class MainWindow(QMainWindow):
                               self.act_upgrade):
             needs_catalog.setEnabled(self.snapshot is not None)
         self.act_open_file.setEnabled(self._can_open_file())
-        self.act_mark_upgrades.setEnabled(bool(self.snapshot and self.snapshot.n_upgradable))
+        self._set_upgrades_available(bool(self.snapshot and self.snapshot.n_upgradable))
 
     def _marks_changed(self, keys):
         self.model.marks_changed(keys)

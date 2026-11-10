@@ -204,3 +204,28 @@ def test_a_failure_stops_the_busy_bar(app):
     assert dlg.download_bar.maximum() == 0
     dlg._on_event({"event": "done", "ok": False, "stage": "exception", "error": "boom"})
     assert dlg.download_bar.maximum() == 1
+
+
+def test_mark_upgrades_icon_follows_whether_there_is_anything_to_mark(app, monkeypatch):
+    from PySide6.QtGui import QColor, QIcon, QPixmap
+
+    def icon(color):
+        pixmap = QPixmap(16, 16)
+        pixmap.fill(QColor(color))
+        return QIcon(pixmap)
+    themed = {"update-medium": icon("red"), "update-none": icon("blue")}
+    monkeypatch.setattr(main_window.QIcon, "fromTheme",
+                        staticmethod(lambda name, fallback=None: themed.get(name, fallback or QIcon())))
+    monkeypatch.setattr(main_window.MainWindow, "reload", lambda self: None)
+    win = main_window.MainWindow()
+    try:
+        action = win.act_mark_upgrades
+        assert not action.isEnabled() and action.icon().cacheKey() == themed["update-none"].cacheKey()
+        win.snapshot = SimpleNamespace(n_upgradable=2)
+        win._update_actions()
+        assert action.isEnabled() and action.icon().cacheKey() == themed["update-medium"].cacheKey()
+        win.snapshot = SimpleNamespace(n_upgradable=0)
+        win._update_actions()
+        assert not action.isEnabled() and action.icon().cacheKey() == themed["update-none"].cacheKey()
+    finally:
+        win.dnf.shutdown()
