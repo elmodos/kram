@@ -1,5 +1,5 @@
 %global appid io.github.elmodos.Kram
-%global base_version 0.4.1
+%global base_version 0.4.2
 
 Name:           kram
 # A tagged release (v%%{base_version}) is plain %%{base_version}. Any other commit gets a snapshot from
@@ -83,6 +83,12 @@ QT_QPA_PLATFORM=offscreen %pytest
 %{_datadir}/icons/hicolor/scalable/apps/%{appid}.svg
 
 %changelog
+* Tue Nov 10 2026 Modo Ltunzher <offnormal@gmail.com> - 0.4.2-1
+- Toolbar: the Mark All Upgrades icon no longer looks disabled when there are upgrades to mark
+- Repositories: the id and the file path are shown in full, a long path is cut in the middle
+- Repositories: every column can be resized and the list scrolls sideways
+- Repositories: right-click a file path to copy it or show it in the file manager
+
 * Tue Nov 10 2026 Modo Ltunzher <offnormal@gmail.com> - 0.4.1-1
 - Apply dialog: no more "essential package will be removed" warning when only the oldest kernel makes room for a new one
 - Apply dialog: package names are no longer cut short by long versions
