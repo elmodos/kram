@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kram\n"
 "Report-Msgid-Bugs-To: https://github.com/elmodos/kram/issues\n"
-"POT-Creation-Date: 2026-11-09 23:05+0200\n"
+"POT-Creation-Date: 2026-11-10 17:15+0200\n"
 "PO-Revision-Date: 2026-11-04 14:07+0200\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -57,7 +57,7 @@ msgstr "Stav"
 msgid "Origin"
 msgstr "Původ"
 
-#: kram/core/custom_filters.py:54 kram/ui/apply_dialog.py:79
+#: kram/core/custom_filters.py:54 kram/ui/apply_dialog.py:80
 #: kram/ui/details.py:44 kram/ui/package_model.py:15
 msgid "Repository"
 msgstr "Repozitář"
@@ -266,44 +266,48 @@ msgid "To be removed as dependent or no longer needed"
 msgstr "K odebrání jako závislé nebo již nepotřebné"
 
 #: kram/ui/apply_dialog.py:44
+msgid "Oldest kernels removed to stay within the limit of kept versions"
+msgstr "Nejstarší jádra odstraněna kvůli limitu uchovávaných verzí"
+
+#: kram/ui/apply_dialog.py:45
 msgid "Install reason changes"
 msgstr "Změny důvodu instalace"
 
-#: kram/ui/apply_dialog.py:46 kram/ui/package_model.py:24
+#: kram/ui/apply_dialog.py:47 kram/ui/package_model.py:24
 msgid "dependency"
 msgstr "závislost"
 
-#: kram/ui/apply_dialog.py:46
+#: kram/ui/apply_dialog.py:47
 msgid "unneeded"
 msgstr "nepotřebné"
 
-#: kram/ui/apply_dialog.py:46 kram/ui/package_model.py:21
+#: kram/ui/apply_dialog.py:47 kram/ui/package_model.py:21
 msgid "user"
 msgstr "uživatel"
 
-#: kram/ui/apply_dialog.py:46 kram/ui/package_model.py:25
+#: kram/ui/apply_dialog.py:47 kram/ui/package_model.py:25
 msgid "weak dependency"
 msgstr "slabá závislost"
 
-#: kram/ui/apply_dialog.py:79 kram/ui/details.py:70
+#: kram/ui/apply_dialog.py:80 kram/ui/details.py:70
 #: kram/ui/install_dialog.py:472 kram/ui/package_model.py:15
 msgid "Package"
 msgstr "Balíček"
 
-#: kram/ui/apply_dialog.py:79 kram/ui/package_model.py:16
+#: kram/ui/apply_dialog.py:80 kram/ui/package_model.py:16
 msgid "Size"
 msgstr "Velikost"
 
-#: kram/ui/apply_dialog.py:79 kram/ui/details.py:44
+#: kram/ui/apply_dialog.py:80 kram/ui/details.py:44
 msgid "Version"
 msgstr "Verze"
 
-#: kram/ui/apply_dialog.py:115
+#: kram/ui/apply_dialog.py:118
 #, python-brace-format
 msgid "Essential system packages will be removed: {names}."
 msgstr "Budou odebrány nezbytné systémové balíčky: {names}."
 
-#: kram/ui/apply_dialog.py:117
+#: kram/ui/apply_dialog.py:120
 #, python-brace-format
 msgid "{n} package will be removed."
 msgid_plural "{n} packages will be removed."
@@ -311,15 +315,15 @@ msgstr[0] "Bude odebrán {n} balíček."
 msgstr[1] "Budou odebrány {n} balíčky."
 msgstr[2] "Bude odebráno {n} balíčků."
 
-#: kram/ui/apply_dialog.py:118
+#: kram/ui/apply_dialog.py:121
 msgid "Make sure this is what you want."
 msgstr "Ujistěte se, že to opravdu chcete."
 
-#: kram/ui/apply_dialog.py:134
+#: kram/ui/apply_dialog.py:137
 msgid "Recommended packages."
 msgstr "Doporučené balíčky."
 
-#: kram/ui/apply_dialog.py:135
+#: kram/ui/apply_dialog.py:138
 msgid ""
 "Not required, but suggested by the packages being installed. Uncheck what "
 "you do not want."
@@ -327,24 +331,24 @@ msgstr ""
 "Nejsou nutné, ale doporučují je instalované balíčky. Zrušte zaškrtnutí u "
 "toho, co nechcete."
 
-#: kram/ui/apply_dialog.py:139
+#: kram/ui/apply_dialog.py:142
 msgid "Adds"
 msgstr "Přidá"
 
-#: kram/ui/apply_dialog.py:139
+#: kram/ui/apply_dialog.py:142
 msgid "Recommended by"
 msgstr "Doporučuje"
 
-#: kram/ui/apply_dialog.py:139
+#: kram/ui/apply_dialog.py:142
 msgid "Recommended package"
 msgstr "Doporučený balíček"
 
-#: kram/ui/apply_dialog.py:155
+#: kram/ui/apply_dialog.py:158
 #, python-brace-format
 msgid "Recommended by dependencies ({n})"
 msgstr "Doporučené závislostmi ({n})"
 
-#: kram/ui/apply_dialog.py:162
+#: kram/ui/apply_dialog.py:165
 msgid ""
 "Pulled in because it complements packages being installed (language support, "
 "plugins)."
@@ -352,11 +356,11 @@ msgstr ""
 "Přidáno, protože doplňuje instalované balíčky (jazyková podpora, zásuvné "
 "moduly)."
 
-#: kram/ui/apply_dialog.py:176
+#: kram/ui/apply_dialog.py:179
 msgid "still installed: something else requires it"
 msgstr "přesto bude nainstalován: vyžaduje jej jiný balíček"
 
-#: kram/ui/apply_dialog.py:183
+#: kram/ui/apply_dialog.py:186
 #, python-brace-format
 msgid "+{size}, {n} package"
 msgid_plural "+{size}, {n} packages"
@@ -364,51 +368,51 @@ msgstr[0] "+{size}, {n} balíček"
 msgstr[1] "+{size}, {n} balíčky"
 msgstr[2] "+{size}, {n} balíčků"
 
-#: kram/ui/apply_dialog.py:201 kram/ui/repos_dialog.py:85
+#: kram/ui/apply_dialog.py:204 kram/ui/repos_dialog.py:85
 msgid "Apply changes"
 msgstr "Použít změny"
 
-#: kram/ui/apply_dialog.py:209
+#: kram/ui/apply_dialog.py:212
 msgid "Review the list before applying."
 msgstr "Před použitím seznam zkontrolujte."
 
-#: kram/ui/apply_dialog.py:209
+#: kram/ui/apply_dialog.py:212
 msgid "The following changes will be made."
 msgstr "Budou provedeny následující změny."
 
-#: kram/ui/apply_dialog.py:234 kram/ui/install_dialog.py:168
+#: kram/ui/apply_dialog.py:237 kram/ui/install_dialog.py:168
 msgid "Equivalent command"
 msgstr "Odpovídající příkaz"
 
-#: kram/ui/apply_dialog.py:238
+#: kram/ui/apply_dialog.py:241
 msgid "Download packages only"
 msgstr "Pouze stáhnout balíčky"
 
-#: kram/ui/apply_dialog.py:243 kram/ui/main_window.py:148
+#: kram/ui/apply_dialog.py:246 kram/ui/main_window.py:148
 msgid "Apply"
 msgstr "Použít"
 
-#: kram/ui/apply_dialog.py:259 kram/ui/install_dialog.py:383
+#: kram/ui/apply_dialog.py:262 kram/ui/install_dialog.py:383
 #, python-brace-format
 msgid "To download: {size}."
 msgstr "Ke stažení: {size}."
 
-#: kram/ui/apply_dialog.py:260 kram/ui/install_dialog.py:384
+#: kram/ui/apply_dialog.py:263 kram/ui/install_dialog.py:384
 #, python-brace-format
 msgid "Disk space change: {size}."
 msgstr "Změna místa na disku: {size}."
 
-#: kram/ui/apply_dialog.py:281 kram/ui/install_dialog.py:191
+#: kram/ui/apply_dialog.py:284 kram/ui/install_dialog.py:191
 #: kram/ui/install_dialog.py:207 kram/ui/install_dialog.py:264
 #: kram/ui/main_window.py:957
 msgid "Resolving dependencies…"
 msgstr "Řešení závislostí…"
 
-#: kram/ui/apply_dialog.py:291 kram/ui/install_dialog.py:281
+#: kram/ui/apply_dialog.py:294 kram/ui/install_dialog.py:281
 msgid "These choices cannot be carried out:"
 msgstr "Tento výběr nelze provést:"
 
-#: kram/ui/apply_dialog.py:296 kram/ui/install_dialog.py:258
+#: kram/ui/apply_dialog.py:299 kram/ui/install_dialog.py:258
 #: kram/ui/install_dialog.py:288 kram/ui/main_window.py:959
 #, python-brace-format
 msgid ""

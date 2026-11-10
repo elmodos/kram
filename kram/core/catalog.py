@@ -27,6 +27,7 @@ from .model import (
     Status,
     TransactionPreview,
     VersionInfo,
+    mark_rotated,
 )
 from .origin import classify
 
@@ -474,6 +475,7 @@ class Catalog:
                 install_size=p.get_install_size(), reason=reasons.get(tp.get_reason(), ""),
             ))
         items.sort(key=lambda i: (i.action, i.reason != "user", i.name))
+        mark_rotated(items)
         return TransactionPreview(items, [], download, change)
 
     def _marked_names(self, request: dict) -> set[str]:

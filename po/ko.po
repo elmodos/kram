@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kram\n"
 "Report-Msgid-Bugs-To: https://github.com/elmodos/kram/issues\n"
-"POT-Creation-Date: 2026-11-09 23:05+0200\n"
+"POT-Creation-Date: 2026-11-10 17:15+0200\n"
 "PO-Revision-Date: 2026-11-04 14:07+0200\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -56,7 +56,7 @@ msgstr "상태"
 msgid "Origin"
 msgstr "출처"
 
-#: kram/core/custom_filters.py:54 kram/ui/apply_dialog.py:79
+#: kram/core/custom_filters.py:54 kram/ui/apply_dialog.py:80
 #: kram/ui/details.py:44 kram/ui/package_model.py:15
 msgid "Repository"
 msgstr "저장소"
@@ -265,58 +265,62 @@ msgid "To be removed as dependent or no longer needed"
 msgstr "의존하거나 더 이상 필요 없어 제거 예정"
 
 #: kram/ui/apply_dialog.py:44
+msgid "Oldest kernels removed to stay within the limit of kept versions"
+msgstr "보관 버전 수 제한을 지키기 위해 가장 오래된 커널을 삭제"
+
+#: kram/ui/apply_dialog.py:45
 msgid "Install reason changes"
 msgstr "설치 이유 변경"
 
-#: kram/ui/apply_dialog.py:46 kram/ui/package_model.py:24
+#: kram/ui/apply_dialog.py:47 kram/ui/package_model.py:24
 msgid "dependency"
 msgstr "의존성"
 
-#: kram/ui/apply_dialog.py:46
+#: kram/ui/apply_dialog.py:47
 msgid "unneeded"
 msgstr "필요 없음"
 
-#: kram/ui/apply_dialog.py:46 kram/ui/package_model.py:21
+#: kram/ui/apply_dialog.py:47 kram/ui/package_model.py:21
 msgid "user"
 msgstr "사용자"
 
-#: kram/ui/apply_dialog.py:46 kram/ui/package_model.py:25
+#: kram/ui/apply_dialog.py:47 kram/ui/package_model.py:25
 msgid "weak dependency"
 msgstr "약한 의존성"
 
-#: kram/ui/apply_dialog.py:79 kram/ui/details.py:70
+#: kram/ui/apply_dialog.py:80 kram/ui/details.py:70
 #: kram/ui/install_dialog.py:472 kram/ui/package_model.py:15
 msgid "Package"
 msgstr "패키지"
 
-#: kram/ui/apply_dialog.py:79 kram/ui/package_model.py:16
+#: kram/ui/apply_dialog.py:80 kram/ui/package_model.py:16
 msgid "Size"
 msgstr "크기"
 
-#: kram/ui/apply_dialog.py:79 kram/ui/details.py:44
+#: kram/ui/apply_dialog.py:80 kram/ui/details.py:44
 msgid "Version"
 msgstr "버전"
 
-#: kram/ui/apply_dialog.py:115
+#: kram/ui/apply_dialog.py:118
 #, python-brace-format
 msgid "Essential system packages will be removed: {names}."
 msgstr "필수 시스템 패키지가 제거됩니다: {names}."
 
-#: kram/ui/apply_dialog.py:117
+#: kram/ui/apply_dialog.py:120
 #, python-brace-format
 msgid "{n} package will be removed."
 msgid_plural "{n} packages will be removed."
 msgstr[0] "패키지 {n}개가 제거됩니다."
 
-#: kram/ui/apply_dialog.py:118
+#: kram/ui/apply_dialog.py:121
 msgid "Make sure this is what you want."
 msgstr "원하는 작업이 맞는지 확인하십시오."
 
-#: kram/ui/apply_dialog.py:134
+#: kram/ui/apply_dialog.py:137
 msgid "Recommended packages."
 msgstr "추천 패키지."
 
-#: kram/ui/apply_dialog.py:135
+#: kram/ui/apply_dialog.py:138
 msgid ""
 "Not required, but suggested by the packages being installed. Uncheck what "
 "you do not want."
@@ -324,84 +328,84 @@ msgstr ""
 "필수는 아니지만 설치할 패키지가 추천합니다. 원하지 않는 항목은 선택을 해제하"
 "세요."
 
-#: kram/ui/apply_dialog.py:139
+#: kram/ui/apply_dialog.py:142
 msgid "Adds"
 msgstr "추가"
 
-#: kram/ui/apply_dialog.py:139
+#: kram/ui/apply_dialog.py:142
 msgid "Recommended by"
 msgstr "추천한 패키지"
 
-#: kram/ui/apply_dialog.py:139
+#: kram/ui/apply_dialog.py:142
 msgid "Recommended package"
 msgstr "추천 패키지"
 
-#: kram/ui/apply_dialog.py:155
+#: kram/ui/apply_dialog.py:158
 #, python-brace-format
 msgid "Recommended by dependencies ({n})"
 msgstr "의존성이 추천함 ({n})"
 
-#: kram/ui/apply_dialog.py:162
+#: kram/ui/apply_dialog.py:165
 msgid ""
 "Pulled in because it complements packages being installed (language support, "
 "plugins)."
 msgstr "설치할 패키지를 보완하므로 함께 설치됩니다 (언어 지원, 플러그인)."
 
-#: kram/ui/apply_dialog.py:176
+#: kram/ui/apply_dialog.py:179
 msgid "still installed: something else requires it"
 msgstr "그래도 설치됩니다: 다른 패키지가 필요로 합니다"
 
-#: kram/ui/apply_dialog.py:183
+#: kram/ui/apply_dialog.py:186
 #, python-brace-format
 msgid "+{size}, {n} package"
 msgid_plural "+{size}, {n} packages"
 msgstr[0] "+{size}, 패키지 {n}개"
 
-#: kram/ui/apply_dialog.py:201 kram/ui/repos_dialog.py:85
+#: kram/ui/apply_dialog.py:204 kram/ui/repos_dialog.py:85
 msgid "Apply changes"
 msgstr "변경 사항 적용"
 
-#: kram/ui/apply_dialog.py:209
+#: kram/ui/apply_dialog.py:212
 msgid "Review the list before applying."
 msgstr "적용하기 전에 목록을 확인하십시오."
 
-#: kram/ui/apply_dialog.py:209
+#: kram/ui/apply_dialog.py:212
 msgid "The following changes will be made."
 msgstr "다음 변경 사항이 적용됩니다."
 
-#: kram/ui/apply_dialog.py:234 kram/ui/install_dialog.py:168
+#: kram/ui/apply_dialog.py:237 kram/ui/install_dialog.py:168
 msgid "Equivalent command"
 msgstr "동등한 명령"
 
-#: kram/ui/apply_dialog.py:238
+#: kram/ui/apply_dialog.py:241
 msgid "Download packages only"
 msgstr "패키지만 다운로드"
 
-#: kram/ui/apply_dialog.py:243 kram/ui/main_window.py:148
+#: kram/ui/apply_dialog.py:246 kram/ui/main_window.py:148
 msgid "Apply"
 msgstr "적용"
 
-#: kram/ui/apply_dialog.py:259 kram/ui/install_dialog.py:383
+#: kram/ui/apply_dialog.py:262 kram/ui/install_dialog.py:383
 #, python-brace-format
 msgid "To download: {size}."
 msgstr "다운로드할 크기: {size}."
 
-#: kram/ui/apply_dialog.py:260 kram/ui/install_dialog.py:384
+#: kram/ui/apply_dialog.py:263 kram/ui/install_dialog.py:384
 #, python-brace-format
 msgid "Disk space change: {size}."
 msgstr "디스크 공간 변화: {size}."
 
-#: kram/ui/apply_dialog.py:281 kram/ui/install_dialog.py:191
+#: kram/ui/apply_dialog.py:284 kram/ui/install_dialog.py:191
 #: kram/ui/install_dialog.py:207 kram/ui/install_dialog.py:264
 #: kram/ui/main_window.py:957
 msgid "Resolving dependencies…"
 msgstr "의존성을 해결하는 중…"
 
-#: kram/ui/apply_dialog.py:291 kram/ui/install_dialog.py:281
+#: kram/ui/apply_dialog.py:294 kram/ui/install_dialog.py:281
 msgid "These choices cannot be carried out:"
 msgstr "이 선택은 실행할 수 없습니다:"
 
-#: kram/ui/apply_dialog.py:296 kram/ui/install_dialog.py:258
+#: kram/ui/apply_dialog.py:299 kram/ui/install_dialog.py:258
 #: kram/ui/install_dialog.py:288 kram/ui/main_window.py:959
 #, python-brace-format
 msgid ""

@@ -38,9 +38,10 @@ GROUPS = [
     (N_("To be upgraded"), "#1f5fa8", lambda i: i.action == "upgrade"),
     (N_("To be downgraded"), "#a86f1f", lambda i: i.action == "downgrade"),
     (N_("To be reinstalled"), "#1f5fa8", lambda i: i.action == "reinstall"),
-    (N_("To be removed"), "#b02020", lambda i: i.action == "remove" and i.reason == "user"),
+    (N_("To be removed"), "#b02020", lambda i: i.action == "remove" and i.reason == "user" and not i.rotated),
     (N_("To be removed as dependent or no longer needed"), "#b02020",
-     lambda i: i.action == "remove" and i.reason != "user"),
+     lambda i: i.action == "remove" and i.reason != "user" and not i.rotated),
+    (N_("Oldest kernels removed to stay within the limit of kept versions"), "#808080", lambda i: i.rotated),
     (N_("Install reason changes"), None, lambda i: i.action == "reason"),
 ]
 REASON_TEXT = {"user": N_("user"), "dependency": N_("dependency"), "weak": N_("weak dependency"), "clean": N_("unneeded")}
@@ -62,12 +63,13 @@ def _rec_label(rec: Recommendation) -> str:
     return m.group(1) if m else rec.what.removeprefix("(").removesuffix(")")
 
 
-def _fit_columns(tree: QTreeWidget) -> None:
-    """The first (name) column takes the spare width as the window resizes; the others fit their contents."""
+def _fit_columns(tree: QTreeWidget, flexible: int = 0) -> None:
+    """Column `flexible` takes the spare width as the window resizes, and gives up room first when it is short;
+    the others fit their contents."""
     header = tree.header()
     header.setStretchLastSection(False)
     header.setSectionResizeMode(QHeaderView.ResizeToContents)
-    header.setSectionResizeMode(0, QHeaderView.Stretch)
+    header.setSectionResizeMode(flexible, QHeaderView.Stretch)
 
 
 class ChangesTree(QTreeWidget):
@@ -77,7 +79,9 @@ class ChangesTree(QTreeWidget):
         super().__init__(parent)
         self._basearch = basearch
         self.setHeaderLabels([_("Package"), _("Version"), _("Repository"), _("Size")])
-        _fit_columns(self)
+        # the name is what the user reads; a long version ("1:9.18.51^git20261003.d0a87358-2 → …") gives way instead
+        _fit_columns(self, flexible=1)
+        self.setTextElideMode(Qt.ElideMiddle)  # keeps both ends of "old → new"
 
     def set_basearch(self, basearch: str) -> None:
         self._basearch = basearch
@@ -101,15 +105,19 @@ class ChangesTree(QTreeWidget):
                 else:
                     version = f"{i.old_evr} → {i.evr}" if i.old_evr else i.evr
                 size = human_size(i.download_size if i.download_size else i.install_size)
-                QTreeWidgetItem(top, [name, version, display_repo(i.repo_id), size])
+                row = QTreeWidgetItem(top, [name, version, display_repo(i.repo_id), size])
+                row.setToolTip(1, version)  # in full, whatever is left of it on screen
             self.addTopLevelItem(top)
+            top.setFirstColumnSpanned(True)  # a group title must not widen the name column
             top.setExpanded(True)
 
 
 def removal_warning(preview: TransactionPreview) -> str:
     """A loud warning when essential packages or very many go away; "" otherwise."""
-    critical = sorted({i.name for i in preview.items if i.action == "remove" and i.name in CRITICAL})
-    removed = sum(1 for i in preview.items if i.action == "remove")
+    # a rotated removal (the oldest kernel, next to a new one) leaves the package installed: no warning for it
+    going = [i for i in preview.items if i.action == "remove" and not i.rotated]
+    critical = sorted({i.name for i in going if i.name in CRITICAL})
+    removed = len(going)
     warnings = []
     if critical:
         warnings.append(_("Essential system packages will be removed: {names}.").format(names=", ".join(critical)))

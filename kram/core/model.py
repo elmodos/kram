@@ -162,6 +162,18 @@ class PreviewItem:
     download_size: int
     install_size: int
     reason: str          # user | dependency | weak | clean (removed as no longer needed) | ""
+    rotated: bool = False  # a removal that makes room for a new version of the same package: see mark_rotated
+
+
+def mark_rotated(items: list[PreviewItem]) -> None:
+    """Flag the removals that go with a new version of the same package (name and arch).
+
+    Kernels are installonly: a new one goes next to the old ones, and past `installonly_limit` the oldest is removed.
+    That is housekeeping, not a loss: the package stays. An upgrade or downgrade never lists such a removal, because
+    libdnf5 reports the old side of those as replaced, so this matches installonly rotation only."""
+    arriving = {(i.name, i.arch) for i in items if i.action in ("install", "upgrade", "downgrade", "reinstall")}
+    for item in items:
+        item.rotated = item.action == "remove" and (item.name, item.arch) in arriving
 
 
 @dataclass(slots=True)
