@@ -1,5 +1,5 @@
 %global appid io.github.elmodos.Kram
-%global base_version 0.4.0
+%global base_version 0.4.1
 
 Name:           kram
 # A tagged release (v%%{base_version}) is plain %%{base_version}. Any other commit gets a snapshot from
@@ -83,6 +83,10 @@ QT_QPA_PLATFORM=offscreen %pytest
 %{_datadir}/icons/hicolor/scalable/apps/%{appid}.svg
 
 %changelog
+* Tue Nov 10 2026 Modo Ltunzher <offnormal@gmail.com> - 0.4.1-1
+- Apply dialog: no more "essential package will be removed" warning when only the oldest kernel makes room for a new one
+- Apply dialog: package names are no longer cut short by long versions
+
 * Mon Nov 09 2026 Modo Ltunzher <offnormal@gmail.com> - 0.4.0-1
 - A toolbar button tells when a new Fedora release is out (Settings > Watch Fedora Releases)
 - Its dialog works out what the upgrade would block, remove and need, without changing anything
