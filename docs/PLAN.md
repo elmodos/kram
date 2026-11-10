@@ -308,6 +308,22 @@ a `.desktop` file in `/usr/share/applications`: it means "has a menu entry", so 
 **After the MVP**: versionlock (🔒), offline system upgrades
 (`dnf5 offline`), dnf-automatic settings, in-app language override.
 
+**Sleep during a long download** (idea, 2026-11-10, not built: the user decided it is not needed yet). The rpm
+transaction is already covered: `rpm-plugin-systemd-inhibit` (a Recommends of python3-dnf, installed on a default
+Fedora) takes a logind lock `idle:sleep:shutdown`, mode `block`, while `tr.run()` works; Plasma's battery widget shows
+it as "RPM blocks sleep and screen locking". Not covered: `tr.download()` before it, up to several GB on a system
+upgrade, and any system without the plugin. If it turns out to matter:
+- The GUI takes `org.freedesktop.login1.Manager.Inhibit("idle:sleep", "Kram", <reason>, "block")` through QtDBus
+  (PySide6 returns the file descriptor as `QDBusUnixFileDescriptor`) and holds it for the whole change operation, from
+  the request to the helper until its `done`. It overlaps with rpm's lock, which does no harm.
+- No `shutdown` lock (rpm's plugin has it during the transaction, and a download restarts cleanly), no checkbox, and
+  only for the operations that change the system: apply, local install, COPR and repository changes, not a refresh or
+  a cache clean.
+- An ordinary active session may take these locks without a password (polkit `org.freedesktop.login1.inhibit-block-sleep`
+  is `yes` for it), and logind drops the lock when Kram dies.
+- Cannot be tested in the container (no logind): test the calls with a fake bus and check `systemd-inhibit --list`
+  by hand during a real apply.
+
 **Changelog in the app** (requested 2026-11-07, not designed yet): show what changed in each version somewhere
 in Kram. Source: commits that change something a user can notice end with `Changelog: <Area>: <change>` git
 trailers (from c4ed714 on), read with `git log vA..vB --format='%(trailers:key=Changelog,valueonly)'`; the
