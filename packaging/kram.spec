@@ -1,5 +1,5 @@
 %global appid io.github.elmodos.Kram
-%global base_version 0.4.2
+%global base_version 0.4.3
 
 Name:           kram
 # A tagged release (v%%{base_version}) is plain %%{base_version}. Any other commit gets a snapshot from
@@ -83,6 +83,9 @@ QT_QPA_PLATFORM=offscreen %pytest
 %{_datadir}/icons/hicolor/scalable/apps/%{appid}.svg
 
 %changelog
+* Thu Nov 12 2026 Modo Ltunzher <offnormal@gmail.com> - 0.4.3-1
+- Table: an option in Settings makes a click on the status icon mark the likely action (install, upgrade or unmark) instead of opening the menu
+
 * Tue Nov 10 2026 Modo Ltunzher <offnormal@gmail.com> - 0.4.2-1
 - Toolbar: the Mark All Upgrades icon no longer looks disabled when there are upgrades to mark
 - Repositories: the id and the file path are shown in full, a long path is cut in the middle
