@@ -1,4 +1,5 @@
 """Main window: Synaptic layout — browse, mark, preview, apply."""
+import html
 import json
 import time
 from collections.abc import Callable
@@ -173,6 +174,14 @@ class MainWindow(QMainWindow):
         self.act_watch_releases.setStatusTip(self.act_watch_releases.toolTip())
         self.act_watch_releases.setVisible(self.running_fedora is not None)
         self.act_watch_releases.toggled.connect(self._on_watch_releases)
+        # Synaptic's "Clicking on the status icon marks the most likely action", off by default there too
+        self.act_status_click = QAction(_("Clicking the status icon marks the likely action"), self, checkable=True)
+        tip = _("A click on the status icon unmarks a marked package, marks one that is not installed for "
+                "installation and one with an upgrade for upgrade. Otherwise it opens the action menu, as "
+                "right-clicking does.")
+        self.act_status_click.setToolTip(f"<p>{html.escape(tip)}</p>")  # rich text, so that Qt wraps it
+        self.act_status_click.setStatusTip(tip)
+        self.act_status_click.toggled.connect(lambda on: QSettings().setValue("table/status_click", on))
         self.act_upgrade = self._action("Fedora", slot=self.open_upgrade, enabled=False, tip=_("A new Fedora release"))
         self.act_upgrade.setIcon(QIcon.fromTheme("fedora-logo-icon", QIcon.fromTheme("system-upgrade")))
         self.act_upgrade.setVisible(False)
@@ -274,7 +283,8 @@ class MainWindow(QMainWindow):
         m.addSeparator()
         m.addActions([self.act_filters, self.act_new_filter])
         m.addSeparator()
-        m.addAction(self.act_watch_releases)
+        m.addActions([self.act_status_click, self.act_watch_releases])
+        m.setToolTipsVisible(True)
         m.addMenu(_("Toolbar")).addActions(self.toolbar_styles.actions())
         m = mb.addMenu(_("&Help"))
         m.addAction(self.act_about)
@@ -379,6 +389,7 @@ class MainWindow(QMainWindow):
         s = QSettings()
         self.set_toolbar_style(s.value("toolbar/style", TOOLBAR_STYLES[0][0]))
         self.act_watch_releases.setChecked(s.value("distro/watch", True, type=bool))
+        self.act_status_click.setChecked(s.value("table/status_click", False, type=bool))
         self._update_upgrade_button()
         if geom := s.value("window/geometry"):
             self.restoreGeometry(geom)
@@ -935,25 +946,32 @@ class MainWindow(QMainWindow):
                                           lambda evr=v.evr: self.mark_selected(Action.DOWNGRADE, evr))
 
     def _on_table_click(self, index):
-        # Synaptic: clicking the status box opens the action menu
+        # Synaptic: clicking the status box opens the action menu, or marks the likely action if the user chose that
         if index.column() == COL_STATUS:
+            if self.act_status_click.isChecked() and self._toggle_likely(index):
+                return
             m = QMenu(self)
             self._package_menu(m)
             m.exec(self.table.viewport().mapToGlobal(self.table.visualRect(index).bottomLeft()))
 
     def _on_double_click(self, index):
-        if index.column() == COL_STATUS:
-            return
+        if index.column() != COL_STATUS:
+            self._toggle_likely(index)
+
+    def _toggle_likely(self, index) -> bool:
+        """Unmark the row, or mark it for the one change it obviously wants: install or upgrade.
+        False, and nothing changes, when there is none (an installed package without an upgrade)."""
         row = self.model.row_at(index)
         if row.key in self.model.marks:
             self.model.marks.unmark(row.key)
         else:
             allowed = allowed_actions(row)
-            for action in (Action.INSTALL, Action.UPGRADE):
-                if action in allowed:
-                    self.model.marks.set(row, action)
-                    break
+            action = next((a for a in (Action.INSTALL, Action.UPGRADE) if a in allowed), None)
+            if action is None:
+                return False
+            self.model.marks.set(row, action)
         self._marks_changed([row.key])
+        return True
 
     # ---------------------------------------------------------------- applying
 

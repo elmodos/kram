@@ -229,3 +229,40 @@ def test_mark_upgrades_icon_follows_whether_there_is_anything_to_mark(app, monke
         assert not action.isEnabled() and action.icon().cacheKey() == themed["update-none"].cacheKey()
     finally:
         win.dnf.shutdown()
+
+
+def test_status_icon_click_marks_the_likely_action_only_when_chosen(window, monkeypatch):
+    from kram.core.marks import Action
+    from kram.core.model import Origin, PkgRow, Status
+    from kram.ui.package_model import COL_NAME, COL_STATUS
+
+    monkeypatch.setattr(main_window, "QSettings", FakeSettings)
+    monkeypatch.setattr(FakeSettings, "values", {})
+    menus = []
+
+    class Menu(main_window.QMenu):
+        def exec(self, *_args):
+            menus.append(self)
+    monkeypatch.setattr(main_window, "QMenu", Menu)
+    rows = [PkgRow("new", "x86_64", "", "", "1-1", "fedora", 1, Origin.FEDORA, Status.NOT_INSTALLED, False),
+            PkgRow("old", "x86_64", "", "1-1", "1-2", "fedora", 1, Origin.FEDORA, Status.UPGRADABLE, True),
+            PkgRow("same", "x86_64", "", "1-1", "1-1", "fedora", 1, Origin.FEDORA, Status.INSTALLED, True)]
+    window.model.set_rows(rows, "x86_64")
+    status = [window.model.index(i, COL_STATUS) for i in range(3)]
+    marks = window.model.marks
+
+    window.act_status_click.setChecked(False)
+    window._on_table_click(status[0])  # Synaptic's default: the menu
+    assert len(menus) == 1 and len(marks) == 0
+
+    window.act_status_click.setChecked(True)
+    window._on_table_click(status[0])
+    window._on_table_click(status[1])
+    assert [marks.get(r.key).action for r in rows[:2]] == [Action.INSTALL, Action.UPGRADE] and len(menus) == 1
+    window._on_table_click(status[2])  # removal, reinstallation...: no obvious one, so the menu
+    assert len(menus) == 2 and rows[2].key not in marks
+    window._on_table_click(status[0])
+    assert rows[0].key not in marks and FakeSettings.values["table/status_click"] is True
+
+    window._on_double_click(window.model.index(0, COL_NAME))  # unchanged
+    assert marks.get(rows[0].key).action is Action.INSTALL

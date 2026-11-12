@@ -149,7 +149,9 @@ Laid out like Synaptic:
   - *Search results*: query history.
   - *Custom filters*: user-defined condition lists (2026-11-04).
 - **Table**: clicking the status box opens the action menu, as in Synaptic; double click installs/upgrades
-  or unmarks. Multi-selection applies an action to all rows it fits. Marked rows are tinted.
+  or unmarks. Settings → "Clicking the status icon marks the likely action" (off by default, like Synaptic's
+  option; issue #5, 2026-11-12) makes the click do what double click does and opens the menu only where there
+  is no obvious change (an installed package without an upgrade): removal is never one click. Multi-selection applies an action to all rows it fits. Marked rows are tinted.
 - **Detail tabs**: Description · General (NEVRA, repos, license, URL, packager, build date, sizes, install
   reason) · Dependencies (Requires / Recommends / Suggests / Required by / Conflicts / Obsoletes / Provides,
   clickable) · Files · Versions (all installed and available) · Changelog.
