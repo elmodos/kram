@@ -1,5 +1,5 @@
 %global appid io.github.elmodos.Kram
-%global base_version 0.4.3
+%global base_version 0.5.0
 
 Name:           kram
 # A tagged release (v%%{base_version}) is plain %%{base_version}. Any other commit gets a snapshot from
@@ -108,6 +108,14 @@ QT_QPA_PLATFORM=offscreen %pytest
 %{_datadir}/icons/hicolor/scalable/status/%{appid}-update-*.svg
 
 %changelog
+* Sat Nov 14 2026 Modo Ltunzher <offnormal@gmail.com> - 0.5.0-1
+- Tray: an optional icon while updates are available, with how many are security updates
+  (Settings > Update Notifications); it downloads nothing, Fedora's dnf-makecache.timer does
+- Tray: clicking the icon opens Kram on the upgradable packages
+- Kram opens only once: starting it again brings the open window to the front
+- Update Notifications: turn Fedora's automatic update check on, and Discover's or GNOME Software's
+  update notifier off
+
 * Thu Nov 12 2026 Modo Ltunzher <offnormal@gmail.com> - 0.4.3-1
 - Table: an option in Settings makes a click on the status icon mark the likely action (install, upgrade or unmark) instead of opening the menu
 
