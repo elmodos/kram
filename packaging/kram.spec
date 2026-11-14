@@ -1,5 +1,5 @@
 %global appid io.github.elmodos.Kram
-%global base_version 0.5.5
+%global base_version 0.5.6
 
 Name:           kram
 # A tagged release (v%%{base_version}) is plain %%{base_version}. Any other commit gets a snapshot from
@@ -116,6 +116,9 @@ QT_QPA_PLATFORM=offscreen %pytest
 %{_datadir}/kram/
 
 %changelog
+* Sat Nov 14 2026 Modo Ltunzher <offnormal@gmail.com> - 0.5.6-1
+- Package files: opening an .rpm file no longer fails with "cannot create directories: Permission denied"
+
 * Sat Nov 14 2026 Modo Ltunzher <offnormal@gmail.com> - 0.5.5-1
 - Update notifications: the tray icon appears right after Kram's Reload finds updates, and after waking from sleep
 
