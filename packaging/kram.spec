@@ -1,5 +1,5 @@
 %global appid io.github.elmodos.Kram
-%global base_version 0.5.4
+%global base_version 0.5.5
 
 Name:           kram
 # A tagged release (v%%{base_version}) is plain %%{base_version}. Any other commit gets a snapshot from
@@ -116,6 +116,9 @@ QT_QPA_PLATFORM=offscreen %pytest
 %{_datadir}/kram/
 
 %changelog
+* Sat Nov 14 2026 Modo Ltunzher <offnormal@gmail.com> - 0.5.5-1
+- Update notifications: the tray icon appears right after Kram's Reload finds updates, and after waking from sleep
+
 * Sat Nov 14 2026 Modo Ltunzher <offnormal@gmail.com> - 0.5.4-1
 - Updates that change a package's architecture (noarch to x86_64, like python3-wcwidth in Fedora 45) now show the new version and install
 
