@@ -1,0 +1,12 @@
+[Unit]
+Description=Kram: count the available updates
+Documentation=https://github.com/elmodos/kram
+# only reads /var/cache/libdnf5, which Fedora's dnf-makecache.timer refreshes; never uses the network
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 -s -m kram.notifier.check
+# a count must never slow the user down
+CPUWeight=idle
+Nice=19
+IOSchedulingClass=idle

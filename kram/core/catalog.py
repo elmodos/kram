@@ -30,6 +30,7 @@ from .model import (
     mark_rotated,
 )
 from .origin import classify
+from .updates import open_system_base, upgradable_keys
 
 MAX_CHANGELOG = 30
 # libdnf5 glob scans take ~0.3-0.9 s and can't be cancelled; too-short patterns would block the worker for
@@ -79,27 +80,7 @@ class Catalog:
     def load(self, provides: Iterable[tuple[str, bool]] = ()) -> CatalogSnapshot:
         """`provides`: the (capability, is a glob) questions of the custom filters, answered in the snapshot."""
         t0 = time.monotonic()
-        base = libdnf5.base.Base()
-        base.load_config()
-        # read the system cache (/var/cache/libdnf5), which the root helper refreshes; for a normal user libdnf5
-        # would otherwise use ~/.cache/libdnf5, which nothing here updates, so "Reload" would seem to do nothing
-        config = base.get_config()
-        config.cachedir = config.system_cachedir
-        # and never write to it: after `dnf makecache` (e.g. dnf-makecache.timer) the .solv files are stale, and
-        # libdnf5 would try to rebuild them in a root-owned directory ("cannot create temporary file: (13)").
-        # Without them it parses the XML metadata instead, a few seconds slower until the next root refresh.
-        config.build_cache = False
-        # only read what the helper downloaded: never fetch metadata as the normal user (it would fail with
-        # "Failed to set up metadata download" for a repo that has no cache yet)
-        config.cacheonly = "all"
-        base.setup()
-        repo_sack = base.get_repo_sack()
-        repo_sack.create_repos_from_system_configuration()
-        # a repo without usable metadata (no build for this release yet, server down) must not hide every other
-        # package: skip it whatever its .repo file says; the snapshot lists it as unavailable
-        for repo in libdnf5.repo.RepoQuery(base):
-            repo.get_config().skip_if_unavailable = True
-        repo_sack.load_repos()
+        base = open_system_base()
         self._base = base
         self._system_base = None  # built on first use, see removal_dependents
         self._local = {}
@@ -124,7 +105,7 @@ class Catalog:
             query_setup(q)
             return {(p.get_name(), p.get_arch()) for p in q}
 
-        upgradable = keys(lambda q: q.filter_upgradable())
+        upgradable = upgradable_keys(base)  # the tray update checker counts with the same function
         orphans = keys(lambda q: q.filter_extras())
         unneeded = keys(lambda q: q.filter_unneeded())
         user_installed = keys(lambda q: q.filter_userinstalled())

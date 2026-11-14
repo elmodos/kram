@@ -65,6 +65,12 @@ Built on libdnf5 (the same library as `dnf5`) and Qt 6. See [docs/PLAN.md](docs/
 - Tells you when a new Fedora release is out (a toolbar button, checked on Reload against Fedora's Bodhi) and works
   out what moving to it would do: what blocks it, what would be removed, COPR projects without a build, the disk
   space. It only reports: the upgrade itself stays with Discover or GNOME Software.
+- An optional icon in the system tray while updates are available, showing how many and how many of them are
+  security updates (Settings → Update Notifications, off by default). It downloads nothing: Fedora's own
+  `dnf-makecache.timer` refreshes the package information, a small check reads it at login, hourly and after
+  every installation, and the icon process exists only while there are updates. Clicking it opens Kram on the
+  upgradable packages. Needs a tray that shows StatusNotifierItem icons (Plasma, Xfce, LXQt, GNOME with the
+  AppIndicator extension).
 - One password per session (polkit); browsing and searching need none.
 - In 13 languages ([Translations](#translations)).
 

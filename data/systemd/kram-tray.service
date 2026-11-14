@@ -1,0 +1,11 @@
+[Unit]
+Description=Kram: tray icon for available updates
+Documentation=https://github.com/elmodos/kram
+# started and stopped by kram-update-check.service, never enabled itself
+PartOf=graphical-session.target
+After=graphical-session.target
+
+[Service]
+ExecStart=/usr/bin/python3 -s -m kram.notifier.tray
+Restart=on-failure
+RestartSec=30s

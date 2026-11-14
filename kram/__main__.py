@@ -5,7 +5,7 @@ from PySide6.QtCore import QLibraryInfo, QTranslator, QUrl
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QApplication
 
-from . import APP_ID, HOMEPAGE, __version__
+from . import APP_ID, HOMEPAGE, __version__, instance
 from .i18n import language
 
 
@@ -29,9 +29,15 @@ def main() -> int:
     files = [a for a in app.arguments()[1:] if not a.startswith("-")]
     if files:
         return install_file(files[0])
+    # `kram --upgradable` (the tray icon): open on the Upgradable filter
+    view = instance.UPGRADABLE if "--upgradable" in app.arguments()[1:] else ""
+    if instance.hand_over(view):  # a Kram is already open: it shows itself
+        return 0
     from .ui.main_window import MainWindow
     win = MainWindow()
+    win.show_view(view)
     win.show()
+    service = instance.serve(win.activate_from_outside)  # noqa: F841 (kept alive while the app runs)
     return app.exec()
 
 

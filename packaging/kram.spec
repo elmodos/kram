@@ -18,11 +18,13 @@ BuildRequires:  python3-devel
 BuildRequires:  gettext
 BuildRequires:  desktop-file-utils
 BuildRequires:  libappstream-glib
+BuildRequires:  systemd-rpm-macros
 # for the test suite (python3-pyside6: the UI modules are imported and the icons rendered offscreen)
 BuildRequires:  python3-pytest
 BuildRequires:  python3-libdnf5
 BuildRequires:  python3-rpm
 BuildRequires:  python3-pyside6
+BuildRequires:  python3-gobject-base
 
 Requires:       python3-libdnf5
 Requires:       python3-rpm
@@ -32,6 +34,8 @@ Requires:       polkit
 # "dnf5 copr" and "dnf5 config-manager" (COPR and repository changes)
 Requires:       dnf5-plugins
 Requires:       hicolor-icon-theme
+# the tray update checker's icon: a StatusNotifierItem over Gio D-Bus, lighter than Qt
+Requires:       python3-gobject-base
 # translations of Qt's standard buttons (Yes, No, Cancel…) in the UI language
 Recommends:     qt6-qttranslations
 
@@ -64,6 +68,10 @@ install -Dpm 0644 data/%{appid}.policy %{buildroot}%{_datadir}/polkit-1/actions/
 install -Dpm 0644 data/%{appid}.desktop %{buildroot}%{_datadir}/applications/%{appid}.desktop
 install -Dpm 0644 data/%{appid}.metainfo.xml %{buildroot}%{_metainfodir}/%{appid}.metainfo.xml
 install -Dpm 0644 data/%{appid}.svg %{buildroot}%{_datadir}/icons/hicolor/scalable/apps/%{appid}.svg
+# the tray update checker: systemd user units, none enabled by default (Kram's settings turn it on)
+install -Dpm 0644 -t %{buildroot}%{_userunitdir} data/systemd/kram-*
+# its tray icons, in hicolor so that every icon theme finds them
+install -Dpm 0644 -t %{buildroot}%{_datadir}/icons/hicolor/scalable/status data/icons/%{appid}-update-*.svg
 mkdir -p %{buildroot}%{_datadir}/locale
 cp -a build-locale/. %{buildroot}%{_datadir}/locale/
 %find_lang %{name}
@@ -73,6 +81,18 @@ desktop-file-validate %{buildroot}%{_datadir}/applications/%{appid}.desktop
 appstream-util validate-relax --nonet %{buildroot}%{_metainfodir}/%{appid}.metainfo.xml
 QT_QPA_PLATFORM=offscreen %pytest
 
+%post
+# the user presets ("disable *") leave the update checker off; Kram's settings turn it on per user
+%systemd_user_post kram-update-check.timer kram-update-check.path
+
+%preun
+# removal: stop and disable it for every logged-in user
+%systemd_user_preun kram-update-check.timer kram-update-check.path kram-tray.service
+
+%postun
+# upgrade: a running tray icon still has the old code loaded; restart it for every logged-in user
+%systemd_user_postun_with_restart kram-tray.service
+
 %files -f %{pyproject_files} -f %{name}.lang
 %doc README.md
 %{_bindir}/kram
@@ -81,6 +101,11 @@ QT_QPA_PLATFORM=offscreen %pytest
 %{_datadir}/applications/%{appid}.desktop
 %{_metainfodir}/%{appid}.metainfo.xml
 %{_datadir}/icons/hicolor/scalable/apps/%{appid}.svg
+%{_userunitdir}/kram-update-check.service
+%{_userunitdir}/kram-update-check.timer
+%{_userunitdir}/kram-update-check.path
+%{_userunitdir}/kram-tray.service
+%{_datadir}/icons/hicolor/scalable/status/%{appid}-update-*.svg
 
 %changelog
 * Thu Nov 12 2026 Modo Ltunzher <offnormal@gmail.com> - 0.4.3-1

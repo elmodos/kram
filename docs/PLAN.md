@@ -480,6 +480,69 @@ replaced copy "cleaning up the old copy" and counts packages, not rpm steps. Che
 packages: install, upgrade, downgrade, reinstall, installonly, unsatisfiable, foreign arch, newer in a repo
 (`scripts/check_local_versions.py`).
 
+**Tray update checker** (designed and built 2026-11-12…14 from user feedback, released in 0.5.0). A separate small
+program in the main kram package (no subpackage), off by default, enabled from a new tab in Kram's Settings: for
+people who don't use Discover and its notifier, and light enough for weak computers. Kram itself does not stay in
+memory for this.
+- **No network.** It only reads `/var/cache/libdnf5` (cacheonly, like the catalog), which `dnf-makecache.timer`
+  (shipped and enabled by dnf5, runs as root every 3 h on AC power, re-downloads after `metadata_expire` = 48 h)
+  or Kram's Reload keeps fresh. Metered connections are therefore not its concern.
+- **Recount on change, not on a schedule**: when a repository's `repomd.xml` or rpm's database changes. After an
+  update (from Kram, the terminal or Discover) the count drops to zero and the icon hides; Kram needs no IPC for it.
+- **The icon is shown exactly when upgrades exist**, nothing else (no snoozing). Kram's box with an
+  upward arrow instead of the checkbox, red when a security update is among them, amber for bug fixes only, green
+  otherwise (`data/icons/io.github.elmodos.Kram-update-{high,medium,low}.svg`, installed into hicolor); the count
+  in the tooltip. Breeze's `update-high` & co. were the first idea, but only Breeze and Papirus have them: on
+  Xfce with Adwaita the item was empty (2026-11-14), and the desktop says nothing about the icon theme. Menu: Open Kram, Settings… (Kram's tab). No "Check now" (removed
+  2026-11-14): a check only re-reads the cache, which looks like asking the servers; fresh metadata is Kram's Reload. Click (built 2026-11-14): a running Kram owns the bus name
+  `io.github.elmodos.Kram` (kram/instance.py) and gets `Activate("upgradable", token)`, otherwise `kram --upgradable`
+  starts in its own systemd scope; a second `kram` hands its request over and exits. The panel's XDG activation
+  token (`ProvideXdgActivationToken`) goes along so that Wayland focuses the window. Kram becomes
+  single-instance; while a dialog is open over the main window, both come to the front and the filter stays.
+- **The count comes from a module shared with Kram's "Upgradable" filter**, so both always show the same number.
+- **Stale cache**: older than N days (a setting; users may refresh weekly or less often) → the tooltip says so
+  instead of claiming there is nothing to update. Kram's tab also says when `dnf-makecache.timer` is disabled.
+- **No tray**: Kram's tab shows a warning when the session has no StatusNotifierWatcher (GNOME without the
+  AppIndicator extension, LXDE: lxpanel only has the old XEmbed tray, checked 2026-11-14). No dependency on it:
+  the user's choice. Without a watcher for 60 s the tray process exits; the hourly check starts it again.
+  No XEmbed fallback (decided 2026-11-14): it needs GTK or Qt in the tray process, and Fedora has no SNI bridge
+  for lxpanel (no `indicator-application`, no `snixembed`; its "Indicator applets" plugin showed nothing).
+- **Fedora does the refreshing, Kram only reads.** The Settings tab says so: the background refresh is Fedora's
+  `dnf-makecache.timer`, not Kram's; when the timer is disabled, a button turns that system service on (systemd
+  over D-Bus, password via polkit `manage-unit-files`).
+- **Plasma's "Software Update" page does not control that timer.** It stores DiscoverNotifier's settings
+  (`~/.config/PlasmaDiscoverUpdates`: notification interval, unattended updates; `discoverrc`: offline updates),
+  and DiscoverNotifier refreshes PackageKit's own cache (`/var/cache/PackageKit`) itself. Kram does not write those
+  files. With the checker and the timer, Discover is not needed for update checks.
+- **Processes** (proposal): systemd user units, enabled from Kram without a password (`systemctl --user`). A timer
+  (at login, then hourly) and a path unit on `/var/lib/rpm/rpmdb.sqlite` start a oneshot check: it compares the
+  mtimes of `repomd.xml` files and the rpm database with the last run and exits in milliseconds when nothing
+  changed; otherwise it counts with libdnf5 and exits. It starts the tray service when there are upgrades and
+  stops it when there are none. Between checks only systemd (always running anyway) waits.
+  Units shipped in `/usr/lib/systemd/user/`, none enabled by default: `kram-update-check.service` (oneshot,
+  `CPUWeight=idle`, `Nice=19`, `IOSchedulingClass=idle` so a count never slows the user down),
+  `kram-update-check.timer`, `kram-update-check.path`, and `kram-tray.service` (`PartOf=graphical-session.target`),
+  which is never enabled, only started and stopped by the check. To verify on light desktops (Xfce, LXQt, …): the
+  user manager must know `DISPLAY`/`WAYLAND_DISPLAY` and reach `graphical-session.target`, as Plasma does.
+- **DiscoverNotifier running** (it owns `org.kde.discover.notifier` on the session bus, autostarted from
+  `/etc/xdg/autostart/org.kde.discover.notifier.desktop`): Kram's tab says that both would check for updates
+  (two icons, PackageKit downloading its own copy of the metadata), and that the user can simply keep Discover's
+  and leave Kram's off, or turn Discover's off (a `~/.config/autostart` override with `Hidden=true`, reversible).
+  Buttons: "Turn off" (writes the override; the system file belongs to the package and cannot be deleted), "Show
+  in file manager", and, because the running notifier stays until the next login, "Stop it now" (SIGTERM to the
+  process owning the bus name). "Turn back on" removes the override. GNOME Software's background service is
+  detected the same way, by its bus name.
+- **Not checked**: a new Fedora release (decided 2026-11-12).
+- **Deferred past the first version**: desktop notifications. They need to remember which upgrades were already
+  announced, or they would repeat after every metadata refresh. A custom icon name in the settings tab (a text
+  field with a live preview), for advanced users who want their theme's icon; they know a Qt preview may differ
+  from a GTK panel.
+- Measured (2026-11-12, this machine, 12 upgrades): a count from the system cache with valid `.solv` files takes
+  0.7 s and 228 MB peak, then the process exits; when the `.solv` files are stale the XML is parsed, 3.2 s and
+  294 MB. A resident tray process: PySide6 `QSystemTrayIcon` 77 MB RSS, a bare StatusNotifierItem over Gio D-Bus
+  (python3-gobject) 29 MB RSS. So: the count runs in a short-lived process, and the tray process lives only
+  while upgrades exist.
+
 **Reasonable, but not planned unless users ask for it** (2026-11-06): moving transactions from our helper to
 dnf5daemon, or supporting both. For: no root code of our own, standard dnf polkit actions, local .rpm and
 offline upgrades come almost for free. Against: dnf5daemon 5.4 has no `mark` (install reason) and cannot add
@@ -506,5 +569,6 @@ history` covers it from the terminal.
 
 1. ~~Project name~~ — **Kram** (Ukrainian *крам*: goods, one's household stuff). Repository
    https://github.com/elmodos/kram, app ID `io.github.elmodos.Kram` (`kram/__init__.py`).
-2. KDE-specific integration (KNotification about updates in the tray) — outside the MVP?
+2. ~~KDE-specific integration (KNotification about updates in the tray)~~ — a separate tray update checker,
+   see "Tray update checker" in section 10.
 3. Should debuginfo/source packages be shown at all (default: no).

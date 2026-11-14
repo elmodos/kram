@@ -25,7 +25,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from .. import HOMEPAGE, __version__
+from .. import HOMEPAGE, __version__, instance
 from ..core import distro, releases
 from ..core.catalog import Catalog
 from ..core.custom_filters import CustomFilter, Field, conditions_for_view, load_filters, provides_queries
@@ -44,6 +44,7 @@ from .filters_dialog import FiltersDialog
 from .install_dialog import InstallDialog
 from .package_model import COL_NAME, COL_STATUS, HEADERS, HIDEABLE, PackageTableModel
 from .cache_dialog import CacheDialog
+from .notifier_dialog import NotifierDialog
 from .progress_dialog import ProgressDialog
 from .repos_dialog import ReposDialog
 from .sidebar import Sidebar
@@ -169,6 +170,9 @@ class MainWindow(QMainWindow):
                                      tip=_("Manage COPR projects: community repositories"))
         self.act_cache = self._action(_("Package Cache…"), "edit-clear-all", slot=self.open_cache, enabled=False,
                                       tip=_("See how much space the package caches take and clean them"))
+        self.act_notifications = self._action(_("Update Notifications…"), "preferences-desktop-notification",
+                                              slot=self.open_notifications,
+                                              tip=_("An icon in the system tray when updates are available"))
         self.act_watch_releases = QAction(_("Watch Fedora Releases"), self, checkable=True)
         self.act_watch_releases.setToolTip(_("On Reload, ask Fedora's Bodhi service whether a new release is out"))
         self.act_watch_releases.setStatusTip(self.act_watch_releases.toolTip())
@@ -279,7 +283,7 @@ class MainWindow(QMainWindow):
         m.addSeparator()
         m.addActions([self.act_properties, self.act_back])
         m = mb.addMenu(_("&Settings"))
-        m.addActions([self.act_repos, self.act_copr, self.act_cache])
+        m.addActions([self.act_repos, self.act_copr, self.act_cache, self.act_notifications])
         m.addSeparator()
         m.addActions([self.act_filters, self.act_new_filter])
         m.addSeparator()
@@ -409,6 +413,30 @@ class MainWindow(QMainWindow):
         except (TypeError, ValueError):
             self.sidebar.custom = []
         self._restore_filter = (s.value("sidebar/view", "status"), s.value("sidebar/entry", "status:all"))
+
+    def show_view(self, view: str) -> None:
+        """`view` from kram.instance: "" keeps the filter, UPGRADABLE selects Status → Upgradable."""
+        if view != instance.UPGRADABLE:
+            return
+        if self.filter is None:  # still loading: the filter to select once the catalog is there
+            self._restore_filter = ("status", "status:upgradable")
+        else:
+            self.sidebar.select("status", "status:upgradable")
+
+    def activate_from_outside(self, view: str) -> None:
+        """Another `kram` or the tray icon asked for this window. It comes to the front; while a dialog is open over
+        it the user is in the middle of something there (marking, applying, a setting): the dialog stays open and
+        comes to the front with it, and the filter is left alone."""
+        dialog = QApplication.activeModalWidget()
+        if dialog is None:
+            self.show_view(view)
+        if self.isMinimized():
+            self.showNormal()
+        self.show()
+        self.raise_()
+        front = dialog or self
+        front.raise_()
+        front.activateWindow()
 
     def _save_settings(self):
         s = QSettings()
@@ -1052,6 +1080,9 @@ class MainWindow(QMainWindow):
         if not self.snapshot or self.helper.busy:
             return
         CacheDialog(self.dnf, self._clean_cache, self).exec()
+
+    def open_notifications(self):
+        NotifierDialog(self).exec()
 
     def _clean_cache(self, target: str) -> None:
         request = {"op": "clean_cache", "target": target}

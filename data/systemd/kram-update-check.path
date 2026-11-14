@@ -1,0 +1,10 @@
+[Unit]
+Description=Kram: check for updates after a package transaction
+Documentation=https://github.com/elmodos/kram
+
+[Path]
+PathChanged=/var/lib/rpm/rpmdb.sqlite
+Unit=kram-update-check.service
+
+[Install]
+WantedBy=default.target

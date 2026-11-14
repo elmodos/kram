@@ -1,0 +1,11 @@
+[Unit]
+Description=Kram: check for updates at login and hourly
+Documentation=https://github.com/elmodos/kram
+
+[Timer]
+OnStartupSec=1min
+OnUnitActiveSec=1h
+Unit=kram-update-check.service
+
+[Install]
+WantedBy=timers.target
