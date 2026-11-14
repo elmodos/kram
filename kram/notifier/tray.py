@@ -9,6 +9,7 @@ import signal
 import subprocess
 import sys
 import time
+from pathlib import Path
 
 from gi.repository import Gio, GLib
 
@@ -31,6 +32,17 @@ NO_WATCHER_GRACE = 60  # seconds without a tray host before the process gives up
 # update-high exist only in some themes) by kram.core.updates' severity, not imported: that would load libdnf5
 # into this long-lived process
 ICONS = {level: f"{APP_ID}-update-{level}" for level in ("low", "medium", "high")}
+# the same icons once more, in a folder of our own that the panel searches too (IconThemePath). A panel that was
+# running when Kram got installed has not seen the new hicolor icons (plasmashell caches its icon lookups until it
+# restarts) and fell back to the nearest name it knew: Kram's own icon. The folder ends in "icons", which Plasma
+# requires; Plasma adds it to its lookup (KIconLoader::addAppDir), GTK panels to their search path, so the user's
+# icon theme still wins when it has an icon of the same name.
+INSTALLED_ICON_DIR = "/usr/share/kram/icons"
+SOURCE_ICON_DIR = Path(__file__).resolve().parents[2] / "data" / "icons"  # a source checkout
+
+
+def icon_dir() -> str:
+    return INSTALLED_ICON_DIR if os.path.isdir(INSTALLED_ICON_DIR) else str(SOURCE_ICON_DIR)
 
 INTERFACES = Gio.DBusNodeInfo.new_for_xml("""<node>
 <interface name="org.kde.StatusNotifierItem">
@@ -39,6 +51,7 @@ INTERFACES = Gio.DBusNodeInfo.new_for_xml("""<node>
   <property name="Title" type="s" access="read"/>
   <property name="Status" type="s" access="read"/>
   <property name="IconName" type="s" access="read"/>
+  <property name="IconThemePath" type="s" access="read"/>
   <property name="ToolTip" type="(sa(iiay)ss)" access="read"/>
   <property name="ItemIsMenu" type="b" access="read"/>
   <property name="Menu" type="o" access="read"/>
@@ -175,6 +188,7 @@ class Tray:
             "Title": GLib.Variant("s", "Kram"),
             "Status": GLib.Variant("s", "Active"),
             "IconName": GLib.Variant("s", self.icon()),
+            "IconThemePath": GLib.Variant("s", icon_dir()),
             "ToolTip": GLib.Variant("(sa(iiay)ss)", (self.icon(), [], "Kram", self.tooltip())),
             "ItemIsMenu": GLib.Variant("b", False),
             "Menu": GLib.Variant("o", MENU_PATH),

@@ -65,6 +65,20 @@ def test_tray_icons_are_shipped():
         assert (ROOT / "data" / "icons" / f"{name}.svg").exists(), name
 
 
+def test_tray_icon_path_holds_the_icons(monkeypatch):
+    """The panel looks for the icons in IconThemePath too: a folder ending in "icons" with all three in it."""
+    pytest.importorskip("gi")
+    from kram.notifier import tray
+
+    assert tray.INSTALLED_ICON_DIR == "/usr/share/kram/icons"
+    assert "%{_datadir}/kram/icons" in (ROOT / "packaging" / "kram.spec").read_text()
+    monkeypatch.setattr(tray, "INSTALLED_ICON_DIR", "/nonexistent/kram/icons")  # the source checkout's folder
+    folder = Path(tray.icon_dir())
+    assert folder.name == "icons"
+    for name in tray.ICONS.values():
+        assert (folder / f"{name}.svg").exists(), name
+
+
 def test_units_start_existing_modules():
     for unit in (ROOT / "data" / "systemd").iterdir():
         for line in unit.read_text().splitlines():

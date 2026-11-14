@@ -72,6 +72,9 @@ install -Dpm 0644 data/%{appid}.svg %{buildroot}%{_datadir}/icons/hicolor/scalab
 install -Dpm 0644 -t %{buildroot}%{_userunitdir} data/systemd/kram-*
 # its tray icons, in hicolor so that every icon theme finds them
 install -Dpm 0644 -t %{buildroot}%{_datadir}/icons/hicolor/scalable/status data/icons/%{appid}-update-*.svg
+# and once more where the tray icon tells the panel to look (IconThemePath): a panel started before Kram was
+# installed has not seen the hicolor ones
+install -Dpm 0644 -t %{buildroot}%{_datadir}/kram/icons data/icons/%{appid}-update-*.svg
 mkdir -p %{buildroot}%{_datadir}/locale
 cp -a build-locale/. %{buildroot}%{_datadir}/locale/
 %find_lang %{name}
@@ -106,6 +109,7 @@ QT_QPA_PLATFORM=offscreen %pytest
 %{_userunitdir}/kram-update-check.path
 %{_userunitdir}/kram-tray.service
 %{_datadir}/icons/hicolor/scalable/status/%{appid}-update-*.svg
+%{_datadir}/kram/
 
 %changelog
 * Sat Nov 14 2026 Modo Ltunzher <offnormal@gmail.com> - 0.5.0-1
