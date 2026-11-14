@@ -1,5 +1,5 @@
 %global appid io.github.elmodos.Kram
-%global base_version 0.5.1
+%global base_version 0.5.2
 
 Name:           kram
 # A tagged release (v%%{base_version}) is plain %%{base_version}. Any other commit gets a snapshot from
@@ -112,6 +112,9 @@ QT_QPA_PLATFORM=offscreen %pytest
 %{_datadir}/kram/
 
 %changelog
+* Sat Nov 14 2026 Modo Ltunzher <offnormal@gmail.com> - 0.5.2-1
+- Fixed a rare crash after Kram finished loading packages or applying changes
+
 * Sat Nov 14 2026 Modo Ltunzher <offnormal@gmail.com> - 0.5.1-1
 - Tray: the icon shows the update level right after installing Kram, without restarting the Plasma panel
 
