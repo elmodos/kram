@@ -5,6 +5,10 @@ Documentation=https://github.com/elmodos/kram
 [Timer]
 OnStartupSec=1min
 OnUnitActiveSec=1h
+# OnUnitActiveSec does not count time asleep, so an hour of it can take a day of a laptop's life; a calendar
+# time missed while asleep fires on resume
+OnCalendar=hourly
+Persistent=true
 Unit=kram-update-check.service
 
 [Install]

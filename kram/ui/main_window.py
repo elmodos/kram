@@ -35,6 +35,7 @@ from ..core.marks import Action, allowed_actions, dump_marks, parse_marks
 from ..core.model import CatalogSnapshot, PkgDetails, PkgRow, Status, TransactionPreview
 from ..core.search import MODE_LABELS, Mode, SearchIndex
 from ..i18n import _, ngettext
+from ..notifier import control as notifier_control
 from ..ipc.client import HelperClient
 from .apply_dialog import ApplyDialog
 from .copr_dialog import CoprDialog
@@ -1197,4 +1198,5 @@ class MainWindow(QMainWindow):
         dlg.exec()
         self.act_reload.setEnabled(True)
         self._update_actions()
+        notifier_control.recheck()  # even after a failure: the metadata may have been refreshed
         return dlg.ok

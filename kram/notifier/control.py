@@ -33,6 +33,17 @@ def set_checker_enabled(on: bool) -> str:
     return "" if result.returncode == 0 else (result.stderr.strip() or f"systemctl: {result.returncode}")
 
 
+def recheck() -> None:
+    """Count again now, if the checker is on: after Kram's helper ran, which may have refreshed the metadata
+    (Reload, or libdnf5 refreshing expired repositories before a transaction). The path unit only watches the rpm
+    database, and the hourly timer may be an hour away. Cheap: the check exits early when nothing changed."""
+    try:
+        if checker_enabled():
+            _systemctl("--user", "start", "--no-block", CHECK_SERVICE, timeout=5)
+    except (OSError, subprocess.SubprocessError):
+        pass  # no systemd user instance: no checker to tell
+
+
 def fedora_timer_state() -> str:
     """"enabled", "disabled", or "missing" (no such unit: not Fedora, or dnf5 without it)."""
     state = _systemctl("is-enabled", FEDORA_TIMER).stdout.strip()

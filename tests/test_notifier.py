@@ -129,6 +129,21 @@ def test_fedora_timer_state(monkeypatch, answer, state):
     assert control.fedora_timer_state() == state
 
 
+@pytest.mark.parametrize("enabled", [True, False])
+def test_recheck_only_when_the_checker_is_on(monkeypatch, enabled):
+    from kram.notifier import control
+
+    calls = []
+
+    def systemctl(*args, **kwargs):
+        calls.append(args)
+        return subprocess.CompletedProcess(args, 0 if enabled else 1, "", "")
+    monkeypatch.setattr(control, "_systemctl", systemctl)
+    control.recheck()
+    started = ("--user", "start", "--no-block", control.CHECK_SERVICE)
+    assert (started in calls) is enabled  # never shows the icon of a checker the user turned off
+
+
 def test_notifier_dialog(monkeypatch, autostart):
     pytest.importorskip("PySide6.QtWidgets")
     import os
