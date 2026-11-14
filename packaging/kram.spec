@@ -1,5 +1,5 @@
 %global appid io.github.elmodos.Kram
-%global base_version 0.5.2
+%global base_version 0.5.3
 
 Name:           kram
 # A tagged release (v%%{base_version}) is plain %%{base_version}. Any other commit gets a snapshot from
@@ -116,6 +116,9 @@ QT_QPA_PLATFORM=offscreen %pytest
 %{_datadir}/kram/
 
 %changelog
+* Sat Nov 14 2026 Modo Ltunzher <offnormal@gmail.com> - 0.5.3-1
+- Xfce: Kram is in the Settings Manager (System section), as "Package Manager"
+
 * Sat Nov 14 2026 Modo Ltunzher <offnormal@gmail.com> - 0.5.2-1
 - Fixed a rare crash after Kram finished loading packages or applying changes
 
