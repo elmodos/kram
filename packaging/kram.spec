@@ -3,7 +3,7 @@
 
 Name:           kram
 # A tagged release (v%%{base_version}) is plain %%{base_version}. Any other commit gets a snapshot from
-# .copr/Makefile, ^YYYYMMDDgitHASH: newer than the release it follows, older than the next one.
+# .copr/Makefile, ^YYYYMMDDHHMMSSgitHASH (UTC commit time): newer than the release it follows, older than the next one.
 Version:        %{base_version}%{?snapshot}
 Release:        1%{?dist}
 Summary:        Synaptic-style package manager for Fedora

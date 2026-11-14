@@ -123,7 +123,7 @@ scripts/rpm_check.sh       # build the RPM like COPR does, install it and check 
   and icon, all named after the app id `io.github.elmodos.Kram` (`kram/__init__.py`).
 - How the COPR project builds and how a release is made: [docs/COPR.md](docs/COPR.md).
 - `.copr/Makefile` builds an SRPM from the current commit: a plain release for the commit tagged
-  `v<version>`, a `<version>^YYYYMMDDgitHASH` snapshot for any other commit.
+  `v<version>`, a `<version>^YYYYMMDDHHMMSSgitHASH` snapshot for any other commit.
 - A release: bump the version (see [docs/COPR.md](docs/COPR.md#releases)), tag `v<version>`, push the tag and
   point the COPR package's Committish at it.
 

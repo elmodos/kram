@@ -14,7 +14,7 @@ sudo dnf install kram
 The package is an SCM source (`https://github.com/elmodos/kram.git`, spec `packaging/kram.spec`, SRPM build
 method **make srpm**, auto-rebuild on). The SRPM step runs `.copr/Makefile`: it archives the commit. The commit
 tagged `v<version>` builds as a plain release (`kram-0.4.0-1`); any other commit gets a snapshot version
-`0.4.0^YYYYMMDDgit<hash>`, which sorts after the release it follows and before the next one. `%check` runs
+`0.4.0^YYYYMMDDHHMMSSgit<hash>`, which sorts after the release it follows and before the next one. `%check` runs
 desktop-file-validate, appstream-util and the test suite; a failing test fails the build.
 
 Pushing a tag starts the build through a GitHub webhook (repository → Settings → Webhooks, only the **Branch or
