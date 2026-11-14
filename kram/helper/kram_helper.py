@@ -156,7 +156,16 @@ def cmdline_package(base, path: str):
     """Add a package file to the base's @commandline repo and return its Package."""
     import libdnf5
 
-    base.get_repo_sack().add_cmdline_packages([path])  # its returned map is opaque in the Python bindings
+    # libdnf5 makes <cachedir>/@commandline-<hash>/packages even for a local file; the catalog's Base points at
+    # the root-owned system cache, so for a normal user the repo is created in their own cache instead
+    config = base.get_config()
+    system = config.cachedir
+    if os.geteuid() != 0:
+        config.cachedir = os.path.join(os.environ.get("XDG_CACHE_HOME") or os.path.expanduser("~/.cache"), "kram", "cmdline")
+    try:
+        base.get_repo_sack().add_cmdline_packages([path])  # its returned map is opaque in the Python bindings
+    finally:
+        config.cachedir = system
     query = libdnf5.rpm.PackageQuery(base)
     query.filter_repo_id(["@commandline"])
     found = [p for p in query if p.get_package_path() == path]
