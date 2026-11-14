@@ -106,6 +106,9 @@ class Catalog:
             return {(p.get_name(), p.get_arch()) for p in q}
 
         upgradable = upgradable_keys(base)  # the tray update checker counts with the same function
+        arch_changes = self._arch_changes(base, installed, cand_by_key, upgradable, arches)
+        for new in arch_changes.values():  # one row per package: the new arch is that row's candidate
+            cand_by_key.pop((new.get_name(), new.get_arch()), None)
         orphans = keys(lambda q: q.filter_extras())
         unneeded = keys(lambda q: q.filter_unneeded())
         user_installed = keys(lambda q: q.filter_userinstalled())
@@ -122,12 +125,13 @@ class Catalog:
         for p in installed:
             key = (p.get_name(), p.get_arch())
             cand = cand_by_key.pop(key, None)
+            cand = arch_changes.get(key, cand)
             from_repo = p.get_from_repo_id()
-            if key in orphans or cand is None:
-                status = Status.ORPHAN
-            elif key in upgradable:
+            if key in upgradable and cand is not None:
                 status = Status.UPGRADABLE
                 n_upgradable += 1
+            elif key in orphans or cand is None:
+                status = Status.ORPHAN
             elif key in unneeded:
                 status = Status.UNNEEDED
             elif p.get_evr() != cand.get_evr() and rpm.labelCompare(_evr_tuple(p), _evr_tuple(cand)) > 0:
@@ -140,6 +144,7 @@ class Catalog:
                 repo_id=cand.get_repo_id() if cand else from_repo,
                 size=p.get_install_size(), origin=classify(from_repo), status=status,
                 user_installed=key in user_installed, from_repo_id=from_repo, reason=reasons.get(p.get_reason()),
+                candidate_arch=cand.get_arch() if key in arch_changes else "",
             ))
             pkgs[key] = (p, cand)
 
@@ -164,6 +169,32 @@ class Catalog:
                                basearch=basearch, releasever=base.get_vars().get_value("releasever"),
                                repos=self._repos(), descriptions=descriptions, groups=self._groups(),
                                provides={q: self.provides_keys(*q) for q in provides})
+
+    @staticmethod
+    def _arch_changes(base, installed, cand_by_key, upgradable, arches) -> dict[tuple[str, str], object]:
+        """(name, arch) of an installed package -> its upgrade of another arch, for the upgradable packages whose
+        own arch has nothing newer: libdnf5 counts noarch -> x86_64 (a package that gained compiled code) and back
+        as an upgrade of the same package."""
+        installed_keys = {(p.get_name(), p.get_arch()) for p in installed}
+        stuck = {}
+        for p in installed:
+            key = (p.get_name(), p.get_arch())
+            same = cand_by_key.get(key)
+            if key in upgradable and (same is None or rpm.labelCompare(_evr_tuple(same), _evr_tuple(p)) <= 0):
+                stuck[key] = p
+        if not stuck:
+            return {}
+        upgrades = libdnf5.rpm.PackageQuery(base)
+        upgrades.filter_upgrades()
+        upgrades.filter_name(sorted({name for name, _arch in stuck}))
+        upgrades.filter_latest_evr()
+        changes = {}
+        for key, p in stuck.items():
+            other = [u for u in upgrades if u.get_name() == key[0] and u.get_arch() != key[1]
+                     and u.get_arch() in arches and (u.get_name(), u.get_arch()) not in installed_keys]
+            if other:
+                changes[key] = max(other, key=_evr_sort_key)
+        return changes
 
     def _groups(self) -> list[GroupInfo]:
         # an installed group shows up twice (system state + repo metadata): merge by id
@@ -213,15 +244,17 @@ class Catalog:
 
         # every installed version: installonly packages (kernel) keep several side by side
         q = libdnf5.rpm.PackageQuery(self._base)
+        # an upgrade that changes the arch (noarch -> x86_64): both arches are versions of this package
+        arches = sorted({key[1], cand.get_arch()} if cand else {key[1]})
         q.filter_installed()
         q.filter_name([key[0]])
-        q.filter_arch([key[1]])
+        q.filter_arch(arches)
         versions = [VersionInfo(x.get_evr(), "@System", installed=True)
                     for x in sorted(q, key=_evr_sort_key, reverse=True)]
         q = libdnf5.rpm.PackageQuery(self._base)
         q.filter_available()
         q.filter_name([key[0]])
-        q.filter_arch([key[1]])
+        q.filter_arch(arches)
         avail = sorted(q, key=_evr_sort_key, reverse=True)
         cand_evr = cand.get_evr() if cand else None
         versions += [VersionInfo(x.get_evr(), x.get_repo_id(), candidate=x.get_evr() == cand_evr) for x in avail]

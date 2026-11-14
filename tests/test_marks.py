@@ -112,3 +112,17 @@ def test_command_for_download_only():
 def test_command_for_a_package_file():
     req = {"op": "local_install", "path": "/home/me/My Downloads/tool.rpm", "sha256": "0" * 64, "action": "reinstall"}
     assert dnf5_command(req) == "sudo dnf5 reinstall '/home/me/My Downloads/tool.rpm'"
+
+
+def test_upgrade_that_changes_the_arch_names_the_new_package():
+    # python3-wcwidth 0.7.0 was noarch, 0.9.2 is x86_64: name.arch would only find the old noarch build, and
+    # libdnf5 refuses name-evr.x86_64 for it
+    wcwidth = PkgRow("python3-wcwidth", "noarch", "", "0.7.0-6.fc45", "0.9.2-1.fc45", "updates", 1, Origin.FEDORA,
+                     Status.UPGRADABLE, candidate_arch="x86_64")
+    assert allowed_actions(wcwidth) == [Action.UPGRADE, Action.REMOVE, Action.MARK_USER]
+    m = MarkSet()
+    assert m.set(wcwidth, Action.UPGRADE)
+    assert m.request({wcwidth.key: wcwidth}) == {"upgrade": ["python3-wcwidth"]}
+    same = PkgRow("python3-wcwidth", "noarch", "", "0.7.0-6.fc45", "0.7.0-6.fc45", "fedora", 1, Origin.FEDORA,
+                  Status.INSTALLED, candidate_arch="x86_64")
+    assert Action.REINSTALL not in allowed_actions(same)  # the same version of another arch is no reinstall

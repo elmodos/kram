@@ -43,6 +43,7 @@ class PkgRow:
     user_installed: bool = False
     from_repo_id: str = ""     # repo it was installed from; "" if not installed
     reason: Reason | None = None  # None if not installed
+    candidate_arch: str = ""   # set when the candidate has another arch (noarch -> x86_64 upgrades), else ""
 
     @property
     def key(self) -> tuple[str, str]:

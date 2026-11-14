@@ -180,7 +180,7 @@ class PackageTableModel(QAbstractTableModel):
                 case 2: return r.name if r.arch in ("noarch", self.basearch) else f"{r.name}.{r.arch}"
                 case 3: return r.installed_evr
                 case 4: return REASON_LABEL.get(r.reason, "")
-                case 5: return r.candidate_evr
+                case 5: return f"{r.candidate_evr} ({r.candidate_arch})" if r.candidate_arch else r.candidate_evr
                 case 6: return display_repo(r.repo_id)
                 case 7: return human_size(r.size)
                 case 8: return r.summary
