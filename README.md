@@ -171,7 +171,7 @@ Use named `{placeholders}` with `.format()`, never f-strings inside `_()`.
 
 - Update the template and all catalogs after changing strings: `scripts/i18n.sh update`
 - Start a new language: `scripts/i18n.sh new <lang>` (e.g. `nl`, `zh_TW`), then translate `po/<lang>.po`;
-  also add the language to `data/` (`.desktop` `GenericName`/`Comment`/`Keywords`, the metainfo `summary`
+  also add the language to `data/` (`GenericName`/`Comment`/`Keywords` in both `.desktop` files, the metainfo `summary`
   and the polkit `description`/`message`)
 - Validate: `scripts/i18n.sh check` (the test suite also checks that the template is current, catalogs
   are complete, and placeholders match)

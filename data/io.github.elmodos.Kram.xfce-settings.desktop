@@ -1,0 +1,50 @@
+# Kram in the Xfce Settings Manager (System section). Xfce only: elsewhere Settings would move Kram out
+# of System menus. No MimeType: the main io.github.elmodos.Kram.desktop opens .rpm files.
+# The label (also in the applications menu's Settings) is the main file's GenericName; the translations
+# repeat the main file's (tests/test_packaging.py keeps them in sync).
+[Desktop Entry]
+Type=Application
+Name=Package Manager
+Name[uk]=Менеджер пакунків
+Name[de]=Paketverwaltung
+Name[fr]=Gestionnaire de paquets
+Name[es]=Gestor de paquetes
+Name[it]=Gestore dei pacchetti
+Name[pt_BR]=Gerenciador de pacotes
+Name[pl]=Menedżer pakietów
+Name[sv]=Pakethanterare
+Name[cs]=Správce balíčků
+Name[zh_CN]=软件包管理器
+Name[ja]=パッケージマネージャー
+Name[ko]=패키지 관리자
+Comment=Browse, install, remove and upgrade software packages
+Comment[uk]=Перегляд, встановлення, вилучення та оновлення пакунків
+Comment[de]=Softwarepakete durchsuchen, installieren, entfernen und aktualisieren
+Comment[fr]=Parcourir, installer, supprimer et mettre à jour des paquets logiciels
+Comment[es]=Explorar, instalar, eliminar y actualizar paquetes de software
+Comment[it]=Sfoglia, installa, rimuovi e aggiorna i pacchetti software
+Comment[pt_BR]=Navegar, instalar, remover e atualizar pacotes de software
+Comment[pl]=Przeglądaj, instaluj, usuwaj i aktualizuj pakiety oprogramowania
+Comment[sv]=Bläddra bland, installera, ta bort och uppgradera programpaket
+Comment[cs]=Procházet, instalovat, odebírat a aktualizovat softwarové balíčky
+Comment[zh_CN]=浏览、安装、删除和升级软件包
+Comment[ja]=ソフトウェアパッケージの閲覧、インストール、削除、アップグレード
+Comment[ko]=소프트웨어 패키지를 찾아보고 설치, 제거, 업그레이드합니다
+Exec=kram
+Icon=io.github.elmodos.Kram
+Terminal=false
+Categories=Settings;PackageManager;X-XFCE-SettingsDialog;X-XFCE-SystemSettings;
+OnlyShowIn=XFCE;
+Keywords=dnf;rpm;package;software;repository;copr;synaptic;
+Keywords[uk]=dnf;rpm;пакунок;програми;репозиторій;copr;synaptic;
+Keywords[de]=dnf;rpm;Paket;Software;Paketquelle;copr;synaptic;
+Keywords[fr]=dnf;rpm;paquet;logiciel;dépôt;copr;synaptic;
+Keywords[es]=dnf;rpm;paquete;software;repositorio;copr;synaptic;
+Keywords[it]=dnf;rpm;pacchetto;software;repository;copr;synaptic;
+Keywords[pt_BR]=dnf;rpm;pacote;software;repositório;copr;synaptic;
+Keywords[pl]=dnf;rpm;pakiet;oprogramowanie;repozytorium;copr;synaptic;
+Keywords[sv]=dnf;rpm;paket;programvara;förråd;copr;synaptic;
+Keywords[cs]=dnf;rpm;balíček;software;repozitář;copr;synaptic;
+Keywords[zh_CN]=dnf;rpm;软件包;软件;软件源;copr;synaptic;
+Keywords[ja]=dnf;rpm;パッケージ;ソフトウェア;リポジトリ;copr;synaptic;
+Keywords[ko]=dnf;rpm;패키지;소프트웨어;저장소;copr;synaptic;

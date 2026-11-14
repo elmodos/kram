@@ -66,6 +66,8 @@ done
 install -Dpm 0755 kram/helper/kram_helper.py %{buildroot}%{_libexecdir}/kram-helper
 install -Dpm 0644 data/%{appid}.policy %{buildroot}%{_datadir}/polkit-1/actions/%{appid}.policy
 install -Dpm 0644 data/%{appid}.desktop %{buildroot}%{_datadir}/applications/%{appid}.desktop
+# Xfce only (OnlyShowIn): puts Kram in the Settings Manager's System section
+install -Dpm 0644 data/%{appid}.xfce-settings.desktop %{buildroot}%{_datadir}/applications/%{appid}.xfce-settings.desktop
 install -Dpm 0644 data/%{appid}.metainfo.xml %{buildroot}%{_metainfodir}/%{appid}.metainfo.xml
 install -Dpm 0644 data/%{appid}.svg %{buildroot}%{_datadir}/icons/hicolor/scalable/apps/%{appid}.svg
 # the tray update checker: systemd user units, none enabled by default (Kram's settings turn it on)
@@ -81,6 +83,7 @@ cp -a build-locale/. %{buildroot}%{_datadir}/locale/
 
 %check
 desktop-file-validate %{buildroot}%{_datadir}/applications/%{appid}.desktop
+desktop-file-validate %{buildroot}%{_datadir}/applications/%{appid}.xfce-settings.desktop
 appstream-util validate-relax --nonet %{buildroot}%{_metainfodir}/%{appid}.metainfo.xml
 QT_QPA_PLATFORM=offscreen %pytest
 
@@ -102,6 +105,7 @@ QT_QPA_PLATFORM=offscreen %pytest
 %{_libexecdir}/kram-helper
 %{_datadir}/polkit-1/actions/%{appid}.policy
 %{_datadir}/applications/%{appid}.desktop
+%{_datadir}/applications/%{appid}.xfce-settings.desktop
 %{_metainfodir}/%{appid}.metainfo.xml
 %{_datadir}/icons/hicolor/scalable/apps/%{appid}.svg
 %{_userunitdir}/kram-update-check.service

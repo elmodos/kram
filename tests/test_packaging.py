@@ -38,6 +38,29 @@ def test_app_id_and_helper_path():
     assert kram.INSTALLED_HELPER == "/usr/libexec/kram-helper"
 
 
+def _desktop_entry(name):
+    desktop = ConfigParser(interpolation=None)
+    desktop.optionxform = str
+    desktop.read(DATA / name, encoding="utf-8")
+    return desktop["Desktop Entry"]
+
+
+def test_xfce_settings_entry():
+    main = _desktop_entry(f"{kram.APP_ID}.desktop")
+    xfce = _desktop_entry(f"{kram.APP_ID}.xfce-settings.desktop")
+    # the Xfce Settings Manager shows an entry only with both categories; the section is System
+    categories = xfce["Categories"].split(";")
+    assert {"Settings", "X-XFCE-SettingsDialog", "X-XFCE-SystemSettings"} <= set(categories)
+    # Settings would take Kram out of the System menus elsewhere (Plasma's System Tools excludes it)
+    assert xfce["OnlyShowIn"] == "XFCE;"
+    assert "MimeType" not in xfce and xfce["Exec"] == "kram"  # the main file opens .rpm files
+    # labelled with the main entry's GenericName, in every language; the same icon and other translations
+    labels = {k.replace("GenericName", "Name", 1): v for k, v in main.items() if k.startswith("GenericName")}
+    assert {k: v for k, v in xfce.items() if k.split("[")[0] in ("Name", "GenericName")} == labels
+    same = [k for k in main if k.split("[")[0] in ("Comment", "Keywords", "Icon")]
+    assert {k: xfce.get(k) for k in same} == {k: main[k] for k in same}
+
+
 def test_readme_lists_every_translation():
     readme = (ROOT / "README.md").read_text()
     codes = sorted(p.stem for p in (ROOT / "po").glob("*.po"))
