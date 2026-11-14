@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <!-- the author's white cat with odd eyes (blue and green), sitting in Kram's cardboard box -->
+  <defs>
+    <radialGradient id="fur" cx="0.45" cy="0.35" r="0.75">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="0.7" stop-color="#f4f5f7"/>
+      <stop offset="1" stop-color="#dde0e5"/>
+    </radialGradient>
+    <radialGradient id="blue" cx="0.4" cy="0.35" r="0.7">
+      <stop offset="0" stop-color="#9fd0ff"/>
+      <stop offset="1" stop-color="#2f74c8"/>
+    </radialGradient>
+    <radialGradient id="green" cx="0.4" cy="0.35" r="0.7">
+      <stop offset="0" stop-color="#c8ef8a"/>
+      <stop offset="1" stop-color="#4f9a2a"/>
+    </radialGradient>
+  </defs>
+
+  <!-- inside of the box and the two back flaps, behind the cat -->
+  <path d="M14 74 L64 54 L114 74 L64 94 Z" fill="#5e3c1c"/>
+  <path d="M14 74 L64 54 L58 38 L6 58 Z" fill="#c99560" stroke="#7d4f24" stroke-width="1.5"
+        stroke-linejoin="round"/>
+  <path d="M64 54 L114 74 L124 60 L72 40 Z" fill="#b98448" stroke="#7d4f24" stroke-width="1.5"
+        stroke-linejoin="round"/>
+
+  <!-- body: a fluffy chest that disappears into the box -->
+  <path d="M38 96 C34 80 36 62 46 54 C52 50 76 50 82 54 C92 62 94 80 90 96 Z" fill="url(#fur)"
+        stroke="#b9bec7" stroke-width="1.5"/>
+  <path d="M57 66 C58 70 60 72 62 73 M64 67 C64 71 64 73 64 76 M71 66 C70 70 68 72 66 73
+           M50 76 C52 80 54 82 57 83 M78 76 C76 80 74 82 71 83" fill="none" stroke="#d3d7de" stroke-width="1.3"
+        stroke-linecap="round"/>
+
+  <!-- ears -->
+  <path d="M36 32 L35 6 L57 20 Z" fill="url(#fur)" stroke="#b9bec7" stroke-width="1.5" stroke-linejoin="round"/>
+  <path d="M92 32 L93 6 L71 20 Z" fill="url(#fur)" stroke="#b9bec7" stroke-width="1.5" stroke-linejoin="round"/>
+  <path d="M39 27 L39 12 L52 21 Z" fill="#f5b8c4"/>
+  <path d="M89 27 L89 12 L76 21 Z" fill="#f5b8c4"/>
+
+  <!-- head with a fluffy ruff -->
+  <path d="M64 15 C80 15 92 23 94 34 C98 37 97 42 95 44 C98 48 95 53 91 55 C90 60 84 62 79 61
+           C74 65 54 65 49 61 C44 62 38 60 37 55 C33 53 30 48 33 44 C31 42 30 37 34 34
+           C36 23 48 15 64 15 Z" fill="url(#fur)" stroke="#b9bec7" stroke-width="1.5" stroke-linejoin="round"/>
+
+  <!-- odd eyes: blue on her right (our left), green on her left -->
+  <ellipse cx="51.5" cy="37" rx="7" ry="7.5" fill="url(#blue)" stroke="#3a4048" stroke-width="1.2"/>
+  <ellipse cx="76.5" cy="37" rx="7" ry="7.5" fill="url(#green)" stroke="#3a4048" stroke-width="1.2"/>
+  <ellipse cx="51.5" cy="37.5" rx="2.4" ry="5.2" fill="#1d2228"/>
+  <ellipse cx="76.5" cy="37.5" rx="2.4" ry="5.2" fill="#1d2228"/>
+  <circle cx="49" cy="34" r="1.8" fill="#fff"/>
+  <circle cx="74" cy="34" r="1.8" fill="#fff"/>
+
+  <!-- nose, mouth, whiskers -->
+  <path d="M60.5 46 L67.5 46 L64 50 Z" fill="#f0a0b2" stroke="#d07a8e" stroke-width="0.8"
+        stroke-linejoin="round"/>
+  <path d="M64 50 L64 52.5 M64 52.5 C62.5 55 59.5 55 58.5 53 M64 52.5 C65.5 55 68.5 55 69.5 53"
+        fill="none" stroke="#9aa0aa" stroke-width="1.2" stroke-linecap="round"/>
+  <path d="M55 50 L36 47 M55 52.5 L37 54 M73 50 L92 47 M73 52.5 L91 54" fill="none" stroke="#c4c8cf"
+        stroke-width="0.9" stroke-linecap="round"/>
+
+  <!-- the front of the box hides the rest of her -->
+  <path d="M14 74 L64 94 L64 124 L14 104 Z" fill="#c18a52"/>
+  <path d="M64 94 L114 74 L114 104 L64 124 Z" fill="#a46f3c"/>
+  <path d="M14 74 L64 94 L114 74 M64 94 L64 124" fill="none" stroke="#7d4f24" stroke-width="2"
+        stroke-linejoin="round"/>
+  <!-- "this side up" arrows on the side, like the real box -->
+  <g transform="matrix(1 -0.4 0 1 0 0)" fill="none" stroke="#2e9a78" stroke-width="3.2"
+     stroke-linecap="round" stroke-linejoin="round">
+    <path d="M84 140 L84 127 M80 131 L84 127 L88 131"/>
+    <path d="M94 140 L94 127 M90 131 L94 127 L98 131"/>
+    <path d="M80 144 L98 144"/>
+  </g>
+  <!-- a front flap folded open -->
+  <path d="M14 74 L64 94 L58 102 L6 82 Z" fill="#dcaa72" stroke="#7d4f24" stroke-width="1.5"
+        stroke-linejoin="round"/>
+</svg>

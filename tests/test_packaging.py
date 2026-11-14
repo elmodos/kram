@@ -61,9 +61,10 @@ def test_xfce_settings_entry():
     assert {k: xfce.get(k) for k in same} == {k: main[k] for k in same}
 
 
-def test_readme_lists_every_translation():
+def test_docs_list_every_translation():
     readme = (ROOT / "README.md").read_text()
     codes = sorted(p.stem for p in (ROOT / "po").glob("*.po"))
-    assert f"translations-{len(codes) + 1}%20languages" in readme  # + English
-    listed = sorted(re.findall(r"^\| [^|]+ \| [^|]+ \| `([a-zA-Z_]+)` \|", readme, re.MULTILINE))
+    assert f"translations-{len(codes) + 1}%20languages" in readme  # the badge, + English
+    table = (ROOT / "docs" / "TRANSLATING.md").read_text()
+    listed = sorted(re.findall(r"^\| [^|]+ \| [^|]+ \| `([a-zA-Z_]+)` \|", table, re.MULTILINE))
     assert listed == codes
