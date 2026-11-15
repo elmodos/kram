@@ -1,5 +1,5 @@
 %global appid io.github.elmodos.Kram
-%global base_version 0.5.6
+%global base_version 0.5.7
 
 Name:           kram
 # A tagged release (v%%{base_version}) is plain %%{base_version}. Any other commit gets a snapshot from
@@ -116,6 +116,10 @@ QT_QPA_PLATFORM=offscreen %pytest
 %{_datadir}/kram/
 
 %changelog
+* Sun Nov 15 2026 Modo Ltunzher <offnormal@gmail.com> - 0.5.7-1
+- Sidebar: groups show icons from the system icon theme, and installed groups are in bold
+- Sidebar: every Status entry has an icon matching the package list's status column
+
 * Sat Nov 14 2026 Modo Ltunzher <offnormal@gmail.com> - 0.5.6-1
 - Package files: opening an .rpm file no longer fails with "cannot create directories: Permission denied"
 
