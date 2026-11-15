@@ -31,11 +31,11 @@ from ..core.catalog import Catalog
 from ..core.custom_filters import CustomFilter, Field, conditions_for_view, load_filters, provides_queries
 from ..core.evr import evr_cmp
 from ..core.filters import FilterEntry
-from ..core.marks import Action, allowed_actions, dump_marks, parse_marks
-from ..core.model import CatalogSnapshot, PkgDetails, PkgRow, Status, TransactionPreview
+from ..core.marks import Action, allowed_actions, allowed_group_actions, dump_marks, parse_marks
+from ..core.model import CatalogSnapshot, GroupInfo, PkgDetails, PkgRow, Status, TransactionPreview
 from ..core.search import MODE_LABELS, Mode, SearchIndex
 from ..core.worker import DnfWorker
-from ..i18n import _, ngettext
+from ..i18n import N_, _, ngettext
 from ..ipc.client import HelperClient
 from ..notifier import control as notifier_control
 from .apply_dialog import ApplyDialog
@@ -52,6 +52,13 @@ from .repos_dialog import ReposDialog
 from .sidebar import Sidebar
 from .upgrade_dialog import UpgradeDialog, api_request
 from .whats_new import WhatsNewDialog
+
+# sidebar menu of a comps group: (text, theme icon)
+GROUP_MARK_ACTIONS = {
+    Action.INSTALL: (N_("Mark Group for Installation"), "list-add"),
+    Action.UPGRADE: (N_("Mark Group for Upgrade"), "go-up"),
+    Action.REMOVE: (N_("Mark Group for Removal"), "list-remove"),
+}
 
 # bumped when columns change: an old saved state would put widths and hidden flags on the wrong columns
 HEADER_STATE_KEY = "table/header-v2"
@@ -488,6 +495,7 @@ class MainWindow(QMainWindow):
         self.index = SearchIndex(snap.rows, snap.descriptions)
         self.key_index = {r.key: i for i, r in enumerate(snap.rows)}
         self._revalidate_marks()
+        self._check_group_upgrades(snap)
         self.catalogLoaded.emit(snap)
         self.age.setText(_age(snap.metadata_age) + "  ")
         self._show_repo_warning(snap)
@@ -768,6 +776,9 @@ class MainWindow(QMainWindow):
 
     def _sidebar_menu(self, pos, entry: FilterEntry | None) -> None:
         m = QMenu(self)
+        if entry is not None and entry.group and (group := self._group(entry.group)) is not None:
+            self._group_menu(m, group)
+            m.addSeparator()
         if entry is not None and entry.id.startswith("custom:"):
             name = entry.id.removeprefix("custom:")
             m.addAction(QIcon.fromTheme("document-edit"), _("Edit Filter…"), lambda: self.edit_filters(select=name))
@@ -785,6 +796,57 @@ class MainWindow(QMainWindow):
         m.addAction(self.act_new_filter)
         m.addAction(self.act_filters)
         m.exec(pos)
+
+    def _check_group_upgrades(self, snap: CatalogSnapshot) -> None:
+        """Find which installed groups `dnf5 group upgrade` would change, after the list is shown (a dry-run
+        resolve each, ~0.1 s); until then their Upgrade item is disabled."""
+        installed = [g.id for g in snap.groups if g.installed]
+        if not installed:
+            return
+
+        def done(found: set[str]) -> None:
+            if self.snapshot is not snap:
+                return  # reloaded meanwhile: that load runs its own check
+            for g in snap.groups:
+                if g.installed:
+                    g.upgradable = g.id in found
+            self._revalidate_marks()  # an upgrade mark on a group with nothing to upgrade goes
+            self._group_marks_changed()
+        self.dnf.submit(lambda: self.catalog.upgradable_groups(installed), done,
+                        lambda e: self.status.setText(_("Error: {error}").format(error=e)))
+
+    def _group(self, group_id: str) -> GroupInfo | None:
+        return next((g for g in self.snapshot.groups if g.id == group_id), None) if self.snapshot else None
+
+    def _group_menu(self, m: QMenu, group: GroupInfo) -> None:
+        """`dnf5 group install / upgrade / remove` for a comps group in the sidebar."""
+        busy = self.helper.busy
+        marked = self.model.marks.group(group.id)
+        allowed = allowed_group_actions(group)
+        m.setToolTipsVisible(True)
+        for action in [Action.UPGRADE, Action.REMOVE] if group.installed else [Action.INSTALL]:
+            text, icon = GROUP_MARK_ACTIONS[action]
+            a = m.addAction(QIcon.fromTheme(icon), _(text), lambda act=action: self.mark_group(group, act))
+            # upgrade only once the check after loading has found something to upgrade
+            known = action is not Action.UPGRADE or group.upgradable is True
+            a.setEnabled(action in allowed and known and action is not marked and not busy)
+            if action is Action.UPGRADE and group.upgradable is not True:
+                a.setToolTip(_("Checking for upgrades…") if group.upgradable is None else
+                             _("Nothing to upgrade: its packages are up to date and match the group"))
+        unmark = m.addAction(QIcon.fromTheme("edit-undo"), _("Unmark Group"), lambda: self.mark_group(group, None))
+        unmark.setEnabled(marked is not None)
+
+    def mark_group(self, group: GroupInfo, action: Action | None) -> None:
+        if action is None:
+            self.model.marks.unmark_group(group.id)
+        elif not self.model.marks.set_group(group, action):
+            return
+        self._group_marks_changed()
+
+    def _group_marks_changed(self) -> None:
+        self._update_actions()
+        if self.sidebar.current_view == "groups":
+            self.sidebar.refresh_counts()
 
     def about(self):
         box = QMessageBox(QMessageBox.NoIcon, _("About Kram"),
@@ -882,6 +944,7 @@ class MainWindow(QMainWindow):
     def unmark_all(self):
         self.model.marks.clear()
         self._marks_changed(None)
+        self._group_marks_changed()
 
     def mark_all_upgrades(self):
         if not self.snapshot:
@@ -926,12 +989,15 @@ class MainWindow(QMainWindow):
                 path=path, error=getattr(e, "strerror", None) or e))
             return
         QSettings().setValue("markings/dir", str(Path(path).parent))
-        marks, bad_lines = parse_marks(text)
+        marks, group_marks, bad_lines = parse_marks(text)
         rows = {r.key: r for r in self.snapshot.rows}
         skipped = [f"{name}.{arch}" for (name, arch), mark in marks
                    if not ((row := rows.get((name, arch))) and self.model.marks.set(row, mark.action, mark.evr))]
+        skipped += [f"@{gid}" for gid, action in group_marks
+                    if not ((group := self._group(gid)) and self.model.marks.set_group(group, action))]
         self._marks_changed(None)
-        n = len(marks) - len(skipped)
+        self._group_marks_changed()
+        n = len(marks) + len(group_marks) - len(skipped)
         self.statusBar().showMessage(ngettext("{n} package marked", "{n} packages marked", n).format(n=n), 5000)
         if skipped or bad_lines:
             problems = []
@@ -956,6 +1022,10 @@ class MainWindow(QMainWindow):
             if row is None or not (mark.action is Action.DOWNGRADE and row.installed
                                    or mark.action in allowed_actions(row)):
                 self.model.marks.unmark(key)
+        groups = {g.id: g for g in self.snapshot.groups}
+        for gid, action in list(self.model.marks.group_items()):
+            if (g := groups.get(gid)) is None or action not in allowed_group_actions(g):
+                self.model.marks.unmark_group(gid)
         self._update_actions()
 
     def _fill_downgrade_menu(self):
@@ -1036,6 +1106,7 @@ class MainWindow(QMainWindow):
         if self._run_helper(request, _("Applying changes")) and not download_only:
             self.model.marks.clear()
             self._marks_changed(None)
+            self._group_marks_changed()
             self.reload()
 
     def refresh_metadata(self):

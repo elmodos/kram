@@ -78,6 +78,9 @@ class GroupInfo:
     description: str
     installed: bool
     packages: frozenset[str]
+    # installed groups: whether `dnf5 group upgrade` would change anything (newer packages, or packages the
+    # distribution added to or dropped from the group); None until Catalog.upgradable_groups has been asked
+    upgradable: bool | None = None
 
 
 @dataclass(slots=True)
@@ -162,7 +165,7 @@ class PreviewItem:
     repo_id: str
     download_size: int
     install_size: int
-    reason: str          # user | dependency | weak | clean (removed as no longer needed) | ""
+    reason: str          # user | dependency | weak | group | clean (removed as no longer needed) | ""
     rotated: bool = False  # a removal that makes room for a new version of the same package: see mark_rotated
 
 
@@ -197,12 +200,21 @@ class Recommendation:
 
 
 @dataclass(slots=True)
+class PreviewGroup:
+    """A comps group the transaction installs, upgrades or removes."""
+    action: str          # install | upgrade | remove
+    id: str
+    name: str
+
+
+@dataclass(slots=True)
 class TransactionPreview:
     items: list[PreviewItem]
     problems: list[str]          # resolver messages; non-empty means the transaction cannot run
     download_size: int
     size_change: int             # bytes of disk space gained (+) or freed (-)
     recommendations: list[Recommendation] = field(default_factory=list)
+    groups: list[PreviewGroup] = field(default_factory=list)
 
     @property
     def ok(self) -> bool:

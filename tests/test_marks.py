@@ -1,5 +1,15 @@
-from kram.core.marks import Action, MarkSet, allowed_actions, dnf5_command, dump_marks, parse_marks
-from kram.core.model import Origin, PkgRow, Status
+from dataclasses import replace
+
+from kram.core.marks import (
+    Action,
+    MarkSet,
+    allowed_actions,
+    allowed_group_actions,
+    dnf5_command,
+    dump_marks,
+    parse_marks,
+)
+from kram.core.model import GroupInfo, Origin, PkgRow, Status
 
 
 def row(name, status, inst="", cand="1-1", user=False):
@@ -60,8 +70,8 @@ def test_markings_file_roundtrip():
     text = dump_marks(m)
     assert text.splitlines()[1:] == ["remove bash.x86_64", "downgrade firefox.x86_64 1:0.9-1.fc44",
                                      "install fish.x86_64"]
-    marks, bad = parse_marks(text)
-    assert bad == []
+    marks, groups, bad = parse_marks(text)
+    assert bad == [] and groups == []
     assert dict(marks) == dict(m.items())
 
 
@@ -75,7 +85,7 @@ def test_markings_file_bad_lines():
         "install",                      # 8: no package
         "  mark_dep  python3-foo.noarch  ",
     ]
-    marks, bad = parse_marks("\n".join(lines))
+    marks, _groups, bad = parse_marks("\n".join(lines))
     assert bad == [4, 5, 6, 7, 8]
     assert [k for k, _m in marks] == [("fish", "x86_64"), ("python3-foo", "noarch")]
 
@@ -126,3 +136,48 @@ def test_upgrade_that_changes_the_arch_names_the_new_package():
     same = PkgRow("python3-wcwidth", "noarch", "", "0.7.0-6.fc45", "0.7.0-6.fc45", "fedora", 1, Origin.FEDORA,
                   Status.INSTALLED, candidate_arch="x86_64")
     assert Action.REINSTALL not in allowed_actions(same)  # the same version of another arch is no reinstall
+
+
+KDE_APPS = GroupInfo("kde-apps", "KDE Applications", "", False, frozenset({"dolphin"}))
+DEV_TOOLS = GroupInfo("development-tools", "Development Tools", "", True, frozenset({"gcc", "make"}))
+
+
+def test_group_marks():
+    assert allowed_group_actions(KDE_APPS) == [Action.INSTALL]
+    assert allowed_group_actions(DEV_TOOLS) == [Action.UPGRADE, Action.REMOVE]  # not checked yet
+    assert allowed_group_actions(replace(DEV_TOOLS, upgradable=False)) == [Action.REMOVE]
+    assert not MarkSet().set_group(replace(DEV_TOOLS, upgradable=False), Action.UPGRADE)
+    m = MarkSet()
+    assert not m.set_group(KDE_APPS, Action.REMOVE)
+    assert not m.set_group(DEV_TOOLS, Action.INSTALL)
+    assert m.set_group(KDE_APPS, Action.INSTALL)
+    assert m.set_group(DEV_TOOLS, Action.UPGRADE)
+    assert m.set_group(DEV_TOOLS, Action.REMOVE)  # a new mark replaces the old one
+    m.set(NEW, Action.INSTALL)
+    assert len(m) == 3 and m.counts() == (1, 0)
+    assert m.group("kde-apps") is Action.INSTALL
+    req = m.request(ROWS)
+    assert req == {"install": ["fish.x86_64"], "group_install": ["kde-apps"], "group_remove": ["development-tools"]}
+    assert dnf5_command(req).splitlines() == [
+        "sudo dnf5 install fish.x86_64", "sudo dnf5 group install kde-apps",
+        "sudo dnf5 group remove development-tools"]
+    # a download-only run fetches the packages of a group being installed or upgraded, removes nothing
+    assert dnf5_command({**req, "download_only": True}).splitlines() == [
+        "sudo dnf5 install --downloadonly fish.x86_64", "sudo dnf5 group install --downloadonly kde-apps"]
+    m.unmark_group("development-tools")
+    assert m.group("development-tools") is None
+    m.clear()
+    assert len(m) == 0 and m.request(ROWS) == {}
+
+
+def test_group_markings_file():
+    m = MarkSet()
+    m.set(NEW, Action.INSTALL)
+    m.set_group(KDE_APPS, Action.INSTALL)
+    m.set_group(DEV_TOOLS, Action.UPGRADE)
+    text = dump_marks(m)
+    assert text.splitlines()[1:] == ["install fish.x86_64", "upgrade @development-tools", "install @kde-apps"]
+    marks, groups, bad = parse_marks(text + "reinstall @kde-apps\ninstall @-y\ninstall @kde-apps extra\n")
+    assert [k for k, _m in marks] == [("fish", "x86_64")]
+    assert groups == [("development-tools", Action.UPGRADE), ("kde-apps", Action.INSTALL)]
+    assert bad == [5, 6, 7]  # no group reinstall, an id like an option, too many fields

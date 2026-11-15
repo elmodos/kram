@@ -20,7 +20,10 @@ The sidebar on the left narrows the table. The buttons at its bottom switch betw
 - **Status**: all, installed, not installed, upgradable, installed by you, unneeded dependencies, orphaned
   (installed but in no repository), newer than the repository, marked.
 - **Origin**: Fedora, COPR, third-party, local; COPR projects and third-party repositories each on their own.
-- **Groups**: the comps groups.
+- **Groups**: the comps groups; installed ones are in bold. Right-click a group to mark it for installation,
+  or an installed one for upgrade or removal, as `dnf5 group install`, `upgrade` and `remove` do. Installing a
+  group brings its mandatory and default packages; removing it removes the packages it brought, unless you
+  installed them yourself or something else needs them.
 - **Search results**: your earlier searches, to go back to one.
 - **Custom filters**: your own filters. A filter combines name, summary, description, provided capability,
   status, origin, repository, group, install reason, architecture and size. For example "installed by user

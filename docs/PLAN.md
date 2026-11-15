@@ -152,7 +152,9 @@ Laid out like Synaptic:
   - *Origin*: Fedora / COPR (each project) / Third-party (each repo) / Local / Unknown.
   - *Groups*: comps groups and environments (Fedora's equivalent of "Sections"; the RPM `Group` tag is dead). Icons
     come from the system icon theme through a table of group ids with an obvious icon (comps has no icons; the
-    dated comps-extras pixmaps are not used), a generic icon otherwise; installed groups are bold.
+    dated comps-extras pixmaps are not used), a generic icon otherwise; installed groups are bold. A group's
+    right-click menu marks it for `dnf5 group install` / `upgrade` / `remove` (2026-11-15); a marked group shows the
+    mark's box and tint instead of its icon. Environments are not listed yet.
   - *Search results*: query history.
   - *Custom filters*: user-defined condition lists (2026-11-04).
 - **Table**: clicking the status box opens the action menu, as in Synaptic; double click installs/upgrades
@@ -549,6 +551,21 @@ memory for this.
   294 MB. A resident tray process: PySide6 `QSystemTrayIcon` 77 MB RSS, a bare StatusNotifierItem over Gio D-Bus
   (python3-gobject) 29 MB RSS. So: the count runs in a short-lived process, and the tray process lives only
   while upgrades exist.
+
+**Comps groups as transactions** (2026-11-15). Stage 1: a group in the sidebar is marked for install (not
+installed), upgrade or removal (installed) from its right-click menu. Group marks live in the `MarkSet` next to the
+package marks (`set_group`, keyed by group id), so Apply, Unmark All, the quit question and Save Markings
+(`install @kde-apps`) cover them; a reload drops marks that no longer apply. The request gets `group_install`,
+`group_upgrade`, `group_remove` (ids, checked against `GROUP_ID_RE` in the helper); `build_goal` calls
+`add_group_*` matching by id only, groups only (no environments, no translated names), with the configured package
+types (mandatory, default, conditional), as `dnf5 group install` does. The preview lists the groups first and the
+packages they bring or take with reason "group" in their own sections. "Mark Group for Upgrade" is enabled only for
+groups that `dnf5 group upgrade` would change: after each load a background job resolves a group upgrade for every
+installed group (~0.1 s each, 0.6 s for 7 groups here) and sets `GroupInfo.upgradable`; until then the item is
+disabled with "Checking for upgrades…", and marks read from a file are kept. Measured on this machine: removing an
+installed group removes its packages (reason group), their unneeded dependencies (clean) and changes install
+reasons of the rest. Next stages: environments (`EnvironmentQuery`, `add_group_*` with environments searched),
+then choosing a group's optional packages.
 
 **Reasonable, but not planned unless users ask for it** (2026-11-06): moving transactions from our helper to
 dnf5daemon, or supporting both. For: no root code of our own, standard dnf polkit actions, local .rpm and

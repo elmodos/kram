@@ -1,14 +1,15 @@
 """Left panel: one filter list whose content is chosen by the buttons below it, as in Synaptic."""
 from PySide6.QtCore import QPoint, Qt, Signal
-from PySide6.QtGui import QFont
+from PySide6.QtGui import QColor, QFont
 from PySide6.QtWidgets import QButtonGroup, QListWidget, QListWidgetItem, QPushButton, QVBoxLayout, QWidget
 
 from ..core.filters import FilterEntry, custom_filter_entries, group_filters, origin_filters, status_filters
+from ..core.marks import ACTION_LABELS
 from ..core.model import CatalogSnapshot
 from ..core.search import MODE_LABELS, Mode
 from ..i18n import _
 from .group_icons import group_icon
-from .icons import origin_icon, status_filter_icon
+from .icons import MARK_BACKGROUND, mark_icon, origin_icon, status_filter_icon
 
 MAX_HISTORY = 30
 
@@ -34,7 +35,7 @@ class Sidebar(QWidget):
         self._view = "status"
         self._selected: dict[str, str] = {}  # view -> selected entry id
         self.history: list[tuple[str, int, int]] = []  # (text, mode, result count), newest first
-        self.marked = None  # container of marked keys, for the "Marked" status entry
+        self.marked = None  # the MarkSet: marked keys for the "Marked" status entry, marked comps groups
         self.custom: list = []  # kram.core.custom_filters.CustomFilter, in sidebar order
 
         lay = QVBoxLayout(self)
@@ -128,14 +129,21 @@ class Sidebar(QWidget):
         current = 0
         for i, e in enumerate(self._entries):
             item = QListWidgetItem("    " * e.indent + e.label + (f"   ({e.count})" if e.count is not None else ""))
+            tip = e.tip
             if e.origin is not None:
                 item.setIcon(origin_icon(e.origin))
+            elif e.group and self.marked is not None and (action := self.marked.group(e.group)) is not None:
+                # like a marked package row: the mark's box and tint instead of the group's icon
+                item.setIcon(mark_icon(action))
+                item.setBackground(QColor(*MARK_BACKGROUND[action]))
+                marked = _("Marked: {action}").format(action=ACTION_LABELS[action])
+                tip = f"{tip}\n{marked}" if tip else marked
             elif e.group is not None:
                 item.setIcon(group_icon(e.group))
             elif (icon := status_filter_icon(e.id)) is not None:
                 item.setIcon(icon)
-            if e.tip:
-                item.setToolTip(e.tip)
+            if tip:
+                item.setToolTip(tip)
             if e.bold or (i == 0 and e.query is None):
                 f = QFont(item.font())
                 f.setBold(True)

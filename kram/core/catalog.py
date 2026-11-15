@@ -19,6 +19,7 @@ from .model import (
     LocalTarget,
     PkgDetails,
     PkgRow,
+    PreviewGroup,
     PreviewItem,
     Reason,
     Recommendation,
@@ -212,6 +213,15 @@ class Catalog:
                 (g.get_translated_description(lang) if lang else "") or g.get_description(),
                 g.get_installed(), frozenset(p.get_name() for p in g.get_packages()))
         return sorted(groups.values(), key=lambda g: g.name.lower())
+
+    def upgradable_groups(self, group_ids: Iterable[str]) -> set[str]:
+        """The installed groups that `dnf5 group upgrade` would change: one dry-run resolve each (~0.1 s)."""
+        found = set()
+        for gid in group_ids:
+            tr = self._resolve_goal(lambda _extra, gid=gid: build_goal(self._base, {"group_upgrade": [gid]}), [])
+            if tr.get_problems() == libdnf5.base.GoalProblem_NO_PROBLEM and len(tr.get_transaction_packages()):
+                found.add(gid)
+        return found
 
     def _repos(self) -> list[RepoInfo]:
         repos = []
@@ -465,7 +475,8 @@ class Catalog:
                    T.TransactionItemAction_DOWNGRADE: "downgrade", T.TransactionItemAction_REINSTALL: "reinstall",
                    T.TransactionItemAction_REMOVE: "remove", T.TransactionItemAction_REASON_CHANGE: "reason"}
         reasons = {T.TransactionItemReason_USER: "user", T.TransactionItemReason_DEPENDENCY: "dependency",
-                   T.TransactionItemReason_WEAK_DEPENDENCY: "weak", T.TransactionItemReason_CLEAN: "clean"}
+                   T.TransactionItemReason_WEAK_DEPENDENCY: "weak", T.TransactionItemReason_GROUP: "group",
+                   T.TransactionItemReason_CLEAN: "clean"}
         items, download, change = [], 0, 0
         for tp in tr.get_transaction_packages():
             p = tp.get_package()
@@ -490,7 +501,19 @@ class Catalog:
             ))
         items.sort(key=lambda i: (i.action, i.reason != "user", i.name))
         mark_rotated(items)
-        return TransactionPreview(items, [], download, change)
+        return TransactionPreview(items, [], download, change, groups=self._preview_groups(tr, actions))
+
+    @staticmethod
+    def _preview_groups(tr, actions: dict) -> list[PreviewGroup]:
+        lang = language() or ""
+        groups = []
+        for tg in tr.get_transaction_groups():
+            if (kind := actions.get(tg.get_action())) not in ("install", "upgrade", "remove"):
+                continue
+            g = tg.get_group()
+            groups.append(PreviewGroup(kind, g.get_groupid(),
+                                       (g.get_translated_name(lang) if lang else "") or g.get_name()))
+        return sorted(groups, key=lambda g: (g.action, g.name.lower()))
 
     def _marked_names(self, request: dict) -> set[str]:
         marked = set()

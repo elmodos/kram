@@ -266,3 +266,45 @@ def test_status_icon_click_marks_the_likely_action_only_when_chosen(window, monk
 
     window._on_double_click(window.model.index(0, COL_NAME))  # unchanged
     assert marks.get(rows[0].key).action is Action.INSTALL
+
+
+def test_group_marks_from_the_sidebar(window):
+    """A comps group is marked from its sidebar menu, shown there like a marked package and sent to the helper."""
+    from PySide6.QtWidgets import QMenu
+
+    from kram.core.marks import Action
+    from kram.core.model import CatalogSnapshot, GroupInfo, TransactionPreview
+    from kram.ui.apply_dialog import ApplyDialog
+
+    apps = GroupInfo("kde-apps", "KDE Applications", "", False, frozenset())
+    tools = GroupInfo("development-tools", "Development Tools", "", True, frozenset())
+    window._on_loaded(CatalogSnapshot([], 0, 0, 0.0, groups=[apps, tools]))
+    window.sidebar.set_view("groups")
+    def menu_for(group):
+        menu = QMenu()
+        window._group_menu(menu, group)
+        return {a.text(): a.isEnabled() for a in menu.actions()}
+
+    # Upgrade waits for the check after loading, and stays off when it finds nothing to upgrade
+    assert menu_for(tools) == {"Mark Group for Upgrade": False, "Mark Group for Removal": True, "Unmark Group": False}
+    tools.upgradable = False
+    assert not menu_for(tools)["Mark Group for Upgrade"]
+    tools.upgradable = True
+    assert menu_for(tools)["Mark Group for Upgrade"]
+
+    window.mark_group(apps, Action.INSTALL)
+    window.mark_group(tools, Action.REMOVE)
+    assert window.act_apply.isEnabled()
+    item = next(window.sidebar.list.item(n) for n, e in enumerate(window.sidebar._entries) if e.group == "kde-apps")
+    assert "Marked: install" in item.toolTip()
+    assert window.model.marks.request({}) == {"group_install": ["kde-apps"], "group_remove": ["development-tools"]}
+
+    preview = TransactionPreview([], [], 0, 0)
+    dlg = ApplyDialog(preview, {"op": "transaction", **window.model.marks.request({})})
+    assert "sudo dnf5 group install kde-apps" in dlg.cmd.toPlainText()
+
+    # after a reload the removed group is gone: its mark goes too
+    window._on_loaded(CatalogSnapshot([], 0, 0, 0.0, groups=[apps]))
+    assert window.model.marks.request({}) == {"group_install": ["kde-apps"]}
+    window.unmark_all()
+    assert not window.act_apply.isEnabled()

@@ -1,10 +1,11 @@
 """Marked changes (Synaptic's "mark for installation/removal/..."). Pure data, no libdnf5, no Qt."""
+import re
 import shlex
 from dataclasses import dataclass
 from enum import Enum
 
 from ..i18n import _
-from .model import PkgRow, Status
+from .model import GroupInfo, PkgRow, Status
 
 
 class Action(Enum):
@@ -29,6 +30,10 @@ ACTION_LABELS = {
 
 INSTALL_LIKE = (Action.INSTALL, Action.UPGRADE, Action.REINSTALL, Action.DOWNGRADE)
 
+# comps groups: `dnf5 group install / remove / upgrade`; the helper's request fields are group_<action>
+GROUP_ACTIONS = (Action.INSTALL, Action.UPGRADE, Action.REMOVE)
+GROUP_ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.+-]{0,199}$")  # the helper accepts the same
+
 
 @dataclass(frozen=True, slots=True)
 class Mark:
@@ -50,6 +55,15 @@ def allowed_actions(row: PkgRow) -> list[Action]:
     return actions
 
 
+def allowed_group_actions(group: GroupInfo) -> list[Action]:
+    """What can be marked for a comps group, in menu order: an installed group can be upgraded (brought in line
+    with the current comps: packages added to it come in, dropped ones go) when that changes something, or
+    removed. While that is not known yet (`upgradable` is None), an upgrade mark is kept."""
+    if not group.installed:
+        return [Action.INSTALL]
+    return [Action.REMOVE] if group.upgradable is False else [Action.UPGRADE, Action.REMOVE]
+
+
 def spec(row: PkgRow, mark: Mark) -> str:
     """Package spec for libdnf5's Goal: name.arch, or a full NEVRA when a version is pinned."""
     if mark.action is Action.UPGRADE and row.candidate_arch:
@@ -64,9 +78,11 @@ def spec(row: PkgRow, mark: Mark) -> str:
 class MarkSet:
     def __init__(self) -> None:
         self._marks: dict[tuple[str, str], Mark] = {}
+        self._groups: dict[str, Action] = {}   # comps group id -> one of GROUP_ACTIONS
 
     def __len__(self) -> int:
-        return len(self._marks)
+        """Marked packages and groups."""
+        return len(self._marks) + len(self._groups)
 
     def __contains__(self, key: tuple[str, str]) -> bool:
         return key in self._marks
@@ -99,6 +115,23 @@ class MarkSet:
 
     def clear(self) -> None:
         self._marks.clear()
+        self._groups.clear()
+
+    def set_group(self, group: GroupInfo, action: Action) -> bool:
+        """Mark a comps group; returns False (and changes nothing) if the action does not apply to it."""
+        if action not in allowed_group_actions(group):
+            return False
+        self._groups[group.id] = action
+        return True
+
+    def group(self, group_id: str) -> Action | None:
+        return self._groups.get(group_id)
+
+    def unmark_group(self, group_id: str) -> None:
+        self._groups.pop(group_id, None)
+
+    def group_items(self):
+        return self._groups.items()
 
     def counts(self) -> tuple[int, int]:
         """(to install/upgrade/reinstall/downgrade, to remove)"""
@@ -111,6 +144,8 @@ class MarkSet:
         req: dict[str, list[str]] = {a.value: [] for a in Action}
         for key, mark in sorted(self._marks.items()):
             req[mark.action.value].append(spec(rows_by_key[key], mark))
+        for gid, action in sorted(self._groups.items()):
+            req.setdefault(f"group_{action.value}", []).append(gid)
         return {k: v for k, v in req.items() if v}
 
 
@@ -120,19 +155,20 @@ def dnf5_command(request: dict[str, list[str]]) -> str:
     option = f" --setopt=exclude_from_weak={','.join(weak)}" if weak else ""
     if request.get("op") == "local_install":
         return f"sudo dnf5 {request.get('action', 'install')}{option} {shlex.quote(request['path'])}"
-    downloading = ("install", "upgrade", "reinstall", "downgrade")
+    downloading = ("install", "upgrade", "reinstall", "downgrade", "group_install", "group_upgrade")
     only_download = bool(request.get("download_only"))
     if only_download:
         option = f" --downloadonly{option}"
     verbs = [("install", "install"), ("upgrade", "upgrade"), ("reinstall", "reinstall"),
              ("downgrade", "downgrade"), ("remove", "remove"),
+             ("group_install", "group install"), ("group_upgrade", "group upgrade"), ("group_remove", "group remove"),
              ("mark_user", "mark user"), ("mark_dep", "mark dependency")]
     # a download-only run removes nothing and changes no reasons, so those commands are not part of it
     return "\n".join(f"sudo dnf5 {verb}{option if k in downloading else ''} {' '.join(request[k])}"
                      for k, verb in verbs if request.get(k) and (k in downloading or not only_download))
 
 
-MARKINGS_HEADER = "# Kram markings: <action> <name>.<arch> [<version>]"
+MARKINGS_HEADER = "# Kram markings: <action> <name>.<arch> [<version>]  or  <action> @<comps group id>"
 
 
 def dump_marks(marks: MarkSet) -> str:
@@ -140,12 +176,15 @@ def dump_marks(marks: MarkSet) -> str:
     lines = [MARKINGS_HEADER]
     for (name, arch), mark in sorted(marks.items()):
         lines.append(" ".join(filter(None, (mark.action.value, f"{name}.{arch}", mark.evr))))
+    for gid, action in sorted(marks.group_items()):
+        lines.append(f"{action.value} @{gid}")
     return "\n".join(lines) + "\n"
 
 
-def parse_marks(text: str) -> tuple[list[tuple[tuple[str, str], Mark]], list[int]]:
-    """Read a markings file: ([(key, mark)], numbers of the lines that are not valid markings)."""
-    marks, bad = [], []
+def parse_marks(text: str) -> tuple[list[tuple[tuple[str, str], Mark]], list[tuple[str, Action]], list[int]]:
+    """Read a markings file: ([(key, mark)], [(group id, action)], numbers of the lines that are not valid
+    markings)."""
+    marks, groups, bad = [], [], []
     actions = {a.value: a for a in Action}
     for n, line in enumerate(text.splitlines(), 1):
         line = line.strip()
@@ -153,10 +192,17 @@ def parse_marks(text: str) -> tuple[list[tuple[tuple[str, str], Mark]], list[int
             continue
         fields = line.split()
         action = actions.get(fields[0])
+        if len(fields) == 2 and fields[1].startswith("@"):
+            gid = fields[1][1:]
+            if action in GROUP_ACTIONS and GROUP_ID_RE.match(gid):
+                groups.append((gid, action))
+            else:
+                bad.append(n)
+            continue
         name, _dot, arch = fields[1].rpartition(".") if len(fields) > 1 else ("", "", "")
         evr = fields[2] if len(fields) == 3 else ""
         if action is None or not name or not arch or len(fields) > 3 or (action is Action.DOWNGRADE) != bool(evr):
             bad.append(n)
             continue
         marks.append(((name, arch), Mark(action, evr)))
-    return marks, bad
+    return marks, groups, bad

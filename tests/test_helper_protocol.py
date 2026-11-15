@@ -48,8 +48,12 @@ def test_rejects_bad_input():
         '{"op": "clean_cache"}',
         '{"op": "clean_cache", "target": "/var/cache"}',
         '{"op": "clean_cache", "target": ["packagekit"]}',
+        '{"op": "transaction", "group_install": ["-y"]}',
+        '{"op": "transaction", "group_install": ["kde apps"]}',
+        '{"op": "transaction", "group_remove": "kde-apps"}',
+        '{"op": "transaction", "group_upgrade": ["@kde-apps"]}',
     )
-    assert len(events) == 29
+    assert len(events) == 33
     assert all(ev["event"] == "done" and ev["ok"] is False and ev["stage"] == "protocol" for ev in events)
 
 

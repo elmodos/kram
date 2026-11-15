@@ -10,8 +10,10 @@ Protocol: one JSON request per line on stdin, JSON event lines on stdout.
   {"op": "refresh"}                                        re-download metadata of enabled repos
   {"op": "transaction", "install": [...], "remove": [...], "upgrade": [...], "reinstall": [...],
    "downgrade": [...], "mark_user": [...], "mark_dep": [...], "upgrade_all": false,
+   "group_install": [...], "group_remove": [...], "group_upgrade": [...],
    "exclude_weak": [...], "download_only": false, "test": false}
                                                            exclude_weak: names never pulled in as recommendations
+                                                           group_*: comps group ids, as `dnf5 group install ...`
   {"op": "local_install", "path": "/abs/file.rpm", "sha256": "<hex>", "action": "install"|"reinstall"|"downgrade",
    "exclude_weak": [...], "test": false}                  one package file; see local_install()
   {"op": "repo_set_enabled", "repos": {"<repo id>": bool}}  persist via dnf5 config-manager, then load metadata
@@ -53,6 +55,9 @@ COPR_HUB_RE = re.compile(r"^[a-z0-9][a-z0-9.-]{0,252}$")
 COPR_DEFAULT_HUB = "copr.fedorainfracloud.org"
 COPR_ACTIONS = ("enable", "disable", "remove")
 SPEC_FIELDS = ("install", "remove", "upgrade", "reinstall", "downgrade", "mark_user", "mark_dep")
+# comps group ids (`dnf5 group install <id>`); must match kram.core.marks.GROUP_ID_RE
+GROUP_ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.+-]{0,199}$")
+GROUP_FIELDS = ("group_install", "group_remove", "group_upgrade")
 
 # local_install: where the helper keeps its private copy of the package file while it installs it
 LOCAL_DIR = "/var/cache/kram"
@@ -99,8 +104,19 @@ def specs(req: dict, field: str) -> list[str]:
     return value
 
 
+def group_ids(req: dict, field: str) -> list[str]:
+    value = req.get(field, [])
+    if not isinstance(value, list) or len(value) > MAX_SPECS:
+        raise ProtocolError(f"{field}: expected a list of at most {MAX_SPECS} group ids")
+    for s in value:
+        if not isinstance(s, str) or not GROUP_ID_RE.match(s):
+            raise ProtocolError(f"{field}: invalid group id {s!r}")
+    return value
+
+
 def validate(req: dict) -> dict[str, list[str]]:
     fields = {f: specs(req, f) for f in SPEC_FIELDS}
+    fields |= {f: group_ids(req, f) for f in GROUP_FIELDS}
     if not (req.get("upgrade_all") or any(fields.values())):
         raise ProtocolError("empty transaction")
     fields["exclude_weak"] = specs(req, "exclude_weak")
@@ -135,6 +151,21 @@ def build_goal(base, req: dict):
         goal.add_rpm_reason_change(s, libdnf5.transaction.TransactionItemReason_USER)
     for s in fields["mark_dep"]:
         goal.add_rpm_reason_change(s, libdnf5.transaction.TransactionItemReason_DEPENDENCY)
+    if any(fields[f] for f in GROUP_FIELDS):
+        # by id only, groups only: "kde-desktop" must not also match an environment or a translated group name.
+        # Package types stay the configured default (mandatory, default, conditional), as with `dnf5 group install`
+        settings = libdnf5.base.GoalJobSettings()
+        settings.set_group_with_id(True)
+        settings.set_group_with_name(False)
+        settings.set_group_search_groups(True)
+        settings.set_group_search_environments(False)
+        user = libdnf5.transaction.TransactionItemReason_USER
+        for gid in fields["group_install"]:
+            goal.add_group_install(gid, user, settings)
+        for gid in fields["group_upgrade"]:
+            goal.add_group_upgrade(gid, settings)
+        for gid in fields["group_remove"]:
+            goal.add_group_remove(gid, user, settings)
     if upgrade_all:
         goal.add_rpm_upgrade()
     return goal

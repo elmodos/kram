@@ -24,9 +24,9 @@ command](../screenshots/apply-preview.png)
 *Before anything happens: every change with its version and size, what it downloads, the disk space it
 takes, and the `dnf5` command that would do the same.*
 
-The review lists the marked packages and everything dnf adds for them, grouped by what happens to them. When
-a package recommends others, each recommendation gets its own checkbox with the size it adds, so you choose
-which ones to install. *Download packages only* fetches the packages without installing them.
+The review lists the marked packages and groups and everything dnf adds for them, grouped by what happens to
+them. When a package recommends others, each recommendation gets its own checkbox with the size it adds, so you
+choose which ones to install. *Download packages only* fetches the packages without installing them.
 
 ## Applying
 

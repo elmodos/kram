@@ -23,6 +23,7 @@ from ..core.marks import dnf5_command
 from ..core.model import Recommendation, TransactionPreview
 from ..core.origin import display_repo
 from ..i18n import N_, _, ngettext
+from .group_icons import group_icon
 from .package_model import human_size
 
 # Removing any of these leaves a system that may not boot or log in; worth a loud warning even if dnf allows it.
@@ -34,17 +35,26 @@ CRITICAL = frozenset({
 # (title, color, predicate over PreviewItem)
 GROUPS = [
     (N_("To be installed"), "#2f7a1f", lambda i: i.action == "install" and i.reason == "user"),
-    (N_("To be installed as dependencies"), "#2f7a1f", lambda i: i.action == "install" and i.reason != "user"),
+    (N_("To be installed with groups"), "#2f7a1f", lambda i: i.action == "install" and i.reason == "group"),
+    (N_("To be installed as dependencies"), "#2f7a1f", lambda i: i.action == "install" and i.reason not in ("user", "group")),
     (N_("To be upgraded"), "#1f5fa8", lambda i: i.action == "upgrade"),
     (N_("To be downgraded"), "#a86f1f", lambda i: i.action == "downgrade"),
     (N_("To be reinstalled"), "#1f5fa8", lambda i: i.action == "reinstall"),
     (N_("To be removed"), "#b02020", lambda i: i.action == "remove" and i.reason == "user" and not i.rotated),
+    (N_("To be removed with groups"), "#b02020", lambda i: i.action == "remove" and i.reason == "group" and not i.rotated),
     (N_("To be removed as dependent or no longer needed"), "#b02020",
-     lambda i: i.action == "remove" and i.reason != "user" and not i.rotated),
+     lambda i: i.action == "remove" and i.reason not in ("user", "group") and not i.rotated),
     (N_("Oldest kernels removed to stay within the limit of kept versions"), "#808080", lambda i: i.rotated),
     (N_("Install reason changes"), None, lambda i: i.action == "reason"),
 ]
-REASON_TEXT = {"user": N_("user"), "dependency": N_("dependency"), "weak": N_("weak dependency"), "clean": N_("unneeded")}
+REASON_TEXT = {"user": N_("user"), "dependency": N_("dependency"), "weak": N_("weak dependency"), "group": N_("group"),
+               "clean": N_("unneeded")}
+# (action, title, color) for the comps groups at the top of the list
+GROUP_SECTIONS = [
+    ("install", N_("Groups to be installed"), "#2f7a1f"),
+    ("upgrade", N_("Groups to be upgraded"), "#1f5fa8"),
+    ("remove", N_("Groups to be removed"), "#b02020"),
+]
 
 
 def signed_size(n: int) -> str:
@@ -90,6 +100,21 @@ class ChangesTree(QTreeWidget):
         self.clear()
         bold = QFont(self.font())
         bold.setBold(True)
+        for action, title, color in GROUP_SECTIONS:
+            groups = [g for g in preview.groups if g.action == action]
+            if not groups:
+                continue
+            top = QTreeWidgetItem([f"{_(title)} ({len(groups)})"])
+            top.setFont(0, bold)
+            top.setForeground(0, QBrush(QColor(color)))
+            for g in groups:
+                row = QTreeWidgetItem(top, [g.name])
+                row.setIcon(0, group_icon(g.id))
+                row.setToolTip(0, g.id)
+            self.addTopLevelItem(top)
+            for item in (top, *(top.child(n) for n in range(top.childCount()))):
+                item.setFirstColumnSpanned(True)  # spanned only once in the tree; names must not widen the column
+            top.setExpanded(True)
         for title, color, pred in GROUPS:
             items = [i for i in preview.items if pred(i)]
             if not items:
