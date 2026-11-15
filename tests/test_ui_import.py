@@ -182,15 +182,12 @@ def test_install_dialog(app, monkeypatch):
 
 def test_progress_counts_packages_not_rpm_steps(app):
     """A reinstall is two rpm steps (install the copy, erase the old one): one package, and no "Removing"."""
-    from PySide6.QtCore import QObject, Signal
+    from types import SimpleNamespace
 
+    from kram.core.mainloop import Signal
     from kram.ui.progress_dialog import ProgressDialog
 
-    class Client(QObject):
-        event = Signal(dict)
-        failed = Signal(str)
-
-    client = Client()
+    client = SimpleNamespace(event=Signal(), failed=Signal())
     dlg = ProgressDialog(client, {"op": "local_install"}, "Installing tool")
     nevra = "tool-1.0-1.x86_64"
     for ev in [{"event": "resolved", "items": [{"action": "Reinstall", "nevra": nevra},

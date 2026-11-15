@@ -81,7 +81,10 @@ kram/
   __init__.py      # APP_ID, homepage
   __main__.py      # QApplication setup, translators
   i18n.py          # gettext setup: _(), ngettext(), pgettext(), N_()
+  instance.py      # the single-instance D-Bus contract (names only; Qt side: ui/single_instance.py)
   core/            # no Qt; unit-tested
+    mainloop.py    # Post (run on the GUI thread) and a plain Signal: all the backend needs from a toolkit
+    worker.py      # DnfWorker: the one libdnf5 thread, results posted back to the GUI thread
     catalog.py     # libdnf5 → PkgRow snapshot, lazy details, resolve(), provides/file search
     model.py       # PkgRow, Origin, Status, details/preview dataclasses
     origin.py      # origin classification
@@ -89,9 +92,10 @@ kram/
     search.py      # ranked in-memory search
     marks.py       # MarkSet, allowed actions, equivalent dnf5 command
     evr.py         # RPM version ordering
-  ipc/client.py    # pkexec'd helper process, event stream
+  ipc/client.py    # pkexec'd helper process, event stream (subprocess + reader threads, no Qt)
   helper/kram_helper.py   # the root process (standalone: stdlib + libdnf5 only)
-  ui/              # main_window, sidebar, package_model, details, apply_dialog, progress_dialog, icons
+  ui/              # the Qt front end: main_window, sidebar, package_model, details, dialogs, icons;
+                   # qt_loop.py (Post for Qt), single_instance.py (QtDBus)
 po/                # kram.pot + one <lang>.po per translation
 data/              # .desktop, AppStream metainfo, polkit policy, icon
 packaging/kram.spec
@@ -495,7 +499,7 @@ memory for this.
   in the tooltip. Breeze's `update-high` & co. were the first idea, but only Breeze and Papirus have them: on
   Xfce with Adwaita the item was empty (2026-11-14), and the desktop says nothing about the icon theme. Menu: Open Kram, Settings… (Kram's tab). No "Check now" (removed
   2026-11-14): a check only re-reads the cache, which looks like asking the servers; fresh metadata is Kram's Reload. Click (built 2026-11-14): a running Kram owns the bus name
-  `io.github.elmodos.Kram` (kram/instance.py) and gets `Activate("upgradable", token)`, otherwise `kram --upgradable`
+  `io.github.elmodos.Kram` (kram/instance.py, the names the tray imports too) and gets `Activate("upgradable", token)`, otherwise `kram --upgradable`
   starts in its own systemd scope; a second `kram` hands its request over and exits. The panel's XDG activation
   token (`ProvideXdgActivationToken`) goes along so that Wayland focuses the window. Kram becomes
   single-instance; while a dialog is open over the main window, both come to the front and the filter stays.

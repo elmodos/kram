@@ -28,10 +28,12 @@ scripts/rpm_check.sh       # build the RPM like COPR does, install it and check 
 
 ## Layout
 
-- `kram/core/` has no Qt and is where most logic and tests live.
+- `kram/core/`, `kram/ipc/`, `kram/helper/` and `kram/notifier/` import no Qt; `kram/core/` is where most
+  logic and tests live. The backend reaches the GUI only through `kram.core.mainloop` (a `post` function that
+  runs a callable on the GUI thread, and a plain `Signal`); `kram/ui/qt_loop.py` is Qt's `post`.
 - `kram/helper/kram_helper.py` is the only code that runs as root. Keep it small; it is the security
   boundary.
-- All libdnf5 calls in the GUI process happen on one worker thread (`kram/ui/dnf_thread.py`).
+- All libdnf5 calls in the GUI process happen on one worker thread (`kram/core/worker.py`).
 - User-visible strings are English in the code and translated with gettext; see
   [docs/TRANSLATING.md](docs/TRANSLATING.md#for-developers).
 

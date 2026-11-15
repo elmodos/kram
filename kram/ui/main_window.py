@@ -34,19 +34,20 @@ from ..core.filters import FilterEntry
 from ..core.marks import Action, allowed_actions, dump_marks, parse_marks
 from ..core.model import CatalogSnapshot, PkgDetails, PkgRow, Status, TransactionPreview
 from ..core.search import MODE_LABELS, Mode, SearchIndex
+from ..core.worker import DnfWorker
 from ..i18n import _, ngettext
-from ..notifier import control as notifier_control
 from ..ipc.client import HelperClient
+from ..notifier import control as notifier_control
 from .apply_dialog import ApplyDialog
+from .cache_dialog import CacheDialog
 from .copr_dialog import CoprDialog
 from .details import DetailsTabs
-from .dnf_thread import DnfThread
 from .filters_dialog import FiltersDialog
 from .install_dialog import InstallDialog
-from .package_model import COL_NAME, COL_STATUS, HEADERS, HIDEABLE, PackageTableModel
-from .cache_dialog import CacheDialog
 from .notifier_dialog import NotifierDialog
+from .package_model import COL_NAME, COL_STATUS, HEADERS, HIDEABLE, PackageTableModel
 from .progress_dialog import ProgressDialog
+from .qt_loop import post
 from .repos_dialog import ReposDialog
 from .sidebar import Sidebar
 from .upgrade_dialog import UpgradeDialog, api_request
@@ -86,7 +87,7 @@ class MainWindow(QMainWindow):
         self.setWindowTitle(_("Package Manager"))  # Qt appends " — Kram" (the application display name)
         self.resize(1320, 860)
 
-        self.dnf = DnfThread(self)
+        self.dnf = DnfWorker(post)
         self.catalog = Catalog()
         self.snapshot: CatalogSnapshot | None = None
         self.filter: FilterEntry | None = None
@@ -98,7 +99,7 @@ class MainWindow(QMainWindow):
         self._user_sort = (COL_NAME, Qt.AscendingOrder)
         self._last_count = 0
         self._details: PkgDetails | None = None  # details of the current row, once loaded
-        self.helper = HelperClient(self)
+        self.helper = HelperClient(post)
         self.running_fedora = distro.running_release()
         self._net = QNetworkAccessManager(self)
         self._upgrade_dialog: UpgradeDialog | None = None

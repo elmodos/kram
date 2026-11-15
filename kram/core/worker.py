@@ -1,29 +1,28 @@
 """Runs all libdnf5 work on one dedicated thread and delivers results back on the GUI thread.
 
 Every reference to a job (its function, callbacks, result or error) is owned by the GUI thread: the worker reads
-the function from `_jobs`, puts the outcome back there and drops its own references before it signals. The
+the function from `_jobs`, puts the outcome back there and drops its own references before it posts. The
 callbacks are often methods of dialogs or lambdas holding widgets. Had the worker dropped the last reference to
 such a widget (the GUI having closed the dialog meanwhile), PySide would have deferred the C++ delete to the GUI
 thread, where Qt had already deleted the widget with its parent: a crash (SIGSEGV in a pending call, 2026-11-14).
+What the worker posts holds only the worker and the job id.
 """
+import functools
 import itertools
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any
 
-from PySide6.QtCore import QObject, Signal
+from .mainloop import Post
 
 
-class DnfThread(QObject):
-    _finished = Signal(int)  # job id; everything else stays in _jobs
-
-    def __init__(self, parent=None):
-        super().__init__(parent)
+class DnfWorker:
+    def __init__(self, post: Post, name: str = "libdnf5"):
+        self._post = post
         # one worker == libdnf5 is only ever touched from a single thread
-        self._pool = ThreadPoolExecutor(max_workers=1, thread_name_prefix="libdnf5")
+        self._pool = ThreadPoolExecutor(max_workers=1, thread_name_prefix=name)
         self._jobs: dict[int, list] = {}  # id -> [fn, on_done, on_error, result, error]
         self._ids = itertools.count()
-        self._finished.connect(self._deliver)
 
     def submit(self, fn: Callable[[], Any], on_done: Callable[[Any], None],
                on_error: Callable[[BaseException], None] | None = None) -> None:
@@ -40,7 +39,7 @@ class DnfThread(QObject):
             job[4] = e
             del e
         del job
-        self._finished.emit(job_id)
+        self._post(functools.partial(self._deliver, job_id))
 
     def _deliver(self, job_id: int) -> None:
         _fn, on_done, on_error, result, error = self._jobs.pop(job_id)

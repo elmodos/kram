@@ -93,10 +93,9 @@ def _bus_owner_pid(name: str) -> int | None:
 class _NotifierRow(QWidget):
     """Another program's update notifier: what it does to ours, and turning it off or back on for this user."""
 
-    def __init__(self, notifier: control.Notifier, parent: "NotifierDialog"):
+    def __init__(self, notifier: control.Notifier):
         super().__init__()
         self.notifier = notifier
-        self.dialog = parent
         outer = QHBoxLayout(self)
         outer.setContentsMargins(0, 0, 0, 0)
         outer.setSpacing(10)
@@ -206,7 +205,7 @@ class NotifierDialog(QDialog):
         lay.addLayout(row)
         self._systemctl = None
 
-        self.rows = [_NotifierRow(n, self) for n in control.NOTIFIERS if n.system_file()]
+        self.rows = [_NotifierRow(n) for n in control.NOTIFIERS if n.system_file()]
         if self.rows:
             lay.addWidget(QLabel("<b>" + _("Other update notifiers") + "</b>"))
             for notifier_row in self.rows:

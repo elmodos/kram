@@ -8,13 +8,16 @@ pytest.importorskip("PySide6.QtDBus")
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from kram import instance  # noqa: E402
-from kram.ui import main_window  # noqa: E402
+from kram.ui import (
+    main_window,  # noqa: E402
+    single_instance,  # noqa: E402
+)
 
 
 def test_service_passes_the_view_and_keeps_the_token(monkeypatch):
     monkeypatch.delenv("XDG_ACTIVATION_TOKEN", raising=False)
     seen = []
-    service = instance.Service(seen.append)
+    service = single_instance.Service(seen.append)
     service.Activate("upgradable", "token-1")
     assert seen == ["upgradable"]
     assert os.environ["XDG_ACTIVATION_TOKEN"] == "token-1"  # Qt's Wayland backend uses it to raise the window

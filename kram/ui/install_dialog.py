@@ -29,12 +29,13 @@ from ..core.local_rpm import LocalRpm, VerifyResult
 from ..core.marks import dnf5_command
 from ..core.model import LocalTarget, TransactionPreview
 from ..core.origin import display_repo
+from ..core.worker import DnfWorker
 from ..i18n import N_, _, ngettext
 from .apply_dialog import ChangesTree, RecommendationsList, removal_warning, signed_size
 from .details import _date
-from .dnf_thread import DnfThread
 from .package_model import human_size
 from .progress_dialog import ProgressDialog
+from .qt_loop import post
 
 e = html.escape
 OK, WARN, ERROR, INFO = "#2f7a1f", "#a86f1f", "#c03030", None
@@ -73,7 +74,7 @@ def _line(kind: str | None, text: str) -> tuple[str | None, str]:
 
 
 class InstallDialog(QDialog):
-    def __init__(self, path: str, catalog, dnf: DnfThread, helper, basearch: str = "x86_64", marks: int = 0,
+    def __init__(self, path: str, catalog, dnf: DnfWorker, helper, basearch: str = "x86_64", marks: int = 0,
                  parent=None, load_catalog: bool = False):
         super().__init__(parent)
         self.setWindowTitle(_("Install Package File"))
@@ -93,7 +94,7 @@ class InstallDialog(QDialog):
         self._generation = 0
         self._closed = False
         self._verify_proc: QProcess | None = None
-        self._reader = DnfThread(self)  # hashing a big file must not hold up the dnf thread
+        self._reader = DnfWorker(post, "kram-reader")  # hashing a big file must not hold up the dnf thread
 
         lay = QVBoxLayout(self)
         head = QHBoxLayout()

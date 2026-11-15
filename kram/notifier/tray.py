@@ -20,12 +20,13 @@ except ImportError:
 
 from .. import APP_ID
 from ..i18n import _, ngettext
+from ..instance import BUS_NAME as KRAM_BUS_NAME
+from ..instance import CALL_TIMEOUT_MS, METHOD, PATH, UPGRADABLE
+from ..instance import INTERFACE as KRAM_INTERFACE
 from . import read_state, stale_days, state_file
 
 WATCHER = "org.kde.StatusNotifierWatcher"
 ITEM_PATH = "/StatusNotifierItem"
-KRAM_BUS_NAME = APP_ID  # kram.instance (not imported: it needs Qt)
-UPGRADABLE = "upgradable"
 MENU_PATH = "/MenuBar"
 NO_WATCHER_GRACE = 60  # seconds without a tray host before the process gives up
 # Kram's own icons (data/icons, installed into hicolor so every icon theme finds them; theme names like Breeze's
@@ -100,8 +101,8 @@ def open_kram(token: str = "") -> None:
     panel's XDG activation token, so that Wayland gives the window focus."""
     bus = Gio.bus_get_sync(Gio.BusType.SESSION)
     try:
-        bus.call_sync(KRAM_BUS_NAME, "/", KRAM_BUS_NAME, "Activate", GLib.Variant("(ss)", (UPGRADABLE, token)),
-                      None, Gio.DBusCallFlags.NO_AUTO_START, 3000, None)
+        bus.call_sync(KRAM_BUS_NAME, PATH, KRAM_INTERFACE, METHOD, GLib.Variant("(ss)", (UPGRADABLE, token)),
+                      None, Gio.DBusCallFlags.NO_AUTO_START, CALL_TIMEOUT_MS, None)
         return
     except GLib.Error:  # no Kram running (or it did not answer): start one
         pass

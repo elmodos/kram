@@ -1,31 +1,34 @@
-"""Talks to the privileged helper over a pkexec'd QProcess, one request at a time.
+"""Talks to the privileged helper over a pkexec'd subprocess, one request at a time.
 
-The helper stays alive for the whole session, so the password is asked once, not per transaction.
+The helper stays alive for the whole session, so the password is asked once, not per transaction. Two daemon
+threads read its stdout (the JSON event lines) and stderr; everything they read reaches the GUI thread through
+`post` (kram.core.mainloop), where `busy` changes and the signals are emitted.
 """
+import functools
 import json
 import os
 import site
+import subprocess
 import sys
+import threading
 from pathlib import Path
 
-from PySide6.QtCore import QObject, QProcess, Signal
-
 from .. import INSTALLED_HELPER
+from ..core.mainloop import Post, Signal
 from ..i18n import _
 
 HELPER = Path(__file__).resolve().parent.parent / "helper" / "kram_helper.py"
 # pkexec exit codes: the user dismissed the dialog / is not authorized
 PKEXEC_CANCELLED = (126, 127)
+STOP_TIMEOUT = 3  # seconds for the helper to quit before it is killed
 
 
-class HelperClient(QObject):
-    event = Signal(dict)        # every event line from the helper, including the final "done"
-    failed = Signal(str)        # the helper could not be started or died; no "done" will follow
-
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self._proc: QProcess | None = None
-        self._buf = b""
+class HelperClient:
+    def __init__(self, post: Post):
+        self.event = Signal()   # (dict) every event line from the helper, including the final "done"
+        self.failed = Signal()  # (str) the helper could not be started or died; no "done" will follow
+        self._post = post
+        self._proc: subprocess.Popen | None = None
         self.busy = False
 
     def _command(self) -> list[str]:
@@ -37,73 +40,97 @@ class HelperClient(QObject):
             return ["pkexec", INSTALLED_HELPER]
         return ["pkexec", *cmd]  # source checkout: run the checkout's helper (generic pkexec prompt)
 
-    def _ensure_started(self) -> None:
-        if self._proc is not None and self._proc.state() != QProcess.NotRunning:
-            return
-        self._buf = b""
-        proc = QProcess(self)
-        proc.setProcessChannelMode(QProcess.SeparateChannels)
-        proc.readyReadStandardOutput.connect(self._read)
-        proc.readyReadStandardError.connect(lambda: self._forward_stderr(proc))
-        proc.finished.connect(self._on_finished)
-        proc.errorOccurred.connect(self._on_error)
-        cmd = self._command()
-        proc.start(cmd[0], cmd[1:])
+    def _running(self) -> bool:
+        return self._proc is not None and self._proc.poll() is None
+
+    def _start(self) -> bool:
+        try:
+            proc = subprocess.Popen(self._command(), stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                                    stderr=subprocess.PIPE)
+        except OSError:
+            self._proc = None
+            return False
         self._proc = proc
+        threading.Thread(target=self._read_stdout, args=(proc,), name="kram-helper-stdout", daemon=True).start()
+        threading.Thread(target=self._read_stderr, args=(proc,), name="kram-helper-stderr", daemon=True).start()
+        return True
 
     def request(self, req: dict) -> None:
-        """Send one request; events arrive via `event` until one with event == "done"."""
+        """Send one request; events arrive via `event` until one with event == "done" (or `failed` fires)."""
         if self.busy:
             raise RuntimeError("helper is busy")
-        self._ensure_started()
         self.busy = True
+        if not self._running() and not self._start():
+            # reported from the main loop, like every other outcome: never from inside request()
+            self._post(functools.partial(self._fail, _("Could not start pkexec. Is polkit installed?")))
+            return
         self._write(req)
 
     def answer(self, question_id: int, yes: bool) -> None:
         self._write({"op": "answer", "id": question_id, "yes": yes})
 
     def stop(self) -> None:
-        if self._proc is not None and self._proc.state() != QProcess.NotRunning:
-            self._write({"op": "quit"})
-            self._proc.closeWriteChannel()
-            if not self._proc.waitForFinished(3000):
-                self._proc.kill()
+        if not self._running():
+            return
+        proc = self._proc
+        self._write({"op": "quit"})
+        try:
+            proc.stdin.close()
+        except OSError:
+            pass
+        try:
+            proc.wait(STOP_TIMEOUT)
+        except subprocess.TimeoutExpired:
+            proc.kill()
 
     def _write(self, obj: dict) -> None:
-        self._proc.write((json.dumps(obj) + "\n").encode())
+        try:
+            self._proc.stdin.write((json.dumps(obj) + "\n").encode())
+            self._proc.stdin.flush()
+        except (OSError, ValueError, AttributeError):
+            pass  # the helper is gone: its end is reported by _on_finished
 
-    def _read(self) -> None:
-        self._buf += bytes(self._proc.readAllStandardOutput())
-        *lines, self._buf = self._buf.split(b"\n")
-        for line in lines:
+    # --- reader threads: they only parse and post ---
+
+    def _read_stdout(self, proc: subprocess.Popen) -> None:
+        for line in proc.stdout:
             if not line.strip():
                 continue
             try:
                 ev = json.loads(line)
             except json.JSONDecodeError:
-                ev = {"event": "log", "text": line.decode(errors="replace")}
-            if ev.get("event") == "done":
-                self.busy = False
-            self.event.emit(ev)
+                ev = {"event": "log", "text": line.decode(errors="replace").rstrip("\n")}
+            self._post(functools.partial(self._on_event, proc, ev))
+        code = proc.wait()
+        self._post(functools.partial(self._on_finished, proc, code))
 
-    def _forward_stderr(self, proc: QProcess) -> None:
+    def _read_stderr(self, proc: subprocess.Popen) -> None:
         # rpm scriptlet output and libdnf5 messages land here (the helper moves fd 1 to stderr)
-        text = bytes(proc.readAllStandardError()).decode(errors="replace").rstrip()
-        if text:
-            self.event.emit({"event": "log", "text": text, "stderr": True})
+        while chunk := proc.stderr.read1(65536):
+            text = chunk.decode(errors="replace").rstrip()
+            if text:
+                self._post(functools.partial(self._on_event, proc, {"event": "log", "text": text, "stderr": True}))
 
-    def _on_finished(self, code: int, _status) -> None:
-        if self.busy:
-            self.busy = False
-            if code in PKEXEC_CANCELLED:
-                self.failed.emit(_("Authentication was cancelled or not authorized."))
-            else:
-                self.failed.emit(_("The privileged helper exited unexpectedly (code {code}).").format(code=code))
+    # --- GUI thread ---
 
-    def _on_error(self, error) -> None:
-        if error == QProcess.FailedToStart and self.busy:
+    def _on_event(self, proc: subprocess.Popen, ev: dict) -> None:
+        if proc is not self._proc:  # a helper from before a restart
+            return
+        if ev.get("event") == "done":
             self.busy = False
-            self.failed.emit(_("Could not start pkexec. Is polkit installed?"))
+        self.event.emit(ev)
+
+    def _on_finished(self, proc: subprocess.Popen, code: int) -> None:
+        if proc is not self._proc or not self.busy:
+            return
+        if code in PKEXEC_CANCELLED:
+            self._fail(_("Authentication was cancelled or not authorized."))
+        else:
+            self._fail(_("The privileged helper exited unexpectedly (code {code}).").format(code=code))
+
+    def _fail(self, message: str) -> None:
+        self.busy = False
+        self.failed.emit(message)
 
 
 def _installed() -> bool:

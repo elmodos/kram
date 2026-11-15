@@ -7,6 +7,7 @@ from PySide6.QtWidgets import QApplication
 
 from . import APP_ID, HOMEPAGE, __version__, instance
 from .i18n import language
+from .ui import single_instance
 
 
 def main() -> int:
@@ -31,24 +32,25 @@ def main() -> int:
         return install_file(files[0])
     # `kram --upgradable` (the tray icon): open on the Upgradable filter
     view = instance.UPGRADABLE if "--upgradable" in app.arguments()[1:] else ""
-    if instance.hand_over(view):  # a Kram is already open: it shows itself
+    if single_instance.hand_over(view):  # a Kram is already open: it shows itself
         return 0
     from .ui.main_window import MainWindow
     win = MainWindow()
     win.show_view(view)
     win.show()
-    service = instance.serve(win.activate_from_outside)  # noqa: F841 (kept alive while the app runs)
+    service = single_instance.serve(win.activate_from_outside)  # noqa: F841 (kept alive while the app runs)
     return app.exec()
 
 
 def install_file(arg: str) -> int:
     from .core.catalog import Catalog
+    from .core.worker import DnfWorker
     from .ipc.client import HelperClient
-    from .ui.dnf_thread import DnfThread
     from .ui.install_dialog import InstallDialog
+    from .ui.qt_loop import post
 
     path = QUrl(arg).toLocalFile() if arg.startswith("file:") else arg
-    dnf, helper = DnfThread(), HelperClient()
+    dnf, helper = DnfWorker(post), HelperClient(post)
     dialog = InstallDialog(path, Catalog(), dnf, helper, load_catalog=True)
     try:
         dialog.exec()
