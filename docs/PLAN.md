@@ -147,9 +147,12 @@ Laid out like Synaptic:
 - **Toolbar**: Reload · Mark All Upgrades · Apply · Properties · Repositories · search mode + field.
 - **Sidebar** with view buttons below it (as in Synaptic):
   - *Status*: All / Installed / Not installed / Upgradable / Installed by user / Unneeded dependencies /
-    Orphaned / Newer than repository / Marked.
+    Orphaned / Newer than repository / Marked. Each has a painted box, the same as the list's status column, so
+    the view doubles as its legend.
   - *Origin*: Fedora / COPR (each project) / Third-party (each repo) / Local / Unknown.
-  - *Groups*: comps groups and environments (Fedora's equivalent of "Sections"; the RPM `Group` tag is dead).
+  - *Groups*: comps groups and environments (Fedora's equivalent of "Sections"; the RPM `Group` tag is dead). Icons
+    come from the system icon theme through a table of group ids with an obvious icon (comps has no icons; the
+    dated comps-extras pixmaps are not used), a generic icon otherwise; installed groups are bold.
   - *Search results*: query history.
   - *Custom filters*: user-defined condition lists (2026-11-04).
 - **Table**: clicking the status box opens the action menu, as in Synaptic; double click installs/upgrades

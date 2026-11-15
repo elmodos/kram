@@ -19,7 +19,8 @@ class FilterEntry:
     origin: Origin | None = None   # for the icon
     indent: int = 0
     query: tuple[str, int] | None = None   # search-history entries: (text, search mode)
-    status: Status | None = None   # for the icon (comps groups: installed or not)
+    group: str | None = None   # comps group id for its themed icon ("" for all groups)
+    bold: bool = False   # comps groups: installed
     tip: str = ""
 
 
@@ -88,9 +89,9 @@ def group_filters(snap: CatalogSnapshot) -> list[FilterEntry]:
     def in_group(names: frozenset[str]) -> Predicate:
         return lambda r: r.name in names
 
-    entries = [FilterEntry("group:all", _("All groups"), _all)]
+    entries = [FilterEntry("group:all", _("All groups"), _all, group="")]
     entries += [FilterEntry(f"group:{g.id}", g.name, in_group(g.packages), tip=g.description,
-                            status=Status.INSTALLED if g.installed else Status.NOT_INSTALLED)
+                            group=g.id, bold=g.installed)
                 for g in snap.groups]
     return _with_counts(entries, snap.rows)
 

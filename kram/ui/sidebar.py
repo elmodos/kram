@@ -7,7 +7,8 @@ from ..core.filters import FilterEntry, custom_filter_entries, group_filters, or
 from ..core.model import CatalogSnapshot
 from ..core.search import MODE_LABELS, Mode
 from ..i18n import _
-from .icons import origin_icon, status_icon
+from .group_icons import group_icon
+from .icons import origin_icon, status_filter_icon
 
 MAX_HISTORY = 30
 
@@ -129,11 +130,13 @@ class Sidebar(QWidget):
             item = QListWidgetItem("    " * e.indent + e.label + (f"   ({e.count})" if e.count is not None else ""))
             if e.origin is not None:
                 item.setIcon(origin_icon(e.origin))
-            elif e.status is not None:
-                item.setIcon(status_icon(e.status))
+            elif e.group is not None:
+                item.setIcon(group_icon(e.group))
+            elif (icon := status_filter_icon(e.id)) is not None:
+                item.setIcon(icon)
             if e.tip:
                 item.setToolTip(e.tip)
-            if i == 0 and e.query is None:
+            if e.bold or (i == 0 and e.query is None):
                 f = QFont(item.font())
                 f.setBold(True)
                 item.setFont(f)

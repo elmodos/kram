@@ -52,5 +52,5 @@ def test_group_filters():
     ])
     entries = group_filters(snap)
     assert counts(entries) == {"group:all": 6, "group:tools": 2, "group:empty": 0}
-    assert entries[1].status is Status.INSTALLED and entries[1].tip == "Useful tools"
-    assert entries[2].status is Status.NOT_INSTALLED
+    assert entries[1].bold and entries[1].group == "tools" and entries[1].tip == "Useful tools"
+    assert not entries[2].bold and entries[2].group == "empty"
