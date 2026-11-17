@@ -88,6 +88,30 @@ def upgradable_keys(base) -> set[tuple[str, str]]:
     return {(p.get_name(), p.get_arch()) for p in q}
 
 
+def installable_upgrades(base, upgradable: set[tuple[str, str]]) -> set[tuple[str, str]]:
+    """The part of `upgradable` that `dnf5 upgrade` would really upgrade now, as a resolve of it says.
+
+    With best=False (Fedora's default) the resolver leaves out an upgrade whose newer versions cannot be installed,
+    such as a build that needs a library no repository has yet; such an upgrade is not one the user can do. The
+    upgraded packages, and those an obsoleting package replaces, count. If the resolve fails as a whole, all of
+    `upgradable` is kept: the upgrade dialog shows that problem."""
+    if not upgradable:
+        return set()
+    goal = libdnf5.base.Goal(base)
+    goal.add_rpm_upgrade()
+    tr = goal.resolve()
+    if tr.get_problems() != libdnf5.base.GoalProblem_NO_PROBLEM:
+        return set(upgradable)
+    T = libdnf5.transaction
+    done = set()
+    for tp in tr.get_transaction_packages():
+        if tp.get_action() == T.TransactionItemAction_UPGRADE:
+            done.add((tp.get_package().get_name(), tp.get_package().get_arch()))
+        for old in tp.get_replaces():
+            done.add((old.get_name(), old.get_arch()))
+    return upgradable & done
+
+
 @dataclass(frozen=True)
 class UpdateSummary:
     count: int
@@ -97,7 +121,8 @@ class UpdateSummary:
 
 
 def summarize(base) -> UpdateSummary:
-    upgradable = upgradable_keys(base)
+    """What the tray shows: only the upgrades that can be installed now, see installable_upgrades."""
+    upgradable = installable_upgrades(base, upgradable_keys(base))
     advisories = upgrade_advisories(base, upgradable)
     types = [{a.type for a in found} for found in advisories.values()]
     security = sum(1 for t in types if "security" in t)

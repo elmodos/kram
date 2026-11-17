@@ -211,3 +211,20 @@ def test_notifier_dialog_rereads_on_activation(monkeypatch, autostart):
     QApplication.sendEvent(dialog, QEvent(QEvent.WindowActivate))
     assert row.toggle.text() == "Turn Off"
     assert dialog.enabled.isChecked() and dialog.stale_row.isEnabled()
+
+
+def test_update_check_counts_again_after_a_kram_upgrade(home, monkeypatch):
+    from kram import __version__
+    from kram.notifier import check
+
+    fp = [["/var/lib/rpm/rpmdb.sqlite", 1]]
+    monkeypatch.setattr(check, "fingerprint", lambda: fp)
+    monkeypatch.setattr(check, "systemctl", lambda verb: None)
+    counts = []
+    monkeypatch.setattr(check, "count", lambda: counts.append(1) or {"count": 0, "severity": "low", "seconds": 0.1})
+
+    notifier.write_state({"count": 3, "severity": "low", "fingerprint": fp, "version": "0.1.0"})
+    check.main()
+    assert counts == [1] and notifier.read_state()["version"] == __version__
+    check.main()  # nothing changed since
+    assert counts == [1]

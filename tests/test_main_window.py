@@ -394,3 +394,41 @@ def test_details_wait_for_the_cursor_to_rest(window, monkeypatch):
     fn, done = jobs[1]
     done(fn())
     assert asked == shown == [("a", "x86_64")]
+
+
+def test_upgrades_that_cannot_be_installed_are_dimmed_and_not_marked_by_mark_all(window):
+    from PySide6.QtCore import Qt
+
+    from kram.core.marks import Action
+    from kram.core.model import CatalogSnapshot, Origin, PkgRow, Status
+    from kram.ui.package_model import COL_CANDIDATE, COL_STATUS
+
+    rows = [PkgRow("ffmpeg", "x86_64", "", "9.0.2-3", "9.0.2-4", "rpmfusion-free-updates", 1, Origin.THIRD_PARTY,
+                   Status.UPGRADABLE, True),
+            PkgRow("gjs", "x86_64", "", "1.90.1-1", "1.90.1-2", "updates", 1, Origin.FEDORA, Status.UPGRADABLE)]
+    window.snapshot = CatalogSnapshot(rows, 2, 2, 0.0)
+    window.model.set_rows(rows, "x86_64")
+    ffmpeg, gjs = (window.model.index(i, COL_CANDIDATE) for i in range(2))
+    assert ffmpeg.data(Qt.FontRole).bold() and ffmpeg.data(Qt.ForegroundRole) is None
+
+    why = ("Problem: package ffmpeg-9.0.2-4.fc45.x86_64 from rpmfusion-free-updates requires ffmpeg-libs(x86-64) = "
+           "9.0.2-4.fc45, but none of the providers can be installed\n"
+           "  - cannot install the best update candidate for package ffmpeg-9.0.2-3.fc45.x86_64\n"
+           "  - nothing provides liboapv.so.11()(64bit) needed by ffmpeg-libs-9.0.2-4.fc45.x86_64 from rpmfusion-free-updates")
+    window.model.set_blocked({rows[0].key: why})
+    assert ffmpeg.data(Qt.FontRole) is None and ffmpeg.data(Qt.ForegroundRole) is not None
+    assert ffmpeg.data(Qt.ToolTipRole) == ("The upgrade cannot be installed now\n"
+                                           "nothing provides liboapv.so.11()(64bit) needed by ffmpeg-libs-9.0.2-4.fc45.x86_64")
+    assert "cannot be installed now" in window.model.index(0, COL_STATUS).data(Qt.ToolTipRole)
+    assert gjs.data(Qt.FontRole).bold() and gjs.data(Qt.ToolTipRole) is None
+
+    window.mark_all_upgrades()
+    marks = window.model.marks
+    assert rows[0].key not in marks and marks.get(rows[1].key).action is Action.UPGRADE
+    assert "1 upgrade left out" in window.statusBar().currentMessage()
+
+    # by hand it can still be marked: the Apply dialog then says why it cannot be carried out
+    assert marks.set(rows[0], Action.UPGRADE)
+
+    window.model.set_rows(rows, "x86_64")  # a reload starts over; the new resolve fills it again
+    assert window.model.blocked == {}

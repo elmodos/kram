@@ -548,6 +548,11 @@ class MainWindow(QMainWindow):
         self._upgrades_of_kind = upgrades_by_kind(snap.rows)
         self.act_reload.setEnabled(True)
         self.model.set_rows(snap.rows, snap.basearch)
+        if any(r.status is Status.UPGRADABLE for r in snap.rows):
+            # after the list is up: the full upgrade resolve takes a few tenths of a second
+            self.dnf.submit(self.catalog.blocked_upgrades,
+                            lambda blocked: self.model.set_blocked(blocked) if self.snapshot is snap else None,
+                            lambda e: None)  # without it every upgrade just looks installable, as before
         self.index = SearchIndex(snap.rows, snap.descriptions)
         self.narrowing = NarrowingSearch(self.index)
         self.key_index = {r.key: i for i, r in enumerate(snap.rows)}
@@ -1046,9 +1051,16 @@ class MainWindow(QMainWindow):
         self._mark_for_upgrade(self._upgrades_of_kind.get(kind, []))
 
     def _mark_for_upgrade(self, rows: list[PkgRow]) -> None:
-        changed = [r.key for r in rows if self.model.marks.set(r, Action.UPGRADE)]
+        """Upgrades that cannot be installed now are left out (see PackageTableModel.blocked): marked one by one,
+        the Apply dialog says why they cannot be carried out."""
+        left_out = sum(1 for r in rows if r.key in self.model.blocked)
+        changed = [r.key for r in rows if r.key not in self.model.blocked and self.model.marks.set(r, Action.UPGRADE)]
         self._marks_changed(None)
-        self.statusBar().showMessage(ngettext("{n} package marked for upgrade", "{n} packages marked for upgrade", len(changed)).format(n=len(changed)), 5000)
+        text = ngettext("{n} package marked for upgrade", "{n} packages marked for upgrade", len(changed)).format(n=len(changed))
+        if left_out:
+            text += "; " + ngettext("{n} upgrade left out: it cannot be installed now",
+                                    "{n} upgrades left out: they cannot be installed now", left_out).format(n=left_out)
+        self.statusBar().showMessage(text, 8000)
 
     def _markings_dir(self) -> str:
         return QSettings().value("markings/dir", str(Path.home()))

@@ -32,7 +32,7 @@ from .model import (
     mark_rotated,
 )
 from .origin import classify
-from .updates import open_system_base, upgradable_keys, upgrade_advisories, waiting_for_lock
+from .updates import installable_upgrades, open_system_base, upgradable_keys, upgrade_advisories, waiting_for_lock
 
 MAX_CHANGELOG = 30
 # a substring of one or two characters matches most of what packages provide: no use as a search
@@ -41,6 +41,8 @@ MIN_SUBSTRING_QUERY = 3
 HIDDEN_SUFFIXES = ("-debuginfo", "-debugsource")
 # what a recommendation adds with everything it pulls in costs one more resolve (~0.4 s) each
 MAX_SIZED_RECOMMENDATIONS = 10
+# blocked upgrades whose reason is resolved one by one (0.1-0.3 s each); the others only say that they are blocked
+MAX_BLOCKED_REASONS = 20
 
 
 def _evr_tuple(pkg):
@@ -391,6 +393,22 @@ class Catalog:
             return []
         # several versions of one package collapse into its catalog row
         return sorted({k for k in ((x.get_name(), x.get_arch()) for x in q) if k in self._pkgs})
+
+    def blocked_upgrades(self) -> dict[tuple[str, str], str]:
+        """Upgradable packages whose upgrade `dnf5 upgrade` would leave out now (see installable_upgrades), as
+        (name, arch) -> the resolver's reason ("" past MAX_BLOCKED_REASONS). Run after `load`, apart from it: it
+        resolves a full upgrade, a few tenths of a second the list does not have to wait for."""
+        upgradable = upgradable_keys(self._base)
+        blocked = sorted(upgradable - installable_upgrades(self._base, upgradable))
+        reasons = {}
+        for n, key in enumerate(blocked):
+            if n >= MAX_BLOCKED_REASONS:
+                reasons[key] = ""
+                continue
+            goal = libdnf5.base.Goal(self._base)
+            goal.add_upgrade(f"{key[0]}.{key[1]}")
+            reasons[key] = "\n".join(skipped_changes(goal.resolve()))
+        return reasons
 
     def removal_dependents(self, remove: list[str]) -> list[tuple[str, str]]:
         """Installed packages that depend on `remove` (specs), at any depth, and would have to be removed with

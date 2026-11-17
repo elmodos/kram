@@ -160,3 +160,74 @@ def test_details_tab_comes_and_goes(model):
     tabs.select_name("files")
     tabs.show_advisories(ROWS[1])
     assert tabs.current_name() == "files"
+
+
+class _Pkg:
+    def __init__(self, name, arch="x86_64"):
+        self.name, self.arch = name, arch
+
+    def get_name(self):
+        return self.name
+
+    def get_arch(self):
+        return self.arch
+
+
+class _Item:
+    def __init__(self, action, package, replaces=()):
+        self.action, self.package, self.replaces = action, package, list(replaces)
+
+    def get_action(self):
+        return self.action
+
+    def get_package(self):
+        return self.package
+
+    def get_replaces(self):
+        return self.replaces
+
+
+def _resolver(monkeypatch, items, problems=None):
+    import libdnf5
+
+    class Transaction:
+        def get_problems(self):
+            return libdnf5.base.GoalProblem_NO_PROBLEM if problems is None else problems
+
+        def get_transaction_packages(self):
+            return items
+
+    class Goal:
+        def __init__(self, base):
+            pass
+
+        def add_rpm_upgrade(self):
+            pass
+
+        def resolve(self):
+            return Transaction()
+    monkeypatch.setattr(libdnf5.base, "Goal", Goal)
+
+
+def test_installable_upgrades_leave_out_what_the_resolver_skips(monkeypatch):
+    import libdnf5
+
+    from kram.core.updates import installable_upgrades
+    T = libdnf5.transaction
+    upgradable = {("gjs", "x86_64"), ("ffmpeg", "x86_64"), ("old-tool", "noarch")}
+    # ffmpeg's new build needs a missing library: best=False drops it without a problem
+    _resolver(monkeypatch, [
+        _Item(T.TransactionItemAction_UPGRADE, _Pkg("gjs")),
+        _Item(T.TransactionItemAction_REPLACED, _Pkg("gjs")),
+        _Item(T.TransactionItemAction_INSTALL, _Pkg("new-tool", "noarch"), [_Pkg("old-tool", "noarch")]),  # obsoletes
+    ])
+    assert installable_upgrades(None, upgradable) == {("gjs", "x86_64"), ("old-tool", "noarch")}
+    assert installable_upgrades(None, set()) == set()
+
+
+def test_installable_upgrades_keep_all_when_the_resolve_fails(monkeypatch):
+    import libdnf5
+
+    from kram.core.updates import installable_upgrades
+    _resolver(monkeypatch, [], problems=libdnf5.base.GoalProblem_SOLVER_ERROR)
+    assert installable_upgrades(None, {("gjs", "x86_64")}) == {("gjs", "x86_64")}

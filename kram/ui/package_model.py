@@ -1,7 +1,8 @@
+import re
 from functools import cache
 
 from PySide6.QtCore import QAbstractTableModel, QModelIndex, Qt
-from PySide6.QtGui import QColor, QFont
+from PySide6.QtGui import QColor, QFont, QGuiApplication, QPalette
 
 from ..core.evr import evr_ranks
 from ..core.marks import ACTION_LABELS, MarkSet
@@ -74,6 +75,14 @@ _NO_ADVISORY = len(ADVISORY_LABEL)
 
 
 @cache
+def blocked_tip(reason: str) -> str:
+    """Two lines: that the upgrade cannot be installed, and the root cause from the resolver's message (its last
+    line, such as "nothing provides liboapv.so.11()(64bit) needed by ffmpeg-libs-9.0.2-4.fc45.x86_64")."""
+    lines = [line.strip().removeprefix("- ") for line in reason.splitlines() if line.strip()]
+    cause = re.sub(r" from \S+$", "", lines[-1]) if lines else ""
+    return "\n".join(filter(None, (_("The upgrade cannot be installed now"), cause)))
+
+
 def _bold() -> QFont:
     f = QFont()
     f.setBold(True)
@@ -104,14 +113,23 @@ class PackageTableModel(QAbstractTableModel):
         self._sort: tuple[int, Qt.SortOrder] | None = (COL_NAME, Qt.AscendingOrder)
         self._evr_rank: dict[str, int] | None = None
         self.marks = MarkSet()
+        # upgradable packages whose upgrade cannot be installed now -> the resolver's reason; see
+        # Catalog.blocked_upgrades. Filled after each load, so it may lag the rows by a moment
+        self.blocked: dict[tuple[str, str], str] = {}
 
     def set_rows(self, rows: list[PkgRow], basearch: str) -> None:
         self.beginResetModel()
         self.rows = rows
         self.basearch = basearch
+        self.blocked = {}
         self.visible = list(range(len(rows)))
         self._evr_rank = None
         self.endResetModel()
+
+    def set_blocked(self, blocked: dict[tuple[str, str], str]) -> None:
+        self.blocked = blocked
+        if self.visible:
+            self.dataChanged.emit(self.index(0, 0), self.index(len(self.visible) - 1, self.columnCount() - 1))
 
     def set_visible(self, visible: list[int], ranked: bool = False) -> None:
         """`ranked`: keep the given order (search relevance) instead of the column sort."""
@@ -225,6 +243,8 @@ class PackageTableModel(QAbstractTableModel):
                 return advisory_icon(r.advisory.level if r.advisories else None)
         elif role == Qt.ToolTipRole:
             if col in (COL_CANDIDATE, COL_ADVISORY):
+                if r.key in self.blocked:
+                    return "\n\n".join(filter(None, (blocked_tip(self.blocked[r.key]), advisory_tip(r))))
                 return advisory_tip(r)
             if col == COL_ORIGIN:
                 return f"{ORIGIN_LABEL[r.origin]}: {display_repo(r.origin_repo)}"
@@ -233,6 +253,8 @@ class PackageTableModel(QAbstractTableModel):
             if col == COL_STATUS:
                 mark = self.marks.get(r.key)
                 label = STATUS_LABEL[r.status]
+                if r.key in self.blocked:
+                    label += "\n" + _("The upgrade cannot be installed now")
                 if mark:
                     target = f" {mark.evr}" if mark.evr else ""
                     label += "\n" + _("Marked: {action}").format(action=ACTION_LABELS[mark.action] + target)
@@ -244,7 +266,9 @@ class PackageTableModel(QAbstractTableModel):
         elif role == Qt.TextAlignmentRole and col == COL_SIZE:
             return int(Qt.AlignRight | Qt.AlignVCenter)
         elif role == Qt.FontRole and col == COL_CANDIDATE and r.status is Status.UPGRADABLE:
-            return _bold()
+            return None if r.key in self.blocked else _bold()
+        elif role == Qt.ForegroundRole and col == COL_CANDIDATE and r.key in self.blocked:
+            return QGuiApplication.palette().color(QPalette.Disabled, QPalette.Text)
         return None
 
 

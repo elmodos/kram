@@ -11,6 +11,7 @@ import subprocess
 import sys
 import time
 
+from .. import __version__
 from . import TRAY_UNIT, read_state, write_state
 
 SYSTEM_CACHEDIR = "/var/cache/libdnf5"  # libdnf5's system_cachedir; read from its config only when counting
@@ -52,7 +53,9 @@ def main() -> int:
     force = "--force" in sys.argv
     previous = read_state()
     current = fingerprint()
-    if not force and previous.get("fingerprint") == current and "count" in previous:
+    # another Kram version may count differently (0.7.3: only the upgrades that can be installed): count again
+    same = previous.get("fingerprint") == current and previous.get("version") == __version__
+    if not force and same and "count" in previous:
         result = previous
         print(f"unchanged: {result['count']} upgrades")
     else:
@@ -66,7 +69,7 @@ def main() -> int:
             # changes the rpm database, which starts this check again, so keep the previous state for now
             print(f"skipped: {e}")
             return 0
-        result = {**counted, "fingerprint": current}
+        result = {**counted, "fingerprint": current, "version": __version__}
         write_state(result)
         print(f"counted: {result['count']} upgrades ({result['severity']}) in {result['seconds']} s")
     systemctl("start" if result["count"] else "stop")
