@@ -1,5 +1,5 @@
 %global appid io.github.elmodos.Kram
-%global base_version 0.7.0
+%global base_version 0.7.1
 
 Name:           kram
 # A tagged release (v%%{base_version}) is plain %%{base_version}. Any other commit gets a snapshot from
@@ -116,6 +116,9 @@ QT_QPA_PLATFORM=offscreen %pytest
 %{_datadir}/kram/
 
 %changelog
+* Tue Nov 17 2026 Modo Ltunzher <offnormal@gmail.com> - 0.7.1-1
+- Packaging: the package builds again for Fedora Rawhide (the test run crashed with PySide6 6.12)
+
 * Tue Nov 17 2026 Modo Ltunzher <offnormal@gmail.com> - 0.7.0-1
 - Updates: a coloured dot and an Update type column show which upgrades fix security issues (by severity), bugs or add enhancements
 - Updates: an Advisories tab shows what an upgrade fixes, with links to the advisory, the bugs and the CVEs
