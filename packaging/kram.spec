@@ -1,5 +1,5 @@
 %global appid io.github.elmodos.Kram
-%global base_version 0.6.1
+%global base_version 0.7.0
 
 Name:           kram
 # A tagged release (v%%{base_version}) is plain %%{base_version}. Any other commit gets a snapshot from
@@ -116,6 +116,13 @@ QT_QPA_PLATFORM=offscreen %pytest
 %{_datadir}/kram/
 
 %changelog
+* Tue Nov 17 2026 Modo Ltunzher <offnormal@gmail.com> - 0.7.0-1
+- Updates: a coloured dot and an Update type column show which upgrades fix security issues (by severity), bugs or add enhancements
+- Updates: an Advisories tab shows what an upgrade fixes, with links to the advisory, the bugs and the CVEs
+- Updates: the sidebar lists the security updates and the bug fix updates on their own
+- Updates: the arrow next to Mark All Upgrades marks only the security upgrades, only the critical and important ones, or the security and bug fix upgrades
+- Custom filters: filter by update type
+
 * Tue Nov 17 2026 Modo Ltunzher <offnormal@gmail.com> - 0.6.1-1
 - Tray: clicking the update icon no longer crashes Kram when the icon appeared right after login
 
