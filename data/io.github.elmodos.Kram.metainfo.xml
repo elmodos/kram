@@ -76,6 +76,15 @@
   <content_rating type="oars-1.1"/>
   <translation type="gettext">kram</translation>
   <releases>
+    <release version="0.7.2" date="2026-11-17">
+      <description>
+        <ul>
+          <li>After a transaction, Kram waits for another package manager (such as akmods building kernel modules) instead of failing to load the package list.</li>
+          <li>The update check no longer fails while another package manager is running.</li>
+          <li>The Apply changes dialog says which marked upgrades cannot be installed and why, and Apply is disabled when nothing is left to do.</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.7.1" date="2026-11-17">
       <description>
         <ul>

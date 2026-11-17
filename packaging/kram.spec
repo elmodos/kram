@@ -1,5 +1,5 @@
 %global appid io.github.elmodos.Kram
-%global base_version 0.7.1
+%global base_version 0.7.2
 
 Name:           kram
 # A tagged release (v%%{base_version}) is plain %%{base_version}. Any other commit gets a snapshot from
@@ -116,6 +116,12 @@ QT_QPA_PLATFORM=offscreen %pytest
 %{_datadir}/kram/
 
 %changelog
+* Tue Nov 17 2026 Modo Ltunzher <offnormal@gmail.com> - 0.7.2-1
+- Catalog: after a transaction, Kram waits for another package manager (such as akmods building kernel modules) instead of failing with "Failed to acquire system repo lock"
+- Tray: the update check no longer fails while another package manager is running
+- Apply changes: the dialog says which marked upgrades cannot be installed and why (such as a missing library), instead of an empty list
+- Apply changes: Apply is disabled when nothing is left to do
+
 * Tue Nov 17 2026 Modo Ltunzher <offnormal@gmail.com> - 0.7.1-1
 - Packaging: the package builds again for Fedora Rawhide (the test run crashed with PySide6 6.12)
 
