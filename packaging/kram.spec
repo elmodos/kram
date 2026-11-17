@@ -1,5 +1,5 @@
 %global appid io.github.elmodos.Kram
-%global base_version 0.5.7
+%global base_version 0.6.0
 
 Name:           kram
 # A tagged release (v%%{base_version}) is plain %%{base_version}. Any other commit gets a snapshot from
@@ -116,6 +116,15 @@ QT_QPA_PLATFORM=offscreen %pytest
 %{_datadir}/kram/
 
 %changelog
+* Tue Nov 17 2026 Modo Ltunzher <offnormal@gmail.com> - 0.6.0-1
+- Groups: right-click a group to install it, or to upgrade or remove an installed one
+- Groups: Upgrade is offered only for groups that have something to upgrade
+- Apply changes: groups and the packages they install or remove are listed separately
+- Speed: the window no longer freezes for seconds when the cursor lands on a kernel package
+- Speed: Provides searches by part of a name or with * are about 20 times faster and keep the window responsive
+- Speed: typing a search and clearing it are several times faster in long package lists
+- Speed: moving through the list no longer stalls on loading package details
+
 * Sun Nov 15 2026 Modo Ltunzher <offnormal@gmail.com> - 0.5.7-1
 - Sidebar: groups show icons from the system icon theme, and installed groups are in bold
 - Sidebar: every Status entry has an icon matching the package list's status column
