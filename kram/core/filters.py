@@ -4,7 +4,7 @@ from collections.abc import Callable, Container
 from dataclasses import dataclass
 
 from ..i18n import _
-from .model import CatalogSnapshot, Origin, PkgRow, Status
+from .model import HIGH_SECURITY_LEVELS, CatalogSnapshot, Origin, PkgRow, Status
 from .origin import classify, display_repo
 
 Predicate = Callable[[PkgRow], bool]
@@ -34,6 +34,32 @@ def _with_counts(entries: list[FilterEntry], rows: list[PkgRow]) -> list[FilterE
     return entries
 
 
+def has_update_type(kind: str) -> Predicate:
+    """An upgrade with an advisory of that type ("security", "bugfix", "enhancement")."""
+    return lambda r: any(a.type == kind for a in r.advisories)
+
+
+# the ways to mark upgrades by their advisories, besides all of them: security fixes, only those rated critical or
+# important, security and bug fixes (everything but enhancements)
+UPGRADES_SECURITY, UPGRADES_SECURITY_HIGH, UPGRADES_FIXES = "security", "security_high", "fixes"
+
+
+def upgrades_by_kind(rows: list[PkgRow]) -> dict[str, list[PkgRow]]:
+    """The upgradable rows of each UPGRADES_* kind. Upgrades without advisories are in none of them."""
+    kinds: dict[str, list[PkgRow]] = {UPGRADES_SECURITY: [], UPGRADES_SECURITY_HIGH: [], UPGRADES_FIXES: []}
+    for r in rows:
+        if r.status is not Status.UPGRADABLE or not r.advisories:
+            continue
+        types = {a.type for a in r.advisories}
+        if "security" in types:
+            kinds[UPGRADES_SECURITY].append(r)
+            if any(a.level in HIGH_SECURITY_LEVELS for a in r.advisories):
+                kinds[UPGRADES_SECURITY_HIGH].append(r)
+        if types & {"security", "bugfix"}:
+            kinds[UPGRADES_FIXES].append(r)
+    return kinds
+
+
 def status_filters(snap: CatalogSnapshot, marked: Container[tuple[str, str]] | None = None) -> list[FilterEntry]:
     def status_is(*statuses: Status) -> Predicate:
         return lambda r: r.status in statuses
@@ -44,6 +70,10 @@ def status_filters(snap: CatalogSnapshot, marked: Container[tuple[str, str]] | N
         FilterEntry("status:installed", _("Installed"), status_is(*installed_like)),
         FilterEntry("status:not-installed", _("Not installed"), status_is(Status.NOT_INSTALLED)),
         FilterEntry("status:upgradable", _("Upgradable"), status_is(Status.UPGRADABLE)),
+        FilterEntry("status:security", _("Security updates"), has_update_type("security"), indent=1,
+                    tip=_("Upgrades that fix a security issue, by their advisories")),
+        FilterEntry("status:bugfix", _("Bug fix updates"), has_update_type("bugfix"), indent=1,
+                    tip=_("Upgrades that fix bugs, by their advisories")),
         FilterEntry("status:user", _("Installed by user"), lambda r: r.installed and r.user_installed),
         FilterEntry("status:unneeded", _("Unneeded dependencies"), status_is(Status.UNNEEDED)),
         FilterEntry("status:orphan", _("Orphaned (no repository)"), status_is(Status.ORPHAN)),

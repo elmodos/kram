@@ -21,6 +21,7 @@ from PySide6.QtWidgets import (
     QSizePolicy,
     QSplitter,
     QToolBar,
+    QToolButton,
     QWidget,
 )
 
@@ -29,7 +30,13 @@ from ..core import distro, releases
 from ..core.catalog import Catalog
 from ..core.custom_filters import CustomFilter, Field, conditions_for_view, load_filters, provides_queries
 from ..core.evr import evr_cmp
-from ..core.filters import FilterEntry
+from ..core.filters import (
+    UPGRADES_FIXES,
+    UPGRADES_SECURITY,
+    UPGRADES_SECURITY_HIGH,
+    FilterEntry,
+    upgrades_by_kind,
+)
 from ..core.marks import Action, allowed_actions, allowed_group_actions, dump_marks, parse_marks
 from ..core.model import CatalogSnapshot, GroupInfo, PkgDetails, PkgRow, Status, TransactionPreview
 from ..core.search import MODE_LABELS, Mode, NarrowingSearch, SearchIndex
@@ -44,7 +51,7 @@ from .details import DetailsTabs
 from .filters_dialog import FiltersDialog
 from .install_dialog import InstallDialog
 from .notifier_dialog import NotifierDialog
-from .package_model import COL_NAME, COL_STATUS, HEADERS, HIDEABLE, PackageTableModel
+from .package_model import COL_ADVISORY, COL_CANDIDATE, COL_NAME, COL_STATUS, HEADERS, HIDEABLE, PackageTableModel
 from .package_view import PackageView
 from .progress_dialog import ProgressDialog
 from .qt_loop import post
@@ -63,6 +70,11 @@ GROUP_MARK_ACTIONS = {
 # bumped when columns change: an old saved state would put widths and hidden flags on the wrong columns
 HEADER_STATE_KEY = "table/header-v2"
 COLUMN_WIDTHS = [26, 24, 230, 175, 110, 175, 150, 80]
+ADVISORY_COLUMN_WIDTH = 150
+# set once the update type column has been moved next to the latest version: a header state saved before 0.7 has
+# it at the end, after the summary that stretches over the spare width
+ADVISORY_COLUMN_KEY = "table/advisory-column"
+DETAILS_TAB_KEY = "details/tab-name"  # "details/tab" held its position before the advisories tab came
 HISTORY_IDLE_MS = 1500  # a search left alone this long goes into the history
 # the details of the current row wait until the cursor rests this long: libdnf5 holds Python's lock while it looks
 # them up, so the window would stop for each row the cursor only passes (typing, holding an arrow key)
@@ -100,6 +112,7 @@ class MainWindow(QMainWindow):
         self.dnf = DnfWorker(post)
         self.catalog = Catalog()
         self.snapshot: CatalogSnapshot | None = None
+        self._upgrades_of_kind: dict[str, list[PkgRow]] = {}  # see upgrades_by_kind
         self.filter: FilterEntry | None = None
         self.history: list[tuple[str, str]] = []  # packages visited via dependency links, for Alt+Left
         self._details_for: tuple[str, str] | None = None
@@ -158,6 +171,22 @@ class MainWindow(QMainWindow):
                                                    "password"))
         self.act_mark_upgrades = self._action(_("Mark All Upgrades"), None, "Ctrl+U", self.mark_all_upgrades,
                                               tip=_("Mark every package that has a newer version for upgrade"))
+        # the other ways to mark upgrades, by their advisories (the arrow next to the toolbar button, Edit menu);
+        # upgrades from repositories without advisories (RPM Fusion, COPR, most third-party ones) are not among them
+        self.mark_upgrade_actions = {
+            kind: self._action(text, None, None, lambda _on=False, k=kind: self.mark_upgrades(k), tip=tip)
+            for kind, text, tip in (
+                (UPGRADES_SECURITY, _("Mark Security Upgrades"),
+                 _("Mark the upgrades that fix a security issue, as dnf upgrade --security")),
+                (UPGRADES_SECURITY_HIGH, _("Mark Critical and Important Security Upgrades"),
+                 _("Mark the upgrades that fix a security issue rated critical or important")),
+                (UPGRADES_FIXES, _("Mark Security and Bug Fix Upgrades"),
+                 _("Mark the upgrades that fix a security issue or bugs, leaving out enhancements")),
+            )}
+        self.mark_upgrades_menu = QMenu(_("Mark Upgrades"), self)
+        self.mark_upgrades_menu.addAction(self.act_mark_upgrades)
+        self.mark_upgrades_menu.addSeparator()
+        self.mark_upgrades_menu.addActions(list(self.mark_upgrade_actions.values()))
         # Breeze's monochrome update glyphs match the other toolbar icons; system-software-update is a colour app
         # icon there, kept as the fallback. With upgrades to mark the button shows update-medium; update-none says
         # "nothing to update" and its dim grey is exactly right for the disabled button, but would make an enabled
@@ -172,7 +201,7 @@ class MainWindow(QMainWindow):
                                            tip=_("Discard all marked changes"))
         self.act_unmark_all.setEnabled(False)
         self.act_properties = self._action(_("Properties"), "document-properties",
-                                           slot=lambda: self.details.setCurrentIndex(1))
+                                           slot=lambda: self.details.select_name("general"))
         self.act_repos = self._action(_("Repositories"), "configure", slot=self.open_repos, enabled=False,
                                       tip=_("Enable or disable software repositories"))
         self.act_filters = self._action(_("Custom Filters…"), "view-filter", slot=lambda: self.edit_filters(),
@@ -287,7 +316,8 @@ class MainWindow(QMainWindow):
         m.addSeparator()
         m.addAction(self.act_quit)
         m = mb.addMenu(_("&Edit"))
-        m.addActions([self.act_mark_upgrades, self.act_unmark_all, self.act_apply])
+        m.addMenu(self.mark_upgrades_menu)
+        m.addActions([self.act_unmark_all, self.act_apply])
         m.addSeparator()
         m.addActions([self.act_copy_name, self.act_copy_nevra])
         m.addSeparator()
@@ -314,6 +344,10 @@ class MainWindow(QMainWindow):
         tb.toggleViewAction().setEnabled(False)  # no way to hide it, so no way to lose it
         self.set_toolbar_style(TOOLBAR_STYLES[0][0])
         tb.addActions([self.act_reload, self.act_mark_upgrades, self.act_apply])
+        # a click marks every upgrade, as before; the arrow next to it offers the other ways
+        mark_button = tb.widgetForAction(self.act_mark_upgrades)
+        mark_button.setMenu(self.mark_upgrades_menu)
+        mark_button.setPopupMode(QToolButton.MenuButtonPopup)
         tb.addSeparator()
         tb.addActions([self.act_repos, self.act_copr, self.act_upgrade])
         spacer = QWidget()
@@ -376,6 +410,8 @@ class MainWindow(QMainWindow):
         self.table.customContextMenuRequested.connect(self._context_menu)
         for col, width in enumerate(COLUMN_WIDTHS):
             self.table.setColumnWidth(col, width)
+        self.table.setColumnWidth(COL_ADVISORY, ADVISORY_COLUMN_WIDTH)
+        self._place_advisory_column()
         self.table.header().setContextMenuPolicy(Qt.CustomContextMenu)
         self.table.header().customContextMenuRequested.connect(self._header_menu)
         self.table.selectionModel().currentRowChanged.connect(self._on_current)
@@ -401,6 +437,10 @@ class MainWindow(QMainWindow):
 
     # ---------------------------------------------------------------- settings
 
+    def _place_advisory_column(self) -> None:
+        header = self.table.header()
+        header.moveSection(header.visualIndex(COL_ADVISORY), header.visualIndex(COL_CANDIDATE) + 1)
+
     def _restore_settings(self):
         s = QSettings()
         self.set_toolbar_style(s.value("toolbar/style", TOOLBAR_STYLES[0][0]))
@@ -414,7 +454,14 @@ class MainWindow(QMainWindow):
                 splitter.restoreState(state)
         if state := s.value(HEADER_STATE_KEY):
             self.table.header().restoreState(state)
-        self.details.setCurrentIndex(int(s.value("details/tab", 0)))
+            if not s.value(ADVISORY_COLUMN_KEY, False, type=bool):
+                self.table.setColumnWidth(COL_ADVISORY, ADVISORY_COLUMN_WIDTH)
+                self._place_advisory_column()
+        if name := s.value(DETAILS_TAB_KEY):
+            self.details.select_name(name)
+        else:  # saved before 0.7 by position, from the tabs before the advisories tab came
+            old = ("description", "general", "dependencies", "files", "versions", "changelog")
+            self.details.select_name(old[min(max(int(s.value("details/tab", 0)), 0), len(old) - 1)])
         self.search_mode.setCurrentIndex(int(s.value("search/mode", Mode.NAME)))
         try:
             self.sidebar.history = [tuple(h) for h in json.loads(s.value("search/history", "[]"))]
@@ -460,7 +507,8 @@ class MainWindow(QMainWindow):
         s.setValue("window/hsplit", self.hsplit.saveState())
         s.setValue("window/vsplit", self.vsplit.saveState())
         s.setValue(HEADER_STATE_KEY, self.table.header().saveState())
-        s.setValue("details/tab", self.details.currentIndex())
+        s.setValue(ADVISORY_COLUMN_KEY, True)
+        s.setValue(DETAILS_TAB_KEY, self.details.current_name())
         s.setValue("search/mode", self.search_mode.currentIndex())
         s.setValue("sidebar/view", self.sidebar.current_view)
         if entry := self.sidebar.current_entry_id:
@@ -493,6 +541,7 @@ class MainWindow(QMainWindow):
     def _on_loaded(self, snap: CatalogSnapshot):
         keep = self._current_key()
         self.snapshot = snap
+        self._upgrades_of_kind = upgrades_by_kind(snap.rows)
         self.act_reload.setEnabled(True)
         self.model.set_rows(snap.rows, snap.basearch)
         self.index = SearchIndex(snap.rows, snap.descriptions)
@@ -671,6 +720,7 @@ class MainWindow(QMainWindow):
         row = self.model.row_at(current)
         self._details_for = row.key
         self._details_row = row
+        self.details.show_advisories(row)  # from the row: no need to wait for the details
         self._details = None
         self._details_timer.start()
 
@@ -897,6 +947,7 @@ class MainWindow(QMainWindow):
 
     def _set_upgrades_available(self, available: bool) -> None:
         self.act_mark_upgrades.setEnabled(available)
+        self.mark_upgrades_menu.setEnabled(available)
         self.act_mark_upgrades.setIcon(self._upgrade_icons[available])
 
     def _update_actions(self, *_args):
@@ -918,6 +969,8 @@ class MainWindow(QMainWindow):
             needs_catalog.setEnabled(self.snapshot is not None)
         self.act_open_file.setEnabled(self._can_open_file())
         self._set_upgrades_available(bool(self.snapshot and self.snapshot.n_upgradable))
+        for kind, a in self.mark_upgrade_actions.items():
+            a.setEnabled(bool(self._upgrades_of_kind.get(kind)))
 
     def _marks_changed(self, keys):
         self.model.marks_changed(keys)
@@ -982,8 +1035,14 @@ class MainWindow(QMainWindow):
     def mark_all_upgrades(self):
         if not self.snapshot:
             return
-        changed = [r.key for r in self.snapshot.rows
-                   if r.status is Status.UPGRADABLE and self.model.marks.set(r, Action.UPGRADE)]
+        self._mark_for_upgrade([r for r in self.snapshot.rows if r.status is Status.UPGRADABLE])
+
+    def mark_upgrades(self, kind: str):
+        """Mark the upgrades of one kind: UPGRADES_SECURITY, UPGRADES_SECURITY_HIGH or UPGRADES_FIXES."""
+        self._mark_for_upgrade(self._upgrades_of_kind.get(kind, []))
+
+    def _mark_for_upgrade(self, rows: list[PkgRow]) -> None:
+        changed = [r.key for r in rows if self.model.marks.set(r, Action.UPGRADE)]
         self._marks_changed(None)
         self.statusBar().showMessage(ngettext("{n} package marked for upgrade", "{n} packages marked for upgrade", len(changed)).format(n=len(changed)), 5000)
 

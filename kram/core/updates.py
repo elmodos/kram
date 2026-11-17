@@ -5,6 +5,9 @@ Shared by the catalog (the "Upgradable" filter) and the tray update checker, so 
 from dataclasses import dataclass
 
 import libdnf5
+import rpm
+
+from .model import Advisory
 
 # severities, from the highest advisory type among the upgrades
 LOW, MEDIUM, HIGH = "low", "medium", "high"
@@ -54,25 +57,60 @@ class UpdateSummary:
 
 def summarize(base) -> UpdateSummary:
     upgradable = upgradable_keys(base)
-    types = advisory_types(base)
-    security = sum(1 for key in upgradable if "security" in types.get(key, ()))
-    bugfix = any("bugfix" in types.get(key, ()) for key in upgradable)
+    advisories = upgrade_advisories(base, upgradable)
+    types = [{a.type for a in found} for found in advisories.values()]
+    security = sum(1 for t in types if "security" in t)
+    bugfix = any("bugfix" in t for t in types)
     severity = HIGH if security else MEDIUM if bugfix else LOW
     ages = [r.get_age() for r in libdnf5.repo.RepoQuery(base)
             if not r.get_id().startswith("@") and r.is_enabled() and r.get_timestamp() != -1]
     return UpdateSummary(len(upgradable), severity, security, min(ages) if ages else None)
 
 
-def advisory_types(base) -> dict[tuple[str, str], set[str]]:
-    """(name, arch) of each upgrade -> the types of the advisories that list its newest version ("security",
-    "bugfix", "enhancement", …). Counted per package: one advisory often covers many packages (dnf5 and its
-    libraries), and an advisory count next to a package count would compare apples and pears."""
-    upgrades = libdnf5.rpm.PackageQuery(base)
-    upgrades.filter_upgrades()
-    upgrades.filter_latest_evr()
+def _evr(p) -> tuple[str, str, str]:
+    return p.get_epoch() or "0", p.get_version(), p.get_release()
+
+
+def upgrade_advisories(base, upgradable: set[tuple[str, str]]) -> dict[tuple[str, str], tuple[Advisory, ...]]:
+    """(name, arch) of each upgradable package -> the advisories of the versions an upgrade brings: newer than the
+    installed one, up to the newest available, the most important first. As `dnf5 advisory list --updates`, so a
+    security fix in an intermediate version counts when the newest version is only a bug fix. Keyed per package:
+    one advisory often covers many packages (dnf5 and its libraries), and an advisory count next to a package count
+    would compare apples and pears."""
+    if not upgradable:
+        return {}
+    installed = libdnf5.rpm.PackageQuery(base)
+    installed.filter_installed()
+    installed.filter_latest_evr()
+    newest = libdnf5.rpm.PackageQuery(base)
+    newest.filter_upgrades()
+    newest.filter_latest_evr()
+    newest_evr: dict[tuple[str, str], tuple[str, str, str]] = {}
+    for p in newest:
+        key = p.get_name(), p.get_arch()
+        if key not in newest_evr or rpm.labelCompare(_evr(p), newest_evr[key]) > 0:
+            newest_evr[key] = _evr(p)
     query = libdnf5.advisory.AdvisoryQuery(base)
-    query.filter_packages(upgrades)
-    types: dict[tuple[str, str], set[str]] = {}
-    for package in query.get_advisory_packages_sorted(upgrades):
-        types.setdefault((package.get_name(), package.get_arch()), set()).add(package.get_advisory().get_type())
-    return types
+    query.filter_packages(installed, libdnf5.common.QueryCmp_GT)
+    seen: dict[int, Advisory] = {}  # libdnf5's advisory id -> its data, read once for all its packages
+    found: dict[tuple[str, str], dict[str, Advisory]] = {}
+    for package in query.get_advisory_packages_sorted(installed, libdnf5.common.QueryCmp_GT):
+        key = package.get_name(), package.get_arch()
+        # an advisory for a version the repositories do not have (yet): its update is not available here
+        if key not in upgradable or key not in newest_evr or rpm.labelCompare(_evr(package), newest_evr[key]) > 0:
+            continue
+        advisory_id = package.get_advisory_id().id
+        if (advisory := seen.get(advisory_id)) is None:
+            advisory = seen[advisory_id] = _advisory(package.get_advisory())
+        found.setdefault(key, {})[advisory.id] = advisory
+    return {key: tuple(sorted(by_id.values(), key=lambda a: (a.rank, -a.issued)))
+            for key, by_id in found.items()}
+
+
+def _advisory(a) -> Advisory:
+    severity = (a.get_severity() or "").lower()
+    return Advisory(
+        id=a.get_name(), type=(a.get_type() or "").lower(), severity="" if severity == "none" else severity,
+        title=a.get_title() or "", issued=a.get_buildtime() or 0, description=(a.get_description() or "").strip(),
+        references=tuple((r.get_type_cstring() or "", r.get_id() or "", r.get_url() or "")
+                         for r in a.get_references()))

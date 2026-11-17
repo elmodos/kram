@@ -32,7 +32,7 @@ from .model import (
 )
 from . import capabilities
 from .origin import classify
-from .updates import open_system_base, upgradable_keys
+from .updates import open_system_base, upgradable_keys, upgrade_advisories
 
 MAX_CHANGELOG = 30
 # a substring of one or two characters matches most of what packages provide: no use as a search
@@ -110,7 +110,8 @@ class Catalog:
             query_setup(q)
             return {(p.get_name(), p.get_arch()) for p in q}
 
-        upgradable = upgradable_keys(base)  # the tray update checker counts with the same function
+        upgradable = upgradable_keys(base)  # the tray update checker counts with the same functions
+        advisories = upgrade_advisories(base, upgradable)
         arch_changes = self._arch_changes(base, installed, cand_by_key, upgradable, arches)
         for new in arch_changes.values():  # one row per package: the new arch is that row's candidate
             cand_by_key.pop((new.get_name(), new.get_arch()), None)
@@ -150,6 +151,7 @@ class Catalog:
                 size=p.get_install_size(), origin=classify(from_repo), status=status,
                 user_installed=key in user_installed, from_repo_id=from_repo, reason=reasons.get(p.get_reason()),
                 candidate_arch=cand.get_arch() if key in arch_changes else "",
+                advisories=advisories.get(key, ()) if status is Status.UPGRADABLE else (),
             ))
             pkgs[key] = (p, cand)
 

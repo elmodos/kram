@@ -8,14 +8,37 @@ from ..core.marks import ACTION_LABELS, MarkSet
 from ..core.model import PkgRow, Reason, Status
 from ..core.origin import display_repo
 from ..i18n import _, pgettext
-from .icons import MARK_BACKGROUND, ORIGIN_LABEL, mark_icon, origin_icon, status_icon
+from .icons import MARK_BACKGROUND, ORIGIN_LABEL, advisory_icon, mark_icon, origin_icon, status_icon
 
-COL_STATUS, COL_ORIGIN, COL_NAME, COL_INSTALLED, COL_REASON, COL_CANDIDATE, COL_REPO, COL_SIZE, COL_SUMMARY = range(9)
+# the update type column came last (logical index 9) so that saved header states keep their columns; the window
+# shows it after the latest version
+(COL_STATUS, COL_ORIGIN, COL_NAME, COL_INSTALLED, COL_REASON, COL_CANDIDATE, COL_REPO, COL_SIZE, COL_SUMMARY,
+ COL_ADVISORY) = range(10)
 # TRANSLATORS: "S" is the narrow status column (Synaptic convention); keep it one letter
 HEADERS = [_("S"), "", _("Package"), _("Installed version"), _("Reason"), _("Latest version"), _("Repository"),
-           _("Size"), _("Summary")]
-# columns the header's context menu can hide (the first three identify the row)
-HIDEABLE = (COL_INSTALLED, COL_REASON, COL_CANDIDATE, COL_REPO, COL_SIZE, COL_SUMMARY)
+           _("Size"), _("Summary"), _("Update type")]
+# columns the header's context menu can hide (the first three identify the row), in the order it lists them
+HIDEABLE = (COL_INSTALLED, COL_REASON, COL_CANDIDATE, COL_ADVISORY, COL_REPO, COL_SIZE, COL_SUMMARY)
+
+# kram.core.model.ADVISORY_LEVELS
+ADVISORY_LABEL = {
+    "critical": _("Security: critical"),
+    "important": _("Security: important"),
+    "moderate": _("Security: moderate"),
+    "low": _("Security: low"),
+    "security": _("Security"),
+    "bugfix": _("Bug fix"),
+    "enhancement": _("Enhancement"),
+    "other": pgettext("update type", "Other"),
+}
+
+
+def advisory_tip(r: PkgRow) -> str | None:
+    """The advisories of an upgrade, one per line: "Security: important — FEDORA-2026-… — title"."""
+    if not r.advisories:
+        return None
+    return "\n".join(" — ".join(filter(None, (ADVISORY_LABEL[a.level], a.id, a.title))) for a in r.advisories)
+
 
 REASON_LABEL = {
     Reason.USER: _("user"),
@@ -47,6 +70,7 @@ SORT_KEYS = {
     COL_SIZE: lambda r: (r.size, r.name.lower()),
     COL_SUMMARY: lambda r: (r.summary.lower(), r.name.lower()),
 }
+_NO_ADVISORY = len(ADVISORY_LABEL)
 
 
 @cache
@@ -153,6 +177,12 @@ class PackageTableModel(QAbstractTableModel):
                 evr = getattr(r, attr)
                 # empty versions go last in both directions
                 return (evr == "") != (order == Qt.DescendingOrder), ranks.get(evr, -1), r.name.lower()
+        elif column == COL_ADVISORY:
+            def key(r):
+                a = r.advisory
+                # the most important first when ascending; packages without an advisory last in both directions
+                rank = a.rank if a else _NO_ADVISORY
+                return (a is None) != (order == Qt.DescendingOrder), rank, r.name.lower()
         else:
             key = SORT_KEYS[column]
         return sorted(visible, key=lambda i: key(rows[i]), reverse=order == Qt.DescendingOrder)
@@ -184,13 +214,18 @@ class PackageTableModel(QAbstractTableModel):
                 case 6: return display_repo(r.repo_id)
                 case 7: return human_size(r.size)
                 case 8: return r.summary
+                case 9: return ADVISORY_LABEL[r.advisory.level] if r.advisories else ""
         elif role == Qt.DecorationRole:
             if col == COL_STATUS:
                 mark = self.marks.get(r.key)
                 return mark_icon(mark.action) if mark else status_icon(r.status)
             if col == COL_ORIGIN:
                 return origin_icon(r.origin)
+            if col == COL_CANDIDATE:  # a blank one without an advisory, so that the versions line up
+                return advisory_icon(r.advisory.level if r.advisories else None)
         elif role == Qt.ToolTipRole:
+            if col in (COL_CANDIDATE, COL_ADVISORY):
+                return advisory_tip(r)
             if col == COL_ORIGIN:
                 return f"{ORIGIN_LABEL[r.origin]}: {display_repo(r.origin_repo)}"
             if col == COL_REASON:

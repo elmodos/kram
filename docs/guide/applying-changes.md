@@ -7,7 +7,10 @@ Nothing happens to the system until you press **Apply**. Until then Kram only co
 Click a package's status box (the S column), or use the Package menu or the context menu, and mark it for
 installation, upgrade, reinstallation, downgrade to a version you choose, or removal. You can also change its
 install reason: installed by you, or a dependency. **Mark All Upgrades** marks every package that has a newer
-version.
+version. The arrow next to it (and Edit → Mark Upgrades) marks only some of them, by their
+[update type](package-list.md#update-types): the security upgrades, as `dnf upgrade --security` does; only
+the security upgrades rated critical or important; or the security and bug fix upgrades, without the
+enhancements. Upgrades from repositories without advisories are in none of these.
 
 Double-clicking a package marks it for installation or upgrade, or unmarks it if it is already marked. With
 Settings → *Clicking the status icon marks the likely action* on, a single click on the status box does the

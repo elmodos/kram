@@ -10,8 +10,8 @@ from PySide6.QtWidgets import QPlainTextEdit, QTabWidget, QTextBrowser, QTreeWid
 from ..core.model import PkgDetails, PkgRow
 from ..core.origin import display_repo
 from ..i18n import _, pgettext
-from .icons import ORIGIN_LABEL
-from .package_model import human_size
+from .icons import ORIGIN_LABEL, advisory_icon
+from .package_model import ADVISORY_LABEL, human_size
 
 e = html.escape
 
@@ -24,6 +24,28 @@ def _browser() -> QTextBrowser:
     b = QTextBrowser()
     b.setOpenLinks(False)
     return b
+
+
+def _reference(kind: str, ref_id: str) -> str:
+    """A bug or CVE an advisory fixes: "CVE-2026-1234", Red Hat's Bugzilla as "RHBZ#2369081"."""
+    return f"RHBZ#{ref_id}" if kind == "bugzilla" and ref_id.isdigit() else ref_id
+
+
+def _advisories_html(row: PkgRow) -> str:
+    """The advisories of an upgrade: what it fixes, with links to the advisory and to the bugs and CVEs."""
+    parts = []
+    for a in row.advisories:
+        name = f"<a href='{e(a.url)}'>{e(a.id)}</a>" if a.url else e(a.id)
+        parts.append(f"<p><b>{name}</b> — {e(ADVISORY_LABEL[a.level])}"
+                     f"{' — ' + _date(a.issued)[:10] if a.issued else ''}"
+                     f"{'<br>' + e(a.title) if a.title else ''}</p>")
+        if a.description:
+            parts.append(f"<p>{e(a.description).replace(chr(10), '<br>')}</p>")
+        links = [f"<a href='{e(url)}'>{e(_reference(kind, ref_id) or url)}</a>" if url else e(_reference(kind, ref_id))
+                 for kind, ref_id, url in a.references]
+        if links:
+            parts.append(f"<p>{e(_('References:'))} {', '.join(links)}</p>")
+    return "".join(parts)
 
 
 class DetailsTabs(QTabWidget):
@@ -46,16 +68,71 @@ class DetailsTabs(QTabWidget):
         self.versions.setColumnWidth(0, 260)
         self.versions.setColumnWidth(1, 360)
         self.changelog = _browser()
-        for widget, title in [(self.desc, _("Description")), (self.general, _("General")),
-                              (self.deps, _("Dependencies")), (self.files, _("Files")),
-                              (self.versions, _("Versions")), (self.changelog, _("Changelog"))]:
+        # only there for an upgrade with advisories, with a dot in the colour of the most important one
+        self.advisories = _browser()
+        self.advisories.anchorClicked.connect(self._on_link)
+        self._tabs = {
+            "description": (self.desc, _("Description")), "general": (self.general, _("General")),
+            "advisories": (self.advisories, _("Advisories")), "dependencies": (self.deps, _("Dependencies")),
+            "files": (self.files, _("Files")), "versions": (self.versions, _("Versions")),
+            "changelog": (self.changelog, _("Changelog")),
+        }
+        for widget, title in self._tabs.values():
             self.addTab(widget, title)
+        self.setTabVisible(self.indexOf(self.advisories), False)
+        # the advisories tab comes and goes with the selected package: when the user picked it, it is selected again
+        # for the next package that has one, and meanwhile the tab the user had before stands in for it
+        self._wants_advisories = False
+        self._other_tab = self.general
+        self._switching = False
+        self.currentChanged.connect(self._on_current_changed)
+
+    def _on_current_changed(self, _index) -> None:
+        if self._switching:
+            return
+        self._wants_advisories = self.currentWidget() is self.advisories
+        if not self._wants_advisories:
+            self._other_tab = self.currentWidget()
+
+    def current_name(self) -> str:
+        """The current tab, as saved in the settings: "general", "advisories"…"""
+        if self._wants_advisories:
+            return "advisories"
+        return next(name for name, (widget, _title) in self._tabs.items() if widget is self.currentWidget())
+
+    def select_name(self, name: str) -> None:
+        widget = self._tabs.get(name, (self.desc, ""))[0]
+        if widget is self.advisories and not self.isTabVisible(self.indexOf(widget)):
+            self._wants_advisories = True
+            return
+        self.setCurrentWidget(widget)
+
+    def show_advisories(self, row: PkgRow | None) -> None:
+        """Show or hide the advisories tab for the selected package; at once, without waiting for its details."""
+        index = self.indexOf(self.advisories)
+        self._switching = True
+        try:
+            if row is None or not row.advisories:
+                if self.currentIndex() == index:
+                    self.setCurrentWidget(self._other_tab)
+                self.setTabVisible(index, False)
+                self.advisories.clear()
+                return
+            self.setTabIcon(index, advisory_icon(row.advisory.level))
+            self.setTabToolTip(index, ADVISORY_LABEL[row.advisory.level])
+            self.advisories.setHtml(_advisories_html(row))
+            self.setTabVisible(index, True)
+            if self._wants_advisories:
+                self.setCurrentIndex(index)
+        finally:
+            self._switching = False
 
     def clear(self) -> None:
         for b in (self.desc, self.general, self.deps, self.changelog):
             b.clear()
         self.files.clear()
         self.versions.clear()
+        self.show_advisories(None)
 
     def show_package(self, row: PkgRow, d: PkgDetails) -> None:
         paragraphs = "".join(f"<p>{e(p)}</p>" for p in d.description.split("\n\n") if p.strip())

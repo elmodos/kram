@@ -134,14 +134,22 @@ A separate narrow **Origin** column (second column, like the Ubuntu icon in Syna
 For installed packages the origin is where it was installed *from*; for others, where it would come from.
 The list of "official" repos should move to a config file (RHEL/CentOS Stream later).
 
-Table columns: S · Origin · Package · Installed version · Latest version · Repository · Size · Summary.
-Sortable by any column; widths and order are saved.
+Table columns: S · Origin · Package · Installed version · Latest version · Update type · Repository · Size ·
+Summary. Sortable by any column; widths and order are saved.
+
+Update types (0.7): `kram.core.updates.upgrade_advisories` reads the advisories (updateinfo) of the versions
+between the installed one and the newest available, as `dnf5 advisory list --updates`, and each upgradable
+`PkgRow` carries them, the most important first (`Advisory.level`: the severity of a security advisory, else
+its type). Shown as a dot before the latest version, the Update type column, an Advisories details tab (only for rows
+with advisories, the dot in its title), Status →
+Security updates / Bug fix updates, a custom filter field, and the ways to mark upgrades under the arrow of
+Mark All Upgrades. The tray checker counts with the same function.
 
 ## 5. UI (MVP)
 
 Laid out like Synaptic:
 
-- **Menu**: File (Reload, Reload from cache, Quit) · Edit (Mark All Upgrades, Unmark All, Apply, Copy,
+- **Menu**: File (Reload, Reload from cache, Quit) · Edit (Mark Upgrades ▸, Unmark All, Apply, Copy,
   Find) · Package (mark for install/upgrade/reinstall/removal, downgrade to…, install reason, unmark,
   Properties, Back) · Settings (Repositories, COPR) · Help.
 - **Toolbar**: Reload · Mark All Upgrades · Apply · Properties · Repositories · search mode + field.

@@ -9,7 +9,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 
 from ..i18n import N_, _, pgettext
-from .model import CatalogSnapshot, Origin, PkgRow, Status
+from .model import HIGH_SECURITY_LEVELS, CatalogSnapshot, Origin, PkgRow, Status
 
 Predicate = Callable[[PkgRow], bool]
 
@@ -29,6 +29,7 @@ class Field(Enum):
     REASON = "reason"
     ARCH = "arch"
     SIZE = "size"
+    UPDATE = "update"   # the advisory types of an upgrade
 
 
 class Op(Enum):
@@ -42,7 +43,7 @@ class Op(Enum):
 
 
 TEXT_FIELDS = (Field.NAME, Field.NAME_SUMMARY, Field.DESCRIPTION)
-CHOICE_FIELDS = (Field.STATUS, Field.ORIGIN, Field.REPO, Field.GROUP, Field.REASON, Field.ARCH)
+CHOICE_FIELDS = (Field.STATUS, Field.ORIGIN, Field.REPO, Field.GROUP, Field.REASON, Field.ARCH, Field.UPDATE)
 
 FIELD_LABELS = {
     Field.NAME: _("Name"),
@@ -56,6 +57,7 @@ FIELD_LABELS = {
     Field.REASON: _("Install reason"),
     Field.ARCH: _("Architecture"),
     Field.SIZE: _("Installed size (MB)"),
+    Field.UPDATE: _("Update type"),
 }
 
 OP_LABELS = {
@@ -78,6 +80,14 @@ STATUS_CHOICES = {
     Status.NEWER.value: N_("Newer than repository"),
     Status.ORPHAN.value: N_("Orphaned (no repository)"),
     Status.UNNEEDED.value: N_("Unneeded dependency"),
+}
+# "update" values: an advisory type, or a security advisory of one of HIGH_SECURITY_LEVELS
+UPDATE_SECURITY_HIGH = "security_high"
+UPDATE_CHOICES = {
+    "security": N_("Security"),
+    UPDATE_SECURITY_HIGH: N_("Security: critical or important"),
+    "bugfix": N_("Bug fix"),
+    "enhancement": N_("Enhancement"),
 }
 REASON_CHOICES = {"user": N_("Installed by user"), "dependency": N_("Installed as a dependency")}
 ORIGIN_CHOICES = {
@@ -107,6 +117,8 @@ def choices(f: Field, snap: CatalogSnapshot | None) -> list[tuple[str, str]] | N
         return [(v, _(label)) for v, label in REASON_CHOICES.items()]
     if f is Field.ORIGIN:
         return [(v, _(label)) for v, label in ORIGIN_CHOICES.items()]
+    if f is Field.UPDATE:
+        return [(v, _(label)) for v, label in UPDATE_CHOICES.items()]
     if snap is None:
         return []
     if f is Field.REPO:
@@ -233,6 +245,11 @@ def _compile(c: Condition, snap: CatalogSnapshot) -> Predicate:
         case Field.REASON:
             want_user = c.value == "user"
             hit = lambda r: r.installed and r.user_installed == want_user
+        case Field.UPDATE:
+            if c.value == UPDATE_SECURITY_HIGH:
+                hit = lambda r: any(a.level in HIGH_SECURITY_LEVELS for a in r.advisories)
+            else:
+                hit = lambda r: any(a.type == c.value for a in r.advisories)
         case _:  # ARCH
             hit = lambda r: r.arch == c.value
     return hit if c.op is Op.IS else (lambda r: not hit(r))
@@ -249,6 +266,8 @@ def conditions_for_view(entry_id: str, search: str, search_field: Field | None) 
         "status:orphan": (Field.STATUS, Status.ORPHAN.value),
         "status:newer": (Field.STATUS, Status.NEWER.value),
         "status:user": (Field.REASON, "user"),
+        "status:security": (Field.UPDATE, "security"),
+        "status:bugfix": (Field.UPDATE, "bugfix"),
     }
     kind, _sep, value = entry_id.partition(":")
     if entry_id in status_map:

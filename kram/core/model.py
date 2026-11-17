@@ -29,6 +29,42 @@ class Reason(Enum):
     WEAK = "weak"            # pulled in by a Recommends/Supplements
 
 
+# what an update is, most important first: security updates by their severity, then the other advisory types.
+# "security" alone is a security advisory without a severity.
+ADVISORY_LEVELS = ("critical", "important", "moderate", "low", "security", "bugfix", "enhancement", "other")
+SECURITY_LEVELS = ADVISORY_LEVELS[:5]
+HIGH_SECURITY_LEVELS = ("critical", "important")
+
+
+@dataclass(frozen=True, slots=True)
+class Advisory:
+    """An update advisory (Fedora's Bodhi update, "FEDORA-2026-…") that lists a newer version of a package."""
+    id: str
+    type: str            # security | bugfix | enhancement | newpackage | unspecified
+    severity: str        # critical | important | moderate | low | "" (none given)
+    title: str
+    issued: int          # seconds since the epoch, 0 if unknown
+    description: str = ""
+    references: tuple[tuple[str, str, str], ...] = ()   # (type, id, url): "cve", "CVE-2026-1234", "https://…"
+
+    @property
+    def level(self) -> str:
+        """One of ADVISORY_LEVELS: the severity of a security advisory, else its type."""
+        if self.type == "security":
+            return self.severity if self.severity in SECURITY_LEVELS else "security"
+        return self.type if self.type in ("bugfix", "enhancement") else "other"
+
+    @property
+    def rank(self) -> int:
+        """0 for the most important level."""
+        return ADVISORY_LEVELS.index(self.level)
+
+    @property
+    def url(self) -> str:
+        """The advisory's page, if known: Bodhi for Fedora's own."""
+        return f"https://bodhi.fedoraproject.org/updates/{self.id}" if self.id.startswith("FEDORA-") else ""
+
+
 @dataclass(slots=True)
 class PkgRow:
     name: str
@@ -44,6 +80,14 @@ class PkgRow:
     from_repo_id: str = ""     # repo it was installed from; "" if not installed
     reason: Reason | None = None  # None if not installed
     candidate_arch: str = ""   # set when the candidate has another arch (noarch -> x86_64 upgrades), else ""
+    # upgradable packages: the advisories of the versions between the installed one and the candidate, the most
+    # important first; empty for repositories without advisories (RPM Fusion, COPR, most third-party ones)
+    advisories: tuple[Advisory, ...] = ()
+
+    @property
+    def advisory(self) -> Advisory | None:
+        """The most important advisory of the upgrade."""
+        return self.advisories[0] if self.advisories else None
 
     @property
     def key(self) -> tuple[str, str]:

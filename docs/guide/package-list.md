@@ -8,17 +8,34 @@ selected package below](../screenshots/main.png)
 ## The table
 
 Every package of the enabled repositories is in one table, installed or not: its status, origin, name, latest
-and installed version, size, repository and summary. Browsing and searching need no password.
+and installed version, update type, size, repository and summary. Browsing and searching need no password.
 
 The origin icon tells where a package comes from: Fedora, a COPR project, a third-party repository, or a
 local file with no repository at all.
+
+## Update types
+
+For a package with an upgrade, a coloured dot before the latest version and the **Update type** column tell
+what the upgrade is, by the advisories Fedora publishes with its updates:
+
+- red and orange: a security fix, rated critical, important, moderate or low;
+- blue: a bug fix;
+- grey: an enhancement or anything else.
+
+The tooltip lists every advisory of the upgrade, and the **Advisories** tab under the table shows them in
+full: what they fix, and links to the advisory on Bodhi and to the bugs and CVEs. The tab is there only for
+packages with advisories, with a dot of the same colour in its title. When several versions came out since the installed
+one, all of their advisories count: a security fix in one of them is shown even when the newest is only a bug
+fix. Repositories that publish no advisories (RPM Fusion, COPR, most third-party ones) leave both empty.
+Sorting by the column puts the most important upgrades first; right-click the table header to hide it.
 
 ## Filters
 
 The sidebar on the left narrows the table. The buttons at its bottom switch between groups of filters:
 
-- **Status**: all, installed, not installed, upgradable, installed by you, unneeded dependencies, orphaned
-  (installed but in no repository), newer than the repository, marked.
+- **Status**: all, installed, not installed, upgradable (and below it the security updates and the bug fix
+  updates), installed by you, unneeded dependencies, orphaned (installed but in no repository), newer than the
+  repository, marked.
 - **Origin**: Fedora, COPR, third-party, local; COPR projects and third-party repositories each on their own.
 - **Groups**: the comps groups; installed ones are in bold. Right-click a group to mark it for installation,
   or an installed one for upgrade or removal, as `dnf5 group install`, `upgrade` and `remove` do. Installing a
@@ -26,8 +43,9 @@ The sidebar on the left narrows the table. The buttons at its bottom switch betw
   installed them yourself or something else needs them.
 - **Search results**: your earlier searches, to go back to one.
 - **Custom filters**: your own filters. A filter combines name, summary, description, provided capability,
-  status, origin, repository, group, install reason, architecture and size. For example "installed by user
-  from COPR", "unneeded dependencies over 50 MB", or, with `application()`, only what has a menu entry.
+  status, origin, repository, group, install reason, architecture, size and update type. For example
+  "installed by user from COPR", "unneeded dependencies over 50 MB", or, with `application()`, only what has a
+  menu entry.
   Settings → New Filter from Current View… starts one from what the table shows.
 
 ## Search
@@ -38,7 +56,7 @@ name and summary, the description, a provided capability, or a file.
 ## Package details
 
 The tabs under the table show the selected package: its description, general information (origin,
-repository, license, install reason, sizes), its dependencies (each one clickable), its files, every
-available version and the changelog.
+repository, license, install reason, sizes), the advisories of an upgrade, its dependencies (each one
+clickable), its files, every available version and the changelog.
 
 Next: [Marking and applying changes](applying-changes.md).

@@ -245,11 +245,36 @@ def _all_icon() -> QIcon:
     return _painted(draw)
 
 
+# update advisories, by kram.core.model.ADVISORY_LEVELS: reds and oranges for security fixes by severity, blue for
+# bug fixes, grey for the rest
+ADVISORY_COLOR = {
+    "critical": "#b3121b", "important": "#e0402a", "moderate": "#f08a1c", "low": "#e6c21e", "security": "#f08a1c",
+    "bugfix": "#3a8ee6", "enhancement": "#909090", "other": "#909090",
+}
+
+
+@cache
+def advisory_icon(level: str | None) -> QIcon:
+    """A dot in the colour of an advisory level; None: an empty icon of the same size, so that the text next to it
+    lines up with the rows that have a dot."""
+    def draw(p: QPainter) -> None:
+        if level is None:
+            return
+        color = QColor(ADVISORY_COLOR[level])
+        p.setPen(QPen(color.darker(150), 1))
+        p.setBrush(color)
+        p.drawEllipse(QRectF(4, 4, 8, 8))
+
+    return _painted(draw)
+
+
 _STATUS_FILTER_ICONS: dict[str, Callable[[], QIcon]] = {
     "status:all": _all_icon,
     "status:installed": lambda: status_icon(Status.INSTALLED),
     "status:not-installed": lambda: status_icon(Status.NOT_INSTALLED),
     "status:upgradable": lambda: status_icon(Status.UPGRADABLE),
+    "status:security": lambda: advisory_icon("important"),
+    "status:bugfix": lambda: advisory_icon("bugfix"),
     "status:user": lambda: _glyph_box("#4e8f3a", "#2f5a22", _hammer),
     "status:unneeded": lambda: status_icon(Status.UNNEEDED),
     "status:orphan": lambda: status_icon(Status.ORPHAN),
