@@ -1,5 +1,5 @@
 %global appid io.github.elmodos.Kram
-%global base_version 0.6.0
+%global base_version 0.6.1
 
 Name:           kram
 # A tagged release (v%%{base_version}) is plain %%{base_version}. Any other commit gets a snapshot from
@@ -116,6 +116,9 @@ QT_QPA_PLATFORM=offscreen %pytest
 %{_datadir}/kram/
 
 %changelog
+* Tue Nov 17 2026 Modo Ltunzher <offnormal@gmail.com> - 0.6.1-1
+- Tray: clicking the update icon no longer crashes Kram when the icon appeared right after login
+
 * Tue Nov 17 2026 Modo Ltunzher <offnormal@gmail.com> - 0.6.0-1
 - Groups: right-click a group to install it, or to upgrade or remove an installed one
 - Groups: Upgrade is offered only for groups that have something to upgrade
