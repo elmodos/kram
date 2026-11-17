@@ -536,7 +536,11 @@ class MainWindow(QMainWindow):
         self.status.setText(_("Loading metadata…"))
         self.act_reload.setEnabled(False)
         queries = provides_queries(self.sidebar.custom)
-        self.dnf.submit(lambda: self.catalog.load(queries), self._on_loaded, self._on_error)
+        self.dnf.submit(lambda: self.catalog.load(queries, self._waiting_for_lock), self._on_loaded, self._on_error)
+
+    def _waiting_for_lock(self):
+        """On the worker thread: another package manager holds the system repo lock, the load waits for it."""
+        post(lambda: self.status.setText(_("Waiting for another package manager to finish…")))
 
     def _on_loaded(self, snap: CatalogSnapshot):
         keep = self._current_key()

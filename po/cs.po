@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kram\n"
 "Report-Msgid-Bugs-To: https://github.com/elmodos/kram/issues\n"
-"POT-Creation-Date: 2026-11-17 16:12+0200\n"
+"POT-Creation-Date: 2026-11-17 18:26+0200\n"
 "PO-Revision-Date: 2026-11-04 14:07+0200\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -494,7 +494,7 @@ msgstr "Změna místa na disku: {size}."
 
 #: kram/ui/apply_dialog.py:314 kram/ui/install_dialog.py:192
 #: kram/ui/install_dialog.py:208 kram/ui/install_dialog.py:265
-#: kram/ui/main_window.py:1175
+#: kram/ui/main_window.py:1179
 msgid "Resolving dependencies…"
 msgstr "Řešení závislostí…"
 
@@ -503,7 +503,7 @@ msgid "These choices cannot be carried out:"
 msgstr "Tento výběr nelze provést:"
 
 #: kram/ui/apply_dialog.py:329 kram/ui/install_dialog.py:259
-#: kram/ui/install_dialog.py:289 kram/ui/main_window.py:1177
+#: kram/ui/install_dialog.py:289 kram/ui/main_window.py:1181
 #, python-brace-format
 msgid ""
 "Could not resolve the changes:\n"
@@ -901,7 +901,7 @@ msgid "text"
 msgstr "text"
 
 #: kram/ui/filters_dialog.py:134 kram/ui/filters_dialog.py:333
-#: kram/ui/main_window.py:843
+#: kram/ui/main_window.py:847
 msgid "Custom Filters"
 msgstr "Vlastní filtry"
 
@@ -909,7 +909,7 @@ msgstr "Vlastní filtry"
 msgid "New"
 msgstr "Nový"
 
-#: kram/ui/filters_dialog.py:153 kram/ui/main_window.py:840
+#: kram/ui/filters_dialog.py:153 kram/ui/main_window.py:844
 msgid "New filter"
 msgstr "Nový filtr"
 
@@ -1042,7 +1042,7 @@ msgstr "Čtení {file}…"
 msgid "Loading metadata…"
 msgstr "Načítání metadat…"
 
-#: kram/ui/install_dialog.py:216 kram/ui/main_window.py:581
+#: kram/ui/install_dialog.py:216 kram/ui/main_window.py:585
 #, python-brace-format
 msgid ""
 "Could not load the package catalog:\n"
@@ -1530,7 +1530,7 @@ msgstr "Kopírovat název"
 msgid "Copy name-version-release.arch"
 msgstr "Kopírovat název-verze-vydání.arch"
 
-#: kram/ui/main_window.py:256 kram/ui/main_window.py:935
+#: kram/ui/main_window.py:256 kram/ui/main_window.py:939
 msgid "About Kram"
 msgstr "O aplikaci Kram"
 
@@ -1633,7 +1633,11 @@ msgstr[0] "{n} označená změna nebyla použita. Přesto ukončit?"
 msgstr[1] "{n} označené změny nebyly použity. Přesto ukončit?"
 msgstr[2] "{n} označených změn nebylo použito. Přesto ukončit?"
 
-#: kram/ui/main_window.py:570
+#: kram/ui/main_window.py:543
+msgid "Waiting for another package manager to finish…"
+msgstr "Čekání na dokončení jiného správce balíčků…"
+
+#: kram/ui/main_window.py:574
 #, python-brace-format
 msgid "{n} repository has no metadata"
 msgid_plural "{n} repositories have no metadata"
@@ -1641,7 +1645,7 @@ msgstr[0] "{n} repozitář nemá metadata"
 msgstr[1] "{n} repozitáře nemají metadata"
 msgstr[2] "{n} repozitářů nemá metadata"
 
-#: kram/ui/main_window.py:573
+#: kram/ui/main_window.py:577
 #, python-brace-format
 msgid ""
 "Not loaded, so their packages are missing from the list:\n"
@@ -1657,13 +1661,13 @@ msgstr ""
 "Stáhněte je pomocí Znovu načíst. Pokud repozitář dál selhává (například pro "
 "toto vydání Fedory ještě nemá balíčky), zakažte ho v Nastavení → Repozitáře."
 
-#: kram/ui/main_window.py:580 kram/ui/main_window.py:899
-#: kram/ui/main_window.py:1022
+#: kram/ui/main_window.py:584 kram/ui/main_window.py:903
+#: kram/ui/main_window.py:1026
 #, python-brace-format
 msgid "Error: {error}"
 msgstr "Chyba: {error}"
 
-#: kram/ui/main_window.py:633
+#: kram/ui/main_window.py:637
 #, python-brace-format
 msgid ""
 "Searching “{text}” ({mode}); the first search also indexes what packages "
@@ -1671,12 +1675,12 @@ msgid ""
 msgstr ""
 "Hledání „{text}“ ({mode}); první hledání také indexuje, co balíčky poskytují…"
 
-#: kram/ui/main_window.py:636
+#: kram/ui/main_window.py:640
 #, python-brace-format
 msgid "Searching “{text}” ({mode})…"
 msgstr "Hledání „{text}“ ({mode})…"
 
-#: kram/ui/main_window.py:693
+#: kram/ui/main_window.py:697
 #, python-brace-format
 msgid "{n} upgrade"
 msgid_plural "{n} upgrades"
@@ -1684,78 +1688,78 @@ msgstr[0] "{n} aktualizace"
 msgstr[1] "{n} aktualizace"
 msgstr[2] "{n} aktualizací"
 
-#: kram/ui/main_window.py:695
+#: kram/ui/main_window.py:699
 #, python-brace-format
 msgid "{shown} listed, {installed} installed, {upgrades}."
 msgstr "Zobrazeno: {shown}, nainstalováno: {installed}, {upgrades}."
 
-#: kram/ui/main_window.py:697
+#: kram/ui/main_window.py:701
 #, python-brace-format
 msgid "{install} to install/upgrade, {remove} to remove."
 msgstr "K instalaci/aktualizaci: {install}, k odebrání: {remove}."
 
-#: kram/ui/main_window.py:700
+#: kram/ui/main_window.py:704
 #, python-brace-format
 msgid "Catalog: {load:.2f} s, filter and search: {ms:.0f} ms"
 msgstr "Katalog: {load:.2f} s, filtr a hledání: {ms:.0f} ms"
 
-#: kram/ui/main_window.py:747
+#: kram/ui/main_window.py:751
 #, python-brace-format
 msgid "Nothing provides “{what}”"
 msgstr "Nic neposkytuje „{what}“"
 
-#: kram/ui/main_window.py:760
+#: kram/ui/main_window.py:764
 #, python-brace-format
 msgid "Package {name} not found in the catalog"
 msgstr "Balíček {name} nebyl v katalogu nalezen"
 
-#: kram/ui/main_window.py:843
+#: kram/ui/main_window.py:847
 #, python-brace-format
 msgid "Delete the filter “{name}”?"
 msgstr "Smazat filtr „{name}“?"
 
-#: kram/ui/main_window.py:867
+#: kram/ui/main_window.py:871
 msgid "Edit Filter…"
 msgstr "Upravit filtr…"
 
-#: kram/ui/main_window.py:868
+#: kram/ui/main_window.py:872
 msgid "Delete Filter"
 msgstr "Smazat filtr"
 
-#: kram/ui/main_window.py:873
+#: kram/ui/main_window.py:877
 msgid "Remove from History"
 msgstr "Odebrat z historie"
 
-#: kram/ui/main_window.py:875
+#: kram/ui/main_window.py:879
 msgid "Clear Search History"
 msgstr "Vymazat historii hledání"
 
-#: kram/ui/main_window.py:917
+#: kram/ui/main_window.py:921
 msgid "Checking for upgrades…"
 msgstr "Hledání aktualizací…"
 
-#: kram/ui/main_window.py:918
+#: kram/ui/main_window.py:922
 msgid "Nothing to upgrade: its packages are up to date and match the group"
 msgstr ""
 "Není co aktualizovat: balíčky skupiny jsou aktuální a odpovídají skupině"
 
-#: kram/ui/main_window.py:919
+#: kram/ui/main_window.py:923
 msgid "Unmark Group"
 msgstr "Zrušit označení skupiny"
 
-#: kram/ui/main_window.py:936
+#: kram/ui/main_window.py:940
 msgid "A Synaptic-style package manager for Fedora."
 msgstr "Správce balíčků pro Fedoru ve stylu Synaptic."
 
-#: kram/ui/main_window.py:938
+#: kram/ui/main_window.py:942
 msgid "Released under the MIT License."
 msgstr "Šířeno pod licencí MIT."
 
-#: kram/ui/main_window.py:941
+#: kram/ui/main_window.py:945
 msgid "What's New"
 msgstr "Co je nového"
 
-#: kram/ui/main_window.py:1004
+#: kram/ui/main_window.py:1008
 #, python-brace-format
 msgid ""
 "{n} installed package depends on the packages marked for removal and has to "
@@ -1773,11 +1777,11 @@ msgstr[2] ""
 "{n} nainstalovaných balíčků závisí na balíčcích označených k odebrání a musí "
 "být také odebrány:"
 
-#: kram/ui/main_window.py:1010
+#: kram/ui/main_window.py:1014
 msgid "Mark"
 msgstr "Označit"
 
-#: kram/ui/main_window.py:1047
+#: kram/ui/main_window.py:1051
 #, python-brace-format
 msgid "{n} package marked for upgrade"
 msgid_plural "{n} packages marked for upgrade"
@@ -1785,15 +1789,15 @@ msgstr[0] "{n} balíček označen k aktualizaci"
 msgstr[1] "{n} balíčky označeny k aktualizaci"
 msgstr[2] "{n} balíčků označeno k aktualizaci"
 
-#: kram/ui/main_window.py:1053 kram/ui/main_window.py:1061
+#: kram/ui/main_window.py:1057 kram/ui/main_window.py:1065
 msgid "Save Markings"
 msgstr "Uložit označení"
 
-#: kram/ui/main_window.py:1055 kram/ui/main_window.py:1071
+#: kram/ui/main_window.py:1059 kram/ui/main_window.py:1075
 msgid "Text files (*.txt);;All files (*)"
 msgstr "Textové soubory (*.txt);;Všechny soubory (*)"
 
-#: kram/ui/main_window.py:1061
+#: kram/ui/main_window.py:1065
 #, python-brace-format
 msgid ""
 "Could not save {path}:\n"
@@ -1804,7 +1808,7 @@ msgstr ""
 "\n"
 "{error}"
 
-#: kram/ui/main_window.py:1066
+#: kram/ui/main_window.py:1070
 #, python-brace-format
 msgid "{n} marking saved to {path}"
 msgid_plural "{n} markings saved to {path}"
@@ -1812,12 +1816,12 @@ msgstr[0] "{n} označení uloženo do {path}"
 msgstr[1] "{n} označení uložena do {path}"
 msgstr[2] "{n} označení uloženo do {path}"
 
-#: kram/ui/main_window.py:1070 kram/ui/main_window.py:1080
-#: kram/ui/main_window.py:1105
+#: kram/ui/main_window.py:1074 kram/ui/main_window.py:1084
+#: kram/ui/main_window.py:1109
 msgid "Read Markings"
 msgstr "Načíst označení"
 
-#: kram/ui/main_window.py:1080
+#: kram/ui/main_window.py:1084
 #, python-brace-format
 msgid ""
 "Could not read {path}:\n"
@@ -1828,7 +1832,7 @@ msgstr ""
 "\n"
 "{error}"
 
-#: kram/ui/main_window.py:1093
+#: kram/ui/main_window.py:1097
 #, python-brace-format
 msgid "{n} package marked"
 msgid_plural "{n} packages marked"
@@ -1836,7 +1840,7 @@ msgstr[0] "Označen {n} balíček"
 msgstr[1] "Označeny {n} balíčky"
 msgstr[2] "Označeno {n} balíčků"
 
-#: kram/ui/main_window.py:1098
+#: kram/ui/main_window.py:1102
 #, python-brace-format
 msgid ""
 "{n} marking no longer applies (package not found, already in that state, …):"
@@ -1849,7 +1853,7 @@ msgstr[1] ""
 msgstr[2] ""
 "{n} označení už neplatí (balíčky nenalezeny, už jsou v tomto stavu, …):"
 
-#: kram/ui/main_window.py:1102
+#: kram/ui/main_window.py:1106
 #, python-brace-format
 msgid "{n} line is not a valid marking: {lines}"
 msgid_plural "{n} lines are not valid markings: {lines}"
@@ -1857,7 +1861,7 @@ msgstr[0] "{n} řádek není platné označení: {lines}"
 msgstr[1] "{n} řádky nejsou platná označení: {lines}"
 msgstr[2] "{n} řádků nejsou platná označení: {lines}"
 
-#: kram/ui/main_window.py:1106
+#: kram/ui/main_window.py:1110
 #, python-brace-format
 msgid "{n} package marked."
 msgid_plural "{n} packages marked."
@@ -1865,52 +1869,52 @@ msgstr[0] "Označen {n} balíček."
 msgstr[1] "Označeny {n} balíčky."
 msgstr[2] "Označeno {n} balíčků."
 
-#: kram/ui/main_window.py:1128
+#: kram/ui/main_window.py:1132
 msgid "(loading…)"
 msgstr "(načítání…)"
 
-#: kram/ui/main_window.py:1135
+#: kram/ui/main_window.py:1139
 msgid "No older versions in the repositories"
 msgstr "V repozitářích nejsou žádné starší verze"
 
-#: kram/ui/main_window.py:1182
+#: kram/ui/main_window.py:1186
 msgid "Cannot apply changes"
 msgstr "Změny nelze použít"
 
-#: kram/ui/main_window.py:1183
+#: kram/ui/main_window.py:1187
 msgid "The marked changes cannot be carried out. Unmark or change them."
 msgstr "Označené změny nelze provést. Zrušte jejich označení nebo je upravte."
 
-#: kram/ui/main_window.py:1198
+#: kram/ui/main_window.py:1202
 msgid "Applying changes"
 msgstr "Použití změn"
 
-#: kram/ui/main_window.py:1207
+#: kram/ui/main_window.py:1211
 msgid "Refreshing metadata"
 msgstr "Obnovování metadat"
 
-#: kram/ui/main_window.py:1224
+#: kram/ui/main_window.py:1228
 msgid "Changing repositories"
 msgstr "Změna repozitářů"
 
-#: kram/ui/main_window.py:1255
+#: kram/ui/main_window.py:1259
 msgid "Downloading metadata again"
 msgstr "Opětovné stahování metadat"
 
-#: kram/ui/main_window.py:1257
+#: kram/ui/main_window.py:1261
 msgid "Cleaning the package cache"
 msgstr "Čištění mezipaměti balíčků"
 
-#: kram/ui/main_window.py:1278
+#: kram/ui/main_window.py:1282
 #, python-brace-format
 msgid "Fedora {new} is available, you have {old}"
 msgstr "Je dostupná Fedora {new}, máte {old}"
 
-#: kram/ui/main_window.py:1343
+#: kram/ui/main_window.py:1347
 msgid "Open Package File"
 msgstr "Otevřít soubor balíčku"
 
-#: kram/ui/main_window.py:1344
+#: kram/ui/main_window.py:1348
 msgid "RPM packages (*.rpm)"
 msgstr "Balíčky RPM (*.rpm)"
 

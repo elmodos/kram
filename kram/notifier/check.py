@@ -56,7 +56,17 @@ def main() -> int:
         result = previous
         print(f"unchanged: {result['count']} upgrades")
     else:
-        result = {**count(), "fingerprint": current}
+        try:
+            counted = count()
+        except Exception as e:
+            from ..core.updates import is_lock_error
+            if not is_lock_error(e):
+                raise
+            # another package manager kept the rpm database locked longer than count() waits; its transaction
+            # changes the rpm database, which starts this check again, so keep the previous state for now
+            print(f"skipped: {e}")
+            return 0
+        result = {**counted, "fingerprint": current}
         write_state(result)
         print(f"counted: {result['count']} upgrades ({result['severity']}) in {result['seconds']} s")
     systemctl("start" if result["count"] else "stop")

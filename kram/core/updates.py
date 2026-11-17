@@ -2,6 +2,8 @@
 
 Shared by the catalog (the "Upgradable" filter) and the tray update checker, so both count the same packages.
 """
+import time
+from collections.abc import Callable
 from dataclasses import dataclass
 
 import libdnf5
@@ -13,8 +15,47 @@ from .model import Advisory
 LOW, MEDIUM, HIGH = "low", "medium", "high"
 
 
-def open_system_base() -> libdnf5.base.Base:
-    """A Base over the system metadata cache (/var/cache/libdnf5), read-only, every repo loaded that can be."""
+# how long to wait for another package manager to release the system repo lock before giving up
+LOCK_WAIT = 120.0
+LOCK_POLL = 1.0
+
+
+def is_lock_error(e: BaseException) -> bool:
+    """libdnf5 could not lock the system repo (the rpm database): another package manager holds it.
+
+    libdnf5 raises a plain libdnf5.exception.Error; its message is not translated."""
+    return "system repo lock" in str(e)
+
+
+def waiting_for_lock[T](load: Callable[[], T], on_wait: Callable[[], None] | None = None,
+                     timeout: float = LOCK_WAIT, poll: float = LOCK_POLL,
+                     sleep: Callable[[float], None] = time.sleep) -> T:
+    """Run `load` (it builds a fresh Base and loads its repos) again while the system repo lock is taken.
+
+    Another package manager holds the lock while it changes the rpm database: right after Kram's own transaction
+    that is often akmods installing the kmods it built for a new kernel. `on_wait` is called once, on the first
+    wait. After `timeout` seconds the last lock error is raised."""
+    waited = 0.0
+    while True:
+        try:
+            return load()
+        except Exception as e:  # only the lock error is retried
+            if not is_lock_error(e) or waited >= timeout:
+                raise
+        if waited == 0.0 and on_wait is not None:
+            on_wait()
+        sleep(poll)
+        waited += poll
+
+
+def open_system_base(on_wait: Callable[[], None] | None = None) -> libdnf5.base.Base:
+    """A Base over the system metadata cache (/var/cache/libdnf5), read-only, every repo loaded that can be.
+
+    Waits while another package manager holds the system repo lock, see waiting_for_lock."""
+    return waiting_for_lock(_open_system_base, on_wait)
+
+
+def _open_system_base() -> libdnf5.base.Base:
     base = libdnf5.base.Base()
     base.load_config()
     # read the system cache (/var/cache/libdnf5), which the root helper refreshes; for a normal user libdnf5

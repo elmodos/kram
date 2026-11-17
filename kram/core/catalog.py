@@ -5,13 +5,14 @@ Not thread-safe: every method must be called from the same single worker thread.
 import functools
 import time
 from collections import Counter
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 
 import libdnf5
 import rpm
 
 from ..helper.kram_helper import build_goal, cmdline_package, local_goal
 from ..i18n import language
+from . import capabilities
 from .model import (
     CatalogSnapshot,
     ChangelogEntry,
@@ -23,16 +24,15 @@ from .model import (
     PreviewItem,
     Reason,
     Recommendation,
-    Requirement,
     RepoInfo,
+    Requirement,
     Status,
     TransactionPreview,
     VersionInfo,
     mark_rotated,
 )
-from . import capabilities
 from .origin import classify
-from .updates import open_system_base, upgradable_keys, upgrade_advisories
+from .updates import open_system_base, upgradable_keys, upgrade_advisories, waiting_for_lock
 
 MAX_CHANGELOG = 30
 # a substring of one or two characters matches most of what packages provide: no use as a search
@@ -80,10 +80,12 @@ class Catalog:
         self._system_base = None
         self._local: dict[str, object] = {}  # package file path -> its Package in @commandline
 
-    def load(self, provides: Iterable[tuple[str, bool]] = ()) -> CatalogSnapshot:
-        """`provides`: the (capability, is a glob) questions of the custom filters, answered in the snapshot."""
+    def load(self, provides: Iterable[tuple[str, bool]] = (),
+             on_wait: Callable[[], None] | None = None) -> CatalogSnapshot:
+        """`provides`: the (capability, is a glob) questions of the custom filters, answered in the snapshot.
+        `on_wait`: called (on this thread) when another package manager holds the system repo lock."""
         t0 = time.monotonic()
-        base = open_system_base()
+        base = open_system_base(on_wait)
         self._base = base
         self._system_base = None  # built on first use, see removal_dependents
         self._local = {}
@@ -389,11 +391,13 @@ class Catalog:
         Resolved like `dnf5 remove`: allow_erasing on a base with only the installed packages. With the
         repositories loaded, allow_erasing would also let the solver downgrade or swap packages instead."""
         if self._system_base is None:
-            base = libdnf5.base.Base()
-            base.load_config()
-            base.setup()
-            base.get_repo_sack().load_repos(libdnf5.repo.Repo.Type_SYSTEM)
-            self._system_base = base
+            def load():
+                base = libdnf5.base.Base()
+                base.load_config()
+                base.setup()
+                base.get_repo_sack().load_repos(libdnf5.repo.Repo.Type_SYSTEM)
+                return base
+            self._system_base = waiting_for_lock(load)
         goal = libdnf5.base.Goal(self._system_base)
         for s in remove:
             goal.add_remove(s)

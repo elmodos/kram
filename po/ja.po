@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kram\n"
 "Report-Msgid-Bugs-To: https://github.com/elmodos/kram/issues\n"
-"POT-Creation-Date: 2026-11-17 16:12+0200\n"
+"POT-Creation-Date: 2026-11-17 18:26+0200\n"
 "PO-Revision-Date: 2026-11-04 14:07+0200\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -483,7 +483,7 @@ msgstr "ディスク使用量の変化: {size}。"
 
 #: kram/ui/apply_dialog.py:314 kram/ui/install_dialog.py:192
 #: kram/ui/install_dialog.py:208 kram/ui/install_dialog.py:265
-#: kram/ui/main_window.py:1175
+#: kram/ui/main_window.py:1179
 msgid "Resolving dependencies…"
 msgstr "依存関係を解決しています…"
 
@@ -492,7 +492,7 @@ msgid "These choices cannot be carried out:"
 msgstr "この選択は実行できません:"
 
 #: kram/ui/apply_dialog.py:329 kram/ui/install_dialog.py:259
-#: kram/ui/install_dialog.py:289 kram/ui/main_window.py:1177
+#: kram/ui/install_dialog.py:289 kram/ui/main_window.py:1181
 #, python-brace-format
 msgid ""
 "Could not resolve the changes:\n"
@@ -887,7 +887,7 @@ msgid "text"
 msgstr "テキスト"
 
 #: kram/ui/filters_dialog.py:134 kram/ui/filters_dialog.py:333
-#: kram/ui/main_window.py:843
+#: kram/ui/main_window.py:847
 msgid "Custom Filters"
 msgstr "カスタムフィルター"
 
@@ -895,7 +895,7 @@ msgstr "カスタムフィルター"
 msgid "New"
 msgstr "新規"
 
-#: kram/ui/filters_dialog.py:153 kram/ui/main_window.py:840
+#: kram/ui/filters_dialog.py:153 kram/ui/main_window.py:844
 msgid "New filter"
 msgstr "新しいフィルター"
 
@@ -1026,7 +1026,7 @@ msgstr "{file} を読み込み中…"
 msgid "Loading metadata…"
 msgstr "メタデータを読み込んでいます…"
 
-#: kram/ui/install_dialog.py:216 kram/ui/main_window.py:581
+#: kram/ui/install_dialog.py:216 kram/ui/main_window.py:585
 #, python-brace-format
 msgid ""
 "Could not load the package catalog:\n"
@@ -1514,7 +1514,7 @@ msgstr "名前をコピー"
 msgid "Copy name-version-release.arch"
 msgstr "名前-バージョン-リリース.アーキテクチャ をコピー"
 
-#: kram/ui/main_window.py:256 kram/ui/main_window.py:935
+#: kram/ui/main_window.py:256 kram/ui/main_window.py:939
 msgid "About Kram"
 msgstr "Kram について"
 
@@ -1615,13 +1615,17 @@ msgid "{n} marked change has not been applied. Quit anyway?"
 msgid_plural "{n} marked changes have not been applied. Quit anyway?"
 msgstr[0] "指定した変更 {n} 件がまだ適用されていません。終了しますか？"
 
-#: kram/ui/main_window.py:570
+#: kram/ui/main_window.py:543
+msgid "Waiting for another package manager to finish…"
+msgstr "別のパッケージマネージャーの終了を待っています…"
+
+#: kram/ui/main_window.py:574
 #, python-brace-format
 msgid "{n} repository has no metadata"
 msgid_plural "{n} repositories have no metadata"
 msgstr[0] "{n} 個のリポジトリにメタデータがありません"
 
-#: kram/ui/main_window.py:573
+#: kram/ui/main_window.py:577
 #, python-brace-format
 msgid ""
 "Not loaded, so their packages are missing from the list:\n"
@@ -1638,13 +1642,13 @@ msgstr ""
 "えば、この Fedora リリース向けのパッケージがまだない場合) は、設定 → リポジト"
 "リで無効にしてください。"
 
-#: kram/ui/main_window.py:580 kram/ui/main_window.py:899
-#: kram/ui/main_window.py:1022
+#: kram/ui/main_window.py:584 kram/ui/main_window.py:903
+#: kram/ui/main_window.py:1026
 #, python-brace-format
 msgid "Error: {error}"
 msgstr "エラー: {error}"
 
-#: kram/ui/main_window.py:633
+#: kram/ui/main_window.py:637
 #, python-brace-format
 msgid ""
 "Searching “{text}” ({mode}); the first search also indexes what packages "
@@ -1653,90 +1657,90 @@ msgstr ""
 "「{text}」を検索中 ({mode})。初回の検索ではパッケージが提供するものの索引も作"
 "成します…"
 
-#: kram/ui/main_window.py:636
+#: kram/ui/main_window.py:640
 #, python-brace-format
 msgid "Searching “{text}” ({mode})…"
 msgstr "「{text}」を検索しています ({mode})…"
 
-#: kram/ui/main_window.py:693
+#: kram/ui/main_window.py:697
 #, python-brace-format
 msgid "{n} upgrade"
 msgid_plural "{n} upgrades"
 msgstr[0] "アップグレード {n} 件"
 
-#: kram/ui/main_window.py:695
+#: kram/ui/main_window.py:699
 #, python-brace-format
 msgid "{shown} listed, {installed} installed, {upgrades}."
 msgstr "表示 {shown} 件、インストール済み {installed} 件、{upgrades}。"
 
-#: kram/ui/main_window.py:697
+#: kram/ui/main_window.py:701
 #, python-brace-format
 msgid "{install} to install/upgrade, {remove} to remove."
 msgstr "インストール/アップグレード {install} 件、削除 {remove} 件。"
 
-#: kram/ui/main_window.py:700
+#: kram/ui/main_window.py:704
 #, python-brace-format
 msgid "Catalog: {load:.2f} s, filter and search: {ms:.0f} ms"
 msgstr "カタログ: {load:.2f} 秒、フィルターと検索: {ms:.0f} ミリ秒"
 
-#: kram/ui/main_window.py:747
+#: kram/ui/main_window.py:751
 #, python-brace-format
 msgid "Nothing provides “{what}”"
 msgstr "「{what}」を提供するものはありません"
 
-#: kram/ui/main_window.py:760
+#: kram/ui/main_window.py:764
 #, python-brace-format
 msgid "Package {name} not found in the catalog"
 msgstr "パッケージ {name} はカタログに見つかりません"
 
-#: kram/ui/main_window.py:843
+#: kram/ui/main_window.py:847
 #, python-brace-format
 msgid "Delete the filter “{name}”?"
 msgstr "フィルター「{name}」を削除しますか？"
 
-#: kram/ui/main_window.py:867
+#: kram/ui/main_window.py:871
 msgid "Edit Filter…"
 msgstr "フィルターを編集…"
 
-#: kram/ui/main_window.py:868
+#: kram/ui/main_window.py:872
 msgid "Delete Filter"
 msgstr "フィルターを削除"
 
-#: kram/ui/main_window.py:873
+#: kram/ui/main_window.py:877
 msgid "Remove from History"
 msgstr "履歴から削除"
 
-#: kram/ui/main_window.py:875
+#: kram/ui/main_window.py:879
 msgid "Clear Search History"
 msgstr "検索履歴を消去"
 
-#: kram/ui/main_window.py:917
+#: kram/ui/main_window.py:921
 msgid "Checking for upgrades…"
 msgstr "アップグレードを確認中…"
 
-#: kram/ui/main_window.py:918
+#: kram/ui/main_window.py:922
 msgid "Nothing to upgrade: its packages are up to date and match the group"
 msgstr ""
 "アップグレードするものはありません: パッケージは最新で、グループの内容と一致"
 "しています"
 
-#: kram/ui/main_window.py:919
+#: kram/ui/main_window.py:923
 msgid "Unmark Group"
 msgstr "グループの指定解除"
 
-#: kram/ui/main_window.py:936
+#: kram/ui/main_window.py:940
 msgid "A Synaptic-style package manager for Fedora."
 msgstr "Synaptic スタイルの Fedora 向けパッケージマネージャー。"
 
-#: kram/ui/main_window.py:938
+#: kram/ui/main_window.py:942
 msgid "Released under the MIT License."
 msgstr "MIT ライセンスの下で公開されています。"
 
-#: kram/ui/main_window.py:941
+#: kram/ui/main_window.py:945
 msgid "What's New"
 msgstr "新機能"
 
-#: kram/ui/main_window.py:1004
+#: kram/ui/main_window.py:1008
 #, python-brace-format
 msgid ""
 "{n} installed package depends on the packages marked for removal and has to "
@@ -1748,25 +1752,25 @@ msgstr[0] ""
 "{n} 個のインストール済みパッケージが削除指定したパッケージに依存しているた"
 "め、一緒に削除する必要があります:"
 
-#: kram/ui/main_window.py:1010
+#: kram/ui/main_window.py:1014
 msgid "Mark"
 msgstr "指定する"
 
-#: kram/ui/main_window.py:1047
+#: kram/ui/main_window.py:1051
 #, python-brace-format
 msgid "{n} package marked for upgrade"
 msgid_plural "{n} packages marked for upgrade"
 msgstr[0] "{n} 個のパッケージをアップグレード指定しました"
 
-#: kram/ui/main_window.py:1053 kram/ui/main_window.py:1061
+#: kram/ui/main_window.py:1057 kram/ui/main_window.py:1065
 msgid "Save Markings"
 msgstr "指定を保存"
 
-#: kram/ui/main_window.py:1055 kram/ui/main_window.py:1071
+#: kram/ui/main_window.py:1059 kram/ui/main_window.py:1075
 msgid "Text files (*.txt);;All files (*)"
 msgstr "テキストファイル (*.txt);;すべてのファイル (*)"
 
-#: kram/ui/main_window.py:1061
+#: kram/ui/main_window.py:1065
 #, python-brace-format
 msgid ""
 "Could not save {path}:\n"
@@ -1777,18 +1781,18 @@ msgstr ""
 "\n"
 "{error}"
 
-#: kram/ui/main_window.py:1066
+#: kram/ui/main_window.py:1070
 #, python-brace-format
 msgid "{n} marking saved to {path}"
 msgid_plural "{n} markings saved to {path}"
 msgstr[0] "{n} 件の指定を {path} に保存しました"
 
-#: kram/ui/main_window.py:1070 kram/ui/main_window.py:1080
-#: kram/ui/main_window.py:1105
+#: kram/ui/main_window.py:1074 kram/ui/main_window.py:1084
+#: kram/ui/main_window.py:1109
 msgid "Read Markings"
 msgstr "指定を読み込む"
 
-#: kram/ui/main_window.py:1080
+#: kram/ui/main_window.py:1084
 #, python-brace-format
 msgid ""
 "Could not read {path}:\n"
@@ -1799,13 +1803,13 @@ msgstr ""
 "\n"
 "{error}"
 
-#: kram/ui/main_window.py:1093
+#: kram/ui/main_window.py:1097
 #, python-brace-format
 msgid "{n} package marked"
 msgid_plural "{n} packages marked"
 msgstr[0] "{n} 個のパッケージを指定しました"
 
-#: kram/ui/main_window.py:1098
+#: kram/ui/main_window.py:1102
 #, python-brace-format
 msgid ""
 "{n} marking no longer applies (package not found, already in that state, …):"
@@ -1815,64 +1819,64 @@ msgstr[0] ""
 "{n} 件の指定はもう適用できません (パッケージが見つからない、すでにその状態で"
 "ある、など):"
 
-#: kram/ui/main_window.py:1102
+#: kram/ui/main_window.py:1106
 #, python-brace-format
 msgid "{n} line is not a valid marking: {lines}"
 msgid_plural "{n} lines are not valid markings: {lines}"
 msgstr[0] "{n} 行は有効な指定ではありません: {lines}"
 
-#: kram/ui/main_window.py:1106
+#: kram/ui/main_window.py:1110
 #, python-brace-format
 msgid "{n} package marked."
 msgid_plural "{n} packages marked."
 msgstr[0] "{n} 個のパッケージを指定しました。"
 
-#: kram/ui/main_window.py:1128
+#: kram/ui/main_window.py:1132
 msgid "(loading…)"
 msgstr "(読み込み中…)"
 
-#: kram/ui/main_window.py:1135
+#: kram/ui/main_window.py:1139
 msgid "No older versions in the repositories"
 msgstr "リポジトリに古いバージョンはありません"
 
-#: kram/ui/main_window.py:1182
+#: kram/ui/main_window.py:1186
 msgid "Cannot apply changes"
 msgstr "変更を適用できません"
 
-#: kram/ui/main_window.py:1183
+#: kram/ui/main_window.py:1187
 msgid "The marked changes cannot be carried out. Unmark or change them."
 msgstr "指定した変更を実行できません。指定を解除するか変更してください。"
 
-#: kram/ui/main_window.py:1198
+#: kram/ui/main_window.py:1202
 msgid "Applying changes"
 msgstr "変更を適用しています"
 
-#: kram/ui/main_window.py:1207
+#: kram/ui/main_window.py:1211
 msgid "Refreshing metadata"
 msgstr "メタデータを更新しています"
 
-#: kram/ui/main_window.py:1224
+#: kram/ui/main_window.py:1228
 msgid "Changing repositories"
 msgstr "リポジトリを変更しています"
 
-#: kram/ui/main_window.py:1255
+#: kram/ui/main_window.py:1259
 msgid "Downloading metadata again"
 msgstr "メタデータを再ダウンロードしています"
 
-#: kram/ui/main_window.py:1257
+#: kram/ui/main_window.py:1261
 msgid "Cleaning the package cache"
 msgstr "パッケージキャッシュを消去しています"
 
-#: kram/ui/main_window.py:1278
+#: kram/ui/main_window.py:1282
 #, python-brace-format
 msgid "Fedora {new} is available, you have {old}"
 msgstr "Fedora {new} が利用可能です（現在は {old}）"
 
-#: kram/ui/main_window.py:1343
+#: kram/ui/main_window.py:1347
 msgid "Open Package File"
 msgstr "パッケージファイルを開く"
 
-#: kram/ui/main_window.py:1344
+#: kram/ui/main_window.py:1348
 msgid "RPM packages (*.rpm)"
 msgstr "RPM パッケージ (*.rpm)"
 
