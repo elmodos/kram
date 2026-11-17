@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kram\n"
 "Report-Msgid-Bugs-To: https://github.com/elmodos/kram/issues\n"
-"POT-Creation-Date: 2026-11-17 18:26+0200\n"
+"POT-Creation-Date: 2026-11-17 19:06+0200\n"
 "PO-Revision-Date: 2026-11-05 18:05+0200\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -464,39 +464,53 @@ msgstr "Granska listan innan du verkställer."
 msgid "The following changes will be made."
 msgstr "Följande ändringar kommer att göras."
 
-#: kram/ui/apply_dialog.py:267 kram/ui/install_dialog.py:169
+#: kram/ui/apply_dialog.py:279 kram/ui/install_dialog.py:169
 msgid "Equivalent command"
 msgstr "Motsvarande kommando"
 
-#: kram/ui/apply_dialog.py:271
+#: kram/ui/apply_dialog.py:283
 msgid "Download packages only"
 msgstr "Hämta endast paketen"
 
-#: kram/ui/apply_dialog.py:276 kram/ui/main_window.py:197
+#: kram/ui/apply_dialog.py:288 kram/ui/main_window.py:197
 msgid "Apply"
 msgstr "Verkställ"
 
-#: kram/ui/apply_dialog.py:292 kram/ui/install_dialog.py:384
+#: kram/ui/apply_dialog.py:304 kram/ui/install_dialog.py:384
 #, python-brace-format
 msgid "To download: {size}."
 msgstr "Att hämta: {size}."
 
-#: kram/ui/apply_dialog.py:293 kram/ui/install_dialog.py:385
+#: kram/ui/apply_dialog.py:305 kram/ui/install_dialog.py:385
 #, python-brace-format
 msgid "Disk space change: {size}."
 msgstr "Ändring av diskutrymme: {size}."
 
-#: kram/ui/apply_dialog.py:314 kram/ui/install_dialog.py:192
+#: kram/ui/apply_dialog.py:317
+msgid "⚠ None of the marked changes can be carried out:"
+msgstr "⚠ Ingen av de markerade ändringarna kan genomföras:"
+
+#: kram/ui/apply_dialog.py:318
+msgid ""
+"⚠ Some marked changes cannot be carried out and are left out; the rest can "
+"be applied:"
+msgstr "⚠ Vissa markerade ändringar kan inte genomföras och utelämnas; resten kan tillämpas:"
+
+#: kram/ui/apply_dialog.py:320
+msgid "Nothing to do: the marked changes are already in place."
+msgstr "Inget att göra: de markerade ändringarna är redan genomförda."
+
+#: kram/ui/apply_dialog.py:342 kram/ui/install_dialog.py:192
 #: kram/ui/install_dialog.py:208 kram/ui/install_dialog.py:265
 #: kram/ui/main_window.py:1179
 msgid "Resolving dependencies…"
 msgstr "Löser beroenden…"
 
-#: kram/ui/apply_dialog.py:324 kram/ui/install_dialog.py:282
+#: kram/ui/apply_dialog.py:351 kram/ui/install_dialog.py:282
 msgid "These choices cannot be carried out:"
 msgstr "Dessa val går inte att genomföra:"
 
-#: kram/ui/apply_dialog.py:329 kram/ui/install_dialog.py:259
+#: kram/ui/apply_dialog.py:356 kram/ui/install_dialog.py:259
 #: kram/ui/install_dialog.py:289 kram/ui/main_window.py:1181
 #, python-brace-format
 msgid ""

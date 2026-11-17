@@ -259,6 +259,9 @@ class TransactionPreview:
     size_change: int             # bytes of disk space gained (+) or freed (-)
     recommendations: list[Recommendation] = field(default_factory=list)
     groups: list[PreviewGroup] = field(default_factory=list)
+    # resolver messages for marked changes it left out: with best=False (Fedora's default) an upgrade whose newest
+    # version cannot be installed is skipped without a problem. The rest of the transaction can still run
+    skipped: list[str] = field(default_factory=list)
 
     @property
     def ok(self) -> bool:

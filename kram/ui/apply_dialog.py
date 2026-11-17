@@ -241,6 +241,18 @@ class ApplyDialog(QDialog):
         lay = QVBoxLayout(self)
         lay.addWidget(QLabel("<b>{}</b> {}".format(_("The following changes will be made."), _("Review the list before applying."))))
 
+        # marked changes the resolver left out (see TransactionPreview.skipped): above the list, so it is not missed
+        self.skipped_label = QLabel()
+        self.skipped_label.setWordWrap(True)
+        self.skipped_label.setStyleSheet("color: #c03030; font-weight: bold")
+        lay.addWidget(self.skipped_label)
+        self.skipped_text = QPlainTextEdit()
+        self.skipped_text.setReadOnly(True)
+        self.skipped_text.setFont(QFontDatabase.systemFont(QFontDatabase.FixedFont))
+        self.skipped_text.setLineWrapMode(QPlainTextEdit.NoWrap)
+        self.skipped_text.setFixedHeight(110)
+        lay.addWidget(self.skipped_text)
+
         self.tree = ChangesTree(basearch)
         self.recs_box = RecommendationsList(set(request.get("exclude_weak", ())))
         self.recs_box.toggled.connect(self._rec_toggled)
@@ -295,7 +307,23 @@ class ApplyDialog(QDialog):
         warning = removal_warning(preview)
         self.warning.setText(warning)
         self.warning.setVisible(bool(warning))
+        self._show_skipped(preview)
         self._show_command()
+
+    def _show_skipped(self, preview: TransactionPreview) -> None:
+        nothing = not preview.items and not preview.groups
+        self.ok.setEnabled(not nothing)
+        if preview.skipped:
+            text = (_("⚠ None of the marked changes can be carried out:") if nothing else
+                    _("⚠ Some marked changes cannot be carried out and are left out; the rest can be applied:"))
+        elif nothing:
+            text = _("Nothing to do: the marked changes are already in place.")
+        else:
+            text = ""
+        self.skipped_label.setText(text)
+        self.skipped_label.setVisible(bool(text))
+        self.skipped_text.setPlainText("\n".join(preview.skipped))
+        self.skipped_text.setVisible(bool(preview.skipped))
 
     def _show_command(self) -> None:
         self.cmd.setPlainText(dnf5_command({**self.request, "download_only": self.download_only.isChecked()}))
@@ -318,8 +346,7 @@ class ApplyDialog(QDialog):
                 return
             self.recs.setEnabled(True)
             if preview.ok:
-                self.ok.setEnabled(True)
-                self._show(preview)
+                self._show(preview)  # enables Apply when something is left to do
             else:
                 self.sizes.setText(_("These choices cannot be carried out:") + " " + preview.problems[0][:300])
 

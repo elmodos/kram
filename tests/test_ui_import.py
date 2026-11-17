@@ -102,6 +102,31 @@ def test_apply_dialog_unchecks_a_recommendation(app):
     assert "--downloadonly" not in dlg.cmd.toPlainText()
 
 
+
+def test_apply_dialog_shows_the_skipped_changes(app):
+    from kram.core.model import PreviewItem, TransactionPreview
+    from kram.ui.apply_dialog import ApplyDialog
+
+    why = ("Problem: package ffmpeg-9.0.2-4.fc45.x86_64 from rpmfusion-free-updates requires ffmpeg-libs(x86-64) = "
+           "9.0.2-4.fc45, but none of the providers can be installed\n"
+           "  - nothing provides liboapv.so.11()(64bit) needed by ffmpeg-libs-9.0.2-4.fc45.x86_64")
+    request = {"op": "transaction", "upgrade": ["ffmpeg.x86_64"]}
+
+    # nothing left: say why, and nothing to apply
+    dlg = ApplyDialog(TransactionPreview([], [], 0, 0, skipped=[why]), request)
+    assert not dlg.ok.isEnabled()
+    assert not dlg.skipped_label.isHidden() and "None of" in dlg.skipped_label.text()
+    assert "liboapv.so.11" in dlg.skipped_text.toPlainText()
+
+    # the rest of the transaction still runs
+    item = PreviewItem("upgrade", "gjs", "x86_64", "1.90.1-2", "1.90.1-1", "updates", 100, 0, "user")
+    dlg = ApplyDialog(TransactionPreview([item], [], 100, 0, skipped=[why]), request)
+    assert dlg.ok.isEnabled()
+    assert "left out" in dlg.skipped_label.text() and not dlg.skipped_text.isHidden()
+
+    dlg = ApplyDialog(TransactionPreview([item], [], 100, 0), request)
+    assert dlg.ok.isEnabled() and dlg.skipped_label.isHidden() and dlg.skipped_text.isHidden()
+
 def test_install_dialog(app, monkeypatch):
     import time
 

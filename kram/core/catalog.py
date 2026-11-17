@@ -69,6 +69,14 @@ def _own_deps(reldep_list) -> list:
     return out
 
 
+def skipped_changes(tr) -> list[str]:
+    """What the resolver left out of a transaction that has no problems: the marked upgrades (or installs) it could
+    not carry out because best=False lets it drop them, such as a new version that needs a library no repository
+    has. Already installed packages and the like are not reported: nothing is missing there."""
+    strict = libdnf5.base.GoalProblem_SOLVER_PROBLEM_STRICT_RESOLVEMENT
+    return [ev.to_string() for ev in tr.get_resolve_logs() if ev.get_problem() == strict]
+
+
 class Catalog:
     def __init__(self) -> None:
         self._base = None
@@ -498,6 +506,7 @@ class Catalog:
         if tr.get_problems() != libdnf5.base.GoalProblem_NO_PROBLEM:
             return TransactionPreview([], list(tr.get_resolve_logs_as_strings()), 0, 0)
         preview = self._preview(tr)
+        preview.skipped = skipped_changes(tr)
         preview.recommendations = self._recommendations(tr, excluded, marked)
         own = {i.name: i.install_size for i in preview.items}
         sized = 0

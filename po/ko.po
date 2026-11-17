@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kram\n"
 "Report-Msgid-Bugs-To: https://github.com/elmodos/kram/issues\n"
-"POT-Creation-Date: 2026-11-17 18:26+0200\n"
+"POT-Creation-Date: 2026-11-17 19:06+0200\n"
 "PO-Revision-Date: 2026-11-04 14:07+0200\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -456,39 +456,53 @@ msgstr "적용하기 전에 목록을 확인하십시오."
 msgid "The following changes will be made."
 msgstr "다음 변경 사항이 적용됩니다."
 
-#: kram/ui/apply_dialog.py:267 kram/ui/install_dialog.py:169
+#: kram/ui/apply_dialog.py:279 kram/ui/install_dialog.py:169
 msgid "Equivalent command"
 msgstr "동등한 명령"
 
-#: kram/ui/apply_dialog.py:271
+#: kram/ui/apply_dialog.py:283
 msgid "Download packages only"
 msgstr "패키지만 다운로드"
 
-#: kram/ui/apply_dialog.py:276 kram/ui/main_window.py:197
+#: kram/ui/apply_dialog.py:288 kram/ui/main_window.py:197
 msgid "Apply"
 msgstr "적용"
 
-#: kram/ui/apply_dialog.py:292 kram/ui/install_dialog.py:384
+#: kram/ui/apply_dialog.py:304 kram/ui/install_dialog.py:384
 #, python-brace-format
 msgid "To download: {size}."
 msgstr "다운로드할 크기: {size}."
 
-#: kram/ui/apply_dialog.py:293 kram/ui/install_dialog.py:385
+#: kram/ui/apply_dialog.py:305 kram/ui/install_dialog.py:385
 #, python-brace-format
 msgid "Disk space change: {size}."
 msgstr "디스크 공간 변화: {size}."
 
-#: kram/ui/apply_dialog.py:314 kram/ui/install_dialog.py:192
+#: kram/ui/apply_dialog.py:317
+msgid "⚠ None of the marked changes can be carried out:"
+msgstr "⚠ 표시한 변경 사항을 하나도 실행할 수 없습니다:"
+
+#: kram/ui/apply_dialog.py:318
+msgid ""
+"⚠ Some marked changes cannot be carried out and are left out; the rest can "
+"be applied:"
+msgstr "⚠ 표시한 변경 사항 중 일부는 실행할 수 없어 제외됩니다. 나머지는 적용할 수 있습니다:"
+
+#: kram/ui/apply_dialog.py:320
+msgid "Nothing to do: the marked changes are already in place."
+msgstr "할 일이 없습니다: 표시한 변경 사항이 이미 적용되어 있습니다."
+
+#: kram/ui/apply_dialog.py:342 kram/ui/install_dialog.py:192
 #: kram/ui/install_dialog.py:208 kram/ui/install_dialog.py:265
 #: kram/ui/main_window.py:1179
 msgid "Resolving dependencies…"
 msgstr "의존성을 해결하는 중…"
 
-#: kram/ui/apply_dialog.py:324 kram/ui/install_dialog.py:282
+#: kram/ui/apply_dialog.py:351 kram/ui/install_dialog.py:282
 msgid "These choices cannot be carried out:"
 msgstr "이 선택은 실행할 수 없습니다:"
 
-#: kram/ui/apply_dialog.py:329 kram/ui/install_dialog.py:259
+#: kram/ui/apply_dialog.py:356 kram/ui/install_dialog.py:259
 #: kram/ui/install_dialog.py:289 kram/ui/main_window.py:1181
 #, python-brace-format
 msgid ""

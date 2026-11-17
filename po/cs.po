@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kram\n"
 "Report-Msgid-Bugs-To: https://github.com/elmodos/kram/issues\n"
-"POT-Creation-Date: 2026-11-17 18:26+0200\n"
+"POT-Creation-Date: 2026-11-17 19:06+0200\n"
 "PO-Revision-Date: 2026-11-04 14:07+0200\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -470,39 +470,53 @@ msgstr "Před použitím seznam zkontrolujte."
 msgid "The following changes will be made."
 msgstr "Budou provedeny následující změny."
 
-#: kram/ui/apply_dialog.py:267 kram/ui/install_dialog.py:169
+#: kram/ui/apply_dialog.py:279 kram/ui/install_dialog.py:169
 msgid "Equivalent command"
 msgstr "Odpovídající příkaz"
 
-#: kram/ui/apply_dialog.py:271
+#: kram/ui/apply_dialog.py:283
 msgid "Download packages only"
 msgstr "Pouze stáhnout balíčky"
 
-#: kram/ui/apply_dialog.py:276 kram/ui/main_window.py:197
+#: kram/ui/apply_dialog.py:288 kram/ui/main_window.py:197
 msgid "Apply"
 msgstr "Použít"
 
-#: kram/ui/apply_dialog.py:292 kram/ui/install_dialog.py:384
+#: kram/ui/apply_dialog.py:304 kram/ui/install_dialog.py:384
 #, python-brace-format
 msgid "To download: {size}."
 msgstr "Ke stažení: {size}."
 
-#: kram/ui/apply_dialog.py:293 kram/ui/install_dialog.py:385
+#: kram/ui/apply_dialog.py:305 kram/ui/install_dialog.py:385
 #, python-brace-format
 msgid "Disk space change: {size}."
 msgstr "Změna místa na disku: {size}."
 
-#: kram/ui/apply_dialog.py:314 kram/ui/install_dialog.py:192
+#: kram/ui/apply_dialog.py:317
+msgid "⚠ None of the marked changes can be carried out:"
+msgstr "⚠ Žádnou z označených změn nelze provést:"
+
+#: kram/ui/apply_dialog.py:318
+msgid ""
+"⚠ Some marked changes cannot be carried out and are left out; the rest can "
+"be applied:"
+msgstr "⚠ Některé označené změny nelze provést a jsou vynechány; zbytek lze použít:"
+
+#: kram/ui/apply_dialog.py:320
+msgid "Nothing to do: the marked changes are already in place."
+msgstr "Není co dělat: označené změny už jsou provedeny."
+
+#: kram/ui/apply_dialog.py:342 kram/ui/install_dialog.py:192
 #: kram/ui/install_dialog.py:208 kram/ui/install_dialog.py:265
 #: kram/ui/main_window.py:1179
 msgid "Resolving dependencies…"
 msgstr "Řešení závislostí…"
 
-#: kram/ui/apply_dialog.py:324 kram/ui/install_dialog.py:282
+#: kram/ui/apply_dialog.py:351 kram/ui/install_dialog.py:282
 msgid "These choices cannot be carried out:"
 msgstr "Tento výběr nelze provést:"
 
-#: kram/ui/apply_dialog.py:329 kram/ui/install_dialog.py:259
+#: kram/ui/apply_dialog.py:356 kram/ui/install_dialog.py:259
 #: kram/ui/install_dialog.py:289 kram/ui/main_window.py:1181
 #, python-brace-format
 msgid ""
