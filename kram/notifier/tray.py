@@ -93,6 +93,31 @@ INTERFACES = Gio.DBusNodeInfo.new_for_xml("""<node>
 </node>""").interfaces
 
 
+def manager_environment(bus: Gio.DBusConnection) -> list[str]:
+    """The user's systemd manager's environment as it is now ("NAME=value" lines): with DISPLAY, WAYLAND_DISPLAY
+    and XAUTHORITY once the desktop session has imported them. Empty if systemd does not answer."""
+    try:
+        reply = bus.call_sync("org.freedesktop.systemd1", "/org/freedesktop/systemd1",
+                              "org.freedesktop.DBus.Properties", "Get",
+                              GLib.Variant("(ss)", ("org.freedesktop.systemd1.Manager", "Environment")),
+                              GLib.VariantType("(v)"), Gio.DBusCallFlags.NONE, CALL_TIMEOUT_MS, None)
+    except GLib.Error:
+        return []
+    return list(reply.unpack()[0])
+
+
+def launch_env(own: dict, manager: list[str], token: str = "") -> dict:
+    """The environment for a Kram the tray starts. The check can start the tray before the desktop session has
+    told systemd its display (at login, before graphical-session.target), and the tray keeps the environment it
+    started with: a Kram started with it finds no display and Qt aborts. The manager's current environment has
+    it."""
+    env = dict(own)
+    env.update(line.split("=", 1) for line in manager if "=" in line)
+    if token:
+        env["XDG_ACTIVATION_TOKEN"] = token
+    return env
+
+
 def open_kram(token: str = "") -> None:
     """Kram on its Upgradable filter. A running Kram is asked over D-Bus (kram.instance: it raises its window, or
     ignores the call while a dialog is open over it); otherwise a new one starts, in a systemd scope of its own like
@@ -111,7 +136,7 @@ def open_kram(token: str = "") -> None:
     command.append("--upgradable")
     scope = ["systemd-run", "--user", "--scope", "--collect", "--quiet", "--slice=app.slice",
              f"--unit=app-{APP_ID}-{os.getpid()}-{time.monotonic_ns()}", "--"]
-    env = dict(os.environ, XDG_ACTIVATION_TOKEN=token) if token else None
+    env = launch_env(os.environ, manager_environment(bus), token)
     try:
         child = subprocess.Popen(scope + command, start_new_session=True, env=env)
     except OSError:  # no systemd-run: better a Kram tied to the tray than none

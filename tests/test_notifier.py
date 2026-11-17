@@ -49,6 +49,20 @@ def test_tray_text(home):
     assert tray.tooltip() == "1 update available\nThe package information is 9 days old"
 
 
+def test_kram_from_the_tray_gets_the_session_display():
+    """A tray started before the desktop session told systemd its display: Kram takes it from the manager."""
+    from kram.notifier.tray import launch_env
+    own = {"PATH": "/usr/bin", "XDG_RUNTIME_DIR": "/run/user/1000"}
+    manager = ["PATH=/usr/bin", "DISPLAY=:0", "WAYLAND_DISPLAY=wayland-0", "XAUTHORITY=/run/user/1000/xauth_x",
+               "not a variable"]
+    env = launch_env(own, manager, "token-1")
+    assert env["DISPLAY"] == ":0" and env["WAYLAND_DISPLAY"] == "wayland-0"
+    assert env["XAUTHORITY"] == "/run/user/1000/xauth_x" and env["XDG_RUNTIME_DIR"] == "/run/user/1000"
+    assert env["XDG_ACTIVATION_TOKEN"] == "token-1"
+    assert "XDG_ACTIVATION_TOKEN" not in launch_env(own, [], "")
+    assert launch_env(own, []) == own  # systemd did not answer: the tray's own environment
+
+
 def test_tray_does_not_load_libdnf5_or_qt():
     pytest.importorskip("gi")
     code = ("import sys; import kram.notifier.tray; "
