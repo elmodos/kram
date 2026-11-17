@@ -1,5 +1,5 @@
 %global appid io.github.elmodos.Kram
-%global base_version 0.7.2
+%global base_version 0.7.3
 
 Name:           kram
 # A tagged release (v%%{base_version}) is plain %%{base_version}. Any other commit gets a snapshot from
@@ -116,6 +116,10 @@ QT_QPA_PLATFORM=offscreen %pytest
 %{_datadir}/kram/
 
 %changelog
+* Tue Nov 17 2026 Modo Ltunzher <offnormal@gmail.com> - 0.7.3-1
+- Tray: upgrades that cannot be installed (such as a new build that needs a missing library) are no longer counted
+- Updates: upgrades that cannot be installed now are dimmed, with the reason in the tooltip, and Mark All Upgrades leaves them out
+
 * Tue Nov 17 2026 Modo Ltunzher <offnormal@gmail.com> - 0.7.2-1
 - Catalog: after a transaction, Kram waits for another package manager (such as akmods building kernel modules) instead of failing with "Failed to acquire system repo lock"
 - Tray: the update check no longer fails while another package manager is running
