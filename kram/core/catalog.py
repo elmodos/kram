@@ -30,12 +30,12 @@ from .model import (
     VersionInfo,
     mark_rotated,
 )
+from . import capabilities
 from .origin import classify
 from .updates import open_system_base, upgradable_keys
 
 MAX_CHANGELOG = 30
-# libdnf5 glob scans take ~0.3-0.9 s and can't be cancelled; too-short patterns would block the worker for
-# nothing useful
+# a substring of one or two characters matches most of what packages provide: no use as a search
 MIN_SUBSTRING_QUERY = 3
 # not-installed debug packages are noise in a package list (TODO: make it a setting)
 HIDDEN_SUFFIXES = ("-debuginfo", "-debugsource")
@@ -74,6 +74,8 @@ class Catalog:
         self._base = None
         # (name, arch) -> (installed pkg | None, candidate pkg | None); lives only on the worker thread
         self._pkgs: dict[tuple[str, str], tuple[object, object]] = {}
+        self._capabilities: dict[str, set[tuple[str, str]]] | None = None  # built on first use, see search_provides
+        self._required: set[str] | None = None  # built on first use, see details
         self._user_installed: set[tuple[str, str]] = set()
         self._system_base = None
         self._local: dict[str, object] = {}  # package file path -> its Package in @commandline
@@ -85,6 +87,8 @@ class Catalog:
         self._base = base
         self._system_base = None  # built on first use, see removal_dependents
         self._local = {}
+        self._capabilities = None
+        self._required = None
 
         basearch = base.get_vars().get_value("basearch")
         arches = [basearch, "noarch"]
@@ -247,10 +251,18 @@ class Catalog:
 
         required_by: list[tuple[str, str]] = []
         if inst is not None:
-            q = libdnf5.rpm.PackageQuery(self._base)
-            q.filter_installed()
-            q.filter_requires(inst.get_provides())
-            required_by = sorted({(x.get_name(), x.get_arch()) for x in q if x.get_name() != inst.get_name()})
+            # only the capabilities somebody asks for: libdnf5 checks each one against every installed package, and
+            # kernel-core provides 16k kernel symbols (6.7 s with the window frozen; 0.03 s like this)
+            asked = self._required_names()
+            wanted = libdnf5.rpm.ReldepList(self._base)
+            for reldep in inst.get_provides():
+                if reldep.get_name() in asked:
+                    wanted.add(reldep)
+            if not wanted.empty():
+                q = libdnf5.rpm.PackageQuery(self._base)
+                q.filter_installed()
+                q.filter_requires(wanted)
+                required_by = sorted({(x.get_name(), x.get_arch()) for x in q if x.get_name() != inst.get_name()})
 
         # every installed version: installonly packages (kernel) keep several side by side
         q = libdnf5.rpm.PackageQuery(self._base)
@@ -289,17 +301,54 @@ class Catalog:
         )
 
     def search_provides(self, text: str) -> list[tuple[str, str]]:
-        """Packages providing a capability. Plain words match the capability name exactly, falling back to
-        *word*; globs are passed through."""
+        """Packages providing a capability. Plain words match the capability exactly (libdnf5, which also knows
+        versions: "python(abi) = 3.14"), falling back to part of a capability name; globs match whole names. Those
+        two go through the capability index, built on the first such search."""
         text = text.strip()
         if not text:
             return []
-        if any(c in text for c in "*?["):
-            return self._keys(lambda q: q.filter_provides([text], libdnf5.common.QueryCmp_GLOB))
+        if capabilities.is_glob(text):
+            return sorted(capabilities.match(self._capability_index(), text))
         exact = self._keys(lambda q: q.filter_provides([text]))
-        if exact or len(text) < MIN_SUBSTRING_QUERY:
+        if exact or len(text) < MIN_SUBSTRING_QUERY or any(c in text for c in " <>="):
             return exact
-        return self._keys(lambda q: q.filter_provides([f"*{text}*"], libdnf5.common.QueryCmp_GLOB))
+        return sorted(capabilities.match(self._capability_index(), text))
+
+    def _required_names(self) -> set[str]:
+        """Every capability name an installed package requires; ~0.2 s for 3000 packages, once per load."""
+        if self._required is None:
+            q = libdnf5.rpm.PackageQuery(self._base)
+            q.filter_installed()
+            names: set[str] = set()
+            for pkg in q:
+                for reldep in pkg.get_requires():
+                    text = str(reldep)
+                    if text.startswith("("):
+                        names |= capabilities.dependency_names(text)
+                    else:
+                        names.add(reldep.get_name())
+            self._required = names
+        return self._required
+
+    @property
+    def capabilities_ready(self) -> bool:
+        """Whether a Provides search by part of a name runs at once, or first builds the index (read from any
+        thread)."""
+        return self._capabilities is not None
+
+    def _capability_index(self) -> dict[str, set[tuple[str, str]]]:
+        """~1.6 s and ~160 MB for 70k packages here. Short libdnf5 calls, so the window keeps running meanwhile.
+        Only the versions the catalog shows (installed and candidate) count: an older build in another repository
+        that provided something the current one dropped is no answer to "what provides it"."""
+        if self._capabilities is None:
+            index: dict[str, set[tuple[str, str]]] = {}
+            for key, versions in self._pkgs.items():
+                for pkg in versions:
+                    if pkg is not None:
+                        for reldep in pkg.get_provides():
+                            index.setdefault(reldep.get_name(), set()).add(key)
+            self._capabilities = index
+        return self._capabilities
 
     def provides_keys(self, capability: str, glob: bool) -> frozenset[tuple[str, str]]:
         """Keys of the packages providing exactly `capability`, or a capability matching it as a glob."""

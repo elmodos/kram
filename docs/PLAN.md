@@ -179,12 +179,39 @@ The pain with dnfdragora is search through separate backend queries over fixed f
 
 - After loading, an **in-memory index** over ~70k `name.arch`: lowercased name, summary, description.
 - **Incremental search** while typing (150 ms debounce) within the current sidebar filter.
-- Modes: *Name* (default) · *Name + summary* · *Description* · *Provides* (libdnf5 `filter_provides`) ·
+- Modes: *Name* (default) · *Name + summary* · *Description* · *Provides* (libdnf5 `filter_provides`, part of a name and globs through an index, see Speed below) ·
   *File* (`filter_file`, e.g. `/usr/bin/foo` or `*/libfoo.so*`).
 - Syntax: several words = AND; `^name` / `name$` anchors; `*` / `?` globs.
 - **Ranking**: exact name → name prefix → name substring → summary → description; within a tier installed
   first, then shorter names. The first row is "the package you meant".
 - Clicking a column header sorts the results instead (Synaptic behaviour); a new query ranks again.
+
+**Speed** (2026-11-15, after the window felt slow on a ThinkPad X220 and froze on Provides searches). libdnf5's
+calls hold Python's GIL until they return, so one running on the dnf thread stops the window just the same: a
+background thread alone fixes nothing, only shorter libdnf5 calls do. `scripts/perf_search.py` measures load,
+typing, package details and Provides searches, with how long the window stops each time ("frozen").
+- *Package details*: "required by" asked libdnf5 for every capability of the package; kernel-core has 16k kernel
+  symbols, 6.7 s with the window frozen whenever the cursor landed on it (typing `kernel-` did). Now only the
+  capabilities some installed package requires are asked about (`Catalog._required_names`, rich dependencies taken
+  apart): 0.03 s, the same answer for every one of 3093 installed packages.
+- *Provides by part of a name or a glob*: libdnf5 scans every capability in the pool, 0.7-1 s frozen per query
+  (and each typed pause queued another). Now an index of capability names -> catalog rows
+  (`kram/core/capabilities.py`), built on the first such search: 1.6 s and ~160 MB here, in short calls that leave
+  the window running; then 20-40 ms per search. It covers the versions the catalog shows (installed and candidate):
+  an older build that provided something the current one dropped no longer counts. Exact names, and anything with
+  a version ("python(abi) = 3.14"), still go to libdnf5, which is fast for them. A search typed over before the dnf
+  thread got to it is skipped.
+- *Typing*: when the text only grows, the next search looks at the rows the last one found (`NarrowingSearch`).
+  The rows the sidebar filter lets in are kept between keystrokes (36 ms of a 45 ms keystroke went into working
+  them out again), except for "Marked", which follows the marks.
+- *The list itself* (2026-11-16, after measuring on the X220: first characters 330-560 ms, clearing a search
+  319 ms): QTreeView rebuilt an item for every row on each model reset, 240 ms for 68k rows here; QTableView keeps
+  nothing per row, 40 ms whatever the count. `kram/ui/package_view.py` sets it up to look like the tree view (same
+  row height, left-aligned movable columns, no grid) and takes its saved column layout. Here: worst keystroke
+  240-410 ms -> 50-95 ms, clearing 200-245 ms -> 25-40 ms.
+- Not done: the catalog load stops the window for ~1 s here (2.6 s on the X220). It is one libdnf5 call,
+  `load_repos`, 0.9 s of it reading the installed packages from rpmdb, which libdnf5 caches only where root may
+  write. Only libdnf5 in a process of its own would avoid that.
 
 ## 7. COPR and repositories (M4)
 

@@ -20,7 +20,7 @@ class Mode(IntEnum):
     NAME = 0
     NAME_SUMMARY = 1
     DESCRIPTION = 2
-    PROVIDES = 3   # resolved by libdnf5 (Catalog.search_provides)
+    PROVIDES = 3   # resolved by Catalog.search_provides (libdnf5 and its capability index)
     FILE = 4       # resolved by libdnf5 (Catalog.search_files)
 
     @property
@@ -113,3 +113,30 @@ class SearchIndex:
     def rank_keys(self, indices: Iterable[int]) -> list[int]:
         """Order for results that came from libdnf5 (provides/file): installed first, then name."""
         return sorted(indices, key=lambda i: (not self.rows[i].installed, len(self.names[i]), self.names[i]))
+
+
+class NarrowingSearch:
+    """SearchIndex.search that reuses its last answer while the user keeps typing.
+
+    Words are ANDed and an added character only makes a word stricter, so whatever matches "kern" also matched
+    "ker": the next search only has to look at the rows that did, a few thousand instead of 70k. Not after a "$":
+    "ab$" is anchored, "ab$c" is a literal, which may match rows "ab$" did not."""
+
+    def __init__(self, index: SearchIndex):
+        self.index = index
+        self._last: tuple[Mode, str, set[int], list[int]] | None = None  # mode, text, candidates, what matched
+
+    def search(self, text: str, mode: Mode, candidates: list[int]) -> list[int]:
+        typed = text.strip().lower()
+        allowed = set(candidates)
+        pool = candidates
+        if self._last is not None:
+            last_mode, last_text, last_allowed, last_found = self._last
+            # the last answer is complete for its candidates: a row the sidebar filter lets in now but did not then
+            # (a new mark, a changed filter) was never looked at
+            if (last_mode == mode and last_text and "$" not in last_text and typed.startswith(last_text)
+                    and allowed <= last_allowed):
+                pool = [i for i in last_found if i in allowed]
+        found = self.index.search(text, mode, pool)
+        self._last = (mode, typed, allowed, found)
+        return found

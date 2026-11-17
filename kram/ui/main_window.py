@@ -21,7 +21,6 @@ from PySide6.QtWidgets import (
     QSizePolicy,
     QSplitter,
     QToolBar,
-    QTreeView,
     QWidget,
 )
 
@@ -33,7 +32,7 @@ from ..core.evr import evr_cmp
 from ..core.filters import FilterEntry
 from ..core.marks import Action, allowed_actions, allowed_group_actions, dump_marks, parse_marks
 from ..core.model import CatalogSnapshot, GroupInfo, PkgDetails, PkgRow, Status, TransactionPreview
-from ..core.search import MODE_LABELS, Mode, SearchIndex
+from ..core.search import MODE_LABELS, Mode, NarrowingSearch, SearchIndex
 from ..core.worker import DnfWorker
 from ..i18n import N_, _, ngettext
 from ..ipc.client import HelperClient
@@ -46,6 +45,7 @@ from .filters_dialog import FiltersDialog
 from .install_dialog import InstallDialog
 from .notifier_dialog import NotifierDialog
 from .package_model import COL_NAME, COL_STATUS, HEADERS, HIDEABLE, PackageTableModel
+from .package_view import PackageView
 from .progress_dialog import ProgressDialog
 from .qt_loop import post
 from .repos_dialog import ReposDialog
@@ -64,6 +64,9 @@ GROUP_MARK_ACTIONS = {
 HEADER_STATE_KEY = "table/header-v2"
 COLUMN_WIDTHS = [26, 24, 230, 175, 110, 175, 150, 80]
 HISTORY_IDLE_MS = 1500  # a search left alone this long goes into the history
+# the details of the current row wait until the cursor rests this long: libdnf5 holds Python's lock while it looks
+# them up, so the window would stop for each row the cursor only passes (typing, holding an arrow key)
+DETAILS_DELAY_MS = 120
 NOT_YET = _("Coming in a later version")
 RELEASE_CHECK_TIMEOUT_MS = 15000
 # toolbar styles (Settings → Toolbar, or right-click the toolbar): id, label, button style, icon size
@@ -101,6 +104,8 @@ class MainWindow(QMainWindow):
         self.history: list[tuple[str, str]] = []  # packages visited via dependency links, for Alt+Left
         self._details_for: tuple[str, str] | None = None
         self.index: SearchIndex | None = None
+        self.narrowing: NarrowingSearch | None = None
+        self._candidates_cache: tuple[FilterEntry, CatalogSnapshot, list[int]] | None = None
         self.key_index: dict[tuple[str, str], int] = {}
         self._search_gen = 0                 # drops stale async (provides/file) results
         self._user_sort = (COL_NAME, Qt.AscendingOrder)
@@ -341,6 +346,9 @@ class MainWindow(QMainWindow):
         self.search.returnPressed.connect(self._on_search_enter)
         self._history_timer = QTimer(self, singleShot=True, interval=HISTORY_IDLE_MS)
         self._history_timer.timeout.connect(self._remember_search)
+        self._details_timer = QTimer(self, singleShot=True, interval=DETAILS_DELAY_MS)
+        self._details_timer.timeout.connect(self._load_details)
+        self._details_row: PkgRow | None = None
 
     def _update_search_icon(self, text: str) -> None:
         """A funnel while the search text filters the list, so it is not missed after switching views."""
@@ -359,13 +367,8 @@ class MainWindow(QMainWindow):
 
         self.model = PackageTableModel(self)
         self.sidebar.marked = self.model.marks
-        self.table = QTreeView()
+        self.table = PackageView()
         self.table.setModel(self.model)
-        self.table.setRootIsDecorated(False)
-        self.table.setUniformRowHeights(True)
-        self.table.setAlternatingRowColors(True)
-        self.table.setSelectionBehavior(QAbstractItemView.SelectRows)
-        self.table.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self.table.setSortingEnabled(True)
         self.table.sortByColumn(COL_NAME, Qt.AscendingOrder)
         self.table.header().sortIndicatorChanged.connect(self._on_sort_indicator)
@@ -493,6 +496,7 @@ class MainWindow(QMainWindow):
         self.act_reload.setEnabled(True)
         self.model.set_rows(snap.rows, snap.basearch)
         self.index = SearchIndex(snap.rows, snap.descriptions)
+        self.narrowing = NarrowingSearch(self.index)
         self.key_index = {r.key: i for i, r in enumerate(snap.rows)}
         self._revalidate_marks()
         self._check_group_upgrades(snap)
@@ -541,6 +545,19 @@ class MainWindow(QMainWindow):
             return
         self.apply_filter()
 
+    def _candidates(self) -> list[int]:
+        """Rows the sidebar filter lets in. Worked out again only for another filter entry or catalog: a keystroke
+        used to run the predicate over every row (36 ms of a 45 ms keystroke here). Entries are rebuilt whenever
+        what they count changes, except "Marked", which follows the marks as they are: never cached."""
+        entry, snap = self.filter, self.snapshot
+        cached = self._candidates_cache
+        if cached is not None and cached[0] is entry and cached[1] is snap and entry.id != "status:marked":
+            return cached[2]
+        pred = entry.predicate
+        found = [i for i, r in enumerate(snap.rows) if pred(r)]
+        self._candidates_cache = (entry, snap, found)
+        return found
+
     def apply_filter(self):
         """Sidebar filter, then search. Searches rank their results; an empty search uses the column sort."""
         if not self.snapshot or not self.filter:
@@ -548,30 +565,35 @@ class MainWindow(QMainWindow):
         self._debounce.stop()
         t0 = time.perf_counter()
         self._search_gen += 1
-        pred = self.filter.predicate
-        rows = self.snapshot.rows
-        candidates = [i for i, r in enumerate(rows) if pred(r)]
+        candidates = self._candidates()
         text = self.search.text().strip()
         mode = Mode(self.search_mode.currentIndex())
         if not text:
             self._history_timer.stop()
-            self._show(candidates, ranked=False, ms=(time.perf_counter() - t0) * 1000)
+            # a copy: the model keeps the list it is given, and this one is cached
+            self._show(list(candidates), ranked=False, ms=(time.perf_counter() - t0) * 1000)
         elif mode.local:
-            self._show(self.index.search(text, mode, candidates), ranked=True, ms=(time.perf_counter() - t0) * 1000)
+            self._show(self.narrowing.search(text, mode, candidates), ranked=True,
+                       ms=(time.perf_counter() - t0) * 1000)
             self._history_timer.start()
         else:
             gen = self._search_gen
             allowed = set(candidates)
             lookup = self.catalog.search_provides if mode is Mode.PROVIDES else self.catalog.search_files
-            self.status.setText(_("Searching “{text}” ({mode})…").format(text=text, mode=MODE_LABELS[mode]))
+            if mode is Mode.PROVIDES and not self.catalog.capabilities_ready:
+                self.status.setText(_("Searching “{text}” ({mode}); the first search also indexes what packages "
+                                      "provide…").format(text=text, mode=MODE_LABELS[mode]))
+            else:
+                self.status.setText(_("Searching “{text}” ({mode})…").format(text=text, mode=MODE_LABELS[mode]))
 
             def done(keys):
-                if gen != self._search_gen:
+                if keys is None or gen != self._search_gen:
                     return
                 found = [i for k in keys if (i := self.key_index.get(k)) is not None and i in allowed]
                 self._show(self.index.rank_keys(found), ranked=True, ms=(time.perf_counter() - t0) * 1000)
                 self._history_timer.start()
-            self.dnf.submit(lambda: lookup(text), done, self._on_error)
+            # the dnf thread takes jobs one after the other: a search typed over by then is skipped, not run for nothing
+            self.dnf.submit(lambda: lookup(text) if gen == self._search_gen else None, done, self._on_error)
 
     def _show(self, visible: list[int], ranked: bool, ms: float):
         # switch the header between "ranked" (no indicator) and the user's column sort without
@@ -587,6 +609,8 @@ class MainWindow(QMainWindow):
         self._last_count = len(visible)
         self._update_status(len(visible), ms)
         if not visible:
+            self._details_timer.stop()
+            self._details_for = self._details_row = None
             self.details.clear()
         elif ranked:  # best match first: select it rather than keeping an old selection
             self.table.setCurrentIndex(self.model.index(0, COL_NAME))
@@ -646,11 +670,20 @@ class MainWindow(QMainWindow):
             return
         row = self.model.row_at(current)
         self._details_for = row.key
+        self._details_row = row
         self._details = None
-        self.dnf.submit(lambda: self.catalog.details(row.key), lambda d: self._show_details(row, d))
+        self._details_timer.start()
+
+    def _load_details(self):
+        row = self._details_row
+        if row is None or row.key != self._details_for:
+            return
+        # skipped on the dnf thread when the cursor moved on while it waited its turn
+        self.dnf.submit(lambda: self.catalog.details(row.key) if row.key == self._details_for else None,
+                        lambda d: self._show_details(row, d))
 
     def _show_details(self, row: PkgRow, d):
-        if row.key == self._details_for:  # ignore stale results when the cursor moved on
+        if d is not None and row.key == self._details_for:  # ignore stale results when the cursor moved on
             self._details = d
             self.details.show_package(row, d)
 

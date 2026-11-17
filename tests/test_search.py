@@ -80,3 +80,53 @@ def test_evr_order():
     assert split_evr("2.3-4") == ("0", "2.3", "4")
     ranks = evr_ranks(["10.0-1", "9.0-1", "1:1.0-1", "9.0-10", "9.0-2", ""])
     assert sorted(ranks, key=ranks.get) == ["9.0-1", "9.0-2", "9.0-10", "10.0-1", "1:1.0-1"]
+
+
+def test_narrowing_gives_the_answer_of_a_full_search():
+    from kram.core.search import NarrowingSearch
+
+    idx = SearchIndex(ROWS, DESCS)
+    narrowing = NarrowingSearch(idx)
+    every = list(range(len(ROWS)))
+    for typed in ("f", "fi", "fis", "fish", "fish ", "fish s", "fish sh", "fish shell"):
+        assert narrowing.search(typed, Mode.NAME_SUMMARY, every) == idx.search(typed, Mode.NAME_SUMMARY, every)
+
+
+def test_narrowing_looks_only_at_what_matched_last_time():
+    from kram.core.search import NarrowingSearch
+
+    idx = SearchIndex(ROWS)
+    looked_at = []
+    search = idx.search
+    idx.search = lambda text, mode, pool: looked_at.append(len(list(pool))) or search(text, mode, pool)
+    narrowing = NarrowingSearch(idx)
+    every = list(range(len(ROWS)))
+    narrowing.search("fish", Mode.NAME, every)
+    narrowing.search("fishb", Mode.NAME, every)
+    assert looked_at == [len(ROWS), 5]  # angelfish, fishbowl, fish, fish-completion-extra, autojump-fish
+
+
+def test_narrowing_starts_afresh_when_it_could_miss_a_row():
+    from kram.core.search import NarrowingSearch
+
+    idx = SearchIndex(ROWS, DESCS)
+    every = list(range(len(ROWS)))
+    narrowing = NarrowingSearch(idx)
+    # the sidebar filter let fewer rows in last time: the others were never looked at
+    narrowing.search("fi", Mode.NAME, [0, 1])
+    assert narrowing.search("fis", Mode.NAME, every) == idx.search("fis", Mode.NAME, every)
+    # shorter text (backspace) and another mode
+    narrowing.search("fish", Mode.NAME, every)
+    assert narrowing.search("fis", Mode.NAME, every) == idx.search("fis", Mode.NAME, every)
+    assert narrowing.search("fish s", Mode.NAME_SUMMARY, every) == idx.search("fish s", Mode.NAME_SUMMARY, every)
+
+
+def test_no_narrowing_after_an_end_anchor():
+    from kram.core.search import NarrowingSearch
+
+    rows = [row("xab"), row("xab$cd")]
+    idx = SearchIndex(rows)
+    narrowing = NarrowingSearch(idx)
+    assert [rows[i].name for i in narrowing.search("ab$", Mode.NAME, [0, 1])] == ["xab"]
+    # "ab$c" is a literal now, which "xab$cd" contains although it did not end in "ab"
+    assert [rows[i].name for i in narrowing.search("ab$c", Mode.NAME, [0, 1])] == ["xab$cd"]

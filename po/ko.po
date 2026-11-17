@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kram\n"
 "Report-Msgid-Bugs-To: https://github.com/elmodos/kram/issues\n"
-"POT-Creation-Date: 2026-11-15 19:45+0200\n"
+"POT-Creation-Date: 2026-11-15 19:55+0200\n"
 "PO-Revision-Date: 2026-11-04 14:07+0200\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -428,7 +428,7 @@ msgstr "동등한 명령"
 msgid "Download packages only"
 msgstr "패키지만 다운로드"
 
-#: kram/ui/apply_dialog.py:276 kram/ui/main_window.py:163
+#: kram/ui/apply_dialog.py:276 kram/ui/main_window.py:164
 msgid "Apply"
 msgstr "적용"
 
@@ -444,7 +444,7 @@ msgstr "디스크 공간 변화: {size}."
 
 #: kram/ui/apply_dialog.py:314 kram/ui/install_dialog.py:192
 #: kram/ui/install_dialog.py:208 kram/ui/install_dialog.py:265
-#: kram/ui/main_window.py:1083
+#: kram/ui/main_window.py:1091
 msgid "Resolving dependencies…"
 msgstr "의존성을 해결하는 중…"
 
@@ -453,7 +453,7 @@ msgid "These choices cannot be carried out:"
 msgstr "이 선택은 실행할 수 없습니다:"
 
 #: kram/ui/apply_dialog.py:329 kram/ui/install_dialog.py:259
-#: kram/ui/install_dialog.py:289 kram/ui/main_window.py:1085
+#: kram/ui/install_dialog.py:289 kram/ui/main_window.py:1093
 #, python-brace-format
 msgid ""
 "Could not resolve the changes:\n"
@@ -834,7 +834,7 @@ msgid "text"
 msgstr "텍스트"
 
 #: kram/ui/filters_dialog.py:134 kram/ui/filters_dialog.py:333
-#: kram/ui/main_window.py:760
+#: kram/ui/main_window.py:768
 msgid "Custom Filters"
 msgstr "사용자 정의 필터"
 
@@ -842,7 +842,7 @@ msgstr "사용자 정의 필터"
 msgid "New"
 msgstr "새로 만들기"
 
-#: kram/ui/filters_dialog.py:153 kram/ui/main_window.py:757
+#: kram/ui/filters_dialog.py:153 kram/ui/main_window.py:765
 msgid "New filter"
 msgstr "새 필터"
 
@@ -969,11 +969,11 @@ msgstr "스크립트"
 msgid "Reading {file}…"
 msgstr "{file} 읽는 중…"
 
-#: kram/ui/install_dialog.py:189 kram/ui/main_window.py:485
+#: kram/ui/install_dialog.py:189 kram/ui/main_window.py:486
 msgid "Loading metadata…"
 msgstr "메타데이터를 불러오는 중…"
 
-#: kram/ui/install_dialog.py:216 kram/ui/main_window.py:528
+#: kram/ui/install_dialog.py:216 kram/ui/main_window.py:530
 #, python-brace-format
 msgid ""
 "Could not load the package catalog:\n"
@@ -1252,107 +1252,107 @@ msgstr "메타데이터: {days}일 전"
 msgid "Package Manager"
 msgstr "패키지 관리자"
 
-#: kram/ui/main_window.py:149
+#: kram/ui/main_window.py:150
 msgid "Reload"
 msgstr "다시 불러오기"
 
-#: kram/ui/main_window.py:150
+#: kram/ui/main_window.py:151
 msgid "Refresh repository metadata and reload the catalog (needs a password)"
 msgstr "저장소 메타데이터를 새로 고치고 카탈로그를 다시 불러옵니다 (암호 필요)"
 
-#: kram/ui/main_window.py:151
+#: kram/ui/main_window.py:152
 msgid "Reload from cache"
 msgstr "캐시에서 다시 불러오기"
 
-#: kram/ui/main_window.py:152
+#: kram/ui/main_window.py:153
 msgid "Reload the catalog from the local cache, without network or password"
 msgstr "네트워크나 암호 없이 로컬 캐시에서 카탈로그를 다시 불러옵니다"
 
-#: kram/ui/main_window.py:154
+#: kram/ui/main_window.py:155
 msgid "Mark All Upgrades"
 msgstr "모든 업그레이드 표시"
 
-#: kram/ui/main_window.py:155
+#: kram/ui/main_window.py:156
 msgid "Mark every package that has a newer version for upgrade"
 msgstr "새 버전이 있는 모든 패키지를 업그레이드로 표시"
 
-#: kram/ui/main_window.py:164
+#: kram/ui/main_window.py:165
 msgid "Review and apply the marked changes"
 msgstr "표시한 변경 사항을 검토하고 적용"
 
-#: kram/ui/main_window.py:166
+#: kram/ui/main_window.py:167
 msgid "Unmark All"
 msgstr "모든 표시 해제"
 
-#: kram/ui/main_window.py:167
+#: kram/ui/main_window.py:168
 msgid "Discard all marked changes"
 msgstr "표시한 모든 변경 사항 취소"
 
-#: kram/ui/main_window.py:169
+#: kram/ui/main_window.py:170
 msgid "Properties"
 msgstr "속성"
 
-#: kram/ui/main_window.py:171 kram/ui/repos_dialog.py:42
+#: kram/ui/main_window.py:172 kram/ui/repos_dialog.py:42
 msgid "Repositories"
 msgstr "저장소"
 
-#: kram/ui/main_window.py:172
+#: kram/ui/main_window.py:173
 msgid "Enable or disable software repositories"
 msgstr "소프트웨어 저장소 활성화 또는 비활성화"
 
-#: kram/ui/main_window.py:173
+#: kram/ui/main_window.py:174
 msgid "Custom Filters…"
 msgstr "사용자 정의 필터…"
 
-#: kram/ui/main_window.py:174
+#: kram/ui/main_window.py:175
 msgid "Create and edit your own filters for the sidebar"
 msgstr "사이드바용 필터를 직접 만들고 편집"
 
-#: kram/ui/main_window.py:175
+#: kram/ui/main_window.py:176
 msgid "New Filter from Current View…"
 msgstr "현재 보기에서 새 필터…"
 
-#: kram/ui/main_window.py:177
+#: kram/ui/main_window.py:178
 msgid "A custom filter with the current sidebar selection and search"
 msgstr "사이드바의 현재 선택과 검색으로 만든 사용자 정의 필터"
 
-#: kram/ui/main_window.py:178
+#: kram/ui/main_window.py:179
 msgid "COPR"
 msgstr "COPR"
 
-#: kram/ui/main_window.py:179
+#: kram/ui/main_window.py:180
 msgid "Manage COPR projects: community repositories"
 msgstr "COPR 프로젝트 관리: 커뮤니티 저장소"
 
-#: kram/ui/main_window.py:180
+#: kram/ui/main_window.py:181
 msgid "Package Cache…"
 msgstr "패키지 캐시…"
 
-#: kram/ui/main_window.py:181
+#: kram/ui/main_window.py:182
 msgid "See how much space the package caches take and clean them"
 msgstr "패키지 캐시가 차지하는 공간을 확인하고 비웁니다"
 
-#: kram/ui/main_window.py:182
+#: kram/ui/main_window.py:183
 msgid "Update Notifications…"
 msgstr "업데이트 알림…"
 
-#: kram/ui/main_window.py:184
+#: kram/ui/main_window.py:185
 msgid "An icon in the system tray when updates are available"
 msgstr "업데이트가 있을 때 시스템 트레이에 아이콘 표시"
 
-#: kram/ui/main_window.py:185
+#: kram/ui/main_window.py:186
 msgid "Watch Fedora Releases"
 msgstr "Fedora 릴리스 확인"
 
-#: kram/ui/main_window.py:186
+#: kram/ui/main_window.py:187
 msgid "On Reload, ask Fedora's Bodhi service whether a new release is out"
 msgstr "다시 불러올 때 Fedora의 Bodhi 서비스에 새 릴리스가 나왔는지 묻습니다"
 
-#: kram/ui/main_window.py:191
+#: kram/ui/main_window.py:192
 msgid "Clicking the status icon marks the likely action"
 msgstr "상태 아이콘을 클릭하면 가장 가능성 높은 작업 표시"
 
-#: kram/ui/main_window.py:192
+#: kram/ui/main_window.py:193
 msgid ""
 "A click on the status icon unmarks a marked package, marks one that is not "
 "installed for installation and one with an upgrade for upgrade. Otherwise it "
@@ -1362,127 +1362,127 @@ msgstr ""
 "는 설치로, 업데이트가 있는 패키지는 업그레이드로 표시합니다. 그 밖의 경우에"
 "는 오른쪽 클릭처럼 작업 메뉴를 엽니다."
 
-#: kram/ui/main_window.py:198
+#: kram/ui/main_window.py:199
 msgid "A new Fedora release"
 msgstr "새 Fedora 릴리스"
 
-#: kram/ui/main_window.py:201
+#: kram/ui/main_window.py:202
 msgid "Find"
 msgstr "찾기"
 
-#: kram/ui/main_window.py:203
+#: kram/ui/main_window.py:204
 msgid "Back"
 msgstr "뒤로"
 
-#: kram/ui/main_window.py:204
+#: kram/ui/main_window.py:205
 msgid "Go back to the previous package (after following a dependency)"
 msgstr "이전 패키지로 돌아가기 (의존성을 따라간 후)"
 
-#: kram/ui/main_window.py:205
+#: kram/ui/main_window.py:206
 msgid "Save Markings As…"
 msgstr "표시를 다른 이름으로 저장…"
 
-#: kram/ui/main_window.py:206
+#: kram/ui/main_window.py:207
 msgid "Save the marked changes to a text file"
 msgstr "표시한 변경 사항을 텍스트 파일로 저장"
 
-#: kram/ui/main_window.py:208
+#: kram/ui/main_window.py:209
 msgid "Read Markings…"
 msgstr "표시 읽기…"
 
-#: kram/ui/main_window.py:209
+#: kram/ui/main_window.py:210
 msgid "Mark the changes listed in a saved markings file"
 msgstr "저장된 표시 파일에 나열된 변경 사항을 표시"
 
-#: kram/ui/main_window.py:211
+#: kram/ui/main_window.py:212
 msgid "Open Package File…"
 msgstr "패키지 파일 열기…"
 
-#: kram/ui/main_window.py:212
+#: kram/ui/main_window.py:213
 msgid "Install a downloaded .rpm file (you can also drop it on the window)"
 msgstr "내려받은 .rpm 파일을 설치합니다 (창에 끌어다 놓아도 됩니다)"
 
-#: kram/ui/main_window.py:214
+#: kram/ui/main_window.py:215
 msgid "Quit"
 msgstr "끝내기"
 
-#: kram/ui/main_window.py:215
+#: kram/ui/main_window.py:216
 msgid "Copy Name"
 msgstr "이름 복사"
 
-#: kram/ui/main_window.py:216
+#: kram/ui/main_window.py:217
 msgid "Copy name-version-release.arch"
 msgstr "이름-버전-릴리스.아키텍처 복사"
 
-#: kram/ui/main_window.py:222 kram/ui/main_window.py:852
+#: kram/ui/main_window.py:223 kram/ui/main_window.py:860
 msgid "About Kram"
 msgstr "Kram 정보"
 
-#: kram/ui/main_window.py:226
+#: kram/ui/main_window.py:227
 msgid "Mark for Installation"
 msgstr "설치 표시"
 
-#: kram/ui/main_window.py:227
+#: kram/ui/main_window.py:228
 msgid "Mark for Upgrade"
 msgstr "업그레이드 표시"
 
-#: kram/ui/main_window.py:228
+#: kram/ui/main_window.py:229
 msgid "Mark for Reinstallation"
 msgstr "재설치 표시"
 
-#: kram/ui/main_window.py:229
+#: kram/ui/main_window.py:230
 msgid "Mark for Removal"
 msgstr "제거 표시"
 
-#: kram/ui/main_window.py:230
+#: kram/ui/main_window.py:231
 msgid "Mark as Installed by User"
 msgstr "사용자가 설치한 것으로 표시"
 
-#: kram/ui/main_window.py:231
+#: kram/ui/main_window.py:232
 msgid "Mark as Dependency"
 msgstr "의존성으로 표시"
 
-#: kram/ui/main_window.py:237
+#: kram/ui/main_window.py:238
 msgid "Downgrade to Version"
 msgstr "버전으로 다운그레이드"
 
-#: kram/ui/main_window.py:240
+#: kram/ui/main_window.py:241
 msgid "Unmark"
 msgstr "표시 해제"
 
-#: kram/ui/main_window.py:241
+#: kram/ui/main_window.py:242
 msgid "Unmark the selected packages"
 msgstr "선택한 패키지의 표시 해제"
 
-#: kram/ui/main_window.py:276
+#: kram/ui/main_window.py:277
 msgid "&File"
 msgstr "파일(&F)"
 
-#: kram/ui/main_window.py:284
+#: kram/ui/main_window.py:285
 msgid "&Edit"
 msgstr "편집(&E)"
 
-#: kram/ui/main_window.py:290
+#: kram/ui/main_window.py:291
 msgid "&Package"
 msgstr "패키지(&P)"
 
-#: kram/ui/main_window.py:294
+#: kram/ui/main_window.py:295
 msgid "&Settings"
 msgstr "설정(&S)"
 
-#: kram/ui/main_window.py:301
+#: kram/ui/main_window.py:302
 msgid "Toolbar"
 msgstr "도구 모음"
 
-#: kram/ui/main_window.py:302
+#: kram/ui/main_window.py:303
 msgid "&Help"
 msgstr "도움말(&H)"
 
-#: kram/ui/main_window.py:306
+#: kram/ui/main_window.py:307
 msgid "Main toolbar"
 msgstr "주 도구 모음"
 
-#: kram/ui/main_window.py:320
+#: kram/ui/main_window.py:321
 msgid ""
 "Name / Name + summary / Description: instant ranked search.\n"
 "Provides: packages providing a capability (libvulkan.so.1, "
@@ -1500,28 +1500,28 @@ msgstr ""
 "\n"
 "여러 단어: 모두 일치해야 합니다. ^시작, 끝$, *와 ?는 와일드카드입니다."
 
-#: kram/ui/main_window.py:327
+#: kram/ui/main_window.py:328
 msgid "Search (Ctrl+F)"
 msgstr "검색 (Ctrl+F)"
 
-#: kram/ui/main_window.py:351
+#: kram/ui/main_window.py:352
 msgid "The list is filtered by the search text"
 msgstr "목록이 검색어로 필터링되어 있습니다"
 
-#: kram/ui/main_window.py:471
+#: kram/ui/main_window.py:472
 #, python-brace-format
 msgid "{n} marked change has not been applied. Quit anyway?"
 msgid_plural "{n} marked changes have not been applied. Quit anyway?"
 msgstr[0] ""
 "표시한 변경 사항 {n}개가 아직 적용되지 않았습니다. 그래도 끝내시겠습니까?"
 
-#: kram/ui/main_window.py:517
+#: kram/ui/main_window.py:519
 #, python-brace-format
 msgid "{n} repository has no metadata"
 msgid_plural "{n} repositories have no metadata"
 msgstr[0] "저장소 {n}개에 메타데이터가 없습니다"
 
-#: kram/ui/main_window.py:520
+#: kram/ui/main_window.py:522
 #, python-brace-format
 msgid ""
 "Not loaded, so their packages are missing from the list:\n"
@@ -1537,94 +1537,103 @@ msgstr ""
 "다시 불러오기로 내려받으십시오. 저장소가 계속 실패하면 (예: 이 Fedora 릴리스"
 "용 패키지가 아직 없는 경우) 설정 → 저장소에서 비활성화하십시오."
 
-#: kram/ui/main_window.py:527 kram/ui/main_window.py:816
-#: kram/ui/main_window.py:936
+#: kram/ui/main_window.py:529 kram/ui/main_window.py:824
+#: kram/ui/main_window.py:944
 #, python-brace-format
 msgid "Error: {error}"
 msgstr "오류: {error}"
 
-#: kram/ui/main_window.py:566
+#: kram/ui/main_window.py:570
+#, python-brace-format
+msgid ""
+"Searching “{text}” ({mode}); the first search also indexes what packages "
+"provide…"
+msgstr ""
+"“{text}” 검색 중 ({mode}). 첫 검색에서는 패키지가 제공하는 항목의 색인도 만듭"
+"니다…"
+
+#: kram/ui/main_window.py:573
 #, python-brace-format
 msgid "Searching “{text}” ({mode})…"
 msgstr "“{text}” 검색 중 ({mode})…"
 
-#: kram/ui/main_window.py:620
+#: kram/ui/main_window.py:628
 #, python-brace-format
 msgid "{n} upgrade"
 msgid_plural "{n} upgrades"
 msgstr[0] "업그레이드 {n}개"
 
-#: kram/ui/main_window.py:622
+#: kram/ui/main_window.py:630
 #, python-brace-format
 msgid "{shown} listed, {installed} installed, {upgrades}."
 msgstr "표시 {shown}개, 설치됨 {installed}개, {upgrades}."
 
-#: kram/ui/main_window.py:624
+#: kram/ui/main_window.py:632
 #, python-brace-format
 msgid "{install} to install/upgrade, {remove} to remove."
 msgstr "설치/업그레이드 {install}개, 제거 {remove}개."
 
-#: kram/ui/main_window.py:627
+#: kram/ui/main_window.py:635
 #, python-brace-format
 msgid "Catalog: {load:.2f} s, filter and search: {ms:.0f} ms"
 msgstr "카탈로그: {load:.2f}초, 필터와 검색: {ms:.0f}ms"
 
-#: kram/ui/main_window.py:664
+#: kram/ui/main_window.py:672
 #, python-brace-format
 msgid "Nothing provides “{what}”"
 msgstr "“{what}”을(를) 제공하는 패키지가 없습니다"
 
-#: kram/ui/main_window.py:677
+#: kram/ui/main_window.py:685
 #, python-brace-format
 msgid "Package {name} not found in the catalog"
 msgstr "카탈로그에서 패키지 {name}을(를) 찾을 수 없습니다"
 
-#: kram/ui/main_window.py:760
+#: kram/ui/main_window.py:768
 #, python-brace-format
 msgid "Delete the filter “{name}”?"
 msgstr "“{name}” 필터를 삭제하시겠습니까?"
 
-#: kram/ui/main_window.py:784
+#: kram/ui/main_window.py:792
 msgid "Edit Filter…"
 msgstr "필터 편집…"
 
-#: kram/ui/main_window.py:785
+#: kram/ui/main_window.py:793
 msgid "Delete Filter"
 msgstr "필터 삭제"
 
-#: kram/ui/main_window.py:790
+#: kram/ui/main_window.py:798
 msgid "Remove from History"
 msgstr "기록에서 제거"
 
-#: kram/ui/main_window.py:792
+#: kram/ui/main_window.py:800
 msgid "Clear Search History"
 msgstr "검색 기록 지우기"
 
-#: kram/ui/main_window.py:834
+#: kram/ui/main_window.py:842
 msgid "Checking for upgrades…"
 msgstr "업그레이드 확인 중…"
 
-#: kram/ui/main_window.py:835
+#: kram/ui/main_window.py:843
 msgid "Nothing to upgrade: its packages are up to date and match the group"
 msgstr "업그레이드할 항목 없음: 패키지가 최신이며 그룹 구성과 일치합니다"
 
-#: kram/ui/main_window.py:836
+#: kram/ui/main_window.py:844
 msgid "Unmark Group"
 msgstr "그룹 표시 해제"
 
-#: kram/ui/main_window.py:853
+#: kram/ui/main_window.py:861
 msgid "A Synaptic-style package manager for Fedora."
 msgstr "Synaptic 스타일의 Fedora용 패키지 관리자입니다."
 
-#: kram/ui/main_window.py:855
+#: kram/ui/main_window.py:863
 msgid "Released under the MIT License."
 msgstr "MIT 라이선스로 배포됩니다."
 
-#: kram/ui/main_window.py:858
+#: kram/ui/main_window.py:866
 msgid "What's New"
 msgstr "새로운 기능"
 
-#: kram/ui/main_window.py:918
+#: kram/ui/main_window.py:926
 #, python-brace-format
 msgid ""
 "{n} installed package depends on the packages marked for removal and has to "
@@ -1635,25 +1644,25 @@ msgid_plural ""
 msgstr[0] ""
 "설치된 패키지 {n}개가 제거로 표시한 패키지에 의존하므로 함께 제거해야 합니다:"
 
-#: kram/ui/main_window.py:924
+#: kram/ui/main_window.py:932
 msgid "Mark"
 msgstr "표시"
 
-#: kram/ui/main_window.py:955
+#: kram/ui/main_window.py:963
 #, python-brace-format
 msgid "{n} package marked for upgrade"
 msgid_plural "{n} packages marked for upgrade"
 msgstr[0] "패키지 {n}개를 업그레이드로 표시했습니다"
 
-#: kram/ui/main_window.py:961 kram/ui/main_window.py:969
+#: kram/ui/main_window.py:969 kram/ui/main_window.py:977
 msgid "Save Markings"
 msgstr "표시 저장"
 
-#: kram/ui/main_window.py:963 kram/ui/main_window.py:979
+#: kram/ui/main_window.py:971 kram/ui/main_window.py:987
 msgid "Text files (*.txt);;All files (*)"
 msgstr "텍스트 파일 (*.txt);;모든 파일 (*)"
 
-#: kram/ui/main_window.py:969
+#: kram/ui/main_window.py:977
 #, python-brace-format
 msgid ""
 "Could not save {path}:\n"
@@ -1664,18 +1673,18 @@ msgstr ""
 "\n"
 "{error}"
 
-#: kram/ui/main_window.py:974
+#: kram/ui/main_window.py:982
 #, python-brace-format
 msgid "{n} marking saved to {path}"
 msgid_plural "{n} markings saved to {path}"
 msgstr[0] "표시 {n}개를 {path}에 저장했습니다"
 
-#: kram/ui/main_window.py:978 kram/ui/main_window.py:988
-#: kram/ui/main_window.py:1013
+#: kram/ui/main_window.py:986 kram/ui/main_window.py:996
+#: kram/ui/main_window.py:1021
 msgid "Read Markings"
 msgstr "표시 읽기"
 
-#: kram/ui/main_window.py:988
+#: kram/ui/main_window.py:996
 #, python-brace-format
 msgid ""
 "Could not read {path}:\n"
@@ -1686,13 +1695,13 @@ msgstr ""
 "\n"
 "{error}"
 
-#: kram/ui/main_window.py:1001
+#: kram/ui/main_window.py:1009
 #, python-brace-format
 msgid "{n} package marked"
 msgid_plural "{n} packages marked"
 msgstr[0] "패키지 {n}개를 표시했습니다"
 
-#: kram/ui/main_window.py:1006
+#: kram/ui/main_window.py:1014
 #, python-brace-format
 msgid ""
 "{n} marking no longer applies (package not found, already in that state, …):"
@@ -1702,64 +1711,64 @@ msgstr[0] ""
 "표시 {n}개가 더 이상 적용되지 않습니다 (패키지를 찾을 수 없음, 이미 그 상태"
 "임 등):"
 
-#: kram/ui/main_window.py:1010
+#: kram/ui/main_window.py:1018
 #, python-brace-format
 msgid "{n} line is not a valid marking: {lines}"
 msgid_plural "{n} lines are not valid markings: {lines}"
 msgstr[0] "{n}개 줄이 올바른 표시가 아닙니다: {lines}"
 
-#: kram/ui/main_window.py:1014
+#: kram/ui/main_window.py:1022
 #, python-brace-format
 msgid "{n} package marked."
 msgid_plural "{n} packages marked."
 msgstr[0] "패키지 {n}개를 표시했습니다."
 
-#: kram/ui/main_window.py:1036
+#: kram/ui/main_window.py:1044
 msgid "(loading…)"
 msgstr "(불러오는 중…)"
 
-#: kram/ui/main_window.py:1043
+#: kram/ui/main_window.py:1051
 msgid "No older versions in the repositories"
 msgstr "저장소에 이전 버전이 없습니다"
 
-#: kram/ui/main_window.py:1090
+#: kram/ui/main_window.py:1098
 msgid "Cannot apply changes"
 msgstr "변경 사항을 적용할 수 없습니다"
 
-#: kram/ui/main_window.py:1091
+#: kram/ui/main_window.py:1099
 msgid "The marked changes cannot be carried out. Unmark or change them."
 msgstr "표시한 변경 사항을 수행할 수 없습니다. 표시를 해제하거나 변경하십시오."
 
-#: kram/ui/main_window.py:1106
+#: kram/ui/main_window.py:1114
 msgid "Applying changes"
 msgstr "변경 사항 적용 중"
 
-#: kram/ui/main_window.py:1115
+#: kram/ui/main_window.py:1123
 msgid "Refreshing metadata"
 msgstr "메타데이터 새로 고치는 중"
 
-#: kram/ui/main_window.py:1132
+#: kram/ui/main_window.py:1140
 msgid "Changing repositories"
 msgstr "저장소 변경 중"
 
-#: kram/ui/main_window.py:1163
+#: kram/ui/main_window.py:1171
 msgid "Downloading metadata again"
 msgstr "메타데이터를 다시 내려받는 중"
 
-#: kram/ui/main_window.py:1165
+#: kram/ui/main_window.py:1173
 msgid "Cleaning the package cache"
 msgstr "패키지 캐시를 비우는 중"
 
-#: kram/ui/main_window.py:1186
+#: kram/ui/main_window.py:1194
 #, python-brace-format
 msgid "Fedora {new} is available, you have {old}"
 msgstr "Fedora {new} 사용 가능, 현재 {old}"
 
-#: kram/ui/main_window.py:1251
+#: kram/ui/main_window.py:1259
 msgid "Open Package File"
 msgstr "패키지 파일 열기"
 
-#: kram/ui/main_window.py:1252
+#: kram/ui/main_window.py:1260
 msgid "RPM packages (*.rpm)"
 msgstr "RPM 패키지 (*.rpm)"
 

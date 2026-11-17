@@ -308,3 +308,89 @@ def test_group_marks_from_the_sidebar(window):
     assert window.model.marks.request({}) == {"group_install": ["kde-apps"]}
     window.unmark_all()
     assert not window.act_apply.isEnabled()
+
+
+def test_a_provides_search_typed_over_is_skipped_not_run(window, monkeypatch):
+    from kram.core.model import CatalogSnapshot, Origin, PkgRow, Status
+    from kram.core.search import Mode, NarrowingSearch, SearchIndex
+
+    rows = [PkgRow("vulkan-loader", "x86_64", "Vulkan", "1-1", "1-1", "fedora", 1, Origin.FEDORA, Status.INSTALLED)]
+    window.snapshot = CatalogSnapshot(rows, 1, 0, 0.0)
+    window.model.set_rows(rows, "x86_64")
+    from kram.core.filters import FilterEntry
+
+    window.filter = FilterEntry("status:all", "All", lambda _row: True)
+    window.index = SearchIndex(rows)
+    window.narrowing = NarrowingSearch(window.index)
+    window.key_index = {rows[0].key: 0}
+    jobs, asked = [], []
+    monkeypatch.setattr(window.dnf, "submit", lambda fn, done, _error=None: jobs.append((fn, done)))
+    monkeypatch.setattr(window.catalog, "search_provides", lambda text: asked.append(text) or [rows[0].key])
+    window.search_mode.setCurrentIndex(Mode.PROVIDES)
+    searches = []  # other jobs load the details of the selected row
+    for text in ("vulk", "vulkan"):
+        window.search.setText(text)
+        before = len(jobs)
+        window.apply_filter()
+        searches.append(jobs[before])
+        if text == "vulk":
+            assert "indexes what packages provide" in window.status.text()  # the first one may take a moment
+    answers = [fn() for fn, _done in searches]  # the dnf thread, in order
+    assert answers[0] is None and asked == ["vulkan"]  # the first was typed over before its turn came
+    for (_fn, done), answer in zip(searches, answers, strict=True):
+        done(answer)
+    assert window.model.rowCount() == 1
+
+
+def test_the_sidebar_filter_is_not_worked_out_again_for_every_keystroke(window, monkeypatch):
+    from kram.core.filters import FilterEntry
+    from kram.core.model import CatalogSnapshot, Origin, PkgRow, Status
+    from kram.ui.package_view import PackageView
+
+    assert isinstance(window.table, PackageView)
+    rows = [PkgRow(n, "x86_64", "", "", "1-1", "fedora", 1, Origin.FEDORA, Status.NOT_INSTALLED) for n in "abc"]
+    window.snapshot = CatalogSnapshot(rows, 0, 0, 0.0)
+    calls = []
+
+    def entry(entry_id):
+        return FilterEntry(entry_id, entry_id, lambda r: calls.append(r.name) or r.name != "b")
+    window.filter = entry("status:all")
+    assert window._candidates() == [0, 2] and len(calls) == 3
+    assert window._candidates() == [0, 2] and len(calls) == 3  # the same entry and catalog: kept
+    window.filter = entry("status:all")  # rebuilt entry (new counts, edited custom filter)
+    window._candidates()
+    assert len(calls) == 6
+    window.snapshot = CatalogSnapshot(rows, 0, 0, 0.0)  # reloaded catalog
+    window._candidates()
+    assert len(calls) == 9
+    window.filter = entry("status:marked")  # follows the marks as they change: never kept
+    window._candidates()
+    window._candidates()
+    assert len(calls) == 15
+
+
+def test_details_wait_for_the_cursor_to_rest(window, monkeypatch):
+    from kram.core.model import Origin, PkgRow, Status
+
+    rows = [PkgRow(n, "x86_64", "", "1-1", "1-1", "fedora", 1, Origin.FEDORA, Status.INSTALLED) for n in "abc"]
+    window.model.set_rows(rows, "x86_64")
+    window.model.set_visible([0, 1, 2], ranked=False)
+    jobs, asked, shown = [], [], []
+    monkeypatch.setattr(window.dnf, "submit", lambda fn, done, _error=None: jobs.append((fn, done)))
+    monkeypatch.setattr(window.catalog, "details", lambda key: asked.append(key) or key)
+    monkeypatch.setattr(window.details, "show_package", lambda row, d: shown.append(row.key))
+    for n in range(3):  # the cursor runs down the list
+        window.table.setCurrentIndex(window.model.index(n, 0))
+    assert jobs == [] and window._details_timer.isActive()
+    window._details_timer.stop()
+    window._load_details()
+    assert len(jobs) == 1
+    window.table.setCurrentIndex(window.model.index(0, 0))  # moved on while the job waited its turn
+    fn, done = jobs[0]
+    done(fn())
+    assert asked == [] and shown == []
+    window._details_timer.stop()
+    window._load_details()
+    fn, done = jobs[1]
+    done(fn())
+    assert asked == shown == [("a", "x86_64")]
