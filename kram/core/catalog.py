@@ -255,10 +255,11 @@ class Catalog:
         return repos
 
     def repo_package_counts(self) -> Counter[str]:
-        """Available packages (all versions) per enabled repo."""
+        """Distinct packages (name.arch, as the package list's rows) available in each enabled repo: a COPR project
+        keeps every build, so counting versions would say 60 for a single package."""
         q = libdnf5.rpm.PackageQuery(self._base)
         q.filter_available()
-        return Counter(p.get_repo_id() for p in q)
+        return Counter(repo for repo, _name, _arch in {(p.get_repo_id(), p.get_name(), p.get_arch()) for p in q})
 
     def details(self, key: tuple[str, str]) -> PkgDetails:
         inst, cand = self._pkgs[key]
