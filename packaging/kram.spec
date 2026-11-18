@@ -1,5 +1,5 @@
 %global appid io.github.elmodos.Kram
-%global base_version 0.8.4
+%global base_version 0.8.5
 
 Name:           kram
 # A tagged release (v%%{base_version}) is plain %%{base_version}. Any other commit gets a snapshot from
@@ -116,6 +116,10 @@ QT_QPA_PLATFORM=offscreen %pytest
 %{_datadir}/kram/
 
 %changelog
+* Wed Nov 18 2026 Modo Ltunzher <offnormal@gmail.com> - 0.8.5-1
+- Progress dialog: dnf's error messages appear in your language where dnf has a translation
+- Progress dialog: Kram's own messages there are translated too, such as the dnf5 command being run
+
 * Wed Nov 18 2026 Modo Ltunzher <offnormal@gmail.com> - 0.8.4-1
 - Package list: an upgrade that cannot be installed now shows a red cross before its version
 - Details: the Dependencies tab of such an upgrade shows why it cannot be installed
