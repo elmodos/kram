@@ -10,6 +10,7 @@ from kram.core.filters import (
     UPGRADES_SECURITY_HIGH,
     status_filters,
     upgrades_by_kind,
+    visible_entries,
 )
 from kram.core.model import Advisory, CatalogSnapshot, Origin, PkgRow, Status
 
@@ -81,6 +82,20 @@ def test_sidebar_counts():
     counts = {e.id: e.count for e in status_filters(SNAP)}
     assert counts["status:security"] == 3
     assert counts["status:bugfix"] == 2  # openssl has a bug fix advisory too
+
+
+def test_sidebar_hides_empty_advisory_entries():
+    rows = [r for r in ROWS if not any(a.type == "bugfix" for a in r.advisories)]
+    ids = [e.id for e in visible_entries(status_filters(CatalogSnapshot(rows, 0, 0, 0.0)))]
+    assert "status:security" in ids and "status:bugfix" not in ids
+    assert "status:upgradable" in ids  # the main entries stay at zero too
+
+
+def test_sidebar_keeps_the_selected_empty_entry():
+    snap = CatalogSnapshot([], 0, 0, 0.0)
+    ids = [e.id for e in visible_entries(status_filters(snap), keep="status:security")]
+    assert "status:security" in ids and "status:bugfix" not in ids
+    assert {"status:upgradable", "status:marked"} <= {e.id for e in visible_entries(status_filters(snap, set()))}
 
 
 @pytest.mark.parametrize(("value", "expected"), [

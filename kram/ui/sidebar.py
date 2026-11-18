@@ -3,7 +3,14 @@ from PySide6.QtCore import QPoint, Qt, Signal
 from PySide6.QtGui import QColor, QFont
 from PySide6.QtWidgets import QButtonGroup, QListWidget, QListWidgetItem, QPushButton, QVBoxLayout, QWidget
 
-from ..core.filters import FilterEntry, custom_filter_entries, group_filters, origin_filters, status_filters
+from ..core.filters import (
+    FilterEntry,
+    custom_filter_entries,
+    group_filters,
+    origin_filters,
+    status_filters,
+    visible_entries,
+)
 from ..core.marks import ACTION_LABELS
 from ..core.model import CatalogSnapshot
 from ..core.search import MODE_LABELS, Mode
@@ -120,7 +127,7 @@ class Sidebar(QWidget):
         elif builder == "custom":
             self._entries = custom_filter_entries(self._snap, self.custom)
         elif builder is status_filters:
-            self._entries = status_filters(self._snap, self.marked)
+            self._entries = visible_entries(status_filters(self._snap, self.marked), self._selected.get(self._view))
         else:
             self._entries = builder(self._snap)
         self.list.blockSignals(True)

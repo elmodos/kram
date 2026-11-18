@@ -22,6 +22,7 @@ class FilterEntry:
     group: str | None = None   # comps group id for its themed icon ("" for all groups)
     bold: bool = False   # comps groups: installed
     tip: str = ""
+    hide_empty: bool = False   # left out of the sidebar while it matches nothing
 
 
 def _all(_r: PkgRow) -> bool:
@@ -32,6 +33,12 @@ def _with_counts(entries: list[FilterEntry], rows: list[PkgRow]) -> list[FilterE
     for e in entries:
         e.count = sum(1 for r in rows if e.predicate(r))
     return entries
+
+
+def visible_entries(entries: list[FilterEntry], keep: str | None = None) -> list[FilterEntry]:
+    """Entries to show: hide_empty ones with no matches are left out, except `keep` (the selected one), so the
+    selection does not jump away from the filter the package list shows."""
+    return [e for e in entries if not (e.hide_empty and e.count == 0 and e.id != keep)]
 
 
 def has_update_type(kind: str) -> Predicate:
@@ -71,9 +78,9 @@ def status_filters(snap: CatalogSnapshot, marked: Container[tuple[str, str]] | N
         FilterEntry("status:not-installed", _("Not installed"), status_is(Status.NOT_INSTALLED)),
         FilterEntry("status:upgradable", _("Upgradable"), status_is(Status.UPGRADABLE)),
         FilterEntry("status:security", _("Security updates"), has_update_type("security"), indent=1,
-                    tip=_("Upgrades that fix a security issue, by their advisories")),
+                    tip=_("Upgrades that fix a security issue, by their advisories"), hide_empty=True),
         FilterEntry("status:bugfix", _("Bug fix updates"), has_update_type("bugfix"), indent=1,
-                    tip=_("Upgrades that fix bugs, by their advisories")),
+                    tip=_("Upgrades that fix bugs, by their advisories"), hide_empty=True),
         FilterEntry("status:user", _("Installed by user"), lambda r: r.installed and r.user_installed),
         # what dnf autoremove removes, orphaned and upgradable ones included
         FilterEntry("status:unneeded", _("Unneeded dependencies"), lambda r: r.unneeded),
