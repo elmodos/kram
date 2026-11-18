@@ -113,3 +113,21 @@ def test_the_mouse_highlights_the_whole_row(app):
 
     view.viewportEvent(QEvent(QEvent.Leave))
     assert view.hover_row == -1
+
+
+def test_the_repository_column_names_where_an_installed_package_came_from(app):
+    from kram.ui.package_model import COL_REPO
+
+    copr = "copr:copr.fedorainfracloud.org:elmodos:Kram"
+    model = PackageTableModel()
+    model.set_rows([
+        PkgRow("kram", "noarch", "", "1-1", "2-1", "updates", 1, Origin.COPR, Status.UPGRADABLE, True, copr),
+        PkgRow("bash", "x86_64", "", "1-1", "1-1", "fedora", 1, Origin.FEDORA, Status.INSTALLED, False, "fedora"),
+        PkgRow("fish", "x86_64", "", "", "1-1", "fedora", 1, Origin.FEDORA, Status.NOT_INSTALLED, False),
+    ], "x86_64")
+    cells = {model.data(model.index(i, 2)): model.index(i, COL_REPO) for i in range(3)}
+    assert cells["kram"].data() == "elmodos/Kram → updates"
+    assert cells["kram"].data(Qt.ToolTipRole) == ("Installed from elmodos/Kram; the latest version comes from "
+                                                  "updates")
+    assert [cells[n].data() for n in ("bash", "fish")] == ["fedora", "fedora"]
+    assert cells["bash"].data(Qt.ToolTipRole) is None

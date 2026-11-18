@@ -67,7 +67,7 @@ SORT_KEYS = {
     COL_ORIGIN: lambda r: (r.origin.value, r.name.lower()),
     COL_NAME: lambda r: (r.name.lower(), r.arch),
     COL_REASON: lambda r: (r.reason is None, _REASON_ORDER.get(r.reason, 0), r.name.lower()),
-    COL_REPO: lambda r: (display_repo(r.repo_id).lower(), r.name.lower()),
+    COL_REPO: lambda r: (repo_text(r).lower(), r.name.lower()),
     COL_SIZE: lambda r: (r.size, r.name.lower()),
     COL_SUMMARY: lambda r: (r.summary.lower(), r.name.lower()),
 }
@@ -229,7 +229,7 @@ class PackageTableModel(QAbstractTableModel):
                 case 3: return r.installed_evr
                 case 4: return REASON_LABEL.get(r.reason, "")
                 case 5: return f"{r.candidate_evr} ({r.candidate_arch})" if r.candidate_arch else r.candidate_evr
-                case 6: return display_repo(r.repo_id)
+                case 6: return repo_text(r)
                 case 7: return human_size(r.size)
                 case 8: return r.summary
                 case 9: return ADVISORY_LABEL[r.advisory.level] if r.advisories else ""
@@ -250,6 +250,9 @@ class PackageTableModel(QAbstractTableModel):
                 return f"{ORIGIN_LABEL[r.origin]}: {display_repo(r.origin_repo)}"
             if col == COL_REASON:
                 return REASON_TIP.get(r.reason)
+            if col == COL_REPO and r.from_repo_id and r.from_repo_id != r.repo_id:
+                return _("Installed from {installed}; the latest version comes from {latest}").format(
+                    installed=display_repo(r.from_repo_id), latest=display_repo(r.repo_id))
             if col == COL_STATUS:
                 mark = self.marks.get(r.key)
                 label = STATUS_LABEL[r.status]
@@ -270,6 +273,14 @@ class PackageTableModel(QAbstractTableModel):
         elif role == Qt.ForegroundRole and col == COL_CANDIDATE and r.key in self.blocked:
             return QGuiApplication.palette().color(QPalette.Disabled, QPalette.Text)
         return None
+
+
+def repo_text(r: PkgRow) -> str:
+    """Where the latest version comes from; for an installed package that came from another repository, that one
+    first: "elmodos/Kram → updates"."""
+    if r.from_repo_id and r.from_repo_id != r.repo_id:
+        return f"{display_repo(r.from_repo_id)} → {display_repo(r.repo_id)}"
+    return display_repo(r.repo_id)
 
 
 STATUS_LABEL = {

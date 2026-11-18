@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kram\n"
 "Report-Msgid-Bugs-To: https://github.com/elmodos/kram/issues\n"
-"POT-Creation-Date: 2026-11-18 13:13+0200\n"
+"POT-Creation-Date: 2026-11-18 13:17+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -2190,42 +2190,47 @@ msgid ""
 "autoremove removes it once nothing needs it"
 msgstr ""
 
-#: kram/ui/package_model.py:83 kram/ui/package_model.py:257
+#: kram/ui/package_model.py:83 kram/ui/package_model.py:260
 msgid "The upgrade cannot be installed now"
 msgstr ""
 
-#: kram/ui/package_model.py:260 kram/ui/sidebar.py:139
+#: kram/ui/package_model.py:254
+#, python-brace-format
+msgid "Installed from {installed}; the latest version comes from {latest}"
+msgstr ""
+
+#: kram/ui/package_model.py:263 kram/ui/sidebar.py:139
 #, python-brace-format
 msgid "Marked: {action}"
 msgstr ""
 
-#: kram/ui/package_model.py:261
+#: kram/ui/package_model.py:264
 msgid "Click for actions"
 msgstr ""
 
-#: kram/ui/package_model.py:276
+#: kram/ui/package_model.py:287
 msgctxt "package status"
 msgid "Not installed"
 msgstr ""
 
-#: kram/ui/package_model.py:277
+#: kram/ui/package_model.py:288
 msgctxt "package status"
 msgid "Installed"
 msgstr ""
 
-#: kram/ui/package_model.py:278
+#: kram/ui/package_model.py:289
 msgid "Installed, upgrade available"
 msgstr ""
 
-#: kram/ui/package_model.py:279
+#: kram/ui/package_model.py:290
 msgid "Installed version is newer than the repository"
 msgstr ""
 
-#: kram/ui/package_model.py:280
+#: kram/ui/package_model.py:291
 msgid "Installed, no repository provides it"
 msgstr ""
 
-#: kram/ui/package_model.py:281
+#: kram/ui/package_model.py:292
 msgid "Installed as a dependency, no longer needed"
 msgstr ""
 

@@ -13,6 +13,10 @@ and installed version, update type, size, repository and summary. Browsing and s
 The origin icon tells where a package comes from: Fedora, a COPR project, a third-party repository, or a
 local file with no repository at all.
 
+The Repository column says where the latest version comes from. When an installed package came from another
+repository, that one comes first: `elmodos/Kram → updates` is a COPR package whose newer version is now in
+Fedora's updates.
+
 ## Update types
 
 For a package with an upgrade, a coloured dot before the latest version and the **Update type** column tell
