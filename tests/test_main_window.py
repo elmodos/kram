@@ -13,6 +13,7 @@ from PySide6.QtNetwork import QNetworkRequest
 from PySide6.QtWidgets import QApplication, QDialog
 
 from kram.ui import actions, main_window, release_watch
+from kram.ui.icons import blocked_icon
 from kram.ui.progress_dialog import ProgressDialog
 
 
@@ -419,11 +420,27 @@ def test_upgrades_that_cannot_be_installed_are_dimmed_and_not_marked_by_mark_all
            "  - nothing provides liboapv.so.11()(64bit) needed by ffmpeg-libs-9.0.2-4.fc45.x86_64 from rpmfusion-free-updates")
     window.model.set_blocked({rows[0].key: why})
     assert ffmpeg.data(Qt.ItemDataRole.FontRole) is None and ffmpeg.data(Qt.ItemDataRole.ForegroundRole) is not None
+    assert ffmpeg.data(Qt.ItemDataRole.DecorationRole).cacheKey() == blocked_icon().cacheKey()
+    assert gjs.data(Qt.ItemDataRole.DecorationRole).cacheKey() != blocked_icon().cacheKey()
     assert ffmpeg.data(Qt.ItemDataRole.ToolTipRole) == (
         "The upgrade cannot be installed now\n"
         "nothing provides liboapv.so.11()(64bit) needed by ffmpeg-libs-9.0.2-4.fc45.x86_64")
     assert "cannot be installed now" in window.model.index(0, COL_STATUS).data(Qt.ItemDataRole.ToolTipRole)
     assert gjs.data(Qt.ItemDataRole.FontRole).bold() and gjs.data(Qt.ItemDataRole.ToolTipRole) is None
+
+    # the dependencies tab gets the cross and the resolver's message, also when the cursor was there first
+    tabs = window.details
+    deps = tabs.indexOf(tabs.deps)
+    window.model.set_blocked({})
+    window.details_loader.follow(rows[0])
+    assert tabs.tabIcon(deps).isNull() and tabs.deps.toPlainText() == ""
+    window._on_blocked({rows[0].key: why})
+    assert tabs.tabIcon(deps).cacheKey() == blocked_icon().cacheKey()
+    text = tabs.deps.toPlainText()
+    assert text.startswith("The upgrade cannot be installed now\nnothing provides liboapv.so.11()(64bit)")
+    assert "cannot install the best update candidate" in text
+    window.details_loader.follow(rows[1])
+    assert tabs.tabIcon(deps).isNull() and tabs.tabToolTip(deps) == ""
 
     window.marker.mark_all_upgrades()
     marks = window.model.marks

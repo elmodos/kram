@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kram\n"
 "Report-Msgid-Bugs-To: https://github.com/elmodos/kram/issues\n"
-"POT-Creation-Date: 2026-11-18 16:48+0000\n"
+"POT-Creation-Date: 2026-11-18 18:58+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -40,7 +40,7 @@ msgctxt "filter field"
 msgid "Description"
 msgstr ""
 
-#: kram/core/custom_filters.py:52 kram/core/search.py:35 kram/ui/details.py:179
+#: kram/core/custom_filters.py:52 kram/core/search.py:35 kram/ui/details.py:207
 #: kram/ui/install_dialog.py:527
 msgid "Provides"
 msgstr ""
@@ -50,14 +50,14 @@ msgstr ""
 msgid "Status"
 msgstr ""
 
-#: kram/core/custom_filters.py:54 kram/ui/details.py:148
+#: kram/core/custom_filters.py:54 kram/ui/details.py:176
 #: kram/ui/package_model.py:221 kram/ui/repos_dialog.py:73
 #: kram/ui/sidebar.py:26
 msgid "Origin"
 msgstr ""
 
 #: kram/core/custom_filters.py:55 kram/ui/apply_dialog.py:91
-#: kram/ui/details.py:66 kram/ui/package_model.py:19
+#: kram/ui/details.py:78 kram/ui/package_model.py:19
 msgid "Repository"
 msgstr ""
 
@@ -65,7 +65,7 @@ msgstr ""
 msgid "Group"
 msgstr ""
 
-#: kram/core/custom_filters.py:57 kram/ui/details.py:157
+#: kram/core/custom_filters.py:57 kram/ui/details.py:185
 msgid "Install reason"
 msgstr ""
 
@@ -479,7 +479,7 @@ msgstr ""
 msgid "Quit"
 msgstr ""
 
-#: kram/ui/actions.py:84 kram/ui/main_window.py:511
+#: kram/ui/actions.py:84 kram/ui/main_window.py:518
 msgid "About Kram"
 msgstr ""
 
@@ -628,7 +628,7 @@ msgstr ""
 msgid "Groups to be removed"
 msgstr ""
 
-#: kram/ui/apply_dialog.py:91 kram/ui/details.py:147
+#: kram/ui/apply_dialog.py:91 kram/ui/details.py:175
 #: kram/ui/install_dialog.py:473 kram/ui/package_model.py:19
 msgid "Package"
 msgstr ""
@@ -637,7 +637,7 @@ msgstr ""
 msgid "Size"
 msgstr ""
 
-#: kram/ui/apply_dialog.py:91 kram/ui/details.py:66
+#: kram/ui/apply_dialog.py:91 kram/ui/details.py:78
 msgid "Version"
 msgstr ""
 
@@ -747,7 +747,7 @@ msgstr ""
 
 #: kram/ui/apply_dialog.py:342 kram/ui/install_dialog.py:192
 #: kram/ui/install_dialog.py:208 kram/ui/install_dialog.py:265
-#: kram/ui/main_window.py:607
+#: kram/ui/main_window.py:614
 msgid "Resolving dependencies…"
 msgstr ""
 
@@ -756,7 +756,7 @@ msgid "These choices cannot be carried out:"
 msgstr ""
 
 #: kram/ui/apply_dialog.py:356 kram/ui/install_dialog.py:259
-#: kram/ui/install_dialog.py:289 kram/ui/main_window.py:609
+#: kram/ui/install_dialog.py:289 kram/ui/main_window.py:616
 #, python-brace-format
 msgid ""
 "Could not resolve the changes:\n"
@@ -1064,7 +1064,7 @@ msgstr ""
 msgid "Builds for this system"
 msgstr ""
 
-#: kram/ui/copr_dialog.py:99 kram/ui/details.py:75
+#: kram/ui/copr_dialog.py:99 kram/ui/details.py:87
 #: kram/ui/install_dialog.py:143
 msgid "Description"
 msgstr ""
@@ -1182,125 +1182,131 @@ msgstr ""
 msgid "References:"
 msgstr ""
 
-#: kram/ui/details.py:66
+#: kram/ui/details.py:56
+msgid ""
+"The repository has to fix it. Until then Mark All Upgrades leaves this "
+"package out."
+msgstr ""
+
+#: kram/ui/details.py:78
 msgid "State"
 msgstr ""
 
-#: kram/ui/details.py:75
+#: kram/ui/details.py:87
 msgid "General"
 msgstr ""
 
-#: kram/ui/details.py:76
+#: kram/ui/details.py:88
 msgid "Advisories"
 msgstr ""
 
-#: kram/ui/details.py:76 kram/ui/install_dialog.py:144
+#: kram/ui/details.py:88 kram/ui/install_dialog.py:144
 msgid "Dependencies"
 msgstr ""
 
-#: kram/ui/details.py:77 kram/ui/install_dialog.py:144
+#: kram/ui/details.py:89 kram/ui/install_dialog.py:144
 msgid "Files"
 msgstr ""
 
-#: kram/ui/details.py:77
+#: kram/ui/details.py:89
 msgid "Versions"
 msgstr ""
 
-#: kram/ui/details.py:78 kram/ui/install_dialog.py:145
+#: kram/ui/details.py:90 kram/ui/install_dialog.py:145
 msgid "Changelog"
 msgstr ""
 
-#: kram/ui/details.py:145
+#: kram/ui/details.py:173
 msgid "as a dependency"
 msgstr ""
 
-#: kram/ui/details.py:145
+#: kram/ui/details.py:173
 msgid "by the user"
 msgstr ""
 
-#: kram/ui/details.py:149
+#: kram/ui/details.py:177
 msgid "Candidate repository"
 msgstr ""
 
-#: kram/ui/details.py:150 kram/ui/install_dialog.py:477
+#: kram/ui/details.py:178 kram/ui/install_dialog.py:477
 msgid "License"
 msgstr ""
 
-#: kram/ui/details.py:151 kram/ui/install_dialog.py:478
+#: kram/ui/details.py:179 kram/ui/install_dialog.py:478
 msgid "Website"
 msgstr ""
 
-#: kram/ui/details.py:152 kram/ui/install_dialog.py:479
+#: kram/ui/details.py:180 kram/ui/install_dialog.py:479
 msgid "Vendor"
 msgstr ""
 
-#: kram/ui/details.py:153 kram/ui/install_dialog.py:480
+#: kram/ui/details.py:181 kram/ui/install_dialog.py:480
 msgid "Packager"
 msgstr ""
 
-#: kram/ui/details.py:154
+#: kram/ui/details.py:182
 msgid "Source package"
 msgstr ""
 
-#: kram/ui/details.py:155 kram/ui/install_dialog.py:481
+#: kram/ui/details.py:183 kram/ui/install_dialog.py:481
 msgid "Built"
 msgstr ""
 
-#: kram/ui/details.py:156
+#: kram/ui/details.py:184
 msgctxt "install date"
 msgid "Installed"
 msgstr ""
 
-#: kram/ui/details.py:158 kram/ui/install_dialog.py:482
+#: kram/ui/details.py:186 kram/ui/install_dialog.py:482
 msgid "Installed size"
 msgstr ""
 
-#: kram/ui/details.py:159
+#: kram/ui/details.py:187
 msgid "Download size"
 msgstr ""
 
-#: kram/ui/details.py:173 kram/ui/install_dialog.py:521
+#: kram/ui/details.py:201 kram/ui/install_dialog.py:521
 msgid "Requires"
 msgstr ""
 
-#: kram/ui/details.py:174 kram/ui/install_dialog.py:522
+#: kram/ui/details.py:202 kram/ui/install_dialog.py:522
 msgid "Recommends"
 msgstr ""
 
-#: kram/ui/details.py:175 kram/ui/install_dialog.py:523
+#: kram/ui/details.py:203 kram/ui/install_dialog.py:523
 msgid "Suggests"
 msgstr ""
 
-#: kram/ui/details.py:176
+#: kram/ui/details.py:204
 msgid "Required by installed packages"
 msgstr ""
 
-#: kram/ui/details.py:177 kram/ui/install_dialog.py:525
+#: kram/ui/details.py:205 kram/ui/install_dialog.py:525
 msgid "Conflicts"
 msgstr ""
 
-#: kram/ui/details.py:178 kram/ui/install_dialog.py:526
+#: kram/ui/details.py:206 kram/ui/install_dialog.py:526
 msgid "Obsoletes"
 msgstr ""
 
-#: kram/ui/details.py:180 kram/ui/install_dialog.py:528
+#: kram/ui/details.py:208 kram/ui/install_dialog.py:528
 msgid "No dependencies"
 msgstr ""
 
-#: kram/ui/details.py:183
+#: kram/ui/details.py:212
 msgid "Not installed: repository metadata lists only some of the files."
 msgstr ""
 
-#: kram/ui/details.py:188
+#: kram/ui/details.py:217
 msgid "candidate"
 msgstr ""
 
-#: kram/ui/details.py:188
+#: kram/ui/details.py:217
 msgctxt "version state"
 msgid "installed"
 msgstr ""
 
-#: kram/ui/details.py:201
+#: kram/ui/details.py:230
 msgid ""
 "The changelog is available for installed packages only (dnf5 does not "
 "download it for repositories by default)."
@@ -1450,7 +1456,7 @@ msgstr ""
 msgid "Loading metadata…"
 msgstr ""
 
-#: kram/ui/install_dialog.py:216 kram/ui/main_window.py:313
+#: kram/ui/install_dialog.py:216 kram/ui/main_window.py:320
 #, python-brace-format
 msgid ""
 "Could not load the package catalog:\n"
@@ -1672,107 +1678,107 @@ msgid_plural "{n} marked changes have not been applied. Quit anyway?"
 msgstr[0] ""
 msgstr[1] ""
 
-#: kram/ui/main_window.py:282
+#: kram/ui/main_window.py:289
 msgid "Waiting for another package manager to finish…"
 msgstr ""
 
-#: kram/ui/main_window.py:360
+#: kram/ui/main_window.py:367
 #, python-brace-format
 msgid ""
 "Searching “{text}” ({mode}); the first search also indexes what packages "
 "provide…"
 msgstr ""
 
-#: kram/ui/main_window.py:363
+#: kram/ui/main_window.py:370
 #, python-brace-format
 msgid "Searching “{text}” ({mode})…"
 msgstr ""
 
-#: kram/ui/main_window.py:442
+#: kram/ui/main_window.py:449
 #, python-brace-format
 msgid "Nothing provides “{what}”"
 msgstr ""
 
-#: kram/ui/main_window.py:453
+#: kram/ui/main_window.py:460
 #, python-brace-format
 msgid "Package {name} not found in the catalog"
 msgstr ""
 
-#: kram/ui/main_window.py:495
+#: kram/ui/main_window.py:502
 msgid "Remove from History"
 msgstr ""
 
-#: kram/ui/main_window.py:497
+#: kram/ui/main_window.py:504
 msgid "Clear Search History"
 msgstr ""
 
-#: kram/ui/main_window.py:512
+#: kram/ui/main_window.py:519
 msgid "A Synaptic-style package manager for Fedora."
 msgstr ""
 
-#: kram/ui/main_window.py:514
+#: kram/ui/main_window.py:521
 msgid "Released under the MIT License."
 msgstr ""
 
-#: kram/ui/main_window.py:517
+#: kram/ui/main_window.py:524
 msgid "What's New"
 msgstr ""
 
-#: kram/ui/main_window.py:563
+#: kram/ui/main_window.py:570
 #, python-brace-format
 msgid "{n} marking saved to {path}"
 msgid_plural "{n} markings saved to {path}"
 msgstr[0] ""
 msgstr[1] ""
 
-#: kram/ui/main_window.py:575
+#: kram/ui/main_window.py:582
 msgid "(loading…)"
 msgstr ""
 
-#: kram/ui/main_window.py:582
+#: kram/ui/main_window.py:589
 msgid "No older versions in the repositories"
 msgstr ""
 
-#: kram/ui/main_window.py:614
+#: kram/ui/main_window.py:621
 msgid "Cannot apply changes"
 msgstr ""
 
-#: kram/ui/main_window.py:615
+#: kram/ui/main_window.py:622
 msgid "The marked changes cannot be carried out. Unmark or change them."
 msgstr ""
 
-#: kram/ui/main_window.py:630
+#: kram/ui/main_window.py:637
 msgid "Applying changes"
 msgstr ""
 
-#: kram/ui/main_window.py:637
+#: kram/ui/main_window.py:644
 msgid "Refreshing metadata"
 msgstr ""
 
-#: kram/ui/main_window.py:663
+#: kram/ui/main_window.py:670
 #, python-brace-format
 msgid "Removing {n} repository"
 msgid_plural "Removing {n} repositories"
 msgstr[0] ""
 msgstr[1] ""
 
-#: kram/ui/main_window.py:667
+#: kram/ui/main_window.py:674
 msgid "Changing repositories"
 msgstr ""
 
-#: kram/ui/main_window.py:702
+#: kram/ui/main_window.py:709
 msgid "Downloading metadata again"
 msgstr ""
 
-#: kram/ui/main_window.py:704
+#: kram/ui/main_window.py:711
 msgid "Cleaning the package cache"
 msgstr ""
 
-#: kram/ui/main_window.py:746
+#: kram/ui/main_window.py:753
 msgid "Open Package File"
 msgstr ""
 
-#: kram/ui/main_window.py:747
+#: kram/ui/main_window.py:754
 msgid "RPM packages (*.rpm)"
 msgstr ""
 
@@ -2065,47 +2071,47 @@ msgid ""
 "autoremove removes it once nothing needs it"
 msgstr ""
 
-#: kram/ui/package_model.py:83 kram/ui/package_model.py:261
+#: kram/ui/package_model.py:83 kram/ui/package_model.py:263
 msgid "The upgrade cannot be installed now"
 msgstr ""
 
-#: kram/ui/package_model.py:255
+#: kram/ui/package_model.py:257
 #, python-brace-format
 msgid "Installed from {installed}; the latest version comes from {latest}"
 msgstr ""
 
-#: kram/ui/package_model.py:264 kram/ui/sidebar.py:146
+#: kram/ui/package_model.py:266 kram/ui/sidebar.py:146
 #, python-brace-format
 msgid "Marked: {action}"
 msgstr ""
 
-#: kram/ui/package_model.py:265
+#: kram/ui/package_model.py:267
 msgid "Click for actions"
 msgstr ""
 
-#: kram/ui/package_model.py:288
+#: kram/ui/package_model.py:290
 msgctxt "package status"
 msgid "Not installed"
 msgstr ""
 
-#: kram/ui/package_model.py:289
+#: kram/ui/package_model.py:291
 msgctxt "package status"
 msgid "Installed"
 msgstr ""
 
-#: kram/ui/package_model.py:290
+#: kram/ui/package_model.py:292
 msgid "Installed, upgrade available"
 msgstr ""
 
-#: kram/ui/package_model.py:291
+#: kram/ui/package_model.py:293
 msgid "Installed version is newer than the repository"
 msgstr ""
 
-#: kram/ui/package_model.py:292
+#: kram/ui/package_model.py:294
 msgid "Installed, no repository provides it"
 msgstr ""
 
-#: kram/ui/package_model.py:293
+#: kram/ui/package_model.py:295
 msgid "Installed as a dependency, no longer needed"
 msgstr ""
 

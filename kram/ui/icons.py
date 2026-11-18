@@ -269,6 +269,19 @@ def advisory_icon(level: str | None) -> QIcon:
     return _painted(draw)
 
 
+@cache
+def blocked_icon() -> QIcon:
+    """A red cross the size of the advisory dot, in its place: the upgrade cannot be installed now. The white halo
+    keeps it visible on dark rows, the selection and the reddish background of a row marked for removal."""
+    def draw(p: QPainter) -> None:
+        cross = (QLineF(5, 5, 11, 11), QLineF(11, 5, 5, 11))
+        for color, width in ((Qt.GlobalColor.white, 4), (QColor(ADVISORY_COLOR["important"]), 2)):
+            p.setPen(QPen(color, width, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
+            p.drawLines(cross)
+
+    return _painted(draw)
+
+
 _STATUS_FILTER_ICONS: dict[str, Callable[[], QIcon]] = {
     "status:all": _all_icon,
     "status:installed": lambda: status_icon(Status.INSTALLED),

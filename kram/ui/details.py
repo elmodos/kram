@@ -4,14 +4,14 @@ from datetime import datetime
 from urllib.parse import quote, unquote
 
 from PySide6.QtCore import Signal
-from PySide6.QtGui import QDesktopServices, QFontDatabase
+from PySide6.QtGui import QDesktopServices, QFontDatabase, QIcon
 from PySide6.QtWidgets import QPlainTextEdit, QTabWidget, QTextBrowser, QTreeWidget, QTreeWidgetItem
 
 from ..core.model import PkgDetails, PkgRow
 from ..core.origin import display_repo
 from ..i18n import _, pgettext
-from .icons import ORIGIN_LABEL, advisory_icon
-from .package_model import ADVISORY_LABEL, human_size
+from .icons import ADVISORY_COLOR, ORIGIN_LABEL, advisory_icon, blocked_icon
+from .package_model import ADVISORY_LABEL, blocked_tip, human_size
 
 e = html.escape
 
@@ -48,6 +48,15 @@ def _advisories_html(row: PkgRow) -> str:
     return "".join(parts)
 
 
+def _blocked_html(reason: str) -> str:
+    """Above the dependencies of an upgrade that cannot be installed: the root cause, then the resolver's message."""
+    title, _nl, cause = blocked_tip(reason).partition("\n")
+    return (f"<p style='color:{ADVISORY_COLOR['important']}'><b>{e(title)}</b></p>"
+            f"{f'<p><b>{e(cause)}</b></p>' if cause else ''}"
+            f"<p>{e(_('The repository has to fix it. Until then Mark All Upgrades leaves this package out.'))}</p>"
+            f"<p style='font-family:monospace; font-size:small; white-space:pre-wrap'>{e(reason.strip())}</p><hr>")
+
+
 class DetailsTabs(QTabWidget):
     # ("dep", requirement string) or ("pkg", "name.arch")
     linkActivated = Signal(str, str)
@@ -58,6 +67,9 @@ class DetailsTabs(QTabWidget):
         self.general = _browser()
         self.deps = _browser()
         self.deps.anchorClicked.connect(self._on_link)
+        # an upgrade that cannot be installed: a cross on the tab and the resolver's message above the dependencies
+        self._blocked = ""  # its HTML
+        self._deps_body = ""
         self.general.anchorClicked.connect(self._on_link)
         self.files = QPlainTextEdit()
         self.files.setReadOnly(True)
@@ -127,9 +139,25 @@ class DetailsTabs(QTabWidget):
         finally:
             self._switching = False
 
+    def show_blocked(self, reason: str | None) -> None:
+        """Mark the dependencies tab when the selected upgrade cannot be installed now; at once, like the advisories."""
+        index = self.indexOf(self.deps)
+        self.setTabIcon(index, blocked_icon() if reason else QIcon())
+        self.setTabToolTip(index, blocked_tip(reason) if reason else "")
+        self._blocked = _blocked_html(reason) if reason else ""
+        self._set_deps()
+
+    def _set_deps(self) -> None:
+        if self._blocked or self._deps_body:
+            self.deps.setHtml(self._blocked + self._deps_body)
+        else:
+            self.deps.clear()
+
     def clear(self) -> None:
-        for b in (self.desc, self.general, self.deps, self.changelog):
+        for b in (self.desc, self.general, self.changelog):
             b.clear()
+        self._deps_body = ""
+        self.show_blocked(None)
         self.files.clear()
         self.versions.clear()
         self.show_advisories(None)
@@ -169,7 +197,7 @@ class DetailsTabs(QTabWidget):
                 lis = "".join(f"<li><a href='dep:{quote(i)}'>{e(i)}</a></li>" for i in items)
             return f"<b>{title} ({len(items)})</b><ul style='margin-top:2px'>{lis}</ul>"
 
-        self.deps.setHtml("".join([
+        self._deps_body = "".join([
             section(_("Requires"), d.requires),
             section(_("Recommends"), d.recommends),
             section(_("Suggests"), d.suggests),
@@ -177,7 +205,8 @@ class DetailsTabs(QTabWidget):
             section(_("Conflicts"), d.conflicts),
             section(_("Obsoletes"), d.obsoletes),
             section(_("Provides"), d.provides),
-        ]) or f"<i>{e(_('No dependencies'))}</i>")
+        ]) or f"<i>{e(_('No dependencies'))}</i>"
+        self._set_deps()
 
         header = "" if d.files_complete else (
             "# " + _("Not installed: repository metadata lists only some of the files.") + "\n")

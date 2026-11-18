@@ -1,4 +1,6 @@
 """Loads the details of the package under the cursor for the detail tabs, once the cursor rests on it."""
+from collections.abc import Callable
+
 from PySide6.QtCore import QObject, QTimer
 
 from ..core.catalog import Catalog
@@ -12,9 +14,11 @@ DETAILS_DELAY_MS = 120
 
 
 class DetailsLoader(QObject):
-    def __init__(self, tabs: DetailsTabs, catalog: Catalog, dnf: DnfWorker, parent: QObject):
+    def __init__(self, tabs: DetailsTabs, catalog: Catalog, dnf: DnfWorker,
+                 blocked: Callable[[tuple[str, str]], str | None], parent: QObject):
+        """`blocked`: why the upgrade of a package cannot be installed now, or None."""
         super().__init__(parent)
-        self._tabs, self._catalog, self._dnf = tabs, catalog, dnf
+        self._tabs, self._catalog, self._dnf, self._blocked = tabs, catalog, dnf, blocked
         self._row: PkgRow | None = None
         self._details: PkgDetails | None = None  # of `_row`, once loaded
         self.timer = QTimer(self, singleShot=True, interval=DETAILS_DELAY_MS)
@@ -25,7 +29,13 @@ class DetailsLoader(QObject):
         self._row = row
         self._details = None
         self._tabs.show_advisories(row)
+        self._tabs.show_blocked(self._blocked(row.key))
         self.timer.start()
+
+    def refresh_blocked(self) -> None:
+        """The blocked upgrades arrived (they are resolved after the list is up)."""
+        if self._row is not None:
+            self._tabs.show_blocked(self._blocked(self._row.key))
 
     def clear(self) -> None:
         """Nothing is listed."""

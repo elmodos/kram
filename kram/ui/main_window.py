@@ -173,7 +173,7 @@ class MainWindow(QMainWindow):
 
         self.details = DetailsTabs()
         self.details.linkActivated.connect(self._on_link)
-        self.details_loader = DetailsLoader(self.details, self.catalog, self.dnf, self)
+        self.details_loader = DetailsLoader(self.details, self.catalog, self.dnf, self._blocked_reason, self)
 
         self.vsplit = QSplitter(Qt.Orientation.Vertical)
         self.vsplit.addWidget(self.table)
@@ -277,6 +277,13 @@ class MainWindow(QMainWindow):
         queries = self.custom_filters.queries()
         self.dnf.submit(lambda: self.catalog.load(queries, self._waiting_for_lock), self._on_loaded, self._on_error)
 
+    def _blocked_reason(self, key: tuple[str, str]) -> str | None:
+        return self.model.blocked.get(key)
+
+    def _on_blocked(self, blocked: dict[tuple[str, str], str]) -> None:
+        self.model.set_blocked(blocked)
+        self.details_loader.refresh_blocked()
+
     def _waiting_for_lock(self):
         """On the worker thread: another package manager holds the system repo lock, the load waits for it."""
         post(lambda: self.status.set_text(_("Waiting for another package manager to finish…")))
@@ -289,7 +296,7 @@ class MainWindow(QMainWindow):
         if any(r.status is Status.UPGRADABLE for r in snap.rows):
             # after the list is up: the full upgrade resolve takes a few tenths of a second
             self.dnf.submit(self.catalog.blocked_upgrades,
-                            lambda blocked: self.model.set_blocked(blocked) if self.snapshot is snap else None,
+                            lambda blocked: self._on_blocked(blocked) if self.snapshot is snap else None,
                             lambda e: None)  # without it every upgrade just looks installable, as before
         self.index = SearchIndex(snap.rows, snap.descriptions)
         self.narrowing = NarrowingSearch(self.index)

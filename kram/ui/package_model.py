@@ -9,7 +9,7 @@ from ..core.marks import ACTION_LABELS, MarkSet
 from ..core.model import PkgRow, Reason, Status
 from ..core.origin import display_repo
 from ..i18n import _, pgettext
-from .icons import MARK_BACKGROUND, ORIGIN_LABEL, advisory_icon, mark_icon, origin_icon, status_icon
+from .icons import MARK_BACKGROUND, ORIGIN_LABEL, advisory_icon, blocked_icon, mark_icon, origin_icon, status_icon
 
 # the update type column came last (logical index 9) so that saved header states keep their columns; the window
 # shows it after the latest version
@@ -241,6 +241,8 @@ class PackageTableModel(QAbstractTableModel):
             if col == COL_ORIGIN:
                 return origin_icon(r.origin)
             if col == COL_CANDIDATE:  # a blank one without an advisory, so that the versions line up
+                if r.key in self.blocked:  # until the repository fixes it, this matters more than the advisory
+                    return blocked_icon()
                 return advisory_icon(r.advisory.level if r.advisories else None)
         elif role == Qt.ItemDataRole.ToolTipRole:
             if col in (COL_CANDIDATE, COL_ADVISORY):
