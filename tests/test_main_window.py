@@ -51,6 +51,7 @@ def test_progress_belongs_to_the_dialog_that_started_it(window, monkeypatch):
 
     class Progress:
         ok = True
+        result = {"ok": True}
 
         def __init__(self, _client, _request, _title, parent):
             parents.append(parent)

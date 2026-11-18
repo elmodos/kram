@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kram\n"
 "Report-Msgid-Bugs-To: https://github.com/elmodos/kram/issues\n"
-"POT-Creation-Date: 2026-11-17 21:42+0200\n"
+"POT-Creation-Date: 2026-11-18 12:35+0200\n"
 "PO-Revision-Date: 2026-11-04 14:07+0200\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -529,61 +529,61 @@ msgstr ""
 "\n"
 "{error}"
 
-#: kram/ui/cache_dialog.py:32
+#: kram/ui/cache_dialog.py:37
 msgid "DNF: downloaded packages"
 msgstr "DNF: stažené balíčky"
 
-#: kram/ui/cache_dialog.py:33 kram/ui/cache_dialog.py:37
-#: kram/ui/cache_dialog.py:39
+#: kram/ui/cache_dialog.py:38 kram/ui/cache_dialog.py:42
+#: kram/ui/cache_dialog.py:44
 msgid "Clean"
 msgstr "Vyčistit"
 
-#: kram/ui/cache_dialog.py:33
+#: kram/ui/cache_dialog.py:38
 msgid "Left by interrupted transactions and “download only”."
 msgstr "Zbytky po přerušených transakcích a volbě „pouze stáhnout“."
 
-#: kram/ui/cache_dialog.py:34
+#: kram/ui/cache_dialog.py:39
 msgid "DNF: repository metadata"
 msgstr "DNF: metadata repozitářů"
 
-#: kram/ui/cache_dialog.py:35
+#: kram/ui/cache_dialog.py:40
 msgid "Download Again…"
 msgstr "Stáhnout znovu…"
 
-#: kram/ui/cache_dialog.py:35
+#: kram/ui/cache_dialog.py:40
 msgid "What Kram and dnf know about the available packages."
 msgstr "Co Kram a dnf vědí o dostupných balíčcích."
 
-#: kram/ui/cache_dialog.py:36
+#: kram/ui/cache_dialog.py:41
 msgid "DNF: cache of your user"
 msgstr "DNF: mezipaměť vašeho uživatele"
 
-#: kram/ui/cache_dialog.py:37
+#: kram/ui/cache_dialog.py:42
 msgid "Written by dnf when it runs without root. Kram does not use it."
 msgstr "Vytváří ji dnf spuštěný bez roota. Kram ji nepoužívá."
 
-#: kram/ui/cache_dialog.py:38
+#: kram/ui/cache_dialog.py:43
 msgid "Discover / GNOME Software"
 msgstr "Discover / GNOME Software"
 
-#: kram/ui/cache_dialog.py:39
+#: kram/ui/cache_dialog.py:44
 msgid "Packages downloaded for offline updates and never removed."
 msgstr "Balíčky stažené pro offline aktualizace a nikdy neodstraněné."
 
-#: kram/ui/cache_dialog.py:88 kram/ui/cache_dialog.py:225
-msgid "Package Cache"
-msgstr "Mezipaměť balíčků"
+#: kram/ui/cache_dialog.py:95 kram/ui/cache_dialog.py:241
+msgid "Cleanup"
+msgstr "Úklid"
 
-#: kram/ui/cache_dialog.py:151
+#: kram/ui/cache_dialog.py:167
 msgid "Open in the file manager"
 msgstr "Otevřít ve správci souborů"
 
-#: kram/ui/cache_dialog.py:180
+#: kram/ui/cache_dialog.py:196
 #, python-brace-format
 msgid "Could not count the caches: {error}"
 msgstr "Mezipaměti se nepodařilo spočítat: {error}"
 
-#: kram/ui/cache_dialog.py:194
+#: kram/ui/cache_dialog.py:210
 #, python-brace-format
 msgid "{n} file"
 msgid_plural "{n} files"
@@ -591,11 +591,11 @@ msgstr[0] "{n} soubor"
 msgstr[1] "{n} soubory"
 msgstr[2] "{n} souborů"
 
-#: kram/ui/cache_dialog.py:215
+#: kram/ui/cache_dialog.py:231
 msgid "Download metadata again"
 msgstr "Stáhnout metadata znovu"
 
-#: kram/ui/cache_dialog.py:216
+#: kram/ui/cache_dialog.py:232
 msgid ""
 "Delete the repository metadata and download it again?\n"
 "\n"
@@ -607,10 +607,185 @@ msgstr ""
 "Je potřeba internet a může to trvat několik minut. Pokud stahování selže, "
 "dostupné balíčky z Kramu zmizí, dokud se nepodaří „Znovu načíst“."
 
-#: kram/ui/cache_dialog.py:225
+#: kram/ui/cache_dialog.py:241
 #, python-brace-format
 msgid "Could not clean the cache: {error}"
 msgstr "Mezipaměť se nepodařilo vyčistit: {error}"
+
+#: kram/ui/cache_dialog.py:266
+msgid "Leftover configuration files"
+msgstr "Zbylé konfigurační soubory"
+
+#: kram/ui/cache_dialog.py:268
+msgid ""
+"Copies rpm keeps when you had changed a package's configuration file: your "
+"earlier version (.rpmsave) or the package's new default it did not apply "
+"(.rpmnew)."
+msgstr ""
+"Kopie, které rpm ponechá, když jste změnili konfigurační soubor balíčku: "
+"vaše dřívější verze (.rpmsave) nebo nová výchozí verze balíčku, kterou "
+"nepoužil (.rpmnew)."
+
+#: kram/ui/cache_dialog.py:278
+msgid "Search All Folders…"
+msgstr "Hledat ve všech složkách…"
+
+#: kram/ui/cache_dialog.py:279
+msgid "Also search the folders only root can read"
+msgstr "Hledat i ve složkách, které může číst jen root"
+
+#: kram/ui/cache_dialog.py:281
+msgid "Delete Unused…"
+msgstr "Smazat nepoužívané…"
+
+#: kram/ui/cache_dialog.py:282
+msgid "Delete the copies of files that no longer exist"
+msgstr "Smazat kopie souborů, které už neexistují"
+
+#: kram/ui/cache_dialog.py:291
+msgid "Searching…"
+msgstr "Hledání…"
+
+#: kram/ui/cache_dialog.py:295
+#, python-brace-format
+msgid "Could not search: {error}"
+msgstr "Hledání se nezdařilo: {error}"
+
+#: kram/ui/cache_dialog.py:305
+#, python-brace-format
+msgid "{n} file found."
+msgid_plural "{n} files found."
+msgstr[0] "Nalezen {n} soubor."
+msgstr[1] "Nalezeny {n} soubory."
+msgstr[2] "Nalezeno {n} souborů."
+
+#: kram/ui/cache_dialog.py:306
+msgid "Nothing found."
+msgstr "Nic nenalezeno."
+
+#: kram/ui/cache_dialog.py:308
+#, python-brace-format
+msgid "{n} folder only root can read was not searched."
+msgid_plural "{n} folders only root can read were not searched."
+msgstr[0] "{n} složka, kterou může číst jen root, nebyla prohledána."
+msgstr[1] "{n} složky, které může číst jen root, nebyly prohledány."
+msgstr[2] "{n} složek, které může číst jen root, nebylo prohledáno."
+
+#: kram/ui/cache_dialog.py:320
+msgid "A copy of a file that no longer exists. Nothing uses it."
+msgstr "Kopie souboru, který už neexistuje. Nic ji nepoužívá."
+
+#: kram/ui/cache_dialog.py:322
+#, python-brace-format
+msgid ""
+"The new default of {package}, not applied because the file had been changed."
+msgstr "Nová výchozí verze z {package}, nepoužitá, protože soubor byl změněn."
+
+#: kram/ui/cache_dialog.py:323
+msgid "A package's new default, not applied because the file had been changed."
+msgstr "Nová výchozí verze z balíčku, nepoužitá, protože soubor byl změněn."
+
+#: kram/ui/cache_dialog.py:324
+msgid "Compare and take over what you need, then delete it."
+msgstr "Porovnejte, převezměte, co potřebujete, a pak ji smažte."
+
+#: kram/ui/cache_dialog.py:325
+#, python-brace-format
+msgid "Your earlier version, put aside by {package}."
+msgstr "Vaše dřívější verze, odložená balíčkem {package}."
+
+#: kram/ui/cache_dialog.py:326
+msgid "Your earlier version, put aside by a package."
+msgstr "Vaše dřívější verze, odložená balíčkem."
+
+#: kram/ui/cache_dialog.py:327
+msgid "Compare and take over your changes, then delete it."
+msgstr "Porovnejte, převezměte své změny a pak ji smažte."
+
+#: kram/ui/cache_dialog.py:343 kram/ui/notifier_dialog.py:110
+#: kram/ui/repos_dialog.py:185
+msgid "Show in File Manager"
+msgstr "Zobrazit ve správci souborů"
+
+#: kram/ui/cache_dialog.py:353 kram/ui/cache_dialog.py:374
+#: kram/ui/cache_dialog.py:436
+msgid "Compare"
+msgstr "Porovnat"
+
+#: kram/ui/cache_dialog.py:356
+msgid "There is no current file to compare it with."
+msgstr "Není aktuální soubor, se kterým ji porovnat."
+
+#: kram/ui/cache_dialog.py:359
+#, python-brace-format
+msgid "Only root can read it. In a terminal: {command}"
+msgstr "Číst ji může jen root. V terminálu: {command}"
+
+#: kram/ui/cache_dialog.py:362
+msgid "Delete…"
+msgstr "Smazat…"
+
+#: kram/ui/cache_dialog.py:374
+#, python-brace-format
+msgid "Could not read the files: {error}"
+msgstr "Soubory nelze přečíst: {error}"
+
+#: kram/ui/cache_dialog.py:376
+msgid "The files are the same."
+msgstr "Soubory jsou stejné."
+
+#: kram/ui/cache_dialog.py:385
+#, python-brace-format
+msgid "Delete {path}?"
+msgstr "Smazat {path}?"
+
+#: kram/ui/cache_dialog.py:387
+#, python-brace-format
+msgid "Delete {n} file?"
+msgid_plural "Delete {n} files?"
+msgstr[0] "Smazat {n} soubor?"
+msgstr[1] "Smazat {n} soubory?"
+msgstr[2] "Smazat {n} souborů?"
+
+#: kram/ui/cache_dialog.py:388
+msgid "Delete leftover files"
+msgstr "Smazat zbylé soubory"
+
+#: kram/ui/cache_dialog.py:391
+msgid ""
+"The new default settings in it are lost: compare first to take over what you "
+"need."
+msgstr ""
+"Nová výchozí nastavení v ní budou ztracena: nejprve porovnejte a převezměte, "
+"co potřebujete."
+
+#: kram/ui/cache_dialog.py:393
+msgid "Your changes in it are lost, unless the current file has them too."
+msgstr "Vaše změny v ní budou ztraceny, pokud je nemá i aktuální soubor."
+
+#: kram/ui/cache_dialog.py:395 kram/ui/filters_dialog.py:154
+msgid "Delete"
+msgstr "Smazat"
+
+#: kram/ui/cache_dialog.py:400
+#, python-brace-format
+msgid "Deleting {n} file"
+msgid_plural "Deleting {n} files"
+msgstr[0] "Mazání {n} souboru"
+msgstr[1] "Mazání {n} souborů"
+msgstr[2] "Mazání {n} souborů"
+
+#: kram/ui/cache_dialog.py:409
+msgid "Searching for leftover files"
+msgstr "Hledání zbylých souborů"
+
+#: kram/ui/cache_dialog.py:439
+#, python-brace-format
+msgid ""
+"Lines with “-” are in the current file {current}; lines with “+” only in "
+"{path}."
+msgstr ""
+"Řádky s „-“ jsou v aktuálním souboru {current}; řádky s „+“ jen v {path}."
 
 #: kram/ui/copr_dialog.py:46
 msgid "COPR repositories"
@@ -929,10 +1104,6 @@ msgstr "Nový"
 msgid "New filter"
 msgstr "Nový filtr"
 
-#: kram/ui/filters_dialog.py:154
-msgid "Delete"
-msgstr "Smazat"
-
 #: kram/ui/filters_dialog.py:167
 msgid "Name:"
 msgstr "Název:"
@@ -1041,7 +1212,7 @@ msgstr "Instalace souboru balíčku"
 msgid "What installing it changes"
 msgstr "Co instalace změní"
 
-#: kram/ui/install_dialog.py:143 kram/ui/progress_dialog.py:89
+#: kram/ui/install_dialog.py:143 kram/ui/progress_dialog.py:90
 msgid "Details"
 msgstr "Podrobnosti"
 
@@ -1457,12 +1628,12 @@ msgid "Manage COPR projects: community repositories"
 msgstr "Spravovat projekty COPR: repozitáře komunity"
 
 #: kram/ui/main_window.py:216
-msgid "Package Cache…"
-msgstr "Mezipaměť balíčků…"
+msgid "Cleanup…"
+msgstr "Úklid…"
 
 #: kram/ui/main_window.py:217
-msgid "See how much space the package caches take and clean them"
-msgstr "Zobrazit, kolik místa zabírají mezipaměti balíčků, a vyčistit je"
+msgid "Clean the package caches and remove leftover configuration files"
+msgstr "Vyčistit mezipaměti balíčků a odstranit zbylé konfigurační soubory"
 
 #: kram/ui/main_window.py:218
 msgid "Update Notifications…"
@@ -1950,10 +2121,6 @@ msgstr "Otevřít soubor balíčku"
 msgid "RPM packages (*.rpm)"
 msgstr "Balíčky RPM (*.rpm)"
 
-#: kram/ui/notifier_dialog.py:110 kram/ui/repos_dialog.py:185
-msgid "Show in File Manager"
-msgstr "Zobrazit ve správci souborů"
-
 #: kram/ui/notifier_dialog.py:120
 #, python-brace-format
 msgid "{program}'s update notifier is turned off for you."
@@ -2251,23 +2418,23 @@ msgstr "Odstraněné soubory: {count}"
 msgid "Removed {path}"
 msgstr "Odstraněno {path}"
 
-#: kram/ui/progress_dialog.py:69
+#: kram/ui/progress_dialog.py:70
 msgid "Waiting for authentication…"
 msgstr "Čekání na ověření…"
 
-#: kram/ui/progress_dialog.py:72
+#: kram/ui/progress_dialog.py:73
 msgid "Download"
 msgstr "Stahování"
 
-#: kram/ui/progress_dialog.py:74
+#: kram/ui/progress_dialog.py:75
 msgid "Installation"
 msgstr "Instalace"
 
-#: kram/ui/progress_dialog.py:93
+#: kram/ui/progress_dialog.py:94
 msgid "Close when finished successfully"
 msgstr "Po úspěšném dokončení zavřít"
 
-#: kram/ui/progress_dialog.py:127
+#: kram/ui/progress_dialog.py:128
 #, python-brace-format
 msgid "The transaction has {n} package. Downloading…"
 msgid_plural "The transaction has {n} packages. Downloading…"
@@ -2275,31 +2442,31 @@ msgstr[0] "Transakce obsahuje {n} balíček. Stahování…"
 msgstr[1] "Transakce obsahuje {n} balíčky. Stahování…"
 msgstr[2] "Transakce obsahuje {n} balíčků. Stahování…"
 
-#: kram/ui/progress_dialog.py:156 kram/ui/upgrade_dialog.py:38
+#: kram/ui/progress_dialog.py:157 kram/ui/upgrade_dialog.py:38
 #, python-brace-format
 msgid "Downloading {name}"
 msgstr "Stahování {name}"
 
-#: kram/ui/progress_dialog.py:161 kram/ui/upgrade_dialog.py:40
+#: kram/ui/progress_dialog.py:162 kram/ui/upgrade_dialog.py:40
 #, python-brace-format
 msgid "Download failed: {error}"
 msgstr "Stahování selhalo: {error}"
 
-#: kram/ui/progress_dialog.py:171
+#: kram/ui/progress_dialog.py:172
 #, python-brace-format
 msgid "Downloaded {done} of {total}"
 msgstr "Staženo {done} z {total}"
 
-#: kram/ui/progress_dialog.py:179
+#: kram/ui/progress_dialog.py:180
 msgid "Preparing the rpm transaction…"
 msgstr "Příprava transakce rpm…"
 
-#: kram/ui/progress_dialog.py:207
+#: kram/ui/progress_dialog.py:208
 #, python-brace-format
 msgid "Package {index} of {count}"
 msgstr "Balíček {index} z {count}"
 
-#: kram/ui/progress_dialog.py:215
+#: kram/ui/progress_dialog.py:216
 #, python-brace-format
 msgid ""
 "Import the OpenPGP key used to verify packages?\n"
@@ -2316,45 +2483,45 @@ msgstr ""
 "Vytvořen: {created}\n"
 "Zdroj: {url}"
 
-#: kram/ui/progress_dialog.py:218
+#: kram/ui/progress_dialog.py:219
 msgid "Import key"
 msgstr "Importovat klíč"
 
-#: kram/ui/progress_dialog.py:219
+#: kram/ui/progress_dialog.py:220
 #, python-brace-format
 msgid "Key {key_id}: importing"
 msgstr "Klíč {key_id}: importuje se"
 
-#: kram/ui/progress_dialog.py:219
+#: kram/ui/progress_dialog.py:220
 #, python-brace-format
 msgid "Key {key_id}: rejected"
 msgstr "Klíč {key_id}: odmítnut"
 
-#: kram/ui/progress_dialog.py:234 kram/ui/progress_dialog.py:235
+#: kram/ui/progress_dialog.py:236 kram/ui/progress_dialog.py:237
 #: kram/ui/upgrade_dialog.py:301
 msgid "Done."
 msgstr "Hotovo."
 
-#: kram/ui/progress_dialog.py:234
+#: kram/ui/progress_dialog.py:236
 msgid "Packages downloaded."
 msgstr "Balíčky staženy."
 
-#: kram/ui/progress_dialog.py:239 kram/ui/progress_dialog.py:255
+#: kram/ui/progress_dialog.py:241 kram/ui/progress_dialog.py:257
 msgid "unknown error"
 msgstr "neznámá chyba"
 
-#: kram/ui/progress_dialog.py:241
+#: kram/ui/progress_dialog.py:243
 #, python-brace-format
 msgid ""
 "Another package operation is running: {process}. Try again when it has "
 "finished."
 msgstr "Probíhá jiná operace s balíčky: {process}. Zkuste to znovu, až skončí."
 
-#: kram/ui/progress_dialog.py:256
+#: kram/ui/progress_dialog.py:258
 msgid "Error:"
 msgstr "Chyba:"
 
-#: kram/ui/progress_dialog.py:258
+#: kram/ui/progress_dialog.py:260
 #, python-brace-format
 msgid "ERROR: {message}"
 msgstr "CHYBA: {message}"
@@ -2404,7 +2571,9 @@ msgstr "Žádný z jeho balíčků není v seznamu."
 msgid ""
 "Its file belongs to the package {package}: remove that package to remove the "
 "repository, or disable it here."
-msgstr "Jeho soubor patří balíčku {package}: repozitář odeberete odebráním tohoto balíčku, nebo jej zde zakažte."
+msgstr ""
+"Jeho soubor patří balíčku {package}: repozitář odeberete odebráním tohoto "
+"balíčku, nebo jej zde zakažte."
 
 #: kram/ui/repos_dialog.py:228
 #, python-brace-format
@@ -2431,8 +2600,10 @@ msgid "The file {path} configures {n} repository. Remove it from the system?"
 msgid_plural ""
 "The file {path} configures {n} repositories. Remove them all from the system?"
 msgstr[0] "Soubor {path} nastavuje {n} repozitář. Odebrat jej ze systému?"
-msgstr[1] "Soubor {path} nastavuje {n} repozitáře. Odebrat je všechny ze systému?"
-msgstr[2] "Soubor {path} nastavuje {n} repozitářů. Odebrat je všechny ze systému?"
+msgstr[1] ""
+"Soubor {path} nastavuje {n} repozitáře. Odebrat je všechny ze systému?"
+msgstr[2] ""
+"Soubor {path} nastavuje {n} repozitářů. Odebrat je všechny ze systému?"
 
 #: kram/ui/repos_dialog.py:258
 #, python-brace-format
@@ -2442,9 +2613,15 @@ msgid ""
 msgid_plural ""
 "{n} installed packages come from them. They stay installed but will no "
 "longer get updates (they will show as orphaned)."
-msgstr[0] "Pochází z nich {n} nainstalovaný balíček. Zůstane nainstalovaný, ale už nebude dostávat aktualizace (zobrazí se jako osiřelý)."
-msgstr[1] "Pocházejí z nich {n} nainstalované balíčky. Zůstanou nainstalované, ale už nebudou dostávat aktualizace (zobrazí se jako osiřelé)."
-msgstr[2] "Pochází z nich {n} nainstalovaných balíčků. Zůstanou nainstalované, ale už nebudou dostávat aktualizace (zobrazí se jako osiřelé)."
+msgstr[0] ""
+"Pochází z nich {n} nainstalovaný balíček. Zůstane nainstalovaný, ale už "
+"nebude dostávat aktualizace (zobrazí se jako osiřelý)."
+msgstr[1] ""
+"Pocházejí z nich {n} nainstalované balíčky. Zůstanou nainstalované, ale už "
+"nebudou dostávat aktualizace (zobrazí se jako osiřelé)."
+msgstr[2] ""
+"Pochází z nich {n} nainstalovaných balíčků. Zůstanou nainstalované, ale už "
+"nebudou dostávat aktualizace (zobrazí se jako osiřelé)."
 
 #: kram/ui/repos_dialog.py:262
 msgid "Remove repository"

@@ -19,6 +19,8 @@ Protocol: one JSON request per line on stdin, JSON event lines on stdout.
   {"op": "repo_set_enabled", "repos": {"<repo id>": bool}}  persist via dnf5 config-manager, then load metadata
   {"op": "copr", "action": "enable"|"disable"|"remove", "project": "owner/name", "hub": "<host>"}
   {"op": "repo_remove", "repos": ["<repo id>", ...]}      delete their .repo files; see repo_files_to_remove()
+  {"op": "find_leftovers"}                                 .rpmnew/.rpmsave/.rpmorig files in /etc ("done" has "files")
+  {"op": "remove_leftovers", "paths": ["/etc/...rpmsave", ...]}   see check_leftover()
   {"op": "clean_cache", "target": "dnf_packages"|"dnf_metadata"|"packagekit"}   see clean_cache()
   {"op": "answer", "id": N, "yes": bool}                   reply to a "question" event (only while asked)
   {"op": "quit"}
@@ -78,6 +80,12 @@ REPO_DIR = "/etc/yum.repos.d"
 # where `dnf5 config-manager setopt` keeps the options it sets, e.g. a repository's "enabled"
 CONFIG_MANAGER_OVERRIDES = "/etc/dnf/repos.override.d/99-config_manager.repo"
 MAX_REMOVE_REPOS = 100
+
+# rpm's copies of changed configuration files: the new default it did not apply (.rpmnew), the user's version it put
+# aside (.rpmsave, .rpmorig)
+LEFTOVER_SUFFIXES = (".rpmnew", ".rpmsave", ".rpmorig")
+LEFTOVER_ROOT = "/etc"
+MAX_LEFTOVERS = 1000
 
 CLEAN_TARGETS = ("dnf_packages", "dnf_metadata", "packagekit")
 PACKAGEKIT_CACHE = "/var/cache/PackageKit"
@@ -469,6 +477,85 @@ def remove_repos(req: dict) -> None:
     emit("done", ok=True)
 
 
+def find_leftover_files(root: str = LEFTOVER_ROOT) -> tuple[list[dict], int]:
+    """rpm's leftover copies below `root` (not following symlinks, not leaving its file system), and the number of
+    folders that could not be read. Shared with the GUI, which searches what a normal user can read.
+
+    Each file: path, size, mtime, and whether the file it is a copy of exists ("current"), which only a search
+    that could read the folder can tell."""
+    found, unreadable = [], [0]
+    root_dev = os.lstat(root).st_dev if os.path.isdir(root) else None
+
+    def skipped(_error: OSError) -> None:
+        unreadable[0] += 1
+
+    for directory, subdirs, names in os.walk(root, onerror=skipped):
+        subdirs[:] = [d for d in subdirs if _same_device(os.path.join(directory, d), root_dev)]
+        for name in names:
+            if not name.endswith(LEFTOVER_SUFFIXES):
+                continue
+            path = os.path.join(directory, name)
+            try:
+                st = os.lstat(path)
+            except OSError:
+                continue
+            if stat.S_ISREG(st.st_mode) and len(found) < MAX_LEFTOVERS:
+                found.append({"path": path, "size": st.st_size, "mtime": int(st.st_mtime),
+                              "current": os.path.lexists(os.path.splitext(path)[0])})
+    return sorted(found, key=lambda f: f["path"]), unreadable[0]
+
+
+def _same_device(path: str, device: int | None) -> bool:
+    try:
+        st = os.lstat(path)
+    except OSError:
+        return False
+    return stat.S_ISDIR(st.st_mode) and st.st_dev == device
+
+
+def check_leftover(path: object, owner=rpm_owner, root: str = LEFTOVER_ROOT) -> str:
+    """`path` if it is a leftover the helper may delete: a plain file below `root`, reached without a symlink, with
+    one of rpm's suffixes, and owned by no package (rpm owns a few .rpmnew-looking files on purpose)."""
+    if not isinstance(path, str) or not path.endswith(LEFTOVER_SUFFIXES) or not path.startswith(root + "/"):
+        raise ProtocolError(f"paths: {path!r} is not a leftover in {root}")
+    if os.path.normpath(path) != path or os.path.realpath(path) != path:
+        raise ProtocolError(f"paths: {path} is not a plain path")
+    try:
+        st = os.lstat(path)
+    except OSError as e:
+        raise ProtocolError(f"paths: {path}: {e.strerror}") from e
+    if not stat.S_ISREG(st.st_mode):
+        raise ProtocolError(f"paths: {path} is not a regular file")
+    if package := owner(path):
+        raise ProtocolError(f"paths: {path} belongs to the package {package}")
+    return path
+
+
+def find_leftovers() -> None:
+    files, unreadable = find_leftover_files()
+    emit("done", ok=True, files=files, unreadable=unreadable)
+
+
+def remove_leftovers(req: dict) -> None:
+    paths = req.get("paths")
+    if not isinstance(paths, list) or not 0 < len(paths) <= MAX_LEFTOVERS:
+        raise ProtocolError(f"paths: expected a list of at most {MAX_LEFTOVERS} paths")
+    checked = [check_leftover(p) for p in paths]  # all of them before deleting any
+    removed, failed = 0, []
+    for path in checked:
+        try:
+            os.unlink(path)
+        except OSError as e:
+            failed.append(f"{path}: {e.strerror}")
+            continue
+        log("file_removed", "Removed {path}", path=path)
+        removed += 1
+    if failed:
+        emit("done", ok=False, stage="remove", error=f"could not remove {len(failed)} files", details=failed)
+    else:
+        emit("done", ok=True)
+
+
 def packagekit_rpms() -> list[tuple[str, int]]:
     """(path, size) of the downloaded packages in PackageKit's cache. Its metadata is left alone: a running daemon
     and Discover keep using it. Shared with the GUI, so the size it shows is what cleaning frees."""
@@ -819,12 +906,13 @@ def main() -> int:
             if op == "ping":
                 emit("done", ok=True, uid=os.geteuid())
             elif op in ("transaction", "local_install", "refresh", "repo_set_enabled", "copr", "clean_cache",
-                        "repo_remove"):
+                        "repo_remove", "find_leftovers", "remove_leftovers"):
                 if "DownloadProgress" not in globals():
                     DownloadProgress, RpmProgress, KeyImport = _callbacks()
                 {"transaction": run_transaction, "local_install": local_install, "refresh": lambda _r: refresh(),
                  "repo_set_enabled": set_repos_enabled, "copr": copr, "clean_cache": clean_cache,
-                 "repo_remove": remove_repos}[op](req)
+                 "repo_remove": remove_repos, "find_leftovers": lambda _r: find_leftovers(),
+                 "remove_leftovers": remove_leftovers}[op](req)
             elif op == "quit":
                 return 0
             else:

@@ -53,6 +53,7 @@ class ProgressDialog(QDialog):
         self.client = client
         self.request = request
         self.ok = False
+        self.result: dict = {}  # the helper's final "done" event
         self.running = True
         self._downloads: dict[int, tuple[float, float]] = {}  # id -> (done, total)
         self._rpm_count = 0
@@ -222,6 +223,7 @@ class ProgressDialog(QDialog):
     def _finish(self, ev: dict) -> None:
         self.running = False
         self.ok = bool(ev.get("ok"))
+        self.result = ev
         self.buttons.setEnabled(True)
         if self.ok:
             self.download_bar.setRange(0, 1)

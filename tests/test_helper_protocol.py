@@ -58,8 +58,13 @@ def test_rejects_bad_input():
         '{"op": "repo_remove", "repos": ["../../etc/passwd"]}',
         '{"op": "repo_remove", "repos": ["-code"]}',
         '{"op": "repo_remove", "repos": [7]}',
+        '{"op": "remove_leftovers"}',
+        '{"op": "remove_leftovers", "paths": []}',
+        '{"op": "remove_leftovers", "paths": ["/etc/passwd"]}',
+        '{"op": "remove_leftovers", "paths": ["/etc/x/../shadow.rpmsave"]}',
+        '{"op": "remove_leftovers", "paths": ["/var/x.rpmsave"]}',
     )
-    assert len(events) == 39
+    assert len(events) == 44
     assert all(ev["event"] == "done" and ev["ok"] is False and ev["stage"] == "protocol" for ev in events)
 
 

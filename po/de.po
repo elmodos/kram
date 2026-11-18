@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kram\n"
 "Report-Msgid-Bugs-To: https://github.com/elmodos/kram/issues\n"
-"POT-Creation-Date: 2026-11-17 21:42+0200\n"
+"POT-Creation-Date: 2026-11-18 12:35+0200\n"
 "PO-Revision-Date: 2026-11-04 14:07+0200\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -529,73 +529,73 @@ msgstr ""
 "\n"
 "{error}"
 
-#: kram/ui/cache_dialog.py:32
+#: kram/ui/cache_dialog.py:37
 msgid "DNF: downloaded packages"
 msgstr "DNF: heruntergeladene Pakete"
 
-#: kram/ui/cache_dialog.py:33 kram/ui/cache_dialog.py:37
-#: kram/ui/cache_dialog.py:39
+#: kram/ui/cache_dialog.py:38 kram/ui/cache_dialog.py:42
+#: kram/ui/cache_dialog.py:44
 msgid "Clean"
 msgstr "Leeren"
 
-#: kram/ui/cache_dialog.py:33
+#: kram/ui/cache_dialog.py:38
 msgid "Left by interrupted transactions and “download only”."
 msgstr "Übrig von abgebrochenen Transaktionen und „nur herunterladen“."
 
-#: kram/ui/cache_dialog.py:34
+#: kram/ui/cache_dialog.py:39
 msgid "DNF: repository metadata"
 msgstr "DNF: Repository-Metadaten"
 
-#: kram/ui/cache_dialog.py:35
+#: kram/ui/cache_dialog.py:40
 msgid "Download Again…"
 msgstr "Erneut herunterladen…"
 
-#: kram/ui/cache_dialog.py:35
+#: kram/ui/cache_dialog.py:40
 msgid "What Kram and dnf know about the available packages."
 msgstr "Was Kram und dnf über die verfügbaren Pakete wissen."
 
-#: kram/ui/cache_dialog.py:36
+#: kram/ui/cache_dialog.py:41
 msgid "DNF: cache of your user"
 msgstr "DNF: Zwischenspeicher Ihres Benutzers"
 
-#: kram/ui/cache_dialog.py:37
+#: kram/ui/cache_dialog.py:42
 msgid "Written by dnf when it runs without root. Kram does not use it."
 msgstr "Von dnf angelegt, wenn es ohne root läuft. Kram verwendet ihn nicht."
 
-#: kram/ui/cache_dialog.py:38
+#: kram/ui/cache_dialog.py:43
 msgid "Discover / GNOME Software"
 msgstr "Discover / GNOME Software"
 
-#: kram/ui/cache_dialog.py:39
+#: kram/ui/cache_dialog.py:44
 msgid "Packages downloaded for offline updates and never removed."
 msgstr ""
 "Für Offline-Aktualisierungen heruntergeladene und nie entfernte Pakete."
 
-#: kram/ui/cache_dialog.py:88 kram/ui/cache_dialog.py:225
-msgid "Package Cache"
-msgstr "Paketzwischenspeicher"
+#: kram/ui/cache_dialog.py:95 kram/ui/cache_dialog.py:241
+msgid "Cleanup"
+msgstr "Aufräumen"
 
-#: kram/ui/cache_dialog.py:151
+#: kram/ui/cache_dialog.py:167
 msgid "Open in the file manager"
 msgstr "Im Dateimanager öffnen"
 
-#: kram/ui/cache_dialog.py:180
+#: kram/ui/cache_dialog.py:196
 #, python-brace-format
 msgid "Could not count the caches: {error}"
 msgstr "Die Zwischenspeicher konnten nicht gezählt werden: {error}"
 
-#: kram/ui/cache_dialog.py:194
+#: kram/ui/cache_dialog.py:210
 #, python-brace-format
 msgid "{n} file"
 msgid_plural "{n} files"
 msgstr[0] "{n} Datei"
 msgstr[1] "{n} Dateien"
 
-#: kram/ui/cache_dialog.py:215
+#: kram/ui/cache_dialog.py:231
 msgid "Download metadata again"
 msgstr "Metadaten erneut herunterladen"
 
-#: kram/ui/cache_dialog.py:216
+#: kram/ui/cache_dialog.py:232
 msgid ""
 "Delete the repository metadata and download it again?\n"
 "\n"
@@ -608,10 +608,188 @@ msgstr ""
 "Schlägt der Download fehl, verschwinden die verfügbaren Pakete aus Kram, bis "
 "„Neu laden“ erfolgreich ist."
 
-#: kram/ui/cache_dialog.py:225
+#: kram/ui/cache_dialog.py:241
 #, python-brace-format
 msgid "Could not clean the cache: {error}"
 msgstr "Der Zwischenspeicher konnte nicht geleert werden: {error}"
+
+#: kram/ui/cache_dialog.py:266
+msgid "Leftover configuration files"
+msgstr "Übrig gebliebene Konfigurationsdateien"
+
+#: kram/ui/cache_dialog.py:268
+msgid ""
+"Copies rpm keeps when you had changed a package's configuration file: your "
+"earlier version (.rpmsave) or the package's new default it did not apply "
+"(.rpmnew)."
+msgstr ""
+"Kopien, die rpm behält, wenn Sie eine Konfigurationsdatei eines Pakets "
+"geändert hatten: Ihre frühere Version (.rpmsave) oder die neue Vorgabe des "
+"Pakets, die es nicht übernommen hat (.rpmnew)."
+
+#: kram/ui/cache_dialog.py:278
+msgid "Search All Folders…"
+msgstr "Alle Ordner durchsuchen …"
+
+#: kram/ui/cache_dialog.py:279
+msgid "Also search the folders only root can read"
+msgstr "Auch die Ordner durchsuchen, die nur root lesen kann"
+
+#: kram/ui/cache_dialog.py:281
+msgid "Delete Unused…"
+msgstr "Unbenutzte löschen …"
+
+#: kram/ui/cache_dialog.py:282
+msgid "Delete the copies of files that no longer exist"
+msgstr "Die Kopien von Dateien löschen, die es nicht mehr gibt"
+
+#: kram/ui/cache_dialog.py:291
+msgid "Searching…"
+msgstr "Suche läuft …"
+
+#: kram/ui/cache_dialog.py:295
+#, python-brace-format
+msgid "Could not search: {error}"
+msgstr "Suche fehlgeschlagen: {error}"
+
+#: kram/ui/cache_dialog.py:305
+#, python-brace-format
+msgid "{n} file found."
+msgid_plural "{n} files found."
+msgstr[0] "{n} Datei gefunden."
+msgstr[1] "{n} Dateien gefunden."
+
+#: kram/ui/cache_dialog.py:306
+msgid "Nothing found."
+msgstr "Nichts gefunden."
+
+#: kram/ui/cache_dialog.py:308
+#, python-brace-format
+msgid "{n} folder only root can read was not searched."
+msgid_plural "{n} folders only root can read were not searched."
+msgstr[0] "{n} Ordner, den nur root lesen kann, wurde nicht durchsucht."
+msgstr[1] "{n} Ordner, die nur root lesen kann, wurden nicht durchsucht."
+
+#: kram/ui/cache_dialog.py:320
+msgid "A copy of a file that no longer exists. Nothing uses it."
+msgstr "Eine Kopie einer Datei, die es nicht mehr gibt. Nichts benutzt sie."
+
+#: kram/ui/cache_dialog.py:322
+#, python-brace-format
+msgid ""
+"The new default of {package}, not applied because the file had been changed."
+msgstr ""
+"Die neue Vorgabe von {package}, nicht übernommen, weil die Datei geändert "
+"worden war."
+
+#: kram/ui/cache_dialog.py:323
+msgid "A package's new default, not applied because the file had been changed."
+msgstr ""
+"Die neue Vorgabe eines Pakets, nicht übernommen, weil die Datei geändert "
+"worden war."
+
+#: kram/ui/cache_dialog.py:324
+msgid "Compare and take over what you need, then delete it."
+msgstr "Vergleichen, Benötigtes übernehmen, dann löschen."
+
+#: kram/ui/cache_dialog.py:325
+#, python-brace-format
+msgid "Your earlier version, put aside by {package}."
+msgstr "Ihre frühere Version, von {package} beiseitegelegt."
+
+#: kram/ui/cache_dialog.py:326
+msgid "Your earlier version, put aside by a package."
+msgstr "Ihre frühere Version, von einem Paket beiseitegelegt."
+
+#: kram/ui/cache_dialog.py:327
+msgid "Compare and take over your changes, then delete it."
+msgstr "Vergleichen, Ihre Änderungen übernehmen, dann löschen."
+
+#: kram/ui/cache_dialog.py:343 kram/ui/notifier_dialog.py:110
+#: kram/ui/repos_dialog.py:185
+msgid "Show in File Manager"
+msgstr "Im Dateimanager anzeigen"
+
+#: kram/ui/cache_dialog.py:353 kram/ui/cache_dialog.py:374
+#: kram/ui/cache_dialog.py:436
+msgid "Compare"
+msgstr "Vergleichen"
+
+#: kram/ui/cache_dialog.py:356
+msgid "There is no current file to compare it with."
+msgstr "Es gibt keine aktuelle Datei zum Vergleichen."
+
+#: kram/ui/cache_dialog.py:359
+#, python-brace-format
+msgid "Only root can read it. In a terminal: {command}"
+msgstr "Nur root kann sie lesen. Im Terminal: {command}"
+
+#: kram/ui/cache_dialog.py:362
+msgid "Delete…"
+msgstr "Löschen …"
+
+#: kram/ui/cache_dialog.py:374
+#, python-brace-format
+msgid "Could not read the files: {error}"
+msgstr "Die Dateien können nicht gelesen werden: {error}"
+
+#: kram/ui/cache_dialog.py:376
+msgid "The files are the same."
+msgstr "Die Dateien sind gleich."
+
+#: kram/ui/cache_dialog.py:385
+#, python-brace-format
+msgid "Delete {path}?"
+msgstr "{path} löschen?"
+
+#: kram/ui/cache_dialog.py:387
+#, python-brace-format
+msgid "Delete {n} file?"
+msgid_plural "Delete {n} files?"
+msgstr[0] "{n} Datei löschen?"
+msgstr[1] "{n} Dateien löschen?"
+
+#: kram/ui/cache_dialog.py:388
+msgid "Delete leftover files"
+msgstr "Übrig gebliebene Dateien löschen"
+
+#: kram/ui/cache_dialog.py:391
+msgid ""
+"The new default settings in it are lost: compare first to take over what you "
+"need."
+msgstr ""
+"Die neuen Vorgaben darin gehen verloren: Vergleichen Sie zuerst und "
+"übernehmen Sie, was Sie brauchen."
+
+#: kram/ui/cache_dialog.py:393
+msgid "Your changes in it are lost, unless the current file has them too."
+msgstr ""
+"Ihre Änderungen darin gehen verloren, außer die aktuelle Datei enthält sie "
+"auch."
+
+#: kram/ui/cache_dialog.py:395 kram/ui/filters_dialog.py:154
+msgid "Delete"
+msgstr "Löschen"
+
+#: kram/ui/cache_dialog.py:400
+#, python-brace-format
+msgid "Deleting {n} file"
+msgid_plural "Deleting {n} files"
+msgstr[0] "{n} Datei wird gelöscht"
+msgstr[1] "{n} Dateien werden gelöscht"
+
+#: kram/ui/cache_dialog.py:409
+msgid "Searching for leftover files"
+msgstr "Übrig gebliebene Dateien werden gesucht"
+
+#: kram/ui/cache_dialog.py:439
+#, python-brace-format
+msgid ""
+"Lines with “-” are in the current file {current}; lines with “+” only in "
+"{path}."
+msgstr ""
+"Zeilen mit „-“ stehen in der aktuellen Datei {current}; Zeilen mit „+“ nur "
+"in {path}."
 
 #: kram/ui/copr_dialog.py:46
 msgid "COPR repositories"
@@ -931,10 +1109,6 @@ msgstr "Neu"
 msgid "New filter"
 msgstr "Neuer Filter"
 
-#: kram/ui/filters_dialog.py:154
-msgid "Delete"
-msgstr "Löschen"
-
 #: kram/ui/filters_dialog.py:167
 msgid "Name:"
 msgstr "Name:"
@@ -1042,7 +1216,7 @@ msgstr "Paketdatei installieren"
 msgid "What installing it changes"
 msgstr "Was die Installation ändert"
 
-#: kram/ui/install_dialog.py:143 kram/ui/progress_dialog.py:89
+#: kram/ui/install_dialog.py:143 kram/ui/progress_dialog.py:90
 msgid "Details"
 msgstr "Details"
 
@@ -1467,13 +1641,14 @@ msgid "Manage COPR projects: community repositories"
 msgstr "COPR-Projekte verwalten: Paketquellen der Gemeinschaft"
 
 #: kram/ui/main_window.py:216
-msgid "Package Cache…"
-msgstr "Paketzwischenspeicher…"
+msgid "Cleanup…"
+msgstr "Aufräumen …"
 
 #: kram/ui/main_window.py:217
-msgid "See how much space the package caches take and clean them"
+msgid "Clean the package caches and remove leftover configuration files"
 msgstr ""
-"Anzeigen, wie viel Platz die Paketzwischenspeicher belegen, und sie leeren"
+"Paketzwischenspeicher leeren und übrig gebliebene Konfigurationsdateien "
+"entfernen"
 
 #: kram/ui/main_window.py:218
 msgid "Update Notifications…"
@@ -1963,10 +2138,6 @@ msgstr "Paketdatei öffnen"
 msgid "RPM packages (*.rpm)"
 msgstr "RPM-Pakete (*.rpm)"
 
-#: kram/ui/notifier_dialog.py:110 kram/ui/repos_dialog.py:185
-msgid "Show in File Manager"
-msgstr "Im Dateimanager anzeigen"
-
 #: kram/ui/notifier_dialog.py:120
 #, python-brace-format
 msgid "{program}'s update notifier is turned off for you."
@@ -2264,54 +2435,54 @@ msgstr "Entfernte Dateien: {count}"
 msgid "Removed {path}"
 msgstr "{path} entfernt"
 
-#: kram/ui/progress_dialog.py:69
+#: kram/ui/progress_dialog.py:70
 msgid "Waiting for authentication…"
 msgstr "Warten auf Authentifizierung …"
 
-#: kram/ui/progress_dialog.py:72
+#: kram/ui/progress_dialog.py:73
 msgid "Download"
 msgstr "Herunterladen"
 
-#: kram/ui/progress_dialog.py:74
+#: kram/ui/progress_dialog.py:75
 msgid "Installation"
 msgstr "Installation"
 
-#: kram/ui/progress_dialog.py:93
+#: kram/ui/progress_dialog.py:94
 msgid "Close when finished successfully"
 msgstr "Nach erfolgreichem Abschluss schließen"
 
-#: kram/ui/progress_dialog.py:127
+#: kram/ui/progress_dialog.py:128
 #, python-brace-format
 msgid "The transaction has {n} package. Downloading…"
 msgid_plural "The transaction has {n} packages. Downloading…"
 msgstr[0] "Die Transaktion umfasst {n} Paket. Wird heruntergeladen …"
 msgstr[1] "Die Transaktion umfasst {n} Pakete. Wird heruntergeladen …"
 
-#: kram/ui/progress_dialog.py:156 kram/ui/upgrade_dialog.py:38
+#: kram/ui/progress_dialog.py:157 kram/ui/upgrade_dialog.py:38
 #, python-brace-format
 msgid "Downloading {name}"
 msgstr "{name} wird heruntergeladen"
 
-#: kram/ui/progress_dialog.py:161 kram/ui/upgrade_dialog.py:40
+#: kram/ui/progress_dialog.py:162 kram/ui/upgrade_dialog.py:40
 #, python-brace-format
 msgid "Download failed: {error}"
 msgstr "Herunterladen fehlgeschlagen: {error}"
 
-#: kram/ui/progress_dialog.py:171
+#: kram/ui/progress_dialog.py:172
 #, python-brace-format
 msgid "Downloaded {done} of {total}"
 msgstr "{done} von {total} heruntergeladen"
 
-#: kram/ui/progress_dialog.py:179
+#: kram/ui/progress_dialog.py:180
 msgid "Preparing the rpm transaction…"
 msgstr "Die RPM-Transaktion wird vorbereitet …"
 
-#: kram/ui/progress_dialog.py:207
+#: kram/ui/progress_dialog.py:208
 #, python-brace-format
 msgid "Package {index} of {count}"
 msgstr "Paket {index} von {count}"
 
-#: kram/ui/progress_dialog.py:215
+#: kram/ui/progress_dialog.py:216
 #, python-brace-format
 msgid ""
 "Import the OpenPGP key used to verify packages?\n"
@@ -2328,34 +2499,34 @@ msgstr ""
 "Erstellt: {created}\n"
 "Von: {url}"
 
-#: kram/ui/progress_dialog.py:218
+#: kram/ui/progress_dialog.py:219
 msgid "Import key"
 msgstr "Schlüssel importieren"
 
-#: kram/ui/progress_dialog.py:219
+#: kram/ui/progress_dialog.py:220
 #, python-brace-format
 msgid "Key {key_id}: importing"
 msgstr "Schlüssel {key_id}: wird importiert"
 
-#: kram/ui/progress_dialog.py:219
+#: kram/ui/progress_dialog.py:220
 #, python-brace-format
 msgid "Key {key_id}: rejected"
 msgstr "Schlüssel {key_id}: abgelehnt"
 
-#: kram/ui/progress_dialog.py:234 kram/ui/progress_dialog.py:235
+#: kram/ui/progress_dialog.py:236 kram/ui/progress_dialog.py:237
 #: kram/ui/upgrade_dialog.py:301
 msgid "Done."
 msgstr "Fertig."
 
-#: kram/ui/progress_dialog.py:234
+#: kram/ui/progress_dialog.py:236
 msgid "Packages downloaded."
 msgstr "Pakete heruntergeladen."
 
-#: kram/ui/progress_dialog.py:239 kram/ui/progress_dialog.py:255
+#: kram/ui/progress_dialog.py:241 kram/ui/progress_dialog.py:257
 msgid "unknown error"
 msgstr "unbekannter Fehler"
 
-#: kram/ui/progress_dialog.py:241
+#: kram/ui/progress_dialog.py:243
 #, python-brace-format
 msgid ""
 "Another package operation is running: {process}. Try again when it has "
@@ -2364,11 +2535,11 @@ msgstr ""
 "Ein anderer Paketvorgang läuft: {process}. Versuchen Sie es erneut, wenn er "
 "abgeschlossen ist."
 
-#: kram/ui/progress_dialog.py:256
+#: kram/ui/progress_dialog.py:258
 msgid "Error:"
 msgstr "Fehler:"
 
-#: kram/ui/progress_dialog.py:258
+#: kram/ui/progress_dialog.py:260
 #, python-brace-format
 msgid "ERROR: {message}"
 msgstr "FEHLER: {message}"
@@ -2418,12 +2589,15 @@ msgstr "Keines ihrer Pakete ist in der Liste."
 msgid ""
 "Its file belongs to the package {package}: remove that package to remove the "
 "repository, or disable it here."
-msgstr "Ihre Datei gehört zum Paket {package}: Entfernen Sie dieses Paket, um die Paketquelle zu entfernen, oder deaktivieren Sie sie hier."
+msgstr ""
+"Ihre Datei gehört zum Paket {package}: Entfernen Sie dieses Paket, um die "
+"Paketquelle zu entfernen, oder deaktivieren Sie sie hier."
 
 #: kram/ui/repos_dialog.py:228
 #, python-brace-format
 msgid "Configured by the system, not in {folder}: it can only be disabled."
-msgstr "Vom System eingerichtet, nicht in {folder}: Sie kann nur deaktiviert werden."
+msgstr ""
+"Vom System eingerichtet, nicht in {folder}: Sie kann nur deaktiviert werden."
 
 #: kram/ui/repos_dialog.py:230
 msgid "Not configured in a file."
@@ -2444,8 +2618,10 @@ msgstr "Ihre Datei {path} wird gelöscht."
 msgid "The file {path} configures {n} repository. Remove it from the system?"
 msgid_plural ""
 "The file {path} configures {n} repositories. Remove them all from the system?"
-msgstr[0] "Die Datei {path} richtet {n} Paketquelle ein. Sie aus dem System entfernen?"
-msgstr[1] "Die Datei {path} richtet {n} Paketquellen ein. Alle aus dem System entfernen?"
+msgstr[0] ""
+"Die Datei {path} richtet {n} Paketquelle ein. Sie aus dem System entfernen?"
+msgstr[1] ""
+"Die Datei {path} richtet {n} Paketquellen ein. Alle aus dem System entfernen?"
 
 #: kram/ui/repos_dialog.py:258
 #, python-brace-format
@@ -2455,8 +2631,12 @@ msgid ""
 msgid_plural ""
 "{n} installed packages come from them. They stay installed but will no "
 "longer get updates (they will show as orphaned)."
-msgstr[0] "{n} installiertes Paket stammt daraus. Es bleibt installiert, erhält aber keine Aktualisierungen mehr (es wird als verwaist angezeigt)."
-msgstr[1] "{n} installierte Pakete stammen daraus. Sie bleiben installiert, erhalten aber keine Aktualisierungen mehr (sie werden als verwaist angezeigt)."
+msgstr[0] ""
+"{n} installiertes Paket stammt daraus. Es bleibt installiert, erhält aber "
+"keine Aktualisierungen mehr (es wird als verwaist angezeigt)."
+msgstr[1] ""
+"{n} installierte Pakete stammen daraus. Sie bleiben installiert, erhalten "
+"aber keine Aktualisierungen mehr (sie werden als verwaist angezeigt)."
 
 #: kram/ui/repos_dialog.py:262
 msgid "Remove repository"

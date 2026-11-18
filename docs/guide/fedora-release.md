@@ -22,4 +22,4 @@ updates, eight replaced and twenty downgraded](../screenshots/fedora-release-res
 *The result: what stops the upgrade and why, what would be removed, what would stay behind with no updates,
 what is replaced or downgraded, and the download and disk space it needs.*
 
-Next: [Package cache](package-cache.md).
+Next: [Cleanup](package-cache.md).

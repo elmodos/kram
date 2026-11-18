@@ -213,8 +213,8 @@ class MainWindow(QMainWindow):
                                            tip=_("A custom filter with the current sidebar selection and search"))
         self.act_copr = self._action(_("COPR"), "folder-cloud", slot=self.open_copr, enabled=False,
                                      tip=_("Manage COPR projects: community repositories"))
-        self.act_cache = self._action(_("Package Cache…"), "edit-clear-all", slot=self.open_cache, enabled=False,
-                                      tip=_("See how much space the package caches take and clean them"))
+        self.act_cache = self._action(_("Cleanup…"), "edit-clear-all", slot=self.open_cache, enabled=False,
+                                      tip=_("Clean the package caches and remove leftover configuration files"))
         self.act_notifications = self._action(_("Update Notifications…"), "preferences-desktop-notification",
                                               slot=self.open_notifications,
                                               tip=_("An icon in the system tray when updates are available"))
@@ -1279,7 +1279,7 @@ class MainWindow(QMainWindow):
     def open_cache(self):
         if not self.snapshot or self.helper.busy:
             return
-        CacheDialog(self.dnf, self._clean_cache, self).exec()
+        CacheDialog(self.dnf, self._clean_cache, self, helper=self._helper_result).exec()
 
     def open_notifications(self):
         NotifierDialog(self).exec()
@@ -1390,6 +1390,10 @@ class MainWindow(QMainWindow):
         self._update_actions()
 
     def _run_helper(self, request: dict, title: str) -> bool:
+        return self._helper_result(request, title) is not None
+
+    def _helper_result(self, request: dict, title: str) -> dict | None:
+        """Run a helper request with a progress dialog: its final event if it succeeded, else None."""
         self.act_apply.setEnabled(False)
         self.act_reload.setEnabled(False)
         # a child of the dialog that started it (COPR, Package Cache): as a sibling, that one could be raised over it
@@ -1398,4 +1402,4 @@ class MainWindow(QMainWindow):
         self.act_reload.setEnabled(True)
         self._update_actions()
         notifier_control.recheck()  # even after a failure: the metadata may have been refreshed
-        return dlg.ok
+        return dlg.result if dlg.ok else None

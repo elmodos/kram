@@ -36,8 +36,8 @@ left, the selected package's details below](docs/screenshots/main.png)
   COPR](docs/guide/repositories.md)
 - **A new Fedora release**: what blocks the upgrade, what it would remove, the disk space it needs.
   [Fedora release](docs/guide/fedora-release.md)
-- **Package cache**: what the caches take, including what Discover and GNOME Software left behind, and
-  cleaning them. [Package cache](docs/guide/package-cache.md)
+- **Cleanup**: what the caches take, including what Discover and GNOME Software left behind, and
+  cleaning them; rpm's leftover `.rpmnew`/`.rpmsave` files, compared and deleted. [Cleanup](docs/guide/package-cache.md)
 - **Tray icon while updates are available** (optional, off by default), without any background downloads.
   [Update notifications](docs/guide/update-notifications.md)
 - **One password per session** (polkit); browsing and searching need none.
@@ -55,7 +55,7 @@ What each part of Kram does, with screenshots:
 - [Repositories and COPR](docs/guide/repositories.md): enabling repositories and COPR projects, searching
   Copr.
 - [A new Fedora release](docs/guide/fedora-release.md): what moving to the next release would do.
-- [Package cache](docs/guide/package-cache.md): what the caches take and how to clean them.
+- [Cleanup](docs/guide/package-cache.md): what the caches take and how to clean them; leftover configuration files.
 - [Update notifications](docs/guide/update-notifications.md): the optional tray icon.
 
 ## Installing
