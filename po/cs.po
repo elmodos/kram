@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kram\n"
 "Report-Msgid-Bugs-To: https://github.com/elmodos/kram/issues\n"
-"POT-Creation-Date: 2026-11-18 12:43+0200\n"
+"POT-Creation-Date: 2026-11-18 13:13+0200\n"
 "PO-Revision-Date: 2026-11-04 14:07+0200\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -824,7 +824,7 @@ msgid "Remove…"
 msgstr "Odebrat…"
 
 #: kram/ui/copr_dialog.py:74 kram/ui/copr_dialog.py:180
-#: kram/ui/repos_dialog.py:125 kram/ui/repos_dialog.py:265
+#: kram/ui/repos_dialog.py:125 kram/ui/repos_dialog.py:264
 msgid "Show packages"
 msgstr "Zobrazit balíčky"
 
@@ -867,7 +867,7 @@ msgstr "Odebrat projekt COPR"
 msgid "Remove the {project} repository from the system?"
 msgstr "Odebrat repozitář {project} ze systému?"
 
-#: kram/ui/copr_dialog.py:175 kram/ui/repos_dialog.py:254
+#: kram/ui/copr_dialog.py:175 kram/ui/repos_dialog.py:253
 #, python-brace-format
 msgid ""
 "{n} installed package comes from it. It stays installed but will no longer "
@@ -885,7 +885,7 @@ msgstr[2] ""
 "Pochází z něj {n} nainstalovaných balíčků. Zůstanou nainstalované, ale už "
 "nebudou dostávat aktualizace (zobrazí se jako osiřelé)."
 
-#: kram/ui/copr_dialog.py:179 kram/ui/repos_dialog.py:264
+#: kram/ui/copr_dialog.py:179 kram/ui/repos_dialog.py:263
 msgid "Remove"
 msgstr "Odebrat"
 
@@ -2587,33 +2587,28 @@ msgstr "Žádný z jeho balíčků není v seznamu."
 
 #: kram/ui/repos_dialog.py:225
 #, python-brace-format
-msgid ""
-"Its file belongs to the package {package}: remove that package to remove the "
-"repository, or disable it here."
-msgstr ""
-"Jeho soubor patří balíčku {package}: repozitář odeberete odebráním tohoto "
-"balíčku, nebo jej zde zakažte."
+msgid "The .repo file is part of the installed package {package}."
+msgstr "Soubor .repo je součástí nainstalovaného balíčku {package}."
 
-#: kram/ui/repos_dialog.py:228
-#, python-brace-format
-msgid "Configured by the system, not in {folder}: it can only be disabled."
-msgstr "Nastaven systémem, ne v {folder}: lze jej pouze zakázat."
+#: kram/ui/repos_dialog.py:227
+msgid "Configured by the system."
+msgstr "Nastaven systémem."
 
-#: kram/ui/repos_dialog.py:230
+#: kram/ui/repos_dialog.py:229
 msgid "Not configured in a file."
 msgstr "Není nastaven v souboru."
 
-#: kram/ui/repos_dialog.py:245
+#: kram/ui/repos_dialog.py:244
 #, python-brace-format
 msgid "Remove the repository {repo} from the system?"
 msgstr "Odebrat repozitář {repo} ze systému?"
 
-#: kram/ui/repos_dialog.py:246
+#: kram/ui/repos_dialog.py:245
 #, python-brace-format
 msgid "Its file {path} will be deleted."
 msgstr "Jeho soubor {path} bude smazán."
 
-#: kram/ui/repos_dialog.py:248
+#: kram/ui/repos_dialog.py:247
 #, python-brace-format
 msgid "The file {path} configures {n} repository. Remove it from the system?"
 msgid_plural ""
@@ -2624,7 +2619,7 @@ msgstr[1] ""
 msgstr[2] ""
 "Soubor {path} nastavuje {n} repozitářů. Odebrat je všechny ze systému?"
 
-#: kram/ui/repos_dialog.py:258
+#: kram/ui/repos_dialog.py:257
 #, python-brace-format
 msgid ""
 "{n} installed package comes from them. It stays installed but will no longer "
@@ -2642,11 +2637,11 @@ msgstr[2] ""
 "Pochází z nich {n} nainstalovaných balíčků. Zůstanou nainstalované, ale už "
 "nebudou dostávat aktualizace (zobrazí se jako osiřelé)."
 
-#: kram/ui/repos_dialog.py:262
+#: kram/ui/repos_dialog.py:261
 msgid "Remove repository"
 msgstr "Odebrat repozitář"
 
-#: kram/ui/repos_dialog.py:294
+#: kram/ui/repos_dialog.py:293
 #, python-brace-format
 msgid "{n} repository will change."
 msgid_plural "{n} repositories will change."

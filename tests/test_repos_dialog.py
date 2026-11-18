@@ -178,7 +178,7 @@ def select(dlg, repo_id):
     ("code", True, ""),
     ("fedora", False, ""),  # in /etc and nobody's: removable; nothing of it in the list
     ("updates", True, "Configured by the system"),
-    ("google-chrome", False, "belongs to the package fedora-workstation-repositories"),
+    ("google-chrome", False, "The .repo file is part of the installed package fedora-workstation-repositories."),
     ("cmdline", False, "Not configured in a file"),
 ])
 def test_the_buttons_follow_the_selected_repository(app, repo_id, can_show, remove_tip):

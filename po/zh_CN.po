@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kram\n"
 "Report-Msgid-Bugs-To: https://github.com/elmodos/kram/issues\n"
-"POT-Creation-Date: 2026-11-18 12:43+0200\n"
+"POT-Creation-Date: 2026-11-18 13:13+0200\n"
 "PO-Revision-Date: 2026-11-04 14:07+0200\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -794,7 +794,7 @@ msgid "Remove…"
 msgstr "删除…"
 
 #: kram/ui/copr_dialog.py:74 kram/ui/copr_dialog.py:180
-#: kram/ui/repos_dialog.py:125 kram/ui/repos_dialog.py:265
+#: kram/ui/repos_dialog.py:125 kram/ui/repos_dialog.py:264
 msgid "Show packages"
 msgstr "显示软件包"
 
@@ -837,7 +837,7 @@ msgstr "删除 COPR 项目"
 msgid "Remove the {project} repository from the system?"
 msgstr "要从系统中删除软件源 {project} 吗？"
 
-#: kram/ui/copr_dialog.py:175 kram/ui/repos_dialog.py:254
+#: kram/ui/copr_dialog.py:175 kram/ui/repos_dialog.py:253
 #, python-brace-format
 msgid ""
 "{n} installed package comes from it. It stays installed but will no longer "
@@ -849,7 +849,7 @@ msgstr[0] ""
 "有 {n} 个已安装的软件包来自该软件源。它们会保留安装，但不再获得更新（将显示为"
 "孤立）。"
 
-#: kram/ui/copr_dialog.py:179 kram/ui/repos_dialog.py:264
+#: kram/ui/copr_dialog.py:179 kram/ui/repos_dialog.py:263
 msgid "Remove"
 msgstr "删除"
 
@@ -2461,39 +2461,35 @@ msgstr "列表中没有它的软件包。"
 
 #: kram/ui/repos_dialog.py:225
 #, python-brace-format
-msgid ""
-"Its file belongs to the package {package}: remove that package to remove the "
-"repository, or disable it here."
-msgstr ""
-"它的文件属于软件包 {package}：删除该软件包即可删除此软件源，或在此禁用它。"
+msgid "The .repo file is part of the installed package {package}."
+msgstr ".repo 文件是已安装软件包 {package} 的一部分。"
 
-#: kram/ui/repos_dialog.py:228
-#, python-brace-format
-msgid "Configured by the system, not in {folder}: it can only be disabled."
-msgstr "由系统配置，不在 {folder} 中：只能禁用。"
+#: kram/ui/repos_dialog.py:227
+msgid "Configured by the system."
+msgstr "由系统配置。"
 
-#: kram/ui/repos_dialog.py:230
+#: kram/ui/repos_dialog.py:229
 msgid "Not configured in a file."
 msgstr "未在文件中配置。"
 
-#: kram/ui/repos_dialog.py:245
+#: kram/ui/repos_dialog.py:244
 #, python-brace-format
 msgid "Remove the repository {repo} from the system?"
 msgstr "要从系统中删除软件源 {repo} 吗？"
 
-#: kram/ui/repos_dialog.py:246
+#: kram/ui/repos_dialog.py:245
 #, python-brace-format
 msgid "Its file {path} will be deleted."
 msgstr "将删除它的文件 {path}。"
 
-#: kram/ui/repos_dialog.py:248
+#: kram/ui/repos_dialog.py:247
 #, python-brace-format
 msgid "The file {path} configures {n} repository. Remove it from the system?"
 msgid_plural ""
 "The file {path} configures {n} repositories. Remove them all from the system?"
 msgstr[0] "文件 {path} 配置了 {n} 个软件源。要将它们全部从系统中删除吗？"
 
-#: kram/ui/repos_dialog.py:258
+#: kram/ui/repos_dialog.py:257
 #, python-brace-format
 msgid ""
 "{n} installed package comes from them. It stays installed but will no longer "
@@ -2505,11 +2501,11 @@ msgstr[0] ""
 "有 {n} 个已安装的软件包来自这些软件源。它们会保留安装，但不再获得更新（将显示"
 "为孤立）。"
 
-#: kram/ui/repos_dialog.py:262
+#: kram/ui/repos_dialog.py:261
 msgid "Remove repository"
 msgstr "删除软件源"
 
-#: kram/ui/repos_dialog.py:294
+#: kram/ui/repos_dialog.py:293
 #, python-brace-format
 msgid "{n} repository will change."
 msgid_plural "{n} repositories will change."

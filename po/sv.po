@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kram\n"
 "Report-Msgid-Bugs-To: https://github.com/elmodos/kram/issues\n"
-"POT-Creation-Date: 2026-11-18 12:43+0200\n"
+"POT-Creation-Date: 2026-11-18 13:13+0200\n"
 "PO-Revision-Date: 2026-11-05 18:05+0200\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -818,7 +818,7 @@ msgid "Remove…"
 msgstr "Ta bort…"
 
 #: kram/ui/copr_dialog.py:74 kram/ui/copr_dialog.py:180
-#: kram/ui/repos_dialog.py:125 kram/ui/repos_dialog.py:265
+#: kram/ui/repos_dialog.py:125 kram/ui/repos_dialog.py:264
 msgid "Show packages"
 msgstr "Visa paket"
 
@@ -862,7 +862,7 @@ msgstr "Ta bort COPR-projekt"
 msgid "Remove the {project} repository from the system?"
 msgstr "Ta bort förrådet {project} från systemet?"
 
-#: kram/ui/copr_dialog.py:175 kram/ui/repos_dialog.py:254
+#: kram/ui/copr_dialog.py:175 kram/ui/repos_dialog.py:253
 #, python-brace-format
 msgid ""
 "{n} installed package comes from it. It stays installed but will no longer "
@@ -877,7 +877,7 @@ msgstr[1] ""
 "{n} installerade paket kommer därifrån. De förblir installerade men får inga "
 "fler uppdateringar (de visas som övergivna)."
 
-#: kram/ui/copr_dialog.py:179 kram/ui/repos_dialog.py:264
+#: kram/ui/copr_dialog.py:179 kram/ui/repos_dialog.py:263
 msgid "Remove"
 msgstr "Ta bort"
 
@@ -2559,33 +2559,28 @@ msgstr "Inget av dess paket finns i listan."
 
 #: kram/ui/repos_dialog.py:225
 #, python-brace-format
-msgid ""
-"Its file belongs to the package {package}: remove that package to remove the "
-"repository, or disable it here."
-msgstr ""
-"Dess fil tillhör paketet {package}: ta bort det paketet för att ta bort "
-"förrådet, eller inaktivera det här."
+msgid "The .repo file is part of the installed package {package}."
+msgstr ".repo-filen är en del av det installerade paketet {package}."
 
-#: kram/ui/repos_dialog.py:228
-#, python-brace-format
-msgid "Configured by the system, not in {folder}: it can only be disabled."
-msgstr "Konfigurerat av systemet, inte i {folder}: det kan bara inaktiveras."
+#: kram/ui/repos_dialog.py:227
+msgid "Configured by the system."
+msgstr "Konfigurerat av systemet."
 
-#: kram/ui/repos_dialog.py:230
+#: kram/ui/repos_dialog.py:229
 msgid "Not configured in a file."
 msgstr "Inte konfigurerat i en fil."
 
-#: kram/ui/repos_dialog.py:245
+#: kram/ui/repos_dialog.py:244
 #, python-brace-format
 msgid "Remove the repository {repo} from the system?"
 msgstr "Ta bort förrådet {repo} från systemet?"
 
-#: kram/ui/repos_dialog.py:246
+#: kram/ui/repos_dialog.py:245
 #, python-brace-format
 msgid "Its file {path} will be deleted."
 msgstr "Dess fil {path} kommer att raderas."
 
-#: kram/ui/repos_dialog.py:248
+#: kram/ui/repos_dialog.py:247
 #, python-brace-format
 msgid "The file {path} configures {n} repository. Remove it from the system?"
 msgid_plural ""
@@ -2593,7 +2588,7 @@ msgid_plural ""
 msgstr[0] "Filen {path} konfigurerar {n} förråd. Ta bort det från systemet?"
 msgstr[1] "Filen {path} konfigurerar {n} förråd. Ta bort alla från systemet?"
 
-#: kram/ui/repos_dialog.py:258
+#: kram/ui/repos_dialog.py:257
 #, python-brace-format
 msgid ""
 "{n} installed package comes from them. It stays installed but will no longer "
@@ -2608,11 +2603,11 @@ msgstr[1] ""
 "{n} installerade paket kommer därifrån. De förblir installerade men får inga "
 "fler uppdateringar (de visas som övergivna)."
 
-#: kram/ui/repos_dialog.py:262
+#: kram/ui/repos_dialog.py:261
 msgid "Remove repository"
 msgstr "Ta bort förråd"
 
-#: kram/ui/repos_dialog.py:294
+#: kram/ui/repos_dialog.py:293
 #, python-brace-format
 msgid "{n} repository will change."
 msgid_plural "{n} repositories will change."

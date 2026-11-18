@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kram\n"
 "Report-Msgid-Bugs-To: https://github.com/elmodos/kram/issues\n"
-"POT-Creation-Date: 2026-11-18 12:43+0200\n"
+"POT-Creation-Date: 2026-11-18 13:13+0200\n"
 "PO-Revision-Date: 2026-11-04 14:07+0200\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -799,7 +799,7 @@ msgid "Remove…"
 msgstr "제거…"
 
 #: kram/ui/copr_dialog.py:74 kram/ui/copr_dialog.py:180
-#: kram/ui/repos_dialog.py:125 kram/ui/repos_dialog.py:265
+#: kram/ui/repos_dialog.py:125 kram/ui/repos_dialog.py:264
 msgid "Show packages"
 msgstr "패키지 보기"
 
@@ -842,7 +842,7 @@ msgstr "COPR 프로젝트 제거"
 msgid "Remove the {project} repository from the system?"
 msgstr "{project} 저장소를 시스템에서 제거하시겠습니까?"
 
-#: kram/ui/copr_dialog.py:175 kram/ui/repos_dialog.py:254
+#: kram/ui/copr_dialog.py:175 kram/ui/repos_dialog.py:253
 #, python-brace-format
 msgid ""
 "{n} installed package comes from it. It stays installed but will no longer "
@@ -854,7 +854,7 @@ msgstr[0] ""
 "설치된 패키지 {n}개가 이 저장소에서 왔습니다. 설치된 상태로 남지만 더 이상 업"
 "데이트를 받지 않습니다 (고아로 표시됩니다)."
 
-#: kram/ui/copr_dialog.py:179 kram/ui/repos_dialog.py:264
+#: kram/ui/copr_dialog.py:179 kram/ui/repos_dialog.py:263
 msgid "Remove"
 msgstr "제거"
 
@@ -2495,33 +2495,28 @@ msgstr "이 저장소의 패키지가 목록에 없습니다."
 
 #: kram/ui/repos_dialog.py:225
 #, python-brace-format
-msgid ""
-"Its file belongs to the package {package}: remove that package to remove the "
-"repository, or disable it here."
-msgstr ""
-"이 파일은 {package} 패키지에 속합니다. 저장소를 제거하려면 그 패키지를 제거하"
-"거나, 여기서 비활성화하십시오."
+msgid "The .repo file is part of the installed package {package}."
+msgstr ".repo 파일은 설치된 패키지 {package}의 일부입니다."
 
-#: kram/ui/repos_dialog.py:228
-#, python-brace-format
-msgid "Configured by the system, not in {folder}: it can only be disabled."
-msgstr "시스템이 설정한 저장소입니다 ({folder} 밖). 비활성화만 할 수 있습니다."
+#: kram/ui/repos_dialog.py:227
+msgid "Configured by the system."
+msgstr "시스템이 설정했습니다."
 
-#: kram/ui/repos_dialog.py:230
+#: kram/ui/repos_dialog.py:229
 msgid "Not configured in a file."
 msgstr "파일에 설정되어 있지 않습니다."
 
-#: kram/ui/repos_dialog.py:245
+#: kram/ui/repos_dialog.py:244
 #, python-brace-format
 msgid "Remove the repository {repo} from the system?"
 msgstr "{repo} 저장소를 시스템에서 제거하시겠습니까?"
 
-#: kram/ui/repos_dialog.py:246
+#: kram/ui/repos_dialog.py:245
 #, python-brace-format
 msgid "Its file {path} will be deleted."
 msgstr "파일 {path}이(가) 삭제됩니다."
 
-#: kram/ui/repos_dialog.py:248
+#: kram/ui/repos_dialog.py:247
 #, python-brace-format
 msgid "The file {path} configures {n} repository. Remove it from the system?"
 msgid_plural ""
@@ -2529,7 +2524,7 @@ msgid_plural ""
 msgstr[0] ""
 "{path} 파일은 저장소 {n}개를 설정합니다. 모두 시스템에서 제거하시겠습니까?"
 
-#: kram/ui/repos_dialog.py:258
+#: kram/ui/repos_dialog.py:257
 #, python-brace-format
 msgid ""
 "{n} installed package comes from them. It stays installed but will no longer "
@@ -2541,11 +2536,11 @@ msgstr[0] ""
 "설치된 패키지 {n}개가 이 저장소들에서 왔습니다. 설치된 상태로 남지만 더 이상 "
 "업데이트를 받지 않습니다 (고아로 표시됩니다)."
 
-#: kram/ui/repos_dialog.py:262
+#: kram/ui/repos_dialog.py:261
 msgid "Remove repository"
 msgstr "저장소 제거"
 
-#: kram/ui/repos_dialog.py:294
+#: kram/ui/repos_dialog.py:293
 #, python-brace-format
 msgid "{n} repository will change."
 msgid_plural "{n} repositories will change."

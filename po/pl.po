@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kram\n"
 "Report-Msgid-Bugs-To: https://github.com/elmodos/kram/issues\n"
-"POT-Creation-Date: 2026-11-18 12:43+0200\n"
+"POT-Creation-Date: 2026-11-18 13:13+0200\n"
 "PO-Revision-Date: 2026-11-04 14:07+0200\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -829,7 +829,7 @@ msgid "Remove…"
 msgstr "Usuń…"
 
 #: kram/ui/copr_dialog.py:74 kram/ui/copr_dialog.py:180
-#: kram/ui/repos_dialog.py:125 kram/ui/repos_dialog.py:265
+#: kram/ui/repos_dialog.py:125 kram/ui/repos_dialog.py:264
 msgid "Show packages"
 msgstr "Pokaż pakiety"
 
@@ -874,7 +874,7 @@ msgstr "Usuń projekt COPR"
 msgid "Remove the {project} repository from the system?"
 msgstr "Usunąć repozytorium {project} z systemu?"
 
-#: kram/ui/copr_dialog.py:175 kram/ui/repos_dialog.py:254
+#: kram/ui/copr_dialog.py:175 kram/ui/repos_dialog.py:253
 #, python-brace-format
 msgid ""
 "{n} installed package comes from it. It stays installed but will no longer "
@@ -892,7 +892,7 @@ msgstr[2] ""
 "Pochodzi z niego {n} zainstalowanych pakietów. Pozostaną zainstalowane, ale "
 "nie będą już otrzymywać aktualizacji (będą widoczne jako osierocone)."
 
-#: kram/ui/copr_dialog.py:179 kram/ui/repos_dialog.py:264
+#: kram/ui/copr_dialog.py:179 kram/ui/repos_dialog.py:263
 msgid "Remove"
 msgstr "Usuń"
 
@@ -2615,33 +2615,28 @@ msgstr "Żadnego z jego pakietów nie ma na liście."
 
 #: kram/ui/repos_dialog.py:225
 #, python-brace-format
-msgid ""
-"Its file belongs to the package {package}: remove that package to remove the "
-"repository, or disable it here."
-msgstr ""
-"Jego plik należy do pakietu {package}: aby usunąć repozytorium, usuń ten "
-"pakiet albo wyłącz je tutaj."
+msgid "The .repo file is part of the installed package {package}."
+msgstr "Plik .repo jest częścią zainstalowanego pakietu {package}."
 
-#: kram/ui/repos_dialog.py:228
-#, python-brace-format
-msgid "Configured by the system, not in {folder}: it can only be disabled."
-msgstr "Skonfigurowane przez system, nie w {folder}: można je tylko wyłączyć."
+#: kram/ui/repos_dialog.py:227
+msgid "Configured by the system."
+msgstr "Skonfigurowane przez system."
 
-#: kram/ui/repos_dialog.py:230
+#: kram/ui/repos_dialog.py:229
 msgid "Not configured in a file."
 msgstr "Nie jest skonfigurowane w pliku."
 
-#: kram/ui/repos_dialog.py:245
+#: kram/ui/repos_dialog.py:244
 #, python-brace-format
 msgid "Remove the repository {repo} from the system?"
 msgstr "Usunąć repozytorium {repo} z systemu?"
 
-#: kram/ui/repos_dialog.py:246
+#: kram/ui/repos_dialog.py:245
 #, python-brace-format
 msgid "Its file {path} will be deleted."
 msgstr "Jego plik {path} zostanie usunięty."
 
-#: kram/ui/repos_dialog.py:248
+#: kram/ui/repos_dialog.py:247
 #, python-brace-format
 msgid "The file {path} configures {n} repository. Remove it from the system?"
 msgid_plural ""
@@ -2652,7 +2647,7 @@ msgstr[1] ""
 msgstr[2] ""
 "Plik {path} konfiguruje {n} repozytoriów. Usunąć je wszystkie z systemu?"
 
-#: kram/ui/repos_dialog.py:258
+#: kram/ui/repos_dialog.py:257
 #, python-brace-format
 msgid ""
 "{n} installed package comes from them. It stays installed but will no longer "
@@ -2670,11 +2665,11 @@ msgstr[2] ""
 "Pochodzi z nich {n} zainstalowanych pakietów. Pozostaną zainstalowane, ale "
 "nie będą już otrzymywać aktualizacji (będą widoczne jako osierocone)."
 
-#: kram/ui/repos_dialog.py:262
+#: kram/ui/repos_dialog.py:261
 msgid "Remove repository"
 msgstr "Usuń repozytorium"
 
-#: kram/ui/repos_dialog.py:294
+#: kram/ui/repos_dialog.py:293
 #, python-brace-format
 msgid "{n} repository will change."
 msgid_plural "{n} repositories will change."

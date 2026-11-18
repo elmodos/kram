@@ -25,7 +25,7 @@ from PySide6.QtWidgets import (
 )
 
 from ..core.model import RepoInfo
-from ..core.repo_files import REPO_DIR, Removal, removal
+from ..core.repo_files import Removal, removal
 from ..i18n import _, ngettext
 from .files import show_in_file_manager
 from .icons import ORIGIN_LABEL, origin_icon
@@ -222,10 +222,9 @@ class ReposDialog(QDialog):
         path = self._repos[repo_id].file_path
         match removal(path, self._owners.get(path)):
             case Removal.OWNED:
-                return _("Its file belongs to the package {package}: remove that package to remove the repository, "
-                         "or disable it here.").format(package=self._owners[path])
+                return _("The .repo file is part of the installed package {package}.").format(package=self._owners[path])
             case Removal.SYSTEM:
-                return _("Configured by the system, not in {folder}: it can only be disabled.").format(folder=REPO_DIR)
+                return _("Configured by the system.")
             case Removal.NO_FILE:
                 return _("Not configured in a file.")
         return None
