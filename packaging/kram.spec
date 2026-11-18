@@ -1,5 +1,5 @@
 %global appid io.github.elmodos.Kram
-%global base_version 0.8.3
+%global base_version 0.8.4
 
 Name:           kram
 # A tagged release (v%%{base_version}) is plain %%{base_version}. Any other commit gets a snapshot from
@@ -116,6 +116,10 @@ QT_QPA_PLATFORM=offscreen %pytest
 %{_datadir}/kram/
 
 %changelog
+* Wed Nov 18 2026 Modo Ltunzher <offnormal@gmail.com> - 0.8.4-1
+- Package list: an upgrade that cannot be installed now shows a red cross before its version
+- Details: the Dependencies tab of such an upgrade shows why it cannot be installed
+
 * Wed Nov 18 2026 Modo Ltunzher <offnormal@gmail.com> - 0.8.3-1
 - Sidebar: "Security updates" and "Bug fix updates" are hidden when there are none
 
