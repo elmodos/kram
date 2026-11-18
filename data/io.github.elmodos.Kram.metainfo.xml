@@ -76,6 +76,17 @@
   <content_rating type="oars-1.1"/>
   <translation type="gettext">kram</translation>
   <releases>
+    <release version="0.8.0" date="2026-11-18">
+      <description>
+        <ul>
+          <li>Repositories: Show packages filters the list to a repository's packages, and Remove deletes a repository you added yourself.</li>
+          <li>The Origin filters list each Fedora repository on its own.</li>
+          <li>Cleanup (formerly Package Cache) lists the leftover .rpmnew and .rpmsave configuration files, compares them with the current file and deletes them.</li>
+          <li>Mark Unneeded Dependencies for Removal marks what dnf autoremove would remove.</li>
+          <li>The Repository column shows where an installed package came from when its latest version is in another repository.</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.7.3" date="2026-11-17">
       <description>
         <ul>
