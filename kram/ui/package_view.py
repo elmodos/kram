@@ -4,16 +4,27 @@ QTreeView rebuilds an internal item for every row on each model reset: 240 ms fo
 on a ThinkPad X220), on every search keystroke that changes the row set and every time a search is cleared.
 QTableView keeps nothing per row (its row heights are one uniform size): 40 ms, whatever the number of rows.
 """
-from PySide6.QtCore import QEvent, Qt
+from PySide6.QtCore import QEvent, QSettings, Qt
 from PySide6.QtGui import QCursor
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QHeaderView,
+    QMenu,
     QStyle,
     QStyledItemDelegate,
     QStyleOptionViewItem,
     QTableView,
 )
+
+from .package_model import COL_ADVISORY, COL_CANDIDATE, HEADERS, HIDEABLE
+
+# bumped when columns change: an old saved state would put widths and hidden flags on the wrong columns
+HEADER_STATE_KEY = "table/header-v2"
+COLUMN_WIDTHS = [26, 24, 230, 175, 110, 175, 150, 80]
+ADVISORY_COLUMN_WIDTH = 150
+# set once the update type column has been moved next to the latest version: a header state saved before 0.7 has
+# it at the end, after the summary that stretches over the spare width
+ADVISORY_COLUMN_KEY = "table/advisory-column"
 
 
 class RowDelegate(QStyledItemDelegate):
@@ -89,6 +100,42 @@ class PackageView(QTableView):
     def setModel(self, model) -> None:
         super().setModel(model)
         model.modelReset.connect(self._fit_row_height)
+        for col, width in enumerate(COLUMN_WIDTHS):
+            self.setColumnWidth(col, width)
+        self.setColumnWidth(COL_ADVISORY, ADVISORY_COLUMN_WIDTH)
+        self._place_advisory_column()
+        header = self.header()
+        header.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        header.customContextMenuRequested.connect(self._header_menu)
+
+    # ---------------------------------------------------------------- columns
+
+    def _place_advisory_column(self) -> None:
+        header = self.header()
+        header.moveSection(header.visualIndex(COL_ADVISORY), header.visualIndex(COL_CANDIDATE) + 1)
+
+    def _header_menu(self, pos) -> None:
+        """Right-click on the column titles: show or hide the columns that may be hidden."""
+        header = self.header()
+        m = QMenu(self)
+        for col in HIDEABLE:
+            act = m.addAction(HEADERS[col])
+            act.setCheckable(True)
+            act.setChecked(not header.isSectionHidden(col))
+            act.toggled.connect(lambda on, c=col: header.setSectionHidden(c, not on))
+        m.exec(header.viewport().mapToGlobal(pos))
+
+    def restore_columns(self, settings: QSettings) -> None:
+        """Widths, order and hidden columns as the user left them."""
+        if state := settings.value(HEADER_STATE_KEY):
+            self.header().restoreState(state)
+            if not settings.value(ADVISORY_COLUMN_KEY, False, type=bool):
+                self.setColumnWidth(COL_ADVISORY, ADVISORY_COLUMN_WIDTH)
+                self._place_advisory_column()
+
+    def save_columns(self, settings: QSettings) -> None:
+        settings.setValue(HEADER_STATE_KEY, self.header().saveState())
+        settings.setValue(ADVISORY_COLUMN_KEY, True)
 
     def _fit_row_height(self) -> None:
         """Rows as tall as the tree view made them: what the delegate asks for (text, status and origin icons), not

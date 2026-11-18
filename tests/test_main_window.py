@@ -12,7 +12,7 @@ from PySide6.QtCore import QObject, Signal
 from PySide6.QtNetwork import QNetworkRequest
 from PySide6.QtWidgets import QApplication, QDialog
 
-from kram.ui import main_window
+from kram.ui import actions, main_window, release_watch
 from kram.ui.progress_dialog import ProgressDialog
 
 
@@ -38,7 +38,7 @@ class FakeClient(QObject):
 
 
 def test_catalog_actions_are_disabled_until_it_is_loaded(window):
-    actions = (window.act_repos, window.act_copr, window.act_cache, window.act_filters, window.act_new_filter)
+    actions = (window.acts.repos, window.acts.copr, window.acts.cache, window.acts.filters, window.acts.new_filter)
     assert not any(a.isEnabled() for a in actions)
     window.snapshot = SimpleNamespace(n_upgradable=0)
     window._update_actions()
@@ -105,7 +105,7 @@ class BodhiReply:
         pass
 
     def error(self):
-        return main_window.QNetworkReply.TimeoutError if self.failed else main_window.QNetworkReply.NoError
+        return release_watch.QNetworkReply.TimeoutError if self.failed else release_watch.QNetworkReply.NoError
 
     def readAll(self):
         return self.body
@@ -117,44 +117,44 @@ BODHI = (b'{"releases": [{"version": "44", "state": "current", "id_prefix": "FED
 
 @pytest.fixture
 def fedora(window, monkeypatch):
-    monkeypatch.setattr(main_window, "QSettings", FakeSettings)
+    monkeypatch.setattr(release_watch, "QSettings", FakeSettings)
     monkeypatch.setattr(FakeSettings, "values", {})
-    window.running_fedora = 44
-    window.act_watch_releases.setChecked(True)
+    window.releases.running = 44
+    window.releases.act_watch.setChecked(True)
     return window
 
 
 def button(window):
-    return window.act_upgrade.isVisible(), window.act_upgrade.text()
+    return window.releases.act_upgrade.isVisible(), window.releases.act_upgrade.text()
 
 
 def test_new_release_shows_the_button(fedora):
     fedora.show()
-    assert not fedora.act_upgrade.isVisible()
-    fedora._on_release_check(BodhiReply(BODHI))
+    assert not fedora.releases.act_upgrade.isVisible()
+    fedora.releases._on_reply(BodhiReply(BODHI))
     assert button(fedora) == (True, "Fedora 45")
-    assert fedora.act_upgrade.toolTip() == "Fedora 45 is available, you have 44"
+    assert fedora.releases.act_upgrade.toolTip() == "Fedora 45 is available, you have 44"
     assert FakeSettings.values["distro/running_eol"] == "2027-06-02"
 
 
 def test_a_failed_check_keeps_the_last_result(fedora):
-    fedora._on_release_check(BodhiReply(BODHI))
+    fedora.releases._on_reply(BodhiReply(BODHI))
     for reply in (BodhiReply(failed=True), BodhiReply(b"not json"), BodhiReply(b'{"releases": []}')):
-        fedora._on_release_check(reply)
+        fedora.releases._on_reply(reply)
         assert FakeSettings.values["distro/target"] == 45
 
 
 def test_button_goes_when_the_system_gets_there_or_watching_stops(fedora):
-    fedora._on_release_check(BodhiReply(BODHI))
+    fedora.releases._on_reply(BodhiReply(BODHI))
     fedora.show()
-    assert fedora.act_upgrade.isVisible()
-    fedora.act_watch_releases.setChecked(False)
-    assert not fedora.act_upgrade.isVisible()
-    fedora.act_watch_releases.setChecked(True)
-    assert fedora.act_upgrade.isVisible()
-    fedora.running_fedora = 45
-    fedora._update_upgrade_button()
-    assert not fedora.act_upgrade.isVisible()
+    assert fedora.releases.act_upgrade.isVisible()
+    fedora.releases.act_watch.setChecked(False)
+    assert not fedora.releases.act_upgrade.isVisible()
+    fedora.releases.act_watch.setChecked(True)
+    assert fedora.releases.act_upgrade.isVisible()
+    fedora.releases.running = 45
+    fedora.releases.update_button()
+    assert not fedora.releases.act_upgrade.isVisible()
 
 
 def test_only_reload_asks_and_only_when_watching(fedora, monkeypatch):
@@ -166,13 +166,13 @@ def test_only_reload_asks_and_only_when_watching(fedora, monkeypatch):
         agents.append((request.header(QNetworkRequest.KnownHeaders.UserAgentHeader),
                        bytes(request.rawHeader("Accept"))))
         return BodhiReplySignal()
-    monkeypatch.setattr(fedora._net, "get", get)
+    monkeypatch.setattr(fedora.releases._net, "get", get)
     monkeypatch.setattr(fedora, "_run_helper", lambda *_args: True)
     fedora.refresh_metadata()
     assert asked == ["bodhi.fedoraproject.org"]
     # Bodhi answers anything that looks like a browser with an HTML bot check
     assert agents[0][0].startswith("Kram/") and agents[0][1] == b"application/json"
-    fedora.act_watch_releases.setChecked(False)
+    fedora.releases.act_watch.setChecked(False)
     fedora.refresh_metadata()
     assert len(asked) == 1
 
@@ -182,11 +182,11 @@ class BodhiReplySignal:
 
 
 def test_not_fedora_has_no_setting_and_no_check(fedora, monkeypatch):
-    fedora.running_fedora = None
-    monkeypatch.setattr(fedora._net, "get", lambda _request: pytest.fail("asked Bodhi"))
-    fedora._check_fedora_release()
-    fedora._update_upgrade_button()
-    assert not fedora.act_upgrade.isVisible()
+    fedora.releases.running = None
+    monkeypatch.setattr(fedora.releases._net, "get", lambda _request: pytest.fail("asked Bodhi"))
+    fedora.releases.check()
+    fedora.releases.update_button()
+    assert not fedora.releases.act_upgrade.isVisible()
 
 
 def test_a_full_download_bar_keeps_moving_until_the_end(app):
@@ -220,7 +220,7 @@ def test_mark_upgrades_icon_follows_whether_there_is_anything_to_mark(app, monke
     monkeypatch.setattr(main_window.MainWindow, "reload", lambda self: None)
     win = main_window.MainWindow()
     try:
-        action = win.act_mark_upgrades
+        action = win.acts.mark_upgrades
         assert not action.isEnabled() and action.icon().cacheKey() == themed["update-none"].cacheKey()
         win.snapshot = SimpleNamespace(n_upgradable=2)
         win._update_actions()
@@ -237,7 +237,7 @@ def test_status_icon_click_marks_the_likely_action_only_when_chosen(window, monk
     from kram.core.model import Origin, PkgRow, Status
     from kram.ui.package_model import COL_NAME, COL_STATUS
 
-    monkeypatch.setattr(main_window, "QSettings", FakeSettings)
+    monkeypatch.setattr(actions, "QSettings", FakeSettings)
     monkeypatch.setattr(FakeSettings, "values", {})
     menus = []
 
@@ -252,11 +252,11 @@ def test_status_icon_click_marks_the_likely_action_only_when_chosen(window, monk
     status = [window.model.index(i, COL_STATUS) for i in range(3)]
     marks = window.model.marks
 
-    window.act_status_click.setChecked(False)
+    window.acts.status_click.setChecked(False)
     window._on_table_click(status[0])  # Synaptic's default: the menu
     assert len(menus) == 1 and len(marks) == 0
 
-    window.act_status_click.setChecked(True)
+    window.acts.status_click.setChecked(True)
     window._on_table_click(status[0])
     window._on_table_click(status[1])
     assert [marks.get(r.key).action for r in rows[:2]] == [Action.INSTALL, Action.UPGRADE] and len(menus) == 1
@@ -283,7 +283,7 @@ def test_group_marks_from_the_sidebar(window):
     window.sidebar.set_view("groups")
     def menu_for(group):
         menu = QMenu()
-        window._group_menu(menu, group)
+        window.marker.fill_group_menu(menu, group, busy=False)
         return {a.text(): a.isEnabled() for a in menu.actions()}
 
     # Upgrade waits for the check after loading, and stays off when it finds nothing to upgrade
@@ -293,9 +293,9 @@ def test_group_marks_from_the_sidebar(window):
     tools.upgradable = True
     assert menu_for(tools)["Mark Group for Upgrade"]
 
-    window.mark_group(apps, Action.INSTALL)
-    window.mark_group(tools, Action.REMOVE)
-    assert window.act_apply.isEnabled()
+    window.marker.mark_group(apps, Action.INSTALL)
+    window.marker.mark_group(tools, Action.REMOVE)
+    assert window.acts.apply.isEnabled()
     item = next(window.sidebar.list.item(n) for n, e in enumerate(window.sidebar._entries) if e.group == "kde-apps")
     assert "Marked: install" in item.toolTip()
     assert window.model.marks.request({}) == {"group_install": ["kde-apps"], "group_remove": ["development-tools"]}
@@ -307,8 +307,8 @@ def test_group_marks_from_the_sidebar(window):
     # after a reload the removed group is gone: its mark goes too
     window._on_loaded(CatalogSnapshot([], 0, 0, 0.0, groups=[apps]))
     assert window.model.marks.request({}) == {"group_install": ["kde-apps"]}
-    window.unmark_all()
-    assert not window.act_apply.isEnabled()
+    window.marker.unmark_all()
+    assert not window.acts.apply.isEnabled()
 
 
 def test_a_provides_search_typed_over_is_skipped_not_run(window, monkeypatch):
@@ -327,10 +327,10 @@ def test_a_provides_search_typed_over_is_skipped_not_run(window, monkeypatch):
     jobs, asked = [], []
     monkeypatch.setattr(window.dnf, "submit", lambda fn, done, _error=None: jobs.append((fn, done)))
     monkeypatch.setattr(window.catalog, "search_provides", lambda text: asked.append(text) or [rows[0].key])
-    window.search_mode.setCurrentIndex(Mode.PROVIDES)
+    window.search.mode_box.setCurrentIndex(Mode.PROVIDES)
     searches = []  # other jobs load the details of the selected row
     for text in ("vulk", "vulkan"):
-        window.search.setText(text)
+        window.search.edit.setText(text)
         before = len(jobs)
         window.apply_filter()
         searches.append(jobs[before])
@@ -382,16 +382,16 @@ def test_details_wait_for_the_cursor_to_rest(window, monkeypatch):
     monkeypatch.setattr(window.details, "show_package", lambda row, d: shown.append(row.key))
     for n in range(3):  # the cursor runs down the list
         window.table.setCurrentIndex(window.model.index(n, 0))
-    assert jobs == [] and window._details_timer.isActive()
-    window._details_timer.stop()
-    window._load_details()
+    assert jobs == [] and window.details_loader.timer.isActive()
+    window.details_loader.timer.stop()
+    window.details_loader.load()
     assert len(jobs) == 1
     window.table.setCurrentIndex(window.model.index(0, 0))  # moved on while the job waited its turn
     fn, done = jobs[0]
     done(fn())
     assert asked == [] and shown == []
-    window._details_timer.stop()
-    window._load_details()
+    window.details_loader.timer.stop()
+    window.details_loader.load()
     fn, done = jobs[1]
     done(fn())
     assert asked == shown == [("a", "x86_64")]
@@ -408,6 +408,7 @@ def test_upgrades_that_cannot_be_installed_are_dimmed_and_not_marked_by_mark_all
                    Status.UPGRADABLE, True),
             PkgRow("gjs", "x86_64", "", "1.90.1-1", "1.90.1-2", "updates", 1, Origin.FEDORA, Status.UPGRADABLE)]
     window.snapshot = CatalogSnapshot(rows, 2, 2, 0.0)
+    window.marker.set_snapshot(window.snapshot)
     window.model.set_rows(rows, "x86_64")
     ffmpeg, gjs = (window.model.index(i, COL_CANDIDATE) for i in range(2))
     assert ffmpeg.data(Qt.ItemDataRole.FontRole).bold() and ffmpeg.data(Qt.ItemDataRole.ForegroundRole) is None
@@ -424,7 +425,7 @@ def test_upgrades_that_cannot_be_installed_are_dimmed_and_not_marked_by_mark_all
     assert "cannot be installed now" in window.model.index(0, COL_STATUS).data(Qt.ItemDataRole.ToolTipRole)
     assert gjs.data(Qt.ItemDataRole.FontRole).bold() and gjs.data(Qt.ItemDataRole.ToolTipRole) is None
 
-    window.mark_all_upgrades()
+    window.marker.mark_all_upgrades()
     marks = window.model.marks
     assert rows[0].key not in marks and marks.get(rows[1].key).action is Action.UPGRADE
     assert "1 upgrade left out" in window.statusBar().currentMessage()
@@ -446,13 +447,13 @@ def test_mark_unneeded_marks_what_autoremove_would_remove(window):
             PkgRow("lib-gone", "x86_64", "", "1-1", "", "", 1, Origin.UNKNOWN, Status.ORPHAN, False, unneeded=True)]
     window.model.set_rows(rows, "x86_64")
     window._update_actions()
-    assert not window.act_mark_unneeded.isEnabled()  # nothing loaded yet
-    window._unneeded = [r for r in rows if r.unneeded]  # as _on_loaded finds them
+    assert not window.acts.mark_unneeded.isEnabled()  # nothing loaded yet
+    window.marker.unneeded = [r for r in rows if r.unneeded]  # as a loaded catalog gives them
     window._update_actions()
-    assert window.act_mark_unneeded.isEnabled()
-    window.act_mark_unneeded.trigger()
+    assert window.acts.mark_unneeded.isEnabled()
+    window.acts.mark_unneeded.trigger()
     marks = window.model.marks
     assert {k: marks.get(k).action for k in (r.key for r in rows) if k in marks} == {
         rows[0].key: Action.REMOVE, rows[2].key: Action.REMOVE}
     assert window.statusBar().currentMessage() == "2 unneeded dependencies marked for removal"
-    assert window.act_apply.isEnabled()
+    assert window.acts.apply.isEnabled()

@@ -1,106 +1,61 @@
 """Main window: Synaptic layout — browse, mark, preview, apply."""
-import html
 import json
 import time
 from collections import Counter
-from collections.abc import Callable
 from pathlib import Path
 
-from PySide6.QtCore import QSettings, QSize, QStandardPaths, Qt, QTimer, QUrl, Signal
-from PySide6.QtGui import QAction, QActionGroup, QGuiApplication, QIcon, QKeySequence
-from PySide6.QtNetwork import QNetworkAccessManager, QNetworkReply
+from PySide6.QtCore import QSettings, QStandardPaths, Qt, QTimer, Signal
+from PySide6.QtGui import QGuiApplication, QIcon
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QApplication,
-    QComboBox,
     QFileDialog,
-    QLabel,
-    QLineEdit,
     QMainWindow,
     QMenu,
     QMessageBox,
-    QSizePolicy,
     QSplitter,
-    QToolBar,
     QToolButton,
     QWidget,
 )
 
 from .. import HOMEPAGE, __version__, instance
-from ..core import distro, releases
+from ..core import releases
 from ..core.catalog import Catalog
-from ..core.custom_filters import CustomFilter, Field, conditions_for_view, load_filters, provides_queries
 from ..core.evr import evr_cmp
-from ..core.filters import (
-    UPGRADES_FIXES,
-    UPGRADES_SECURITY,
-    UPGRADES_SECURITY_HIGH,
-    FilterEntry,
-    upgrades_by_kind,
-)
-from ..core.marks import Action, allowed_actions, allowed_group_actions, dump_marks, parse_marks
-from ..core.model import CatalogSnapshot, GroupInfo, PkgDetails, PkgRow, Status, TransactionPreview
+from ..core.filters import FilterEntry
+from ..core.marks import Action, allowed_actions
+from ..core.model import CatalogSnapshot, PkgRow, Status, TransactionPreview
 from ..core.repo_files import file_owners
 from ..core.search import MODE_LABELS, Mode, NarrowingSearch, SearchIndex
 from ..core.worker import DnfWorker
-from ..i18n import N_, _, ngettext
+from ..i18n import _, ngettext
 from ..ipc.client import HelperClient
 from ..notifier import control as notifier_control
+from .actions import WindowActions
 from .apply_dialog import ApplyDialog
 from .cache_dialog import CacheDialog
 from .copr_dialog import CoprDialog
+from .custom_filters import CustomFilters
 from .details import DetailsTabs
-from .filters_dialog import FiltersDialog
+from .details_loader import DetailsLoader
 from .install_dialog import InstallDialog
+from .marking import Marker
+from .markings_file import ask_markings_file, save_markings
 from .notifier_dialog import NotifierDialog
-from .package_model import COL_ADVISORY, COL_CANDIDATE, COL_NAME, COL_STATUS, HEADERS, HIDEABLE, PackageTableModel
+from .package_model import COL_NAME, COL_STATUS, PackageTableModel
 from .package_view import PackageView
 from .progress_dialog import ProgressDialog
 from .qt_loop import post
+from .release_watch import ReleaseWatcher
 from .repos_dialog import ReposDialog
+from .search_bar import SearchBar
 from .sidebar import Sidebar
-from .upgrade_dialog import UpgradeDialog, api_request
+from .status_bar import MainStatusBar
+from .toolbar import MainToolBar
+from .upgrade_dialog import UpgradeDialog
 from .whats_new import WhatsNewDialog
 
-# sidebar menu of a comps group: (text, theme icon)
-GROUP_MARK_ACTIONS = {
-    Action.INSTALL: (N_("Mark Group for Installation"), "list-add"),
-    Action.UPGRADE: (N_("Mark Group for Upgrade"), "go-up"),
-    Action.REMOVE: (N_("Mark Group for Removal"), "list-remove"),
-}
-
-# bumped when columns change: an old saved state would put widths and hidden flags on the wrong columns
-HEADER_STATE_KEY = "table/header-v2"
-COLUMN_WIDTHS = [26, 24, 230, 175, 110, 175, 150, 80]
-ADVISORY_COLUMN_WIDTH = 150
-# set once the update type column has been moved next to the latest version: a header state saved before 0.7 has
-# it at the end, after the summary that stretches over the spare width
-ADVISORY_COLUMN_KEY = "table/advisory-column"
 DETAILS_TAB_KEY = "details/tab-name"  # "details/tab" held its position before the advisories tab came
-HISTORY_IDLE_MS = 1500  # a search left alone this long goes into the history
-# the details of the current row wait until the cursor rests this long: libdnf5 holds Python's lock while it looks
-# them up, so the window would stop for each row the cursor only passes (typing, holding an arrow key)
-DETAILS_DELAY_MS = 120
-NOT_YET = _("Coming in a later version")
-RELEASE_CHECK_TIMEOUT_MS = 15000
-# toolbar styles (Settings → Toolbar, or right-click the toolbar): id, label, button style, icon size
-# (an invalid size means the style's default, which on Plasma follows System Settings)
-TOOLBAR_STYLES = [
-    ("system", _("Follow System Settings"), Qt.ToolButtonStyle.ToolButtonFollowStyle, QSize()),
-    ("under", _("Text Under Icons"), Qt.ToolButtonStyle.ToolButtonTextUnderIcon, QSize(24, 24)),
-    ("beside", _("Compact: Text Beside Icons"), Qt.ToolButtonStyle.ToolButtonTextBesideIcon, QSize(16, 16)),
-    ("icons", _("Icons Only"), Qt.ToolButtonStyle.ToolButtonIconOnly, QSize(22, 22)),
-]
-
-
-def _age(seconds: int | None) -> str:
-    if seconds is None:
-        return _("Metadata: unknown age")
-    if seconds < 3600:
-        return _("Metadata: {minutes} min ago").format(minutes=seconds // 60)
-    if seconds < 2 * 86400:
-        return _("Metadata: {hours} h {minutes} min ago").format(hours=seconds // 3600, minutes=seconds % 3600 // 60)
-    return _("Metadata: {days} d ago").format(days=seconds // 86400)
 
 
 class MainWindow(QMainWindow):
@@ -114,11 +69,8 @@ class MainWindow(QMainWindow):
         self.dnf = DnfWorker(post)
         self.catalog = Catalog()
         self.snapshot: CatalogSnapshot | None = None
-        self._upgrades_of_kind: dict[str, list[PkgRow]] = {}  # see upgrades_by_kind
-        self._unneeded: list[PkgRow] = []  # what dnf autoremove would remove
         self.filter: FilterEntry | None = None
         self.history: list[tuple[str, str]] = []  # packages visited via dependency links, for Alt+Left
-        self._details_for: tuple[str, str] | None = None
         self.index: SearchIndex | None = None
         self.narrowing: NarrowingSearch | None = None
         self._candidates_cache: tuple[FilterEntry, CatalogSnapshot, list[int]] | None = None
@@ -126,26 +78,23 @@ class MainWindow(QMainWindow):
         self._search_gen = 0                 # drops stale async (provides/file) results
         self._user_sort = (COL_NAME, Qt.SortOrder.AscendingOrder)
         self._last_count = 0
-        self._details: PkgDetails | None = None  # details of the current row, once loaded
         self.helper = HelperClient(post)
-        self.running_fedora = distro.running_release()
-        self._net = QNetworkAccessManager(self)
+        self.releases = ReleaseWatcher(self)
+        self.releases.act_upgrade.triggered.connect(self.open_upgrade)
         self._upgrade_dialog: UpgradeDialog | None = None
+        self.search = SearchBar(self)
+        self.search.changed.connect(self.apply_filter)
+        self.search.submitted.connect(self._on_search_enter)
+        self.search.settled.connect(self._remember_search)
+        self.status = MainStatusBar()
+        self.status.reposClicked.connect(self.open_repos)
+        self.setStatusBar(self.status)
 
-        self._build_actions()
-        self._build_menus()
-        self._build_toolbar()
         self._build_central()
-
-        self.status = QLabel()
-        self.statusBar().addWidget(self.status, 1)
-        # enabled repositories that could not be loaded; clicking opens Settings → Repositories
-        self.repo_warning = QLabel()
-        self.repo_warning.setVisible(False)
-        self.repo_warning.linkActivated.connect(lambda _link: self.open_repos())
-        self.statusBar().addPermanentWidget(self.repo_warning)
-        self.age = QLabel()
-        self.statusBar().addPermanentWidget(self.age)
+        self._connect_actions()
+        self.table.addActions(self.acts.table_actions())
+        self._build_toolbar()
+        self.acts.fill_menu_bar(self.menuBar(), [self.releases.act_watch], self.toolbar.styles.actions())
 
         self.setAcceptDrops(True)  # an .rpm file dropped anywhere on the window opens the installer
         self._restore_settings()
@@ -153,263 +102,63 @@ class MainWindow(QMainWindow):
 
     # ---------------------------------------------------------------- construction
 
-    def _action(self, text, icon=None, shortcut=None, slot=None, enabled=True, tip=None) -> QAction:
-        a = QAction(QIcon.fromTheme(icon) if icon else QIcon(), text, self)
-        if shortcut:
-            a.setShortcut(QKeySequence(shortcut))
-        if slot:
-            a.triggered.connect(slot)
-        a.setEnabled(enabled)
-        if tip or not enabled:
-            a.setToolTip(tip or NOT_YET)
-            a.setStatusTip(tip or NOT_YET)
-        self.addAction(a)  # shortcuts work even when the action is only in a menu
-        return a
-
-    def _build_actions(self):
-        self.act_reload = self._action(_("Reload"), "view-refresh", "Ctrl+R", self.refresh_metadata,
-                                       tip=_("Refresh repository metadata and reload the catalog (needs a password)"))
-        self.act_reload_cache = self._action(_("Reload from cache"), "view-refresh", "Ctrl+Shift+R", self.reload,
-                                             tip=_("Reload the catalog from the local cache, without network or "
-                                                   "password"))
-        self.act_mark_upgrades = self._action(_("Mark All Upgrades"), None, "Ctrl+U", self.mark_all_upgrades,
-                                              tip=_("Mark every package that has a newer version for upgrade"))
-        # the other ways to mark upgrades, by their advisories (the arrow next to the toolbar button, Edit menu);
-        # upgrades from repositories without advisories (RPM Fusion, COPR, most third-party ones) are not among them
-        self.mark_upgrade_actions = {
-            kind: self._action(text, None, None, lambda _on=False, k=kind: self.mark_upgrades(k), tip=tip)
-            for kind, text, tip in (
-                (UPGRADES_SECURITY, _("Mark Security Upgrades"),
-                 _("Mark the upgrades that fix a security issue, as dnf upgrade --security")),
-                (UPGRADES_SECURITY_HIGH, _("Mark Critical and Important Security Upgrades"),
-                 _("Mark the upgrades that fix a security issue rated critical or important")),
-                (UPGRADES_FIXES, _("Mark Security and Bug Fix Upgrades"),
-                 _("Mark the upgrades that fix a security issue or bugs, leaving out enhancements")),
-            )}
-        self.mark_upgrades_menu = QMenu(_("Mark Upgrades"), self)
-        self.mark_upgrades_menu.addAction(self.act_mark_upgrades)
-        self.mark_upgrades_menu.addSeparator()
-        self.mark_upgrades_menu.addActions(list(self.mark_upgrade_actions.values()))
-        # Breeze's monochrome update glyphs match the other toolbar icons; system-software-update is a colour app
-        # icon there, kept as the fallback. With upgrades to mark the button shows update-medium; update-none says
-        # "nothing to update" and its dim grey is exactly right for the disabled button, but would make an enabled
-        # one look disabled
-        fallback = QIcon.fromTheme("system-software-update")
-        self._upgrade_icons = {True: QIcon.fromTheme("update-medium", fallback),
-                               False: QIcon.fromTheme("update-none", fallback)}
-        self.act_mark_unneeded = self._action(
-            _("Mark Unneeded Dependencies for Removal"), "edit-delete", None, self.mark_unneeded, enabled=False,
-            tip=_("Mark for removal the dependencies nothing needs any more, as dnf autoremove does"))
-        self.act_apply = self._action(_("Apply"), "dialog-ok-apply", "Ctrl+P", self.apply,
-                                      tip=_("Review and apply the marked changes"))
-        self.act_apply.setEnabled(False)
-        self.act_unmark_all = self._action(_("Unmark All"), "edit-clear", "Ctrl+Shift+Z", self.unmark_all,
-                                           tip=_("Discard all marked changes"))
-        self.act_unmark_all.setEnabled(False)
-        self.act_properties = self._action(_("Properties"), "document-properties",
-                                           slot=lambda: self.details.select_name("general"))
-        self.act_repos = self._action(_("Repositories"), "configure", slot=self.open_repos, enabled=False,
-                                      tip=_("Enable or disable software repositories"))
-        self.act_filters = self._action(_("Custom Filters…"), "view-filter", slot=lambda: self.edit_filters(),
-                                        enabled=False, tip=_("Create and edit your own filters for the sidebar"))
-        self.act_new_filter = self._action(_("New Filter from Current View…"), "list-add",
-                                           slot=self.new_filter_from_view, enabled=False,
-                                           tip=_("A custom filter with the current sidebar selection and search"))
-        self.act_copr = self._action(_("COPR"), "folder-cloud", slot=self.open_copr, enabled=False,
-                                     tip=_("Manage COPR projects: community repositories"))
-        self.act_cache = self._action(_("Cleanup…"), "edit-clear-all", slot=self.open_cache, enabled=False,
-                                      tip=_("Clean the package caches and remove leftover configuration files"))
-        self.act_notifications = self._action(_("Update Notifications…"), "preferences-desktop-notification",
-                                              slot=self.open_notifications,
-                                              tip=_("An icon in the system tray when updates are available"))
-        self.act_watch_releases = QAction(_("Watch Fedora Releases"), self, checkable=True)
-        self.act_watch_releases.setToolTip(_("On Reload, ask Fedora's Bodhi service whether a new release is out"))
-        self.act_watch_releases.setStatusTip(self.act_watch_releases.toolTip())
-        self.act_watch_releases.setVisible(self.running_fedora is not None)
-        self.act_watch_releases.toggled.connect(self._on_watch_releases)
-        # Synaptic's "Clicking on the status icon marks the most likely action", off by default there too
-        self.act_status_click = QAction(_("Clicking the status icon marks the likely action"), self, checkable=True)
-        tip = _("A click on the status icon unmarks a marked package, marks one that is not installed for "
-                "installation and one with an upgrade for upgrade. Otherwise it opens the action menu, as "
-                "right-clicking does.")
-        self.act_status_click.setToolTip(f"<p>{html.escape(tip)}</p>")  # rich text, so that Qt wraps it
-        self.act_status_click.setStatusTip(tip)
-        self.act_status_click.toggled.connect(lambda on: QSettings().setValue("table/status_click", on))
-        self.act_upgrade = self._action("Fedora", slot=self.open_upgrade, enabled=False, tip=_("A new Fedora release"))
-        self.act_upgrade.setIcon(QIcon.fromTheme("fedora-logo-icon", QIcon.fromTheme("system-upgrade")))
-        self.act_upgrade.setVisible(False)
-        self.act_find = self._action(_("Find"), "edit-find", QKeySequence.StandardKey.Find,
-                                     lambda: (self.search.setFocus(), self.search.selectAll()))
-        self.act_back = self._action(_("Back"), "go-previous", "Alt+Left", self.go_back,
-                                     tip=_("Go back to the previous package (after following a dependency)"))
-        self.act_save_marks = self._action(_("Save Markings As…"), "document-save-as", "Ctrl+S", self.save_marks,
-                                           tip=_("Save the marked changes to a text file"))
-        self.act_save_marks.setEnabled(False)
-        self.act_read_marks = self._action(_("Read Markings…"), "document-open", "Ctrl+O", self.read_marks,
-                                           tip=_("Mark the changes listed in a saved markings file"))
-        self.act_read_marks.setEnabled(False)
-        self.act_open_file = self._action(_("Open Package File…"), "document-open", slot=self.open_package_file,
-                                          tip=_("Install a downloaded .rpm file (you can also drop it on the window)"))
-        self.act_open_file.setEnabled(False)
-        self.act_quit = self._action(_("Quit"), "application-exit", QKeySequence.StandardKey.Quit, self.close)
-        self.act_copy_name = self._action(_("Copy Name"), "edit-copy", "Ctrl+C", self.copy_names)
-        self.act_copy_nevra = self._action(_("Copy name-version-release.arch"), "edit-copy", "Ctrl+Shift+C",
-                                           self.copy_nevras)
-        # scoped to the table, so Ctrl+C still copies text in the search field and the detail tabs
-        for a in (self.act_copy_name, self.act_copy_nevra):
-            self.removeAction(a)
-            a.setShortcutContext(Qt.ShortcutContext.WidgetWithChildrenShortcut)
-        self.act_about = self._action(_("About Kram"), "help-about", slot=self.about)
-        # package actions are scoped to the table: Del/Ins/Ctrl+Z keep their meaning in the search field
-        self.mark_actions: dict[Action, QAction] = {}
-        for action, text, icon, shortcut in [
-            (Action.INSTALL, _("Mark for Installation"), "list-add", "Ins"),
-            (Action.UPGRADE, _("Mark for Upgrade"), "go-up", None),
-            (Action.REINSTALL, _("Mark for Reinstallation"), "view-refresh", None),
-            (Action.REMOVE, _("Mark for Removal"), "list-remove", "Del"),
-            (Action.MARK_USER, _("Mark as Installed by User"), "user-identity", None),
-            (Action.MARK_DEP, _("Mark as Dependency"), "link", None),
+    def _connect_actions(self):
+        acts = self.acts = WindowActions(self)
+        for action, slot in [
+            (acts.reload, self.refresh_metadata), (acts.reload_cache, self.reload),
+            (acts.mark_upgrades, self.marker.mark_all_upgrades), (acts.mark_unneeded, self.marker.mark_unneeded),
+            (acts.apply, self.apply), (acts.unmark_all, self.marker.unmark_all),
+            (acts.properties, lambda: self.details.select_name("general")),
+            (acts.repos, self.open_repos), (acts.copr, self.open_copr), (acts.cache, self.open_cache),
+            (acts.notifications, self.open_notifications),
+            (acts.filters, lambda: self.custom_filters.edit()), (acts.new_filter, self.new_filter_from_view),
+            (acts.find, self.search.focus), (acts.back, self.go_back),
+            (acts.save_marks, self.save_marks), (acts.read_marks, self.read_marks),
+            (acts.open_file, lambda: self.open_package_file()), (acts.quit, self.close), (acts.about, self.about),
+            (acts.copy_name, self.copy_names), (acts.copy_nevra, self.copy_nevras), (acts.unmark, self.unmark_selected),
         ]:
-            a = self._action(text, icon, shortcut, lambda _c=False, act=action: self.mark_selected(act), tip=text)
-            self.removeAction(a)
-            a.setShortcutContext(Qt.ShortcutContext.WidgetWithChildrenShortcut)
-            self.mark_actions[action] = a
-        self.downgrade_menu = QMenu(_("Downgrade to Version"), self)
-        self.downgrade_menu.setIcon(QIcon.fromTheme("go-down"))
-        self.downgrade_menu.aboutToShow.connect(self._fill_downgrade_menu)
-        self.act_unmark = self._action(_("Unmark"), "edit-undo", "Ctrl+Z", self.unmark_selected,
-                                       tip=_("Unmark the selected packages"))
-        self.removeAction(self.act_unmark)
-        self.act_unmark.setShortcutContext(Qt.ShortcutContext.WidgetWithChildrenShortcut)
-        self._set_upgrades_available(False)
-        self.toolbar_styles = QActionGroup(self)
-        for style_id, label, _button, _size in TOOLBAR_STYLES:
-            a = self.toolbar_styles.addAction(label)
-            a.setCheckable(True)
-            a.setData(style_id)
-        self.toolbar_styles.triggered.connect(lambda a: self.set_toolbar_style(a.data()))
-
-    def set_toolbar_style(self, style_id: str) -> None:
-        _id, _label, button, size = next((t for t in TOOLBAR_STYLES if t[0] == style_id), TOOLBAR_STYLES[0])
-        self.toolbar.setToolButtonStyle(button)
-        self.toolbar.setIconSize(size)
-        for a in self.toolbar_styles.actions():
-            a.setChecked(a.data() == _id)
-
-    def toolbar_style(self) -> str:
-        return next((a.data() for a in self.toolbar_styles.actions() if a.isChecked()), TOOLBAR_STYLES[0][0])
+            action.triggered.connect(slot)
+        for kind, action in acts.mark_upgrades_of_kind.items():
+            action.triggered.connect(lambda _on=False, k=kind: self.marker.mark_upgrades(k))
+        for mark, action in acts.mark.items():
+            action.triggered.connect(lambda _on=False, m=mark: self.mark_selected(m))
+        acts.downgrade_menu.aboutToShow.connect(self._fill_downgrade_menu)
 
     def createPopupMenu(self) -> QMenu:
         # instead of Qt's default "show/hide toolbars" menu: the toolbar can't be hidden, only restyled
         menu = QMenu(self)
-        menu.addActions(self.toolbar_styles.actions())
+        menu.addActions(self.toolbar.styles.actions())
         return menu
 
-    def _package_menu(self, menu: QMenu) -> None:
-        menu.addActions(list(self.mark_actions.values()))
-        menu.addMenu(self.downgrade_menu)
-        menu.addSeparator()
-        menu.addAction(self.act_unmark)
-
-    def _build_menus(self):
-        mb = self.menuBar()
-        m = mb.addMenu(_("&File"))
-        m.addAction(self.act_open_file)
-        m.addSeparator()
-        m.addActions([self.act_reload, self.act_reload_cache])
-        m.addSeparator()
-        m.addActions([self.act_read_marks, self.act_save_marks])
-        m.addSeparator()
-        m.addAction(self.act_quit)
-        m = mb.addMenu(_("&Edit"))
-        m.addMenu(self.mark_upgrades_menu)
-        m.addAction(self.act_mark_unneeded)
-        m.addSeparator()
-        m.addActions([self.act_unmark_all, self.act_apply])
-        m.addSeparator()
-        m.addActions([self.act_copy_name, self.act_copy_nevra])
-        m.addSeparator()
-        m.addAction(self.act_find)
-        m = mb.addMenu(_("&Package"))
-        self._package_menu(m)
-        m.addSeparator()
-        m.addActions([self.act_properties, self.act_back])
-        m = mb.addMenu(_("&Settings"))
-        m.addActions([self.act_repos, self.act_copr, self.act_cache, self.act_notifications])
-        m.addSeparator()
-        m.addActions([self.act_filters, self.act_new_filter])
-        m.addSeparator()
-        m.addActions([self.act_status_click, self.act_watch_releases])
-        m.setToolTipsVisible(True)
-        m.addMenu(_("Toolbar")).addActions(self.toolbar_styles.actions())
-        m = mb.addMenu(_("&Help"))
-        m.addAction(self.act_about)
-
     def _build_toolbar(self):
-        tb = self.toolbar = QToolBar(_("Main toolbar"))
-        tb.setObjectName("main-toolbar")
-        tb.setMovable(False)
-        tb.toggleViewAction().setEnabled(False)  # no way to hide it, so no way to lose it
-        self.set_toolbar_style(TOOLBAR_STYLES[0][0])
-        tb.addActions([self.act_reload, self.act_mark_upgrades, self.act_apply])
+        tb = self.toolbar = MainToolBar()
+        tb.addActions([self.acts.reload, self.acts.mark_upgrades, self.acts.apply])
         # a click marks every upgrade, as before; the arrow next to it offers the other ways
-        mark_button = tb.widgetForAction(self.act_mark_upgrades)
-        mark_button.setMenu(self.mark_upgrades_menu)
+        mark_button = tb.widgetForAction(self.acts.mark_upgrades)
+        mark_button.setMenu(self.acts.mark_upgrades_menu)
         mark_button.setPopupMode(QToolButton.ToolButtonPopupMode.MenuButtonPopup)
         tb.addSeparator()
-        tb.addActions([self.act_repos, self.act_copr, self.act_upgrade])
+        tb.addActions([self.acts.repos, self.acts.copr, self.releases.act_upgrade])
         spacer = QWidget()
         spacer.setSizePolicy(spacer.sizePolicy().Policy.Expanding, spacer.sizePolicy().Policy.Preferred)
         tb.addWidget(spacer)
-        self.search_mode = QComboBox()
-        self.search_mode.addItems([MODE_LABELS[m] for m in Mode])
-        self.search_mode.setToolTip(
-            _("Name / Name + summary / Description: instant ranked search.\n"
-              "Provides: packages providing a capability (libvulkan.so.1, python3dist(requests), webbrowser).\n"
-              "File: owner of a file (/usr/bin/7z or just 7z; only the main files for packages not installed).\n\n"
-              "Several words: all must match. ^start, end$, * and ? are wildcards."))
-        self.search_mode.currentIndexChanged.connect(self.apply_filter)
-        tb.addWidget(self.search_mode)
-        self.search = QLineEdit()
-        self.search.setPlaceholderText(_("Search (Ctrl+F)"))
-        self.search.setClearButtonEnabled(True)
-        # shrinks before anything overflows into the toolbar's ">" menu (where Ctrl+F could not reach it)
-        self.search.setMinimumWidth(160)
-        self.search.setMaximumWidth(300)
-        self.search.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-        self._search_icon = self.search.addAction(QIcon.fromTheme("edit-find"),
-                                                  QLineEdit.ActionPosition.LeadingPosition)
-        self.search.textChanged.connect(self._update_search_icon)
-        tb.addWidget(self.search)
+        tb.addWidget(self.search.mode_box)
+        tb.addWidget(self.search.edit)
         self.addToolBar(tb)
-
-        self._debounce = QTimer(self, singleShot=True, interval=150)
-        self._debounce.timeout.connect(self.apply_filter)
-        self.search.textChanged.connect(self._debounce.start)
-        self.search.returnPressed.connect(self._on_search_enter)
-        self._history_timer = QTimer(self, singleShot=True, interval=HISTORY_IDLE_MS)
-        self._history_timer.timeout.connect(self._remember_search)
-        self._details_timer = QTimer(self, singleShot=True, interval=DETAILS_DELAY_MS)
-        self._details_timer.timeout.connect(self._load_details)
-        self._details_row: PkgRow | None = None
-
-    def _update_search_icon(self, text: str) -> None:
-        """A funnel while the search text filters the list, so it is not missed after switching views."""
-        active = bool(text.strip())
-        # the theme's own icon (monochrome in Breeze); themes without view-filter keep the magnifier
-        self._search_icon.setIcon(QIcon.fromTheme("view-filter" if active and QIcon.hasThemeIcon("view-filter")
-                                                  else "edit-find"))
-        self._search_icon.setToolTip(_("The list is filtered by the search text") if active else "")
 
     def _build_central(self):
         self.sidebar = Sidebar()
         self.sidebar.filterChanged.connect(self._on_filter)
         self.sidebar.contextMenuRequested.connect(self._sidebar_menu)
-        self.sidebar.entryActivated.connect(
-            lambda e: e.id.startswith("custom:") and self.edit_filters(select=e.id.removeprefix("custom:")))
+        self.custom_filters = CustomFilters(self.sidebar, self.catalog, self.dnf, lambda: self.snapshot, self)
 
         self.model = PackageTableModel(self)
         self.sidebar.marked = self.model.marks
+        self.marker = Marker(self.model, self.catalog, self.dnf, self)
+        self.marker.changed.connect(self._marks_changed)
+        self.marker.groupsChanged.connect(self._group_marks_changed)
+        self.marker.message.connect(self.statusBar().showMessage)
+        self.marker.failed.connect(self.status.show_error)
         self.table = PackageView()
         self.table.setModel(self.model)
         self.table.setSortingEnabled(True)
@@ -417,20 +166,14 @@ class MainWindow(QMainWindow):
         self.table.header().sortIndicatorChanged.connect(self._on_sort_indicator)
         self.table.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.table.customContextMenuRequested.connect(self._context_menu)
-        for col, width in enumerate(COLUMN_WIDTHS):
-            self.table.setColumnWidth(col, width)
-        self.table.setColumnWidth(COL_ADVISORY, ADVISORY_COLUMN_WIDTH)
-        self._place_advisory_column()
-        self.table.header().setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
-        self.table.header().customContextMenuRequested.connect(self._header_menu)
         self.table.selectionModel().currentRowChanged.connect(self._on_current)
         self.table.selectionModel().selectionChanged.connect(self._update_actions)
-        self.table.addActions([self.act_copy_name, self.act_copy_nevra, *self.mark_actions.values(), self.act_unmark])
         self.table.clicked.connect(self._on_table_click)
         self.table.doubleClicked.connect(self._on_double_click)
 
         self.details = DetailsTabs()
         self.details.linkActivated.connect(self._on_link)
+        self.details_loader = DetailsLoader(self.details, self.catalog, self.dnf, self)
 
         self.vsplit = QSplitter(Qt.Orientation.Vertical)
         self.vsplit.addWidget(self.table)
@@ -446,40 +189,28 @@ class MainWindow(QMainWindow):
 
     # ---------------------------------------------------------------- settings
 
-    def _place_advisory_column(self) -> None:
-        header = self.table.header()
-        header.moveSection(header.visualIndex(COL_ADVISORY), header.visualIndex(COL_CANDIDATE) + 1)
-
     def _restore_settings(self):
         s = QSettings()
-        self.set_toolbar_style(s.value("toolbar/style", TOOLBAR_STYLES[0][0]))
-        self.act_watch_releases.setChecked(s.value("distro/watch", True, type=bool))
-        self.act_status_click.setChecked(s.value("table/status_click", False, type=bool))
-        self._update_upgrade_button()
+        self.toolbar.set_style(s.value("toolbar/style", self.toolbar.style_id()))
+        self.releases.restore()
+        self.acts.status_click.setChecked(s.value("table/status_click", False, type=bool))
         if geom := s.value("window/geometry"):
             self.restoreGeometry(geom)
         for key, splitter in (("window/hsplit", self.hsplit), ("window/vsplit", self.vsplit)):
             if state := s.value(key):
                 splitter.restoreState(state)
-        if state := s.value(HEADER_STATE_KEY):
-            self.table.header().restoreState(state)
-            if not s.value(ADVISORY_COLUMN_KEY, False, type=bool):
-                self.table.setColumnWidth(COL_ADVISORY, ADVISORY_COLUMN_WIDTH)
-                self._place_advisory_column()
+        self.table.restore_columns(s)
         if name := s.value(DETAILS_TAB_KEY):
             self.details.select_name(name)
         else:  # saved before 0.7 by position, from the tabs before the advisories tab came
             old = ("description", "general", "dependencies", "files", "versions", "changelog")
             self.details.select_name(old[min(max(int(s.value("details/tab", 0)), 0), len(old) - 1)])
-        self.search_mode.setCurrentIndex(int(s.value("search/mode", Mode.NAME)))
+        self.search.set_mode(int(s.value("search/mode", Mode.NAME)))
         try:
             self.sidebar.history = [tuple(h) for h in json.loads(s.value("search/history", "[]"))]
         except (TypeError, ValueError):
             self.sidebar.history = []
-        try:
-            self.sidebar.custom = load_filters(json.loads(s.value("filters/custom", "[]")))
-        except (TypeError, ValueError):
-            self.sidebar.custom = []
+        self.custom_filters.restore()
         self._restore_filter = (s.value("sidebar/view", "status"), s.value("sidebar/entry", "status:all"))
 
     def show_view(self, view: str) -> None:
@@ -511,14 +242,13 @@ class MainWindow(QMainWindow):
         if self.model.sort_column is None:  # ranked search results: save the user's column sort instead
             self.table.header().setSortIndicator(*self._user_sort)
         s.setValue("search/history", json.dumps(self.sidebar.history, ensure_ascii=False))
-        s.setValue("toolbar/style", self.toolbar_style())
+        s.setValue("toolbar/style", self.toolbar.style_id())
         s.setValue("window/geometry", self.saveGeometry())
         s.setValue("window/hsplit", self.hsplit.saveState())
         s.setValue("window/vsplit", self.vsplit.saveState())
-        s.setValue(HEADER_STATE_KEY, self.table.header().saveState())
-        s.setValue(ADVISORY_COLUMN_KEY, True)
+        self.table.save_columns(s)
         s.setValue(DETAILS_TAB_KEY, self.details.current_name())
-        s.setValue("search/mode", self.search_mode.currentIndex())
+        s.setValue("search/mode", self.search.mode_box.currentIndex())
         s.setValue("sidebar/view", self.sidebar.current_view)
         if entry := self.sidebar.current_entry_id:
             s.setValue("sidebar/entry", entry)
@@ -542,21 +272,19 @@ class MainWindow(QMainWindow):
     # ---------------------------------------------------------------- loading and filtering
 
     def reload(self):
-        self.status.setText(_("Loading metadata…"))
-        self.act_reload.setEnabled(False)
-        queries = provides_queries(self.sidebar.custom)
+        self.status.set_text(_("Loading metadata…"))
+        self.acts.reload.setEnabled(False)
+        queries = self.custom_filters.queries()
         self.dnf.submit(lambda: self.catalog.load(queries, self._waiting_for_lock), self._on_loaded, self._on_error)
 
     def _waiting_for_lock(self):
         """On the worker thread: another package manager holds the system repo lock, the load waits for it."""
-        post(lambda: self.status.setText(_("Waiting for another package manager to finish…")))
+        post(lambda: self.status.set_text(_("Waiting for another package manager to finish…")))
 
     def _on_loaded(self, snap: CatalogSnapshot):
         keep = self._current_key()
         self.snapshot = snap
-        self._upgrades_of_kind = upgrades_by_kind(snap.rows)
-        self._unneeded = [r for r in snap.rows if r.unneeded]
-        self.act_reload.setEnabled(True)
+        self.acts.reload.setEnabled(True)
         self.model.set_rows(snap.rows, snap.basearch)
         if any(r.status is Status.UPGRADABLE for r in snap.rows):
             # after the list is up: the full upgrade resolve takes a few tenths of a second
@@ -566,50 +294,30 @@ class MainWindow(QMainWindow):
         self.index = SearchIndex(snap.rows, snap.descriptions)
         self.narrowing = NarrowingSearch(self.index)
         self.key_index = {r.key: i for i, r in enumerate(snap.rows)}
-        self._revalidate_marks()
-        self._check_group_upgrades(snap)
+        self.marker.set_snapshot(snap)
+        self._update_actions()
         self.catalogLoaded.emit(snap)
-        self.age.setText(_age(snap.metadata_age) + "  ")
-        self._show_repo_warning(snap)
+        self.status.show_catalog(snap)
         view, entry = self._restore_filter if self.filter is None else (
             self.sidebar.current_view, self.sidebar.current_entry_id)
         self.sidebar.set_snapshot(snap)
         self.sidebar.select(view, entry)  # emits filterChanged -> apply_filter
         if keep:
             self._select_key(keep)
-        if missing := self._missing_provides():  # a filter was edited while this catalog was loading
-            self._resolve_provides(missing, lambda: self.sidebar.set_view(self.sidebar.current_view))
-
-    def _show_repo_warning(self, snap: CatalogSnapshot) -> None:
-        missing = snap.unavailable_repos
-        self.repo_warning.setVisible(bool(missing))
-        if not missing:
-            return
-        n = len(missing)
-        text = ngettext("{n} repository has no metadata", "{n} repositories have no metadata", n).format(n=n)
-        self.repo_warning.setText(f"⚠ <a href='repos'>{text}</a>  ")
-        self.repo_warning.setToolTip(
-            _("Not loaded, so their packages are missing from the list:\n{names}\n\n"
-              "Use Reload to download them. If a repository keeps failing (for example it has no packages for "
-              "this Fedora release yet), disable it in Settings → Repositories.").format(
-                names="\n".join(f"• {r.name} ({r.id})" for r in missing)))
+        # a filter edited while this catalog was loading
+        self.custom_filters.resolve_missing(lambda: self.sidebar.set_view(self.sidebar.current_view))
 
     def _on_error(self, e: BaseException):
-        self.act_reload.setEnabled(True)
-        self.status.setText(_("Error: {error}").format(error=e))
+        self.acts.reload.setEnabled(True)
+        self.status.show_error(e)
         QMessageBox.critical(self, "Kram", _("Could not load the package catalog:\n\n{error}").format(error=e))
 
     def _on_filter(self, entry: FilterEntry):
         self.filter = entry
         if entry.query is not None:  # a search-history entry: re-run that search
-            text, mode = entry.query
-            for w, setter in ((self.search, lambda: self.search.setText(text)),
-                              (self.search_mode, lambda: self.search_mode.setCurrentIndex(mode))):
-                w.blockSignals(True)
-                setter()
-                w.blockSignals(False)
+            self.search.set_query(*entry.query)
             self.apply_filter()
-            self._history_timer.stop()  # already in the history; don't reorder the list under the cursor
+            self.search.stop_history()  # already in the history; don't reorder the list under the cursor
             return
         self.apply_filter()
 
@@ -630,36 +338,36 @@ class MainWindow(QMainWindow):
         """Sidebar filter, then search. Searches rank their results; an empty search uses the column sort."""
         if not self.snapshot or not self.filter:
             return
-        self._debounce.stop()
+        self.search.cancel_pending()
         t0 = time.perf_counter()
         self._search_gen += 1
         candidates = self._candidates()
-        text = self.search.text().strip()
-        mode = Mode(self.search_mode.currentIndex())
+        text = self.search.text()
+        mode = self.search.mode()
         if not text:
-            self._history_timer.stop()
+            self.search.stop_history()
             # a copy: the model keeps the list it is given, and this one is cached
             self._show(list(candidates), ranked=False, ms=(time.perf_counter() - t0) * 1000)
         elif mode.local:
             self._show(self.narrowing.search(text, mode, candidates), ranked=True,
                        ms=(time.perf_counter() - t0) * 1000)
-            self._history_timer.start()
+            self.search.start_history()
         else:
             gen = self._search_gen
             allowed = set(candidates)
             lookup = self.catalog.search_provides if mode is Mode.PROVIDES else self.catalog.search_files
             if mode is Mode.PROVIDES and not self.catalog.capabilities_ready:
-                self.status.setText(_("Searching “{text}” ({mode}); the first search also indexes what packages "
+                self.status.set_text(_("Searching “{text}” ({mode}); the first search also indexes what packages "
                                       "provide…").format(text=text, mode=MODE_LABELS[mode]))
             else:
-                self.status.setText(_("Searching “{text}” ({mode})…").format(text=text, mode=MODE_LABELS[mode]))
+                self.status.set_text(_("Searching “{text}” ({mode})…").format(text=text, mode=MODE_LABELS[mode]))
 
             def done(keys):
                 if keys is None or gen != self._search_gen:
                     return
                 found = [i for k in keys if (i := self.key_index.get(k)) is not None and i in allowed]
                 self._show(self.index.rank_keys(found), ranked=True, ms=(time.perf_counter() - t0) * 1000)
-                self._history_timer.start()
+                self.search.start_history()
             # the dnf thread takes jobs one after the other: a search typed over by then is skipped, not run for nothing
             self.dnf.submit(lambda: lookup(text) if gen == self._search_gen else None, done, self._on_error)
 
@@ -677,9 +385,7 @@ class MainWindow(QMainWindow):
         self._last_count = len(visible)
         self._update_status(len(visible), ms)
         if not visible:
-            self._details_timer.stop()
-            self._details_for = self._details_row = None
-            self.details.clear()
+            self.details_loader.clear()
         elif ranked:  # best match first: select it rather than keeping an old selection
             self.table.setCurrentIndex(self.model.index(0, COL_NAME))
             self.table.scrollToTop()
@@ -692,31 +398,20 @@ class MainWindow(QMainWindow):
 
     def _on_search_enter(self):
         self.apply_filter()
-        if not Mode(self.search_mode.currentIndex()).local:
+        if not self.search.mode().local:
             return  # async: remembered when results arrive (timer started in done())
         self._remember_search()
 
     def _remember_search(self):
-        self._history_timer.stop()
-        text = self.search.text().strip()
-        if text:
-            self.sidebar.add_search(text, self.search_mode.currentIndex(), self._last_count)
+        self.search.stop_history()
+        if text := self.search.text():
+            self.sidebar.add_search(text, int(self.search.mode()), self._last_count)
 
     def _update_status(self, shown: int | None = None, ms: float | None = None):
         s = self.snapshot
         if s is None:
             return
-        if shown is None:
-            shown = self.model.rowCount()
-        inst, rm = self.model.marks.counts()
-        upgrades = ngettext("{n} upgrade", "{n} upgrades", s.n_upgradable).format(n=s.n_upgradable)
-        self.status.setText(
-            _("{shown} listed, {installed} installed, {upgrades}.").format(
-                shown=shown, installed=s.n_installed, upgrades=upgrades) + " "
-            + _("{install} to install/upgrade, {remove} to remove.").format(install=inst, remove=rm))
-        if ms is None:
-            return
-        self.status.setToolTip(_("Catalog: {load:.2f} s, filter and search: {ms:.0f} ms").format(load=s.load_seconds, ms=ms))
+        self.status.show_counts(s, self.model.rowCount() if shown is None else shown, *self.model.marks.counts(), ms)
 
     # ---------------------------------------------------------------- selection and details
 
@@ -734,27 +429,8 @@ class MainWindow(QMainWindow):
         return True
 
     def _on_current(self, current, _previous):
-        if not current.isValid():
-            return
-        row = self.model.row_at(current)
-        self._details_for = row.key
-        self._details_row = row
-        self.details.show_advisories(row)  # from the row: no need to wait for the details
-        self._details = None
-        self._details_timer.start()
-
-    def _load_details(self):
-        row = self._details_row
-        if row is None or row.key != self._details_for:
-            return
-        # skipped on the dnf thread when the cursor moved on while it waited its turn
-        self.dnf.submit(lambda: self.catalog.details(row.key) if row.key == self._details_for else None,
-                        lambda d: self._show_details(row, d))
-
-    def _show_details(self, row: PkgRow, d):
-        if d is not None and row.key == self._details_for:  # ignore stale results when the cursor moved on
-            self._details = d
-            self.details.show_package(row, d)
+        if current.isValid():
+            self.details_loader.follow(self.model.row_at(current))
 
     def _on_link(self, kind: str, value: str):
         if kind == "pkg":
@@ -771,9 +447,7 @@ class MainWindow(QMainWindow):
         if self._select_key(key):
             return
         # not visible under the current filter: fall back to "All" with no search
-        self.search.blockSignals(True)
-        self.search.clear()
-        self.search.blockSignals(False)
+        self.search.clear(quietly=True)
         self.sidebar.select("status", "status:all")
         if not self._select_key(key):
             self.statusBar().showMessage(_("Package {name} not found in the catalog").format(name=f"{key[0]}.{key[1]}"), 5000)
@@ -798,97 +472,23 @@ class MainWindow(QMainWindow):
         if not self.table.indexAt(pos).isValid():
             return
         m = QMenu(self)
-        self._package_menu(m)
+        self.acts.fill_package_menu(m)
         m.addSeparator()
-        m.addActions([self.act_copy_name, self.act_copy_nevra])
+        m.addActions([self.acts.copy_name, self.acts.copy_nevra])
         m.exec(self.table.viewport().mapToGlobal(pos))
 
-    # ---------------------------------------------------------- custom filters
-
-    def _save_custom_filters(self) -> None:
-        QSettings().setValue("filters/custom", json.dumps([f.to_dict() for f in self.sidebar.custom],
-                                                          ensure_ascii=False))
-
-    def _missing_provides(self) -> set[tuple[str, bool]]:
-        return provides_queries(self.sidebar.custom) - self.snapshot.provides.keys()
-
-    def _resolve_provides(self, queries: set[tuple[str, bool]], done: Callable[[], None]) -> None:
-        """Ask libdnf5 on its own thread; the filters themselves run on this one, from the snapshot's answers."""
-        snap = self.snapshot
-
-        def store(found):
-            snap.provides.update(found)
-            done()
-        self.dnf.submit(lambda: {q: self.catalog.provides_keys(*q) for q in queries}, store)
-
-    def edit_filters(self, select: str | None = None, new: CustomFilter | None = None) -> None:
-        if self.snapshot is None:
-            return
-        d = FiltersDialog(self.sidebar.custom, self.snapshot, self, select=select, new=new,
-                          resolve_provides=self._resolve_provides)
-        if not d.exec():
-            return
-        self.sidebar.custom = d.filters()
-        self._save_custom_filters()
-        name = d.current_name()
-
-        def show():
-            if name is not None:
-                self.sidebar.select("custom", f"custom:{name}")
-            elif self.sidebar.current_view == "custom":
-                self.sidebar.set_view("custom")
-        if missing := self._missing_provides():  # closed before the count came back
-            self._resolve_provides(missing, show)
-        else:
-            show()
-
     def new_filter_from_view(self) -> None:
-        entry_id = self.sidebar.current_entry_id or ""
-        text = self.search.text().strip()
-        mode = Mode(self.search_mode.currentIndex())
-        search_field = {Mode.NAME: Field.NAME, Mode.NAME_SUMMARY: Field.NAME_SUMMARY,
-                        Mode.DESCRIPTION: Field.DESCRIPTION, Mode.PROVIDES: Field.PROVIDES}.get(mode)
-        conditions = conditions_for_view(entry_id, text, search_field)
-        if entry_id.startswith("custom:"):
-            base = next((f for f in self.sidebar.custom if f"custom:{f.name}" == entry_id), None)
-            if base is not None:
-                conditions = list(base.conditions) + conditions
-        # named after what it reproduces: "Upgradable", "COPR “term”", …; "All" adds nothing to the name
-        from_view = bool(conditions_for_view(entry_id, "", None)) or entry_id.startswith("custom:")
-        parts = [self.filter.label if self.filter and from_view else "", f"“{text}”" if text and search_field else ""]
-        self.edit_filters(new=CustomFilter(" ".join(p for p in parts if p) or _("New filter"), conditions))
-
-    def delete_filter(self, name: str) -> None:
-        if QMessageBox.question(self, _("Custom Filters"), _("Delete the filter “{name}”?").format(name=name)) \
-                != QMessageBox.StandardButton.Yes:
-            return
-        self.sidebar.custom = [f for f in self.sidebar.custom if f.name != name]
-        self._save_custom_filters()
-        self.sidebar.set_view(self.sidebar.current_view)
-
-    def _header_menu(self, pos) -> None:
-        header = self.table.header()
-        m = QMenu(self)
-        for col in HIDEABLE:
-            act = m.addAction(HEADERS[col])
-            act.setCheckable(True)
-            act.setChecked(not header.isSectionHidden(col))
-            act.toggled.connect(lambda on, c=col: header.setSectionHidden(c, not on))
-        m.exec(header.viewport().mapToGlobal(pos))
+        self.custom_filters.new_from_view(self.filter, self.search.text(), self.search.mode())
 
     def _sidebar_menu(self, pos, entry: FilterEntry | None) -> None:
         m = QMenu(self)
-        if entry is not None and entry.group and (group := self._group(entry.group)) is not None:
-            self._group_menu(m, group)
+        if entry is not None and entry.group and (group := self.marker.group(entry.group)) is not None:
+            self.marker.fill_group_menu(m, group, busy=self.helper.busy)
             m.addSeparator()
         if entry is not None and entry.id == "status:unneeded":
-            m.addAction(self.act_mark_unneeded)
+            m.addAction(self.acts.mark_unneeded)
             m.addSeparator()
-        if entry is not None and entry.id.startswith("custom:"):
-            name = entry.id.removeprefix("custom:")
-            m.addAction(QIcon.fromTheme("document-edit"), _("Edit Filter…"), lambda: self.edit_filters(select=name))
-            m.addAction(QIcon.fromTheme("edit-delete"), _("Delete Filter"), lambda: self.delete_filter(name))
-            m.addSeparator()
+        self.custom_filters.fill_menu(m, entry)
         if self.sidebar.current_view == "search":
             if entry is not None and entry.query is not None:
                 text, mode = entry.query
@@ -898,55 +498,9 @@ class MainWindow(QMainWindow):
                                 self.sidebar.clear_history)
             clear.setEnabled(bool(self.sidebar.history))
             m.addSeparator()
-        m.addAction(self.act_new_filter)
-        m.addAction(self.act_filters)
+        m.addAction(self.acts.new_filter)
+        m.addAction(self.acts.filters)
         m.exec(pos)
-
-    def _check_group_upgrades(self, snap: CatalogSnapshot) -> None:
-        """Find which installed groups `dnf5 group upgrade` would change, after the list is shown (a dry-run
-        resolve each, ~0.1 s); until then their Upgrade item is disabled."""
-        installed = [g.id for g in snap.groups if g.installed]
-        if not installed:
-            return
-
-        def done(found: set[str]) -> None:
-            if self.snapshot is not snap:
-                return  # reloaded meanwhile: that load runs its own check
-            for g in snap.groups:
-                if g.installed:
-                    g.upgradable = g.id in found
-            self._revalidate_marks()  # an upgrade mark on a group with nothing to upgrade goes
-            self._group_marks_changed()
-        self.dnf.submit(lambda: self.catalog.upgradable_groups(installed), done,
-                        lambda e: self.status.setText(_("Error: {error}").format(error=e)))
-
-    def _group(self, group_id: str) -> GroupInfo | None:
-        return next((g for g in self.snapshot.groups if g.id == group_id), None) if self.snapshot else None
-
-    def _group_menu(self, m: QMenu, group: GroupInfo) -> None:
-        """`dnf5 group install / upgrade / remove` for a comps group in the sidebar."""
-        busy = self.helper.busy
-        marked = self.model.marks.group(group.id)
-        allowed = allowed_group_actions(group)
-        m.setToolTipsVisible(True)
-        for action in [Action.UPGRADE, Action.REMOVE] if group.installed else [Action.INSTALL]:
-            text, icon = GROUP_MARK_ACTIONS[action]
-            a = m.addAction(QIcon.fromTheme(icon), _(text), lambda act=action: self.mark_group(group, act))
-            # upgrade only once the check after loading has found something to upgrade
-            known = action is not Action.UPGRADE or group.upgradable is True
-            a.setEnabled(action in allowed and known and action is not marked and not busy)
-            if action is Action.UPGRADE and group.upgradable is not True:
-                a.setToolTip(_("Checking for upgrades…") if group.upgradable is None else
-                             _("Nothing to upgrade: its packages are up to date and match the group"))
-        unmark = m.addAction(QIcon.fromTheme("edit-undo"), _("Unmark Group"), lambda: self.mark_group(group, None))
-        unmark.setEnabled(marked is not None)
-
-    def mark_group(self, group: GroupInfo, action: Action | None) -> None:
-        if action is None:
-            self.model.marks.unmark_group(group.id)
-        elif not self.model.marks.set_group(group, action):
-            return
-        self._group_marks_changed()
 
     def _group_marks_changed(self) -> None:
         self._update_actions()
@@ -967,33 +521,28 @@ class MainWindow(QMainWindow):
 
     # ---------------------------------------------------------------- marking
 
-    def _set_upgrades_available(self, available: bool) -> None:
-        self.act_mark_upgrades.setEnabled(available)
-        self.mark_upgrades_menu.setEnabled(available)
-        self.act_mark_upgrades.setIcon(self._upgrade_icons[available])
-
     def _update_actions(self, *_args):
         rows = self._selected_rows()
         allowed = set()
         for r in rows:
             allowed.update(allowed_actions(r))
-        for action, a in self.mark_actions.items():
+        for action, a in self.acts.mark.items():
             a.setEnabled(action in allowed)
-        self.downgrade_menu.setEnabled(len(rows) == 1 and rows[0].installed)
-        self.act_unmark.setEnabled(any(r.key in self.model.marks for r in rows))
+        self.acts.downgrade_menu.setEnabled(len(rows) == 1 and rows[0].installed)
+        self.acts.unmark.setEnabled(any(r.key in self.model.marks for r in rows))
         n = len(self.model.marks)
-        self.act_apply.setEnabled(n > 0 and not self.helper.busy)
-        self.act_unmark_all.setEnabled(n > 0)
-        self.act_save_marks.setEnabled(n > 0)
-        self.act_read_marks.setEnabled(self.snapshot is not None)
-        for needs_catalog in (self.act_repos, self.act_copr, self.act_cache, self.act_filters, self.act_new_filter,
-                              self.act_upgrade):
+        self.acts.apply.setEnabled(n > 0 and not self.helper.busy)
+        self.acts.unmark_all.setEnabled(n > 0)
+        self.acts.save_marks.setEnabled(n > 0)
+        self.acts.read_marks.setEnabled(self.snapshot is not None)
+        for needs_catalog in (self.acts.repos, self.acts.copr, self.acts.cache, self.acts.filters, self.acts.new_filter,
+                              self.releases.act_upgrade):
             needs_catalog.setEnabled(self.snapshot is not None)
-        self.act_open_file.setEnabled(self._can_open_file())
-        self._set_upgrades_available(bool(self.snapshot and self.snapshot.n_upgradable))
-        for kind, a in self.mark_upgrade_actions.items():
-            a.setEnabled(bool(self._upgrades_of_kind.get(kind)))
-        self.act_mark_unneeded.setEnabled(bool(self._unneeded))
+        self.acts.open_file.setEnabled(self._can_open_file())
+        self.acts.set_upgrades_available(bool(self.snapshot and self.snapshot.n_upgradable))
+        for kind, a in self.acts.mark_upgrades_of_kind.items():
+            a.setEnabled(bool(self.marker.upgrades_of(kind)))
+        self.acts.mark_unneeded.setEnabled(bool(self.marker.unneeded))
 
     def _marks_changed(self, keys):
         self.model.marks_changed(keys)
@@ -1003,206 +552,50 @@ class MainWindow(QMainWindow):
             self.sidebar.refresh_counts()
 
     def mark_selected(self, action: Action, evr: str = ""):
-        rows = self._selected_rows()
-        before = {r.key: self.model.marks.get(r.key) for r in rows}
-        changed = [r.key for r in rows if self.model.marks.set(r, action, evr)]
-        if changed:
-            self._marks_changed(changed)
-            if action is Action.REMOVE:
-                self._check_removal_dependents(changed, {k: before[k] for k in changed})
-
-    def _check_removal_dependents(self, keys: list, before: dict) -> None:
-        """Like Synaptic: packages that depend on the ones just marked for removal must go too; offer to mark them."""
-        rows = {r.key: r for r in self.snapshot.rows}
-        remove = self.model.marks.request(rows).get("remove", [])
-
-        def done(dependents):
-            marks = self.model.marks
-            if any((m := marks.get(k)) is None or m.action is not Action.REMOVE for k in keys):
-                return  # the marks changed meanwhile
-            extra = [rows[k] for k in dependents if k not in marks and k in rows]
-            if not extra:
-                return
-            box = QMessageBox(QMessageBox.Icon.Question, "Kram",
-                              ngettext("{n} installed package depends on the packages marked for removal and has to be "
-                                       "removed as well:",
-                                       "{n} installed packages depend on the packages marked for removal and have to be "
-                                       "removed as well:", len(extra)).format(n=len(extra)),
-                              QMessageBox.StandardButton.Cancel, self)
-            box.setInformativeText(", ".join(sorted(r.name for r in extra)))
-            mark_btn = box.addButton(_("Mark"), QMessageBox.ButtonRole.AcceptRole)
-            box.setDefaultButton(mark_btn)
-            box.exec()
-            if box.clickedButton() is mark_btn:
-                for r in extra:
-                    marks.set(r, Action.REMOVE)
-                self._marks_changed([r.key for r in extra])
-            else:  # as in Synaptic, cancelling takes back the removal that needed them
-                for k, m in before.items():
-                    marks.restore(k, m)
-                self._marks_changed(list(before))
-        self.dnf.submit(lambda: self.catalog.removal_dependents(remove), done,
-                        lambda e: self.status.setText(_("Error: {error}").format(error=e)))
+        self.marker.mark(self._selected_rows(), action, evr)
 
     def unmark_selected(self):
-        keys = [r.key for r in self._selected_rows() if r.key in self.model.marks]
-        for k in keys:
-            self.model.marks.unmark(k)
-        self._marks_changed(keys)
-
-    def unmark_all(self):
-        self.model.marks.clear()
-        self._marks_changed(None)
-        self._group_marks_changed()
-
-    def mark_all_upgrades(self):
-        if not self.snapshot:
-            return
-        self._mark_for_upgrade([r for r in self.snapshot.rows if r.status is Status.UPGRADABLE])
-
-    def mark_upgrades(self, kind: str):
-        """Mark the upgrades of one kind: UPGRADES_SECURITY, UPGRADES_SECURITY_HIGH or UPGRADES_FIXES."""
-        self._mark_for_upgrade(self._upgrades_of_kind.get(kind, []))
-
-    def mark_unneeded(self):
-        """Autoremove: mark every unneeded dependency for removal. The Apply dialog then shows what goes, including
-        what becomes unneeded only once these are gone."""
-        changed = [r.key for r in self._unneeded if self.model.marks.set(r, Action.REMOVE)]
-        self._marks_changed(None)
-        self.statusBar().showMessage(ngettext("{n} unneeded dependency marked for removal",
-                                              "{n} unneeded dependencies marked for removal",
-                                              len(changed)).format(n=len(changed)), 8000)
-
-    def _mark_for_upgrade(self, rows: list[PkgRow]) -> None:
-        """Upgrades that cannot be installed now are left out (see PackageTableModel.blocked): marked one by one,
-        the Apply dialog says why they cannot be carried out."""
-        left_out = sum(1 for r in rows if r.key in self.model.blocked)
-        changed = [r.key for r in rows if r.key not in self.model.blocked and self.model.marks.set(r, Action.UPGRADE)]
-        self._marks_changed(None)
-        text = ngettext("{n} package marked for upgrade", "{n} packages marked for upgrade", len(changed)).format(n=len(changed))
-        if left_out:
-            text += "; " + ngettext("{n} upgrade left out: it cannot be installed now",
-                                    "{n} upgrades left out: they cannot be installed now", left_out).format(n=left_out)
-        self.statusBar().showMessage(text, 8000)
-
-    def _markings_dir(self) -> str:
-        return QSettings().value("markings/dir", str(Path.home()))
+        self.marker.unmark(self._selected_rows())
 
     def save_marks(self):
-        path, _filter = QFileDialog.getSaveFileName(self, _("Save Markings"),
-                                                    str(Path(self._markings_dir()) / "kram-markings.txt"),
-                                                    _("Text files (*.txt);;All files (*)"))
-        if not path:
-            return
-        try:
-            Path(path).write_text(dump_marks(self.model.marks), encoding="utf-8")
-        except OSError as e:
-            QMessageBox.critical(self, _("Save Markings"), _("Could not save {path}:\n\n{error}").format(
-                path=path, error=e.strerror or e))
-            return
-        QSettings().setValue("markings/dir", str(Path(path).parent))
-        n = len(self.model.marks)
-        self.statusBar().showMessage(ngettext("{n} marking saved to {path}", "{n} markings saved to {path}", n)
-                                     .format(n=n, path=path), 5000)
+        if path := save_markings(self, self.model.marks):
+            n = len(self.model.marks)
+            self.statusBar().showMessage(ngettext("{n} marking saved to {path}", "{n} markings saved to {path}", n)
+                                         .format(n=n, path=path), 5000)
 
     def read_marks(self):
-        path, _filter = QFileDialog.getOpenFileName(self, _("Read Markings"), self._markings_dir(),
-                                                    _("Text files (*.txt);;All files (*)"))
-        if path:
-            self.load_marks_file(path)
-
-    def load_marks_file(self, path: str) -> None:
-        """Add the marks from a markings file to the current ones; report what could not be marked."""
-        try:
-            text = Path(path).read_text(encoding="utf-8")
-        except (OSError, UnicodeDecodeError) as e:
-            QMessageBox.critical(self, _("Read Markings"), _("Could not read {path}:\n\n{error}").format(
-                path=path, error=getattr(e, "strerror", None) or e))
-            return
-        QSettings().setValue("markings/dir", str(Path(path).parent))
-        marks, group_marks, bad_lines = parse_marks(text)
-        rows = {r.key: r for r in self.snapshot.rows}
-        skipped = [f"{name}.{arch}" for (name, arch), mark in marks
-                   if not ((row := rows.get((name, arch))) and self.model.marks.set(row, mark.action, mark.evr))]
-        skipped += [f"@{gid}" for gid, action in group_marks
-                    if not ((group := self._group(gid)) and self.model.marks.set_group(group, action))]
-        self._marks_changed(None)
-        self._group_marks_changed()
-        n = len(marks) + len(group_marks) - len(skipped)
-        self.statusBar().showMessage(ngettext("{n} package marked", "{n} packages marked", n).format(n=n), 5000)
-        if skipped or bad_lines:
-            problems = []
-            if skipped:
-                problems.append(ngettext(
-                    "{n} marking no longer applies (package not found, already in that state, …):",
-                    "{n} markings no longer apply (packages not found, already in that state, …):",
-                    len(skipped)).format(n=len(skipped)) + "\n" + ", ".join(skipped))
-            if bad_lines:
-                problems.append(ngettext("{n} line is not a valid marking: {lines}",
-                                         "{n} lines are not valid markings: {lines}", len(bad_lines))
-                                .format(n=len(bad_lines), lines=", ".join(map(str, bad_lines))))
-            QMessageBox.warning(self, _("Read Markings"),
-                                ngettext("{n} package marked.", "{n} packages marked.", n).format(n=n) + "\n\n"
-                                + "\n\n".join(problems))
-
-    def _revalidate_marks(self):
-        """After a reload, drop marks that no longer apply (package gone, already installed, ...)."""
-        rows = {r.key: r for r in self.snapshot.rows}
-        for key, mark in list(self.model.marks.items()):
-            row = rows.get(key)
-            if row is None or not (mark.action is Action.DOWNGRADE and row.installed
-                                   or mark.action in allowed_actions(row)):
-                self.model.marks.unmark(key)
-        groups = {g.id: g for g in self.snapshot.groups}
-        for gid, action in list(self.model.marks.group_items()):
-            if (g := groups.get(gid)) is None or action not in allowed_group_actions(g):
-                self.model.marks.unmark_group(gid)
-        self._update_actions()
+        if path := ask_markings_file(self):
+            self.marker.read_file(path)
 
     def _fill_downgrade_menu(self):
-        self.downgrade_menu.clear()
+        self.acts.downgrade_menu.clear()
         rows = self._selected_rows()
-        d = self._details
-        if len(rows) != 1 or d is None or self._details_for != rows[0].key:
-            self.downgrade_menu.addAction(_("(loading…)")).setEnabled(False)
+        d = self.details_loader.details_of(rows[0].key) if len(rows) == 1 else None
+        if d is None:
+            self.acts.downgrade_menu.addAction(_("(loading…)")).setEnabled(False)
             return
         row = rows[0]
         installed = {v.evr for v in d.versions if v.installed}
         older = [v for v in d.versions if not v.installed and v.evr not in installed
                  and evr_cmp(v.evr, row.installed_evr) < 0]
         if not older:
-            self.downgrade_menu.addAction(_("No older versions in the repositories")).setEnabled(False)
+            self.acts.downgrade_menu.addAction(_("No older versions in the repositories")).setEnabled(False)
         for v in older:
-            self.downgrade_menu.addAction(f"{v.evr}  ({v.repo_id})",
+            self.acts.downgrade_menu.addAction(f"{v.evr}  ({v.repo_id})",
                                           lambda evr=v.evr: self.mark_selected(Action.DOWNGRADE, evr))
 
     def _on_table_click(self, index):
         # Synaptic: clicking the status box opens the action menu, or marks the likely action if the user chose that
         if index.column() == COL_STATUS:
-            if self.act_status_click.isChecked() and self._toggle_likely(index):
+            if self.acts.status_click.isChecked() and self.marker.toggle_likely(self.model.row_at(index)):
                 return
             m = QMenu(self)
-            self._package_menu(m)
+            self.acts.fill_package_menu(m)
             m.exec(self.table.viewport().mapToGlobal(self.table.visualRect(index).bottomLeft()))
 
     def _on_double_click(self, index):
         if index.column() != COL_STATUS:
-            self._toggle_likely(index)
-
-    def _toggle_likely(self, index) -> bool:
-        """Unmark the row, or mark it for the one change it obviously wants: install or upgrade.
-        False, and nothing changes, when there is none (an installed package without an upgrade)."""
-        row = self.model.row_at(index)
-        if row.key in self.model.marks:
-            self.model.marks.unmark(row.key)
-        else:
-            allowed = allowed_actions(row)
-            action = next((a for a in (Action.INSTALL, Action.UPGRADE) if a in allowed), None)
-            if action is None:
-                return False
-            self.model.marks.set(row, action)
-        self._marks_changed([row.key])
-        return True
+            self.marker.toggle_likely(self.model.row_at(index))
 
     # ---------------------------------------------------------------- applying
 
@@ -1211,7 +604,7 @@ class MainWindow(QMainWindow):
             return
         rows = {r.key: r for r in self.snapshot.rows}
         request = {"op": "transaction", **self.model.marks.request(rows)}
-        self.status.setText(_("Resolving dependencies…"))
+        self.status.set_text(_("Resolving dependencies…"))
         self.dnf.submit(lambda: self.catalog.resolve(request), lambda p: self._on_preview(p, request),
                         lambda e: QMessageBox.critical(self, "Kram", _("Could not resolve the changes:\n\n{error}").format(error=e)))
 
@@ -1235,16 +628,14 @@ class MainWindow(QMainWindow):
         if download_only:
             request = {**request, "download_only": True}
         if self._run_helper(request, _("Applying changes")) and not download_only:
-            self.model.marks.clear()
-            self._marks_changed(None)
-            self._group_marks_changed()
+            self.marker.unmark_all()
             self.reload()
 
     def refresh_metadata(self):
         if self.helper.busy:
             return
         self._run_helper({"op": "refresh"}, _("Refreshing metadata"))
-        self._check_fedora_release()
+        self.releases.check()
         self.reload()
 
     def run_helper_and_reload(self, request: dict, title: str) -> bool:
@@ -1312,57 +703,12 @@ class MainWindow(QMainWindow):
         else:
             self._run_helper(request, _("Cleaning the package cache"))
 
-    # ---------------------------------------------------------------- new Fedora release
-
-    def _on_watch_releases(self, on: bool) -> None:
-        QSettings().setValue("distro/watch", on)
-        self._update_upgrade_button()
-
-    def _upgrade_target(self) -> int | None:
-        """The release the button offers, from the last check. Gone once the system has reached it."""
-        target = QSettings().value("distro/target", 0, type=int)
-        running = self.running_fedora
-        if running is None or not self.act_watch_releases.isChecked():
-            return None
-        return target if running < target <= running + distro.MAX_RELEASE_JUMP else None
-
-    def _update_upgrade_button(self) -> None:
-        target = self._upgrade_target()
-        self.act_upgrade.setVisible(target is not None)
-        if target is not None:
-            self.act_upgrade.setText(f"Fedora {target}")
-            tip = _("Fedora {new} is available, you have {old}").format(new=target, old=self.running_fedora)
-            self.act_upgrade.setToolTip(tip)
-            self.act_upgrade.setStatusTip(tip)
-
-    def _check_fedora_release(self) -> None:
-        if self.running_fedora is None or not self.act_watch_releases.isChecked():
-            return
-        reply = self._net.get(api_request(QUrl(distro.BODHI_RELEASES_URL), RELEASE_CHECK_TIMEOUT_MS))
-        reply.finished.connect(lambda: self._on_release_check(reply))
-
-    def _on_release_check(self, reply: QNetworkReply) -> None:
-        reply.deleteLater()
-        if reply.error() != QNetworkReply.NetworkError.NoError:
-            return  # no network is no news: the last result stays
-        try:
-            releases = distro.parse_releases(json.loads(bytes(reply.readAll())))
-        except ValueError:
-            return
-        if not releases:
-            return
-        target = distro.choose_target(self.running_fedora, releases)
-        settings = QSettings()
-        settings.setValue("distro/target", target.version if target else 0)
-        settings.setValue("distro/running_eol", next((r.eol for r in releases if r.version == self.running_fedora), ""))
-        self._update_upgrade_button()
-
     def open_upgrade(self) -> None:
-        target = self._upgrade_target()
+        target = self.releases.target()
         if target is None or self.snapshot is None:
             return
         if self._upgrade_dialog is None or self._upgrade_dialog.target != target:
-            self._upgrade_dialog = UpgradeDialog(target, self.running_fedora, QSettings().value("distro/running_eol", ""),
+            self._upgrade_dialog = UpgradeDialog(target, self.releases.running, self.releases.running_eol(),
                                                  self.snapshot, self.dnf, self)
         self._upgrade_dialog.exec()
 
@@ -1416,12 +762,12 @@ class MainWindow(QMainWindow):
 
     def _helper_result(self, request: dict, title: str) -> dict | None:
         """Run a helper request with a progress dialog: its final event if it succeeded, else None."""
-        self.act_apply.setEnabled(False)
-        self.act_reload.setEnabled(False)
+        self.acts.apply.setEnabled(False)
+        self.acts.reload.setEnabled(False)
         # a child of the dialog that started it (COPR, Package Cache): as a sibling, that one could be raised over it
         dlg = ProgressDialog(self.helper, request, title, QApplication.activeModalWidget() or self)
         dlg.exec()
-        self.act_reload.setEnabled(True)
+        self.acts.reload.setEnabled(True)
         self._update_actions()
         notifier_control.recheck()  # even after a failure: the metadata may have been refreshed
         return dlg.result if dlg.ok else None

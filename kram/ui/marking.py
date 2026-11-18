@@ -1,0 +1,223 @@
+"""Marking: what the user marks for the next transaction, packages and comps groups, in the table model's marks.
+
+The window decides what is selected and repaints; this decides what a mark means: which upgrades "Mark All Upgrades"
+takes, the packages that must go with a removal, the marks a reload leaves without a package."""
+from PySide6.QtCore import QObject, Signal
+from PySide6.QtGui import QIcon
+from PySide6.QtWidgets import QMenu, QMessageBox, QWidget
+
+from ..core.catalog import Catalog
+from ..core.filters import upgrades_by_kind
+from ..core.marks import Action, Mark, allowed_actions, allowed_group_actions
+from ..core.model import CatalogSnapshot, GroupInfo, PkgRow, Status
+from ..core.worker import DnfWorker
+from ..i18n import N_, _, ngettext
+from .markings_file import read_markings
+from .package_model import PackageTableModel
+
+# sidebar menu of a comps group: (text, theme icon)
+GROUP_MARK_ACTIONS = {
+    Action.INSTALL: (N_("Mark Group for Installation"), "list-add"),
+    Action.UPGRADE: (N_("Mark Group for Upgrade"), "go-up"),
+    Action.REMOVE: (N_("Mark Group for Removal"), "list-remove"),
+}
+MESSAGE_MS = 8000  # how long a status bar message about a bulk marking stays
+
+
+class Marker(QObject):
+    """`changed`: the marks of these package keys changed (None: of any number of packages). `groupsChanged`: a group
+    mark changed. `message`: a status bar message and its timeout. `failed`: a background check failed."""
+
+    changed = Signal(object)
+    groupsChanged = Signal()
+    message = Signal(str, int)
+    failed = Signal(object)
+
+    def __init__(self, model: PackageTableModel, catalog: Catalog, dnf: DnfWorker, parent: QWidget):
+        super().__init__(parent)
+        self._window = parent  # for the dialogs
+        self.model, self._catalog, self._dnf = model, catalog, dnf
+        self.marks = model.marks
+        self.snapshot: CatalogSnapshot | None = None
+        self._upgrades_of_kind: dict[str, list[PkgRow]] = {}  # see upgrades_by_kind
+        self.unneeded: list[PkgRow] = []  # what dnf autoremove would remove
+
+    # ---------------------------------------------------------------- catalog
+
+    def set_snapshot(self, snap: CatalogSnapshot) -> None:
+        """A (re)loaded catalog: drop the marks that no longer apply, find which groups can be upgraded."""
+        self.snapshot = snap
+        self._upgrades_of_kind = upgrades_by_kind(snap.rows)
+        self.unneeded = [r for r in snap.rows if r.unneeded]
+        self.revalidate()
+        self._check_group_upgrades(snap)
+
+    def upgrades_of(self, kind: str) -> list[PkgRow]:
+        """UPGRADES_SECURITY, UPGRADES_SECURITY_HIGH or UPGRADES_FIXES."""
+        return self._upgrades_of_kind.get(kind, [])
+
+    def group(self, group_id: str) -> GroupInfo | None:
+        return next((g for g in self.snapshot.groups if g.id == group_id), None) if self.snapshot else None
+
+    def revalidate(self) -> None:
+        """After a reload, drop marks that no longer apply (package gone, already installed, ...). Says nothing: the
+        reloaded list is drawn afresh anyway."""
+        rows = {r.key: r for r in self.snapshot.rows}
+        for key, mark in list(self.marks.items()):
+            row = rows.get(key)
+            if row is None or not (mark.action is Action.DOWNGRADE and row.installed
+                                   or mark.action in allowed_actions(row)):
+                self.marks.unmark(key)
+        groups = {g.id: g for g in self.snapshot.groups}
+        for gid, action in list(self.marks.group_items()):
+            if (g := groups.get(gid)) is None or action not in allowed_group_actions(g):
+                self.marks.unmark_group(gid)
+
+    def _check_group_upgrades(self, snap: CatalogSnapshot) -> None:
+        """Find which installed groups `dnf5 group upgrade` would change, after the list is shown (a dry-run
+        resolve each, ~0.1 s); until then their Upgrade item is disabled."""
+        installed = [g.id for g in snap.groups if g.installed]
+        if not installed:
+            return
+
+        def done(found: set[str]) -> None:
+            if self.snapshot is not snap:
+                return  # reloaded meanwhile: that load runs its own check
+            for g in snap.groups:
+                if g.installed:
+                    g.upgradable = g.id in found
+            self.revalidate()  # an upgrade mark on a group with nothing to upgrade goes
+            self.groupsChanged.emit()
+        self._dnf.submit(lambda: self._catalog.upgradable_groups(installed), done, self.failed.emit)
+
+    # ---------------------------------------------------------------- packages
+
+    def mark(self, rows: list[PkgRow], action: Action, evr: str = "") -> None:
+        before = {r.key: self.marks.get(r.key) for r in rows}
+        changed = [r.key for r in rows if self.marks.set(r, action, evr)]
+        if changed:
+            self.changed.emit(changed)
+            if action is Action.REMOVE:
+                self._check_removal_dependents(changed, {k: before[k] for k in changed})
+
+    def _check_removal_dependents(self, keys: list, before: dict[tuple[str, str], Mark | None]) -> None:
+        """Like Synaptic: packages that depend on the ones just marked for removal must go too; offer to mark them."""
+        rows = {r.key: r for r in self.snapshot.rows}
+        remove = self.marks.request(rows).get("remove", [])
+
+        def done(dependents):
+            marks = self.marks
+            if any((m := marks.get(k)) is None or m.action is not Action.REMOVE for k in keys):
+                return  # the marks changed meanwhile
+            extra = [rows[k] for k in dependents if k not in marks and k in rows]
+            if not extra:
+                return
+            box = QMessageBox(QMessageBox.Icon.Question, "Kram",
+                              ngettext("{n} installed package depends on the packages marked for removal and has to be "
+                                       "removed as well:",
+                                       "{n} installed packages depend on the packages marked for removal and have to be "
+                                       "removed as well:", len(extra)).format(n=len(extra)),
+                              QMessageBox.StandardButton.Cancel, self._window)
+            box.setInformativeText(", ".join(sorted(r.name for r in extra)))
+            mark_btn = box.addButton(_("Mark"), QMessageBox.ButtonRole.AcceptRole)
+            box.setDefaultButton(mark_btn)
+            box.exec()
+            if box.clickedButton() is mark_btn:
+                for r in extra:
+                    marks.set(r, Action.REMOVE)
+                self.changed.emit([r.key for r in extra])
+            else:  # as in Synaptic, cancelling takes back the removal that needed them
+                for k, m in before.items():
+                    marks.restore(k, m)
+                self.changed.emit(list(before))
+        self._dnf.submit(lambda: self._catalog.removal_dependents(remove), done, self.failed.emit)
+
+    def unmark(self, rows: list[PkgRow]) -> None:
+        keys = [r.key for r in rows if r.key in self.marks]
+        for k in keys:
+            self.marks.unmark(k)
+        self.changed.emit(keys)
+
+    def unmark_all(self) -> None:
+        self.marks.clear()
+        self.changed.emit(None)
+        self.groupsChanged.emit()
+
+    def toggle_likely(self, row: PkgRow) -> bool:
+        """Unmark the row, or mark it for the one change it obviously wants: install or upgrade.
+        False, and nothing changes, when there is none (an installed package without an upgrade)."""
+        if row.key in self.marks:
+            self.marks.unmark(row.key)
+        else:
+            allowed = allowed_actions(row)
+            action = next((a for a in (Action.INSTALL, Action.UPGRADE) if a in allowed), None)
+            if action is None:
+                return False
+            self.marks.set(row, action)
+        self.changed.emit([row.key])
+        return True
+
+    def mark_all_upgrades(self) -> None:
+        if self.snapshot:
+            self._mark_for_upgrade([r for r in self.snapshot.rows if r.status is Status.UPGRADABLE])
+
+    def mark_upgrades(self, kind: str) -> None:
+        """Mark the upgrades of one kind: UPGRADES_SECURITY, UPGRADES_SECURITY_HIGH or UPGRADES_FIXES."""
+        self._mark_for_upgrade(self.upgrades_of(kind))
+
+    def _mark_for_upgrade(self, rows: list[PkgRow]) -> None:
+        """Upgrades that cannot be installed now are left out (see PackageTableModel.blocked): marked one by one,
+        the Apply dialog says why they cannot be carried out."""
+        blocked = self.model.blocked
+        left_out = sum(1 for r in rows if r.key in blocked)
+        changed = [r.key for r in rows if r.key not in blocked and self.marks.set(r, Action.UPGRADE)]
+        self.changed.emit(None)
+        text = ngettext("{n} package marked for upgrade", "{n} packages marked for upgrade", len(changed)).format(
+            n=len(changed))
+        if left_out:
+            text += "; " + ngettext("{n} upgrade left out: it cannot be installed now",
+                                    "{n} upgrades left out: they cannot be installed now", left_out).format(n=left_out)
+        self.message.emit(text, MESSAGE_MS)
+
+    def mark_unneeded(self) -> None:
+        """Autoremove: mark every unneeded dependency for removal. The Apply dialog then shows what goes, including
+        what becomes unneeded only once these are gone."""
+        changed = [r.key for r in self.unneeded if self.marks.set(r, Action.REMOVE)]
+        self.changed.emit(None)
+        self.message.emit(ngettext("{n} unneeded dependency marked for removal",
+                                   "{n} unneeded dependencies marked for removal",
+                                   len(changed)).format(n=len(changed)), MESSAGE_MS)
+
+    def read_file(self, path: str) -> None:
+        """Add the marks from a markings file to the current ones; report what could not be marked."""
+        def marked(n: int) -> None:
+            self.changed.emit(None)
+            self.groupsChanged.emit()
+            self.message.emit(ngettext("{n} package marked", "{n} packages marked", n).format(n=n), 5000)
+        read_markings(self._window, path, self.marks, {r.key: r for r in self.snapshot.rows}, self.group, marked)
+
+    # ---------------------------------------------------------------- groups
+
+    def fill_group_menu(self, m: QMenu, group: GroupInfo, busy: bool) -> None:
+        """`dnf5 group install / upgrade / remove` for a comps group in the sidebar; nothing to mark while `busy`."""
+        marked = self.marks.group(group.id)
+        allowed = allowed_group_actions(group)
+        m.setToolTipsVisible(True)
+        for action in [Action.UPGRADE, Action.REMOVE] if group.installed else [Action.INSTALL]:
+            text, icon = GROUP_MARK_ACTIONS[action]
+            a = m.addAction(QIcon.fromTheme(icon), _(text), lambda act=action: self.mark_group(group, act))
+            # upgrade only once the check after loading has found something to upgrade
+            known = action is not Action.UPGRADE or group.upgradable is True
+            a.setEnabled(action in allowed and known and action is not marked and not busy)
+            if action is Action.UPGRADE and group.upgradable is not True:
+                a.setToolTip(_("Checking for upgrades…") if group.upgradable is None else
+                             _("Nothing to upgrade: its packages are up to date and match the group"))
+        unmark = m.addAction(QIcon.fromTheme("edit-undo"), _("Unmark Group"), lambda: self.mark_group(group, None))
+        unmark.setEnabled(marked is not None)
+
+    def mark_group(self, group: GroupInfo, action: Action | None) -> None:
+        if action is None:
+            self.marks.unmark_group(group.id)
+        elif not self.marks.set_group(group, action):
+            return
+        self.groupsChanged.emit()
