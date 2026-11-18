@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kram\n"
 "Report-Msgid-Bugs-To: https://github.com/elmodos/kram/issues\n"
-"POT-Creation-Date: 2026-11-18 18:58+0200\n"
+"POT-Creation-Date: 2026-11-18 19:35+0200\n"
 "PO-Revision-Date: 2026-11-04 14:07+0200\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -57,7 +57,7 @@ msgid "Origin"
 msgstr "출처"
 
 #: kram/core/custom_filters.py:55 kram/ui/apply_dialog.py:91
-#: kram/ui/details.py:78 kram/ui/package_model.py:19
+#: kram/ui/details.py:78 kram/ui/package_model.py:18
 msgid "Repository"
 msgstr "저장소"
 
@@ -77,7 +77,7 @@ msgstr "아키텍처"
 msgid "Installed size (MB)"
 msgstr "설치 크기 (MB)"
 
-#: kram/core/custom_filters.py:60 kram/ui/package_model.py:20
+#: kram/core/custom_filters.py:60 kram/ui/package_model.py:19
 msgid "Update type"
 msgstr "업데이트 유형"
 
@@ -137,7 +137,7 @@ msgstr "고아 (저장소 없음)"
 msgid "Unneeded dependency"
 msgstr "필요 없는 의존성"
 
-#: kram/core/custom_filters.py:87 kram/ui/package_model.py:30
+#: kram/core/custom_filters.py:87 kram/ui/package_model.py:29
 msgid "Security"
 msgstr "보안"
 
@@ -145,11 +145,11 @@ msgstr "보안"
 msgid "Security: critical or important"
 msgstr "보안: 심각 또는 중요"
 
-#: kram/core/custom_filters.py:89 kram/ui/package_model.py:31
+#: kram/core/custom_filters.py:89 kram/ui/package_model.py:30
 msgid "Bug fix"
 msgstr "버그 수정"
 
-#: kram/core/custom_filters.py:90 kram/ui/package_model.py:32
+#: kram/core/custom_filters.py:90 kram/ui/package_model.py:31
 msgid "Enhancement"
 msgstr "기능 개선"
 
@@ -597,20 +597,20 @@ msgstr "보관 버전 수 제한을 지키기 위해 가장 오래된 커널을 
 msgid "Install reason changes"
 msgstr "설치 이유 변경"
 
-#: kram/ui/apply_dialog.py:50 kram/ui/package_model.py:48
+#: kram/ui/apply_dialog.py:50 kram/ui/package_model.py:47
 msgid "dependency"
 msgstr "의존성"
 
 #: kram/ui/apply_dialog.py:50 kram/ui/install_dialog.py:53
-#: kram/ui/package_model.py:46
+#: kram/ui/package_model.py:45
 msgid "group"
 msgstr "그룹"
 
-#: kram/ui/apply_dialog.py:50 kram/ui/package_model.py:45
+#: kram/ui/apply_dialog.py:50 kram/ui/package_model.py:44
 msgid "user"
 msgstr "사용자"
 
-#: kram/ui/apply_dialog.py:50 kram/ui/package_model.py:49
+#: kram/ui/apply_dialog.py:50 kram/ui/package_model.py:48
 msgid "weak dependency"
 msgstr "약한 의존성"
 
@@ -631,11 +631,11 @@ msgid "Groups to be removed"
 msgstr "제거 예정 그룹"
 
 #: kram/ui/apply_dialog.py:91 kram/ui/details.py:175
-#: kram/ui/install_dialog.py:473 kram/ui/package_model.py:19
+#: kram/ui/install_dialog.py:473 kram/ui/package_model.py:18
 msgid "Package"
 msgstr "패키지"
 
-#: kram/ui/apply_dialog.py:91 kram/ui/package_model.py:20
+#: kram/ui/apply_dialog.py:91 kram/ui/package_model.py:19
 msgid "Size"
 msgstr "크기"
 
@@ -1198,7 +1198,9 @@ msgstr "참조:"
 msgid ""
 "The repository has to fix it. Until then Mark All Upgrades leaves this "
 "package out."
-msgstr "저장소에서 수정해야 합니다. 그때까지 '모든 업그레이드 표시'는 이 패키지를 건너뜁니다."
+msgstr ""
+"저장소에서 수정해야 합니다. 그때까지 '모든 업그레이드 표시'는 이 패키지를 건"
+"너뜁니다."
 
 #: kram/ui/details.py:78
 msgid "State"
@@ -1452,7 +1454,7 @@ msgstr "패키지 파일 설치"
 msgid "What installing it changes"
 msgstr "설치로 바뀌는 것"
 
-#: kram/ui/install_dialog.py:143 kram/ui/progress_dialog.py:90
+#: kram/ui/install_dialog.py:143 kram/ui/progress_dialog.py:97
 msgid "Details"
 msgstr "자세히"
 
@@ -2036,61 +2038,61 @@ msgid "day"
 msgid_plural "days"
 msgstr[0] "일"
 
-#: kram/ui/package_model.py:19
+#: kram/ui/package_model.py:18
 msgid "Installed version"
 msgstr "설치된 버전"
 
-#: kram/ui/package_model.py:19
+#: kram/ui/package_model.py:18
 msgid "Latest version"
 msgstr "최신 버전"
 
-#: kram/ui/package_model.py:19
+#: kram/ui/package_model.py:18
 msgid "Reason"
 msgstr "이유"
 
 #. TRANSLATORS: "S" is the narrow status column (Synaptic convention); keep it one letter
-#: kram/ui/package_model.py:19
+#: kram/ui/package_model.py:18
 msgid "S"
 msgstr "S"
 
-#: kram/ui/package_model.py:20
+#: kram/ui/package_model.py:19
 msgid "Summary"
 msgstr "요약"
 
-#: kram/ui/package_model.py:26
+#: kram/ui/package_model.py:25
 msgid "Security: critical"
 msgstr "보안: 심각"
 
-#: kram/ui/package_model.py:27
+#: kram/ui/package_model.py:26
 msgid "Security: important"
 msgstr "보안: 중요"
 
-#: kram/ui/package_model.py:28
+#: kram/ui/package_model.py:27
 msgid "Security: moderate"
 msgstr "보안: 보통"
 
-#: kram/ui/package_model.py:29
+#: kram/ui/package_model.py:28
 msgid "Security: low"
 msgstr "보안: 낮음"
 
-#: kram/ui/package_model.py:33
+#: kram/ui/package_model.py:32
 msgctxt "update type"
 msgid "Other"
 msgstr "기타"
 
-#: kram/ui/package_model.py:47
+#: kram/ui/package_model.py:46
 msgid "not recorded"
 msgstr "기록 없음"
 
-#: kram/ui/package_model.py:52
+#: kram/ui/package_model.py:51
 msgid "Installed by the user: autoremove keeps it"
 msgstr "사용자가 설치함: autoremove가 유지합니다"
 
-#: kram/ui/package_model.py:53
+#: kram/ui/package_model.py:52
 msgid "Installed with a package group: autoremove keeps it"
 msgstr "패키지 그룹과 함께 설치됨: autoremove가 유지합니다"
 
-#: kram/ui/package_model.py:54
+#: kram/ui/package_model.py:53
 msgid ""
 "Installed outside dnf, or dnf lost the record: treated as installed by the "
 "user,\n"
@@ -2101,11 +2103,11 @@ msgstr ""
 "되어\n"
 "autoremove가 유지합니다. 다른 패키지가 끌어온 것이라면 의존성으로 표시하세요."
 
-#: kram/ui/package_model.py:56
+#: kram/ui/package_model.py:55
 msgid "Installed as a dependency: autoremove removes it once nothing needs it"
 msgstr "의존성으로 설치됨: 더 이상 필요하지 않으면 autoremove가 제거합니다"
 
-#: kram/ui/package_model.py:57
+#: kram/ui/package_model.py:56
 msgid ""
 "Installed as a weak dependency (recommended by another package):\n"
 "autoremove removes it once nothing needs it"
@@ -2185,91 +2187,120 @@ msgstr "이전 사본"
 msgid "reason change"
 msgstr "사유 변경"
 
-#: kram/ui/progress_dialog.py:36
+#: kram/ui/progress_dialog.py:37
+#, python-brace-format
+msgid "Running: {command}"
+msgstr "실행 중: {command}"
+
+#: kram/ui/progress_dialog.py:38
 msgid "Loading repositories…"
 msgstr "저장소를 불러오는 중…"
 
-#: kram/ui/progress_dialog.py:37
+#: kram/ui/progress_dialog.py:39
 msgid "Refreshing repository metadata…"
 msgstr "저장소 메타데이터를 새로 고치는 중…"
 
-#: kram/ui/progress_dialog.py:38 kram/ui/upgrade_dialog.py:41
+#: kram/ui/progress_dialog.py:40 kram/ui/upgrade_dialog.py:41
 #, python-brace-format
 msgid "Mirror unavailable: {url}: {error}"
 msgstr "미러를 사용할 수 없음: {url}: {error}"
 
-#: kram/ui/progress_dialog.py:39
+#: kram/ui/progress_dialog.py:41
 #, python-brace-format
 msgid "Scriptlet {script} of {nevra} failed with exit code {code}"
 msgstr "{nevra}의 {script} 스크립틀릿이 종료 코드 {code}(으)로 실패했습니다"
 
-#: kram/ui/progress_dialog.py:40
+#: kram/ui/progress_dialog.py:42
 #, python-brace-format
 msgid "Imported key {key_id}"
 msgstr "키 {key_id}을(를) 가져왔습니다"
 
-#: kram/ui/progress_dialog.py:41
+#: kram/ui/progress_dialog.py:43
 #, python-brace-format
 msgid "Copying {name}…"
 msgstr "{name} 복사 중…"
 
-#: kram/ui/progress_dialog.py:42
+#: kram/ui/progress_dialog.py:44
 #, python-brace-format
 msgid "Files removed: {count}"
 msgstr "삭제한 파일: {count}"
 
-#: kram/ui/progress_dialog.py:43
+#: kram/ui/progress_dialog.py:45
 #, python-brace-format
 msgid "Removed {path}"
 msgstr "{path} 제거됨"
 
-#: kram/ui/progress_dialog.py:70
+#: kram/ui/progress_dialog.py:46
+#, python-brace-format
+msgid "Could not change repository {repo}"
+msgstr "저장소 {repo}을(를) 변경할 수 없습니다"
+
+#: kram/ui/progress_dialog.py:47
+#, python-brace-format
+msgid "Command failed: {command}"
+msgstr "명령 실패: {command}"
+
+#: kram/ui/progress_dialog.py:48
+#, python-brace-format
+msgid "Files not removed: {count}"
+msgstr "제거하지 못한 파일: {count}"
+
+#: kram/ui/progress_dialog.py:49
+#, python-brace-format
+msgid "{path}: the file changed after it was checked"
+msgstr "{path}: 확인 후 파일이 변경되었습니다"
+
+#: kram/ui/progress_dialog.py:50
+msgid "The helper must run as root"
+msgstr "도우미는 root로 실행해야 합니다"
+
+#: kram/ui/progress_dialog.py:77
 msgid "Waiting for authentication…"
 msgstr "인증을 기다리는 중…"
 
-#: kram/ui/progress_dialog.py:73
+#: kram/ui/progress_dialog.py:80
 msgid "Download"
 msgstr "다운로드"
 
-#: kram/ui/progress_dialog.py:75
+#: kram/ui/progress_dialog.py:82
 msgid "Installation"
 msgstr "설치"
 
-#: kram/ui/progress_dialog.py:94
+#: kram/ui/progress_dialog.py:101
 msgid "Close when finished successfully"
 msgstr "성공적으로 끝나면 닫기"
 
-#: kram/ui/progress_dialog.py:128
+#: kram/ui/progress_dialog.py:135
 #, python-brace-format
 msgid "The transaction has {n} package. Downloading…"
 msgid_plural "The transaction has {n} packages. Downloading…"
 msgstr[0] "트랜잭션에 패키지 {n}개가 있습니다. 다운로드 중…"
 
-#: kram/ui/progress_dialog.py:157 kram/ui/upgrade_dialog.py:38
+#: kram/ui/progress_dialog.py:165 kram/ui/upgrade_dialog.py:38
 #, python-brace-format
 msgid "Downloading {name}"
 msgstr "{name} 다운로드 중"
 
-#: kram/ui/progress_dialog.py:162 kram/ui/upgrade_dialog.py:40
+#: kram/ui/progress_dialog.py:170 kram/ui/upgrade_dialog.py:40
 #, python-brace-format
 msgid "Download failed: {error}"
 msgstr "다운로드 실패: {error}"
 
-#: kram/ui/progress_dialog.py:172
+#: kram/ui/progress_dialog.py:180
 #, python-brace-format
 msgid "Downloaded {done} of {total}"
 msgstr "{total} 중 {done} 다운로드함"
 
-#: kram/ui/progress_dialog.py:180
+#: kram/ui/progress_dialog.py:188
 msgid "Preparing the rpm transaction…"
 msgstr "rpm 트랜잭션 준비 중…"
 
-#: kram/ui/progress_dialog.py:208
+#: kram/ui/progress_dialog.py:216
 #, python-brace-format
 msgid "Package {index} of {count}"
 msgstr "패키지 {index} / {count}"
 
-#: kram/ui/progress_dialog.py:216
+#: kram/ui/progress_dialog.py:224
 #, python-brace-format
 msgid ""
 "Import the OpenPGP key used to verify packages?\n"
@@ -2286,45 +2317,45 @@ msgstr ""
 "생성일: {created}\n"
 "출처: {url}"
 
-#: kram/ui/progress_dialog.py:219
+#: kram/ui/progress_dialog.py:227
 msgid "Import key"
 msgstr "키 가져오기"
 
-#: kram/ui/progress_dialog.py:220
+#: kram/ui/progress_dialog.py:228
 #, python-brace-format
 msgid "Key {key_id}: importing"
 msgstr "키 {key_id}: 가져오는 중"
 
-#: kram/ui/progress_dialog.py:220
+#: kram/ui/progress_dialog.py:228
 #, python-brace-format
 msgid "Key {key_id}: rejected"
 msgstr "키 {key_id}: 거부됨"
 
-#: kram/ui/progress_dialog.py:236 kram/ui/progress_dialog.py:237
+#: kram/ui/progress_dialog.py:244 kram/ui/progress_dialog.py:245
 #: kram/ui/upgrade_dialog.py:301
 msgid "Done."
 msgstr "완료."
 
-#: kram/ui/progress_dialog.py:236
+#: kram/ui/progress_dialog.py:244
 msgid "Packages downloaded."
 msgstr "패키지를 다운로드했습니다."
 
-#: kram/ui/progress_dialog.py:241 kram/ui/progress_dialog.py:257
+#: kram/ui/progress_dialog.py:249 kram/ui/progress_dialog.py:265
 msgid "unknown error"
 msgstr "알 수 없는 오류"
 
-#: kram/ui/progress_dialog.py:243
+#: kram/ui/progress_dialog.py:251
 #, python-brace-format
 msgid ""
 "Another package operation is running: {process}. Try again when it has "
 "finished."
 msgstr "다른 패키지 작업이 실행 중입니다: {process}. 끝난 뒤 다시 시도하세요."
 
-#: kram/ui/progress_dialog.py:258
+#: kram/ui/progress_dialog.py:266
 msgid "Error:"
 msgstr "오류:"
 
-#: kram/ui/progress_dialog.py:260
+#: kram/ui/progress_dialog.py:268
 #, python-brace-format
 msgid "ERROR: {message}"
 msgstr "오류: {message}"

@@ -1,4 +1,3 @@
-import re
 from functools import cache
 
 from PySide6.QtCore import QAbstractTableModel, QModelIndex, Qt
@@ -76,10 +75,11 @@ _NO_ADVISORY = len(ADVISORY_LABEL)
 
 @cache
 def blocked_tip(reason: str) -> str:
-    """Two lines: that the upgrade cannot be installed, and the root cause from the resolver's message (its last
-    line, such as "nothing provides liboapv.so.11()(64bit) needed by ffmpeg-libs-9.0.2-4.fc45.x86_64")."""
+    """Two lines: that the upgrade cannot be installed, and the root cause from the resolver's message, as dnf says
+    it in the user's language (its last line, such as "nothing provides liboapv.so.11()(64bit) needed by
+    ffmpeg-libs-9.0.2-4.fc45.x86_64 from rpmfusion-free-updates")."""
     lines = [line.strip().removeprefix("- ") for line in reason.splitlines() if line.strip()]
-    cause = re.sub(r" from \S+$", "", lines[-1]) if lines else ""
+    cause = lines[-1] if lines else ""
     return "\n".join(filter(None, (_("The upgrade cannot be installed now"), cause)))
 
 

@@ -27,8 +27,9 @@ Protocol: one JSON request per line on stdin, JSON event lines on stdout.
 Events: {"event": "log"|"resolved"|"download"|"rpm"|"question"|"done", ...}; every request ends with "done".
 A "done" with stage "locked" (and "process": "dnf5 (pid 71)") means another package operation holds rpm.
 A "done" with stage "packagekit" (and "reason": "offline"|"transaction") means its cache must not be touched now.
-"log" events carry an English "text" plus a "key" and "params" so the GUI can show them translated
-(pkexec strips the locale from the environment, so the helper does not translate anything itself).
+"log" events, and a failed "done" with its own message, carry an English "text"/"error" plus a "key" and "params" so
+the GUI can show Kram's messages translated. What libdnf5 and dnf5 say comes as they say it: in the user's language
+where dnf has a translation (pkexec keeps LANG/LC_*, and main() turns LC_MESSAGES on).
 """
 import configparser
 import fcntl
@@ -36,6 +37,7 @@ import glob
 import hashlib
 import hmac
 import json
+import locale
 import os
 import pwd
 import re
@@ -105,6 +107,12 @@ def emit(event: str, **fields) -> None:
 
 def log(key: str, template: str, **params) -> None:
     emit("log", key=key, params=params, text=template.format(**params))
+
+
+def fail(stage: str, key: str, template: str, details: list[str] | None = None, **params) -> None:
+    """A failed "done" with a message of Kram's own, translated by the GUI like the "log" events."""
+    extra = {"details": details} if details else {}
+    emit("done", ok=False, stage=stage, key=key, params=params, error=template.format(**params), **extra)
 
 
 class ProtocolError(Exception):
@@ -381,7 +389,7 @@ def set_repos_enabled(req: dict) -> None:
         raise ProtocolError(f"repos: not configured: {', '.join(unknown)}")
     for repo_id, enabled in sorted(repos.items()):
         if not run_command(["dnf5", "-q", "-y", "config-manager", "setopt", f"{repo_id}.enabled={int(enabled)}"]):
-            emit("done", ok=False, stage="config", error=f"could not change {repo_id}")
+            fail("config", "repo_not_changed", "Could not change repository {repo}", repo=repo_id)
             return
     if any(repos.values()):
         load_metadata()
@@ -399,8 +407,8 @@ def copr(req: dict) -> None:
     argv = ["dnf5", "-y", "copr"]
     if hub != COPR_DEFAULT_HUB:
         argv.append(f"--hub={hub}")
-    if not run_command([*argv, action, project]):
-        emit("done", ok=False, stage="copr", error=f"dnf5 copr {action} {project} failed")
+    if not run_command(argv := [*argv, action, project]):
+        fail("copr", "command_failed", "Command failed: {command}", command=" ".join(argv))
         return
     if action == "enable":
         load_metadata()
@@ -551,7 +559,7 @@ def remove_leftovers(req: dict) -> None:
         log("file_removed", "Removed {path}", path=path)
         removed += 1
     if failed:
-        emit("done", ok=False, stage="remove", error=f"could not remove {len(failed)} files", details=failed)
+        fail("remove", "files_not_removed", "Files not removed: {count}", details=failed, count=len(failed))
     else:
         emit("done", ok=True)
 
@@ -606,7 +614,7 @@ def clean_packagekit() -> None:
             removed += 1
     log("files_removed", "Files removed: {count}", count=removed)
     if failed:
-        emit("done", ok=False, stage="clean", error=f"could not remove {len(failed)} files", details=failed)
+        fail("clean", "files_not_removed", "Files not removed: {count}", details=failed, count=len(failed))
     else:
         emit("done", ok=True)
 
@@ -621,8 +629,9 @@ def clean_cache(req: dict) -> None:
         emit_locked(holder)
     elif target == "packagekit":
         clean_packagekit()
-    elif not run_command(["dnf5", "clean", *(("packages",) if target == "dnf_packages" else ("metadata", "dbcache"))]):
-        emit("done", ok=False, stage="clean", error="dnf5 clean failed")
+    elif not run_command(argv := ["dnf5", "clean", *(("packages",) if target == "dnf_packages"
+                                                     else ("metadata", "dbcache"))]):
+        fail("clean", "command_failed", "Command failed: {command}", command=" ".join(argv))
     elif target == "dnf_metadata":
         refresh()
     else:
@@ -650,7 +659,7 @@ def local_install(req: dict) -> None:
         log("copying_package", "Copying {name}…", name=os.path.basename(path))
         copy, actual = clone_file(fd, size, workdir)
         if not hmac.compare_digest(actual, expected):
-            emit("done", ok=False, stage="file", error=f"{path}: the file changed after it was checked")
+            fail("file", "file_changed", "{path}: the file changed after it was checked", path=path)
             return
         run_goal(lambda base: local_goal(base, cmdline_package(base, copy), action, exclude_weak),
                  test=bool(req.get("test")), download_only=False)
@@ -891,8 +900,14 @@ def main() -> int:
     # rpm scriptlets and libdnf5 may write to fd 1; keep a private copy for the protocol and point fd 1 at stderr.
     _proto = os.fdopen(os.dup(1), "w", buffering=1, encoding="utf-8")
     os.dup2(2, 1)
+    # libdnf5's messages in the user's language, like those of the GUI's own libdnf5 (Qt turns the locale on there).
+    # Only LC_MESSAGES: numbers and dates keep the C formats the protocol and libdnf5's config parsing expect
+    try:
+        locale.setlocale(locale.LC_MESSAGES, "")
+    except locale.Error:  # LANG names a locale that is not installed
+        pass
     if os.geteuid() != 0 and "--allow-non-root" not in sys.argv:
-        emit("done", ok=False, stage="startup", error="helper must run as root")
+        fail("startup", "not_root", "The helper must run as root")
         return 1
     while line := sys.stdin.readline():
         line = line.strip()

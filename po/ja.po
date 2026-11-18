@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kram\n"
 "Report-Msgid-Bugs-To: https://github.com/elmodos/kram/issues\n"
-"POT-Creation-Date: 2026-11-18 18:58+0200\n"
+"POT-Creation-Date: 2026-11-18 19:35+0200\n"
 "PO-Revision-Date: 2026-11-04 14:07+0200\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -58,7 +58,7 @@ msgid "Origin"
 msgstr "提供元"
 
 #: kram/core/custom_filters.py:55 kram/ui/apply_dialog.py:91
-#: kram/ui/details.py:78 kram/ui/package_model.py:19
+#: kram/ui/details.py:78 kram/ui/package_model.py:18
 msgid "Repository"
 msgstr "リポジトリ"
 
@@ -78,7 +78,7 @@ msgstr "アーキテクチャ"
 msgid "Installed size (MB)"
 msgstr "インストールサイズ (MB)"
 
-#: kram/core/custom_filters.py:60 kram/ui/package_model.py:20
+#: kram/core/custom_filters.py:60 kram/ui/package_model.py:19
 msgid "Update type"
 msgstr "更新の種類"
 
@@ -138,7 +138,7 @@ msgstr "孤立 (リポジトリなし)"
 msgid "Unneeded dependency"
 msgstr "不要な依存関係"
 
-#: kram/core/custom_filters.py:87 kram/ui/package_model.py:30
+#: kram/core/custom_filters.py:87 kram/ui/package_model.py:29
 msgid "Security"
 msgstr "セキュリティ"
 
@@ -146,11 +146,11 @@ msgstr "セキュリティ"
 msgid "Security: critical or important"
 msgstr "セキュリティ: 緊急または重要"
 
-#: kram/core/custom_filters.py:89 kram/ui/package_model.py:31
+#: kram/core/custom_filters.py:89 kram/ui/package_model.py:30
 msgid "Bug fix"
 msgstr "バグ修正"
 
-#: kram/core/custom_filters.py:90 kram/ui/package_model.py:32
+#: kram/core/custom_filters.py:90 kram/ui/package_model.py:31
 msgid "Enhancement"
 msgstr "機能強化"
 
@@ -606,20 +606,20 @@ msgstr "保持するバージョン数の上限に収めるため、最も古い
 msgid "Install reason changes"
 msgstr "インストール理由の変更"
 
-#: kram/ui/apply_dialog.py:50 kram/ui/package_model.py:48
+#: kram/ui/apply_dialog.py:50 kram/ui/package_model.py:47
 msgid "dependency"
 msgstr "依存関係"
 
 #: kram/ui/apply_dialog.py:50 kram/ui/install_dialog.py:53
-#: kram/ui/package_model.py:46
+#: kram/ui/package_model.py:45
 msgid "group"
 msgstr "グループ"
 
-#: kram/ui/apply_dialog.py:50 kram/ui/package_model.py:45
+#: kram/ui/apply_dialog.py:50 kram/ui/package_model.py:44
 msgid "user"
 msgstr "ユーザー"
 
-#: kram/ui/apply_dialog.py:50 kram/ui/package_model.py:49
+#: kram/ui/apply_dialog.py:50 kram/ui/package_model.py:48
 msgid "weak dependency"
 msgstr "弱い依存関係"
 
@@ -640,11 +640,11 @@ msgid "Groups to be removed"
 msgstr "削除予定のグループ"
 
 #: kram/ui/apply_dialog.py:91 kram/ui/details.py:175
-#: kram/ui/install_dialog.py:473 kram/ui/package_model.py:19
+#: kram/ui/install_dialog.py:473 kram/ui/package_model.py:18
 msgid "Package"
 msgstr "パッケージ"
 
-#: kram/ui/apply_dialog.py:91 kram/ui/package_model.py:20
+#: kram/ui/apply_dialog.py:91 kram/ui/package_model.py:19
 msgid "Size"
 msgstr "サイズ"
 
@@ -1217,7 +1217,9 @@ msgstr "参照:"
 msgid ""
 "The repository has to fix it. Until then Mark All Upgrades leaves this "
 "package out."
-msgstr "リポジトリ側での修正が必要です。それまで「すべてのアップグレードを指定」はこのパッケージを除外します。"
+msgstr ""
+"リポジトリ側での修正が必要です。それまで「すべてのアップグレードを指定」はこ"
+"のパッケージを除外します。"
 
 #: kram/ui/details.py:78
 msgid "State"
@@ -1473,7 +1475,7 @@ msgstr "パッケージファイルのインストール"
 msgid "What installing it changes"
 msgstr "インストールによる変更"
 
-#: kram/ui/install_dialog.py:143 kram/ui/progress_dialog.py:90
+#: kram/ui/install_dialog.py:143 kram/ui/progress_dialog.py:97
 msgid "Details"
 msgstr "詳細"
 
@@ -2070,61 +2072,61 @@ msgid "day"
 msgid_plural "days"
 msgstr[0] "日"
 
-#: kram/ui/package_model.py:19
+#: kram/ui/package_model.py:18
 msgid "Installed version"
 msgstr "インストール済みのバージョン"
 
-#: kram/ui/package_model.py:19
+#: kram/ui/package_model.py:18
 msgid "Latest version"
 msgstr "最新バージョン"
 
-#: kram/ui/package_model.py:19
+#: kram/ui/package_model.py:18
 msgid "Reason"
 msgstr "理由"
 
 #. TRANSLATORS: "S" is the narrow status column (Synaptic convention); keep it one letter
-#: kram/ui/package_model.py:19
+#: kram/ui/package_model.py:18
 msgid "S"
 msgstr "S"
 
-#: kram/ui/package_model.py:20
+#: kram/ui/package_model.py:19
 msgid "Summary"
 msgstr "概要"
 
-#: kram/ui/package_model.py:26
+#: kram/ui/package_model.py:25
 msgid "Security: critical"
 msgstr "セキュリティ: 緊急"
 
-#: kram/ui/package_model.py:27
+#: kram/ui/package_model.py:26
 msgid "Security: important"
 msgstr "セキュリティ: 重要"
 
-#: kram/ui/package_model.py:28
+#: kram/ui/package_model.py:27
 msgid "Security: moderate"
 msgstr "セキュリティ: 中程度"
 
-#: kram/ui/package_model.py:29
+#: kram/ui/package_model.py:28
 msgid "Security: low"
 msgstr "セキュリティ: 低"
 
-#: kram/ui/package_model.py:33
+#: kram/ui/package_model.py:32
 msgctxt "update type"
 msgid "Other"
 msgstr "その他"
 
-#: kram/ui/package_model.py:47
+#: kram/ui/package_model.py:46
 msgid "not recorded"
 msgstr "記録なし"
 
-#: kram/ui/package_model.py:52
+#: kram/ui/package_model.py:51
 msgid "Installed by the user: autoremove keeps it"
 msgstr "ユーザーがインストール: autoremove は残します"
 
-#: kram/ui/package_model.py:53
+#: kram/ui/package_model.py:52
 msgid "Installed with a package group: autoremove keeps it"
 msgstr "パッケージグループと一緒にインストール: autoremove は残します"
 
-#: kram/ui/package_model.py:54
+#: kram/ui/package_model.py:53
 msgid ""
 "Installed outside dnf, or dnf lost the record: treated as installed by the "
 "user,\n"
@@ -2136,11 +2138,11 @@ msgstr ""
 "autoremove は残します。他のパッケージに引き込まれた場合は依存関係としてマーク"
 "してください。"
 
-#: kram/ui/package_model.py:56
+#: kram/ui/package_model.py:55
 msgid "Installed as a dependency: autoremove removes it once nothing needs it"
 msgstr "依存関係としてインストール: 不要になると autoremove が削除します"
 
-#: kram/ui/package_model.py:57
+#: kram/ui/package_model.py:56
 msgid ""
 "Installed as a weak dependency (recommended by another package):\n"
 "autoremove removes it once nothing needs it"
@@ -2221,92 +2223,121 @@ msgstr "古いコピー"
 msgid "reason change"
 msgstr "理由の変更"
 
-#: kram/ui/progress_dialog.py:36
+#: kram/ui/progress_dialog.py:37
+#, python-brace-format
+msgid "Running: {command}"
+msgstr "実行中: {command}"
+
+#: kram/ui/progress_dialog.py:38
 msgid "Loading repositories…"
 msgstr "リポジトリを読み込んでいます…"
 
-#: kram/ui/progress_dialog.py:37
+#: kram/ui/progress_dialog.py:39
 msgid "Refreshing repository metadata…"
 msgstr "リポジトリのメタデータを更新しています…"
 
-#: kram/ui/progress_dialog.py:38 kram/ui/upgrade_dialog.py:41
+#: kram/ui/progress_dialog.py:40 kram/ui/upgrade_dialog.py:41
 #, python-brace-format
 msgid "Mirror unavailable: {url}: {error}"
 msgstr "ミラーを利用できません: {url}: {error}"
 
-#: kram/ui/progress_dialog.py:39
+#: kram/ui/progress_dialog.py:41
 #, python-brace-format
 msgid "Scriptlet {script} of {nevra} failed with exit code {code}"
 msgstr "{nevra} の {script} スクリプトレットが終了コード {code} で失敗しました"
 
-#: kram/ui/progress_dialog.py:40
+#: kram/ui/progress_dialog.py:42
 #, python-brace-format
 msgid "Imported key {key_id}"
 msgstr "鍵 {key_id} をインポートしました"
 
-#: kram/ui/progress_dialog.py:41
+#: kram/ui/progress_dialog.py:43
 #, python-brace-format
 msgid "Copying {name}…"
 msgstr "{name} をコピーしています…"
 
-#: kram/ui/progress_dialog.py:42
+#: kram/ui/progress_dialog.py:44
 #, python-brace-format
 msgid "Files removed: {count}"
 msgstr "削除したファイル: {count}"
 
-#: kram/ui/progress_dialog.py:43
+#: kram/ui/progress_dialog.py:45
 #, python-brace-format
 msgid "Removed {path}"
 msgstr "{path} を削除しました"
 
-#: kram/ui/progress_dialog.py:70
+#: kram/ui/progress_dialog.py:46
+#, python-brace-format
+msgid "Could not change repository {repo}"
+msgstr "リポジトリ {repo} を変更できませんでした"
+
+#: kram/ui/progress_dialog.py:47
+#, python-brace-format
+msgid "Command failed: {command}"
+msgstr "コマンドが失敗しました: {command}"
+
+#: kram/ui/progress_dialog.py:48
+#, python-brace-format
+msgid "Files not removed: {count}"
+msgstr "削除できなかったファイル: {count}"
+
+#: kram/ui/progress_dialog.py:49
+#, python-brace-format
+msgid "{path}: the file changed after it was checked"
+msgstr "{path}: 確認後にファイルが変更されました"
+
+#: kram/ui/progress_dialog.py:50
+msgid "The helper must run as root"
+msgstr "ヘルパーは root で実行する必要があります"
+
+#: kram/ui/progress_dialog.py:77
 msgid "Waiting for authentication…"
 msgstr "認証を待っています…"
 
-#: kram/ui/progress_dialog.py:73
+#: kram/ui/progress_dialog.py:80
 msgid "Download"
 msgstr "ダウンロード"
 
-#: kram/ui/progress_dialog.py:75
+#: kram/ui/progress_dialog.py:82
 msgid "Installation"
 msgstr "インストール"
 
-#: kram/ui/progress_dialog.py:94
+#: kram/ui/progress_dialog.py:101
 msgid "Close when finished successfully"
 msgstr "正常に終了したら閉じる"
 
-#: kram/ui/progress_dialog.py:128
+#: kram/ui/progress_dialog.py:135
 #, python-brace-format
 msgid "The transaction has {n} package. Downloading…"
 msgid_plural "The transaction has {n} packages. Downloading…"
 msgstr[0] ""
 "トランザクションには {n} 個のパッケージがあります。ダウンロードしています…"
 
-#: kram/ui/progress_dialog.py:157 kram/ui/upgrade_dialog.py:38
+#: kram/ui/progress_dialog.py:165 kram/ui/upgrade_dialog.py:38
 #, python-brace-format
 msgid "Downloading {name}"
 msgstr "{name} をダウンロードしています"
 
-#: kram/ui/progress_dialog.py:162 kram/ui/upgrade_dialog.py:40
+#: kram/ui/progress_dialog.py:170 kram/ui/upgrade_dialog.py:40
 #, python-brace-format
 msgid "Download failed: {error}"
 msgstr "ダウンロードに失敗しました: {error}"
 
-#: kram/ui/progress_dialog.py:172
+#: kram/ui/progress_dialog.py:180
 #, python-brace-format
 msgid "Downloaded {done} of {total}"
 msgstr "{total} 中 {done} をダウンロード済み"
 
-#: kram/ui/progress_dialog.py:180
+#: kram/ui/progress_dialog.py:188
 msgid "Preparing the rpm transaction…"
 msgstr "rpm トランザクションを準備しています…"
 
-#: kram/ui/progress_dialog.py:208
+#: kram/ui/progress_dialog.py:216
 #, python-brace-format
 msgid "Package {index} of {count}"
 msgstr "パッケージ {index} / {count}"
 
-#: kram/ui/progress_dialog.py:216
+#: kram/ui/progress_dialog.py:224
 #, python-brace-format
 msgid ""
 "Import the OpenPGP key used to verify packages?\n"
@@ -2323,34 +2354,34 @@ msgstr ""
 "作成日: {created}\n"
 "取得元: {url}"
 
-#: kram/ui/progress_dialog.py:219
+#: kram/ui/progress_dialog.py:227
 msgid "Import key"
 msgstr "鍵をインポート"
 
-#: kram/ui/progress_dialog.py:220
+#: kram/ui/progress_dialog.py:228
 #, python-brace-format
 msgid "Key {key_id}: importing"
 msgstr "鍵 {key_id}: インポートしています"
 
-#: kram/ui/progress_dialog.py:220
+#: kram/ui/progress_dialog.py:228
 #, python-brace-format
 msgid "Key {key_id}: rejected"
 msgstr "鍵 {key_id}: 拒否しました"
 
-#: kram/ui/progress_dialog.py:236 kram/ui/progress_dialog.py:237
+#: kram/ui/progress_dialog.py:244 kram/ui/progress_dialog.py:245
 #: kram/ui/upgrade_dialog.py:301
 msgid "Done."
 msgstr "完了しました。"
 
-#: kram/ui/progress_dialog.py:236
+#: kram/ui/progress_dialog.py:244
 msgid "Packages downloaded."
 msgstr "パッケージをダウンロードしました。"
 
-#: kram/ui/progress_dialog.py:241 kram/ui/progress_dialog.py:257
+#: kram/ui/progress_dialog.py:249 kram/ui/progress_dialog.py:265
 msgid "unknown error"
 msgstr "不明なエラー"
 
-#: kram/ui/progress_dialog.py:243
+#: kram/ui/progress_dialog.py:251
 #, python-brace-format
 msgid ""
 "Another package operation is running: {process}. Try again when it has "
@@ -2359,11 +2390,11 @@ msgstr ""
 "別のパッケージ操作が実行中です: {process}。終了してからもう一度お試しくださ"
 "い。"
 
-#: kram/ui/progress_dialog.py:258
+#: kram/ui/progress_dialog.py:266
 msgid "Error:"
 msgstr "エラー:"
 
-#: kram/ui/progress_dialog.py:260
+#: kram/ui/progress_dialog.py:268
 #, python-brace-format
 msgid "ERROR: {message}"
 msgstr "エラー: {message}"

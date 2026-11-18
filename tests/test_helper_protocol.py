@@ -1,7 +1,10 @@
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
+
+import pytest
 
 HELPER = Path(__file__).resolve().parent.parent / "kram" / "helper" / "kram_helper.py"
 
@@ -94,3 +97,12 @@ def test_question_waits_for_answer():
         finally:
             sys.stdin = old
     assert '"question"' in helper._proto.getvalue()
+
+
+@pytest.mark.skipif(os.geteuid() == 0, reason="root passes the check")
+def test_own_failures_carry_a_key_for_the_gui_to_translate():
+    out = subprocess.run([sys.executable, "-I", str(HELPER)], input="", capture_output=True, text=True, timeout=30,
+                         check=False, env={"LANG": "de_DE.UTF-8"})  # a locale that may not be installed: no crash
+    [ev] = [json.loads(line) for line in out.stdout.splitlines()]
+    assert ev == {"event": "done", "ok": False, "stage": "startup", "key": "not_root", "params": {},
+                  "error": "The helper must run as root"}

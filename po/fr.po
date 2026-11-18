@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kram\n"
 "Report-Msgid-Bugs-To: https://github.com/elmodos/kram/issues\n"
-"POT-Creation-Date: 2026-11-18 18:58+0200\n"
+"POT-Creation-Date: 2026-11-18 19:35+0200\n"
 "PO-Revision-Date: 2026-11-04 14:07+0200\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -58,7 +58,7 @@ msgid "Origin"
 msgstr "Origine"
 
 #: kram/core/custom_filters.py:55 kram/ui/apply_dialog.py:91
-#: kram/ui/details.py:78 kram/ui/package_model.py:19
+#: kram/ui/details.py:78 kram/ui/package_model.py:18
 msgid "Repository"
 msgstr "Dépôt"
 
@@ -78,7 +78,7 @@ msgstr "Architecture"
 msgid "Installed size (MB)"
 msgstr "Taille installée (Mo)"
 
-#: kram/core/custom_filters.py:60 kram/ui/package_model.py:20
+#: kram/core/custom_filters.py:60 kram/ui/package_model.py:19
 msgid "Update type"
 msgstr "Type de mise à jour"
 
@@ -138,7 +138,7 @@ msgstr "Orphelin (aucun dépôt)"
 msgid "Unneeded dependency"
 msgstr "Dépendance inutile"
 
-#: kram/core/custom_filters.py:87 kram/ui/package_model.py:30
+#: kram/core/custom_filters.py:87 kram/ui/package_model.py:29
 msgid "Security"
 msgstr "Sécurité"
 
@@ -146,11 +146,11 @@ msgstr "Sécurité"
 msgid "Security: critical or important"
 msgstr "Sécurité : critique ou importante"
 
-#: kram/core/custom_filters.py:89 kram/ui/package_model.py:31
+#: kram/core/custom_filters.py:89 kram/ui/package_model.py:30
 msgid "Bug fix"
 msgstr "Correctif"
 
-#: kram/core/custom_filters.py:90 kram/ui/package_model.py:32
+#: kram/core/custom_filters.py:90 kram/ui/package_model.py:31
 msgid "Enhancement"
 msgstr "Amélioration"
 
@@ -625,20 +625,20 @@ msgstr ""
 msgid "Install reason changes"
 msgstr "Changements de raison d’installation"
 
-#: kram/ui/apply_dialog.py:50 kram/ui/package_model.py:48
+#: kram/ui/apply_dialog.py:50 kram/ui/package_model.py:47
 msgid "dependency"
 msgstr "dépendance"
 
 #: kram/ui/apply_dialog.py:50 kram/ui/install_dialog.py:53
-#: kram/ui/package_model.py:46
+#: kram/ui/package_model.py:45
 msgid "group"
 msgstr "groupe"
 
-#: kram/ui/apply_dialog.py:50 kram/ui/package_model.py:45
+#: kram/ui/apply_dialog.py:50 kram/ui/package_model.py:44
 msgid "user"
 msgstr "utilisateur"
 
-#: kram/ui/apply_dialog.py:50 kram/ui/package_model.py:49
+#: kram/ui/apply_dialog.py:50 kram/ui/package_model.py:48
 msgid "weak dependency"
 msgstr "dépendance faible"
 
@@ -659,11 +659,11 @@ msgid "Groups to be removed"
 msgstr "Groupes à supprimer"
 
 #: kram/ui/apply_dialog.py:91 kram/ui/details.py:175
-#: kram/ui/install_dialog.py:473 kram/ui/package_model.py:19
+#: kram/ui/install_dialog.py:473 kram/ui/package_model.py:18
 msgid "Package"
 msgstr "Paquet"
 
-#: kram/ui/apply_dialog.py:91 kram/ui/package_model.py:20
+#: kram/ui/apply_dialog.py:91 kram/ui/package_model.py:19
 msgid "Size"
 msgstr "Taille"
 
@@ -1253,7 +1253,9 @@ msgstr "Références :"
 msgid ""
 "The repository has to fix it. Until then Mark All Upgrades leaves this "
 "package out."
-msgstr "Le dépôt doit corriger le problème. D’ici là, « Sélectionner toutes les mises à jour » ignore ce paquet."
+msgstr ""
+"Le dépôt doit corriger le problème. D’ici là, « Sélectionner toutes les "
+"mises à jour » ignore ce paquet."
 
 #: kram/ui/details.py:78
 msgid "State"
@@ -1510,7 +1512,7 @@ msgstr "Installer un fichier de paquet"
 msgid "What installing it changes"
 msgstr "Ce que l’installation modifie"
 
-#: kram/ui/install_dialog.py:143 kram/ui/progress_dialog.py:90
+#: kram/ui/install_dialog.py:143 kram/ui/progress_dialog.py:97
 msgid "Details"
 msgstr "Détails"
 
@@ -2137,61 +2139,61 @@ msgid_plural "days"
 msgstr[0] "jour"
 msgstr[1] "jours"
 
-#: kram/ui/package_model.py:19
+#: kram/ui/package_model.py:18
 msgid "Installed version"
 msgstr "Version installée"
 
-#: kram/ui/package_model.py:19
+#: kram/ui/package_model.py:18
 msgid "Latest version"
 msgstr "Dernière version"
 
-#: kram/ui/package_model.py:19
+#: kram/ui/package_model.py:18
 msgid "Reason"
 msgstr "Raison"
 
 #. TRANSLATORS: "S" is the narrow status column (Synaptic convention); keep it one letter
-#: kram/ui/package_model.py:19
+#: kram/ui/package_model.py:18
 msgid "S"
 msgstr "S"
 
-#: kram/ui/package_model.py:20
+#: kram/ui/package_model.py:19
 msgid "Summary"
 msgstr "Résumé"
 
-#: kram/ui/package_model.py:26
+#: kram/ui/package_model.py:25
 msgid "Security: critical"
 msgstr "Sécurité : critique"
 
-#: kram/ui/package_model.py:27
+#: kram/ui/package_model.py:26
 msgid "Security: important"
 msgstr "Sécurité : importante"
 
-#: kram/ui/package_model.py:28
+#: kram/ui/package_model.py:27
 msgid "Security: moderate"
 msgstr "Sécurité : modérée"
 
-#: kram/ui/package_model.py:29
+#: kram/ui/package_model.py:28
 msgid "Security: low"
 msgstr "Sécurité : faible"
 
-#: kram/ui/package_model.py:33
+#: kram/ui/package_model.py:32
 msgctxt "update type"
 msgid "Other"
 msgstr "Autre"
 
-#: kram/ui/package_model.py:47
+#: kram/ui/package_model.py:46
 msgid "not recorded"
 msgstr "non enregistré"
 
-#: kram/ui/package_model.py:52
+#: kram/ui/package_model.py:51
 msgid "Installed by the user: autoremove keeps it"
 msgstr "Installé par l’utilisateur : autoremove le conserve"
 
-#: kram/ui/package_model.py:53
+#: kram/ui/package_model.py:52
 msgid "Installed with a package group: autoremove keeps it"
 msgstr "Installé avec un groupe de paquets : autoremove le conserve"
 
-#: kram/ui/package_model.py:54
+#: kram/ui/package_model.py:53
 msgid ""
 "Installed outside dnf, or dnf lost the record: treated as installed by the "
 "user,\n"
@@ -2203,13 +2205,13 @@ msgstr ""
 "donc autoremove le conserve. Marquez-le comme dépendance si un autre paquet "
 "l’a amené."
 
-#: kram/ui/package_model.py:56
+#: kram/ui/package_model.py:55
 msgid "Installed as a dependency: autoremove removes it once nothing needs it"
 msgstr ""
 "Installé comme dépendance : autoremove le supprime dès que plus rien n’en a "
 "besoin"
 
-#: kram/ui/package_model.py:57
+#: kram/ui/package_model.py:56
 msgid ""
 "Installed as a weak dependency (recommended by another package):\n"
 "autoremove removes it once nothing needs it"
@@ -2290,93 +2292,122 @@ msgstr "ancienne copie"
 msgid "reason change"
 msgstr "changement de raison"
 
-#: kram/ui/progress_dialog.py:36
+#: kram/ui/progress_dialog.py:37
+#, python-brace-format
+msgid "Running: {command}"
+msgstr "Exécution : {command}"
+
+#: kram/ui/progress_dialog.py:38
 msgid "Loading repositories…"
 msgstr "Chargement des dépôts…"
 
-#: kram/ui/progress_dialog.py:37
+#: kram/ui/progress_dialog.py:39
 msgid "Refreshing repository metadata…"
 msgstr "Actualisation des métadonnées des dépôts…"
 
-#: kram/ui/progress_dialog.py:38 kram/ui/upgrade_dialog.py:41
+#: kram/ui/progress_dialog.py:40 kram/ui/upgrade_dialog.py:41
 #, python-brace-format
 msgid "Mirror unavailable: {url}: {error}"
 msgstr "Miroir indisponible : {url} : {error}"
 
-#: kram/ui/progress_dialog.py:39
+#: kram/ui/progress_dialog.py:41
 #, python-brace-format
 msgid "Scriptlet {script} of {nevra} failed with exit code {code}"
 msgstr ""
 "Le scriptlet {script} de {nevra} a échoué avec le code de sortie {code}"
 
-#: kram/ui/progress_dialog.py:40
+#: kram/ui/progress_dialog.py:42
 #, python-brace-format
 msgid "Imported key {key_id}"
 msgstr "Clé {key_id} importée"
 
-#: kram/ui/progress_dialog.py:41
+#: kram/ui/progress_dialog.py:43
 #, python-brace-format
 msgid "Copying {name}…"
 msgstr "Copie de {name}…"
 
-#: kram/ui/progress_dialog.py:42
+#: kram/ui/progress_dialog.py:44
 #, python-brace-format
 msgid "Files removed: {count}"
 msgstr "Fichiers supprimés : {count}"
 
-#: kram/ui/progress_dialog.py:43
+#: kram/ui/progress_dialog.py:45
 #, python-brace-format
 msgid "Removed {path}"
 msgstr "{path} supprimé"
 
-#: kram/ui/progress_dialog.py:70
+#: kram/ui/progress_dialog.py:46
+#, python-brace-format
+msgid "Could not change repository {repo}"
+msgstr "Impossible de modifier le dépôt {repo}"
+
+#: kram/ui/progress_dialog.py:47
+#, python-brace-format
+msgid "Command failed: {command}"
+msgstr "La commande a échoué : {command}"
+
+#: kram/ui/progress_dialog.py:48
+#, python-brace-format
+msgid "Files not removed: {count}"
+msgstr "Fichiers non supprimés : {count}"
+
+#: kram/ui/progress_dialog.py:49
+#, python-brace-format
+msgid "{path}: the file changed after it was checked"
+msgstr "{path} : le fichier a changé après sa vérification"
+
+#: kram/ui/progress_dialog.py:50
+msgid "The helper must run as root"
+msgstr "L’assistant doit s’exécuter en tant que root"
+
+#: kram/ui/progress_dialog.py:77
 msgid "Waiting for authentication…"
 msgstr "En attente d’authentification…"
 
-#: kram/ui/progress_dialog.py:73
+#: kram/ui/progress_dialog.py:80
 msgid "Download"
 msgstr "Téléchargement"
 
-#: kram/ui/progress_dialog.py:75
+#: kram/ui/progress_dialog.py:82
 msgid "Installation"
 msgstr "Installation"
 
-#: kram/ui/progress_dialog.py:94
+#: kram/ui/progress_dialog.py:101
 msgid "Close when finished successfully"
 msgstr "Fermer après un succès"
 
-#: kram/ui/progress_dialog.py:128
+#: kram/ui/progress_dialog.py:135
 #, python-brace-format
 msgid "The transaction has {n} package. Downloading…"
 msgid_plural "The transaction has {n} packages. Downloading…"
 msgstr[0] "La transaction comporte {n} paquet. Téléchargement…"
 msgstr[1] "La transaction comporte {n} paquets. Téléchargement…"
 
-#: kram/ui/progress_dialog.py:157 kram/ui/upgrade_dialog.py:38
+#: kram/ui/progress_dialog.py:165 kram/ui/upgrade_dialog.py:38
 #, python-brace-format
 msgid "Downloading {name}"
 msgstr "Téléchargement de {name}"
 
-#: kram/ui/progress_dialog.py:162 kram/ui/upgrade_dialog.py:40
+#: kram/ui/progress_dialog.py:170 kram/ui/upgrade_dialog.py:40
 #, python-brace-format
 msgid "Download failed: {error}"
 msgstr "Échec du téléchargement : {error}"
 
-#: kram/ui/progress_dialog.py:172
+#: kram/ui/progress_dialog.py:180
 #, python-brace-format
 msgid "Downloaded {done} of {total}"
 msgstr "{done} téléchargés sur {total}"
 
-#: kram/ui/progress_dialog.py:180
+#: kram/ui/progress_dialog.py:188
 msgid "Preparing the rpm transaction…"
 msgstr "Préparation de la transaction rpm…"
 
-#: kram/ui/progress_dialog.py:208
+#: kram/ui/progress_dialog.py:216
 #, python-brace-format
 msgid "Package {index} of {count}"
 msgstr "Paquet {index} sur {count}"
 
-#: kram/ui/progress_dialog.py:216
+#: kram/ui/progress_dialog.py:224
 #, python-brace-format
 msgid ""
 "Import the OpenPGP key used to verify packages?\n"
@@ -2393,34 +2424,34 @@ msgstr ""
 "Créée le : {created}\n"
 "Provenance : {url}"
 
-#: kram/ui/progress_dialog.py:219
+#: kram/ui/progress_dialog.py:227
 msgid "Import key"
 msgstr "Importer la clé"
 
-#: kram/ui/progress_dialog.py:220
+#: kram/ui/progress_dialog.py:228
 #, python-brace-format
 msgid "Key {key_id}: importing"
 msgstr "Clé {key_id} : importation"
 
-#: kram/ui/progress_dialog.py:220
+#: kram/ui/progress_dialog.py:228
 #, python-brace-format
 msgid "Key {key_id}: rejected"
 msgstr "Clé {key_id} : refusée"
 
-#: kram/ui/progress_dialog.py:236 kram/ui/progress_dialog.py:237
+#: kram/ui/progress_dialog.py:244 kram/ui/progress_dialog.py:245
 #: kram/ui/upgrade_dialog.py:301
 msgid "Done."
 msgstr "Terminé."
 
-#: kram/ui/progress_dialog.py:236
+#: kram/ui/progress_dialog.py:244
 msgid "Packages downloaded."
 msgstr "Paquets téléchargés."
 
-#: kram/ui/progress_dialog.py:241 kram/ui/progress_dialog.py:257
+#: kram/ui/progress_dialog.py:249 kram/ui/progress_dialog.py:265
 msgid "unknown error"
 msgstr "erreur inconnue"
 
-#: kram/ui/progress_dialog.py:243
+#: kram/ui/progress_dialog.py:251
 #, python-brace-format
 msgid ""
 "Another package operation is running: {process}. Try again when it has "
@@ -2429,11 +2460,11 @@ msgstr ""
 "Une autre opération sur les paquets est en cours : {process}. Réessayez "
 "quand elle sera terminée."
 
-#: kram/ui/progress_dialog.py:258
+#: kram/ui/progress_dialog.py:266
 msgid "Error:"
 msgstr "Erreur :"
 
-#: kram/ui/progress_dialog.py:260
+#: kram/ui/progress_dialog.py:268
 #, python-brace-format
 msgid "ERROR: {message}"
 msgstr "ERREUR : {message}"

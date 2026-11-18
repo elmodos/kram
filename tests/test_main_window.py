@@ -208,6 +208,24 @@ def test_a_failure_stops_the_busy_bar(app):
     assert dlg.download_bar.maximum() == 1
 
 
+def test_helper_messages_of_kram_are_translated_and_dnf_text_is_kept(app, monkeypatch):
+    from kram.ui import progress_dialog
+
+    monkeypatch.setattr(progress_dialog, "_", lambda s: {"Running: {command}": "Виконання: {command}",
+                                                         "Command failed: {command}": "Збій команди: {command}"}.get(s, s))
+    dlg = ProgressDialog(FakeClient(), {"op": "clean_cache", "target": "dnf_packages"}, "t")
+    dlg._on_event({"event": "log", "text": "Running: dnf5 clean packages", "key": "command",
+                   "params": {"command": "dnf5 clean packages"}})
+    dlg._on_event({"event": "log", "text": "Odstraněno 3 souborů"})  # dnf5's own output, in its language
+    dlg._on_event({"event": "done", "ok": False, "stage": "clean", "key": "command_failed",
+                   "params": {"command": "dnf5 clean packages"}, "error": "Command failed: dnf5 clean packages"})
+    log = dlg.log.toPlainText()
+    assert "Виконання: dnf5 clean packages" in log and "Odstraněno 3 souborů" in log
+    assert "Збій команди: dnf5 clean packages" in log
+    dlg._on_event({"event": "done", "ok": False, "stage": "resolve", "error": "Keine Pakete zum Entfernen"})
+    assert "Keine Pakete zum Entfernen" in dlg.log.toPlainText()
+
+
 def test_mark_upgrades_icon_follows_whether_there_is_anything_to_mark(app, monkeypatch):
     from PySide6.QtGui import QColor, QIcon, QPixmap
 
@@ -424,7 +442,7 @@ def test_upgrades_that_cannot_be_installed_are_dimmed_and_not_marked_by_mark_all
     assert gjs.data(Qt.ItemDataRole.DecorationRole).cacheKey() != blocked_icon().cacheKey()
     assert ffmpeg.data(Qt.ItemDataRole.ToolTipRole) == (
         "The upgrade cannot be installed now\n"
-        "nothing provides liboapv.so.11()(64bit) needed by ffmpeg-libs-9.0.2-4.fc45.x86_64")
+        "nothing provides liboapv.so.11()(64bit) needed by ffmpeg-libs-9.0.2-4.fc45.x86_64 from rpmfusion-free-updates")
     assert "cannot be installed now" in window.model.index(0, COL_STATUS).data(Qt.ItemDataRole.ToolTipRole)
     assert gjs.data(Qt.ItemDataRole.FontRole).bold() and gjs.data(Qt.ItemDataRole.ToolTipRole) is None
 

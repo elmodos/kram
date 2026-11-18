@@ -31,8 +31,10 @@ RESOLVED_ACTIONS = {"Install": N_("install"), "Upgrade": N_("upgrade"), "Downgra
 # what the package bar counts; "Replaced" (the old copy rpm erases after an upgrade, downgrade or reinstall) and
 # reason changes are no package of their own
 COUNTED = ("Install", "Upgrade", "Downgrade", "Reinstall", "Remove")
-# keys of the helper's "log" events (see kram_helper.log); unknown keys fall back to the English text
+# Kram's own messages from the helper, by the key of a "log" event (kram_helper.log) or of a failed "done"
+# (kram_helper.fail); unknown keys fall back to the English text. What dnf says is shown as it comes
 HELPER_MESSAGES = {
+    "command": N_("Running: {command}"),
     "loading_repos": N_("Loading repositories…"),
     "refreshing": N_("Refreshing repository metadata…"),
     "mirror_failure": N_("Mirror unavailable: {url}: {error}"),
@@ -41,6 +43,11 @@ HELPER_MESSAGES = {
     "copying_package": N_("Copying {name}…"),
     "files_removed": N_("Files removed: {count}"),
     "file_removed": N_("Removed {path}"),
+    "repo_not_changed": N_("Could not change repository {repo}"),
+    "command_failed": N_("Command failed: {command}"),
+    "files_not_removed": N_("Files not removed: {count}"),
+    "file_changed": N_("{path}: the file changed after it was checked"),
+    "not_root": N_("The helper must run as root"),
 }
 STAGE_KEYS = ("loading_repos", "refreshing")  # helper messages that also replace the line above the progress bars
 
@@ -120,9 +127,9 @@ class ProgressDialog(QDialog):
     def _on_event(self, ev: dict) -> None:
         kind = ev.get("event")
         if kind == "log":
-            self._append(self._log_text(ev))
+            self._append(self._helper_text(ev, "text"))
             if ev.get("key") in STAGE_KEYS:  # the password was accepted: say what runs instead
-                self.stage.setText(self._log_text(ev))
+                self.stage.setText(self._helper_text(ev, "text"))
         elif kind == "resolved":
             n = len(ev["items"])
             self.stage.setText(ngettext("The transaction has {n} package. Downloading…",
@@ -142,14 +149,15 @@ class ProgressDialog(QDialog):
             self._finish(ev)
 
     @staticmethod
-    def _log_text(ev: dict) -> str:
+    def _helper_text(ev: dict, field: str) -> str:
+        """A helper message translated by its key, else its English `field` ("text" of a log, "error" of a done)."""
         template = HELPER_MESSAGES.get(ev.get("key"))
         if template is None:
-            return ev.get("text", "")
+            return ev.get(field, "")
         try:
             return _(template).format(**ev.get("params", {}))
         except (KeyError, IndexError):  # a translation with wrong placeholders must not break the log
-            return ev.get("text", "")
+            return ev.get(field, "")
 
     def _on_download(self, ev: dict) -> None:
         i = ev["id"]
@@ -238,7 +246,7 @@ class ProgressDialog(QDialog):
             if self.auto_close.isChecked():
                 self.accept()
         else:
-            error = ev.get("error", _("unknown error"))
+            error = self._helper_text(ev, "error") or _("unknown error")
             if ev.get("stage") == "locked":
                 error = _("Another package operation is running: {process}. Try again when it has finished.").format(
                     process=ev.get("process", "?"))
