@@ -1,5 +1,5 @@
 %global appid io.github.elmodos.Kram
-%global base_version 0.8.0
+%global base_version 0.8.1
 
 Name:           kram
 # A tagged release (v%%{base_version}) is plain %%{base_version}. Any other commit gets a snapshot from
@@ -116,6 +116,9 @@ QT_QPA_PLATFORM=offscreen %pytest
 %{_datadir}/kram/
 
 %changelog
+* Wed Nov 18 2026 Modo Ltunzher <offnormal@gmail.com> - 0.8.1-1
+- Repositories and COPR: the Packages column counts distinct packages instead of every built version
+
 * Wed Nov 18 2026 Modo Ltunzher <offnormal@gmail.com> - 0.8.0-1
 - Repositories: Show packages filters the list to a repository's packages
 - Repositories: Remove… deletes a repository you added yourself, with every repository its file configures
