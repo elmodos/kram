@@ -18,6 +18,7 @@ Protocol: one JSON request per line on stdin, JSON event lines on stdout.
    "exclude_weak": [...], "test": false}                  one package file; see local_install()
   {"op": "repo_set_enabled", "repos": {"<repo id>": bool}}  persist via dnf5 config-manager, then load metadata
   {"op": "copr", "action": "enable"|"disable"|"remove", "project": "owner/name", "hub": "<host>"}
+  {"op": "repo_remove", "repos": ["<repo id>", ...]}      delete their .repo files; see repo_files_to_remove()
   {"op": "clean_cache", "target": "dnf_packages"|"dnf_metadata"|"packagekit"}   see clean_cache()
   {"op": "answer", "id": N, "yes": bool}                   reply to a "question" event (only while asked)
   {"op": "quit"}
@@ -27,6 +28,7 @@ A "done" with stage "packagekit" (and "reason": "offline"|"transaction") means i
 "log" events carry an English "text" plus a "key" and "params" so the GUI can show them translated
 (pkexec strips the locale from the environment, so the helper does not translate anything itself).
 """
+import configparser
 import fcntl
 import glob
 import hashlib
@@ -69,6 +71,13 @@ FICLONE = 0x40049409
 # held (fcntl write lock) while libdnf5 / rpm run a transaction
 TRANSACTION_LOCKS = ("/run/dnf/rpmtransaction.lock", "/usr/lib/sysimage/rpm/.rpm.lock", "/var/lib/rpm/.rpm.lock")  # ioctl: copy-on-write clone (btrfs, XFS)
 COPY_CHUNK = 1 << 20
+
+# repo_remove: the only directory Kram deletes a .repo file from; /usr/share/dnf5/repos.d and /etc/distro.repos.d
+# belong to the distribution
+REPO_DIR = "/etc/yum.repos.d"
+# where `dnf5 config-manager setopt` keeps the options it sets, e.g. a repository's "enabled"
+CONFIG_MANAGER_OVERRIDES = "/etc/dnf/repos.override.d/99-config_manager.repo"
+MAX_REMOVE_REPOS = 100
 
 CLEAN_TARGETS = ("dnf_packages", "dnf_metadata", "packagekit")
 PACKAGEKIT_CACHE = "/var/cache/PackageKit"
@@ -387,6 +396,76 @@ def copr(req: dict) -> None:
         return
     if action == "enable":
         load_metadata()
+    emit("done", ok=True)
+
+
+def rpm_owner(path: str) -> str | None:
+    """Name of the package that owns `path`, None if none does."""
+    proc = subprocess.run(["rpm", "-qf", "--qf", "%{NAME}\\n", "--", path], stdin=subprocess.DEVNULL,
+                          capture_output=True, text=True, check=False)
+    return (proc.stdout.split("\n", 1)[0].strip() or None) if proc.returncode == 0 else None
+
+
+def repo_files_to_remove(requested: set[str], configured: dict[str, str], owner=rpm_owner,
+                         repo_dir: str = REPO_DIR) -> list[str]:
+    """The .repo files that removing the `requested` repo ids deletes (`configured`: repo id -> its file).
+
+    Only a plain file of the user's own, right in `repo_dir`, that no package owns (a package's file comes back
+    with its next update), and only when every repository it configures is requested: the GUI has shown the user
+    all of them."""
+    unknown = sorted(requested - configured.keys())
+    if unknown:
+        raise ProtocolError(f"repos: not configured: {', '.join(unknown)}")
+    files = sorted({configured[r] for r in requested})
+    for path in files:
+        if os.path.normpath(path) != path or os.path.dirname(path) != repo_dir or not path.endswith(".repo"):
+            raise ProtocolError(f"repos: {path or 'no file'} is not a file in {repo_dir}")
+        try:
+            st = os.lstat(path)
+        except OSError as e:
+            raise ProtocolError(f"repos: {path}: {e.strerror}") from e
+        if not stat.S_ISREG(st.st_mode):
+            raise ProtocolError(f"repos: {path} is not a regular file")
+        others = sorted(r for r, p in configured.items() if p == path and r not in requested)
+        if others:
+            raise ProtocolError(f"repos: {path} also configures {', '.join(others)}")
+        if package := owner(path):
+            raise ProtocolError(f"repos: {path} belongs to the package {package}")
+    return files
+
+
+def overridden_options(repo_ids: set[str], path: str = CONFIG_MANAGER_OVERRIDES) -> list[str]:
+    """`repo.option` names that `dnf5 config-manager setopt` has set for these repositories."""
+    parser = configparser.ConfigParser(interpolation=None, strict=False)
+    parser.optionxform = str
+    try:
+        parser.read(path, encoding="utf-8")
+    except (configparser.Error, UnicodeDecodeError):
+        return []
+    return [f"{section}.{key}" for section in parser.sections() if section in repo_ids for key in parser[section]]
+
+
+def remove_repos(req: dict) -> None:
+    repos = req.get("repos")
+    if (not isinstance(repos, list) or not 0 < len(repos) <= MAX_REMOVE_REPOS
+            or not all(isinstance(r, str) and REPO_ID_RE.match(r) for r in repos)):
+        raise ProtocolError(f"repos: expected a list of at most {MAX_REMOVE_REPOS} repo ids")
+    import libdnf5
+    base = make_base(load=False)  # referenced while iterating, see set_repos_enabled
+    configured = {r.get_id(): r.get_repo_file_path() for r in libdnf5.repo.RepoQuery(base)}
+    requested = set(repos)
+    files = repo_files_to_remove(requested, configured)
+    # while the repositories still exist: config-manager refuses options of an unknown one. A leftover only
+    # clutters the file, so a failure here does not stop the removal
+    if options := overridden_options(requested):
+        run_command(["dnf5", "-q", "-y", "config-manager", "unsetopt", *options])
+    for path in files:
+        try:
+            os.unlink(path)
+        except OSError as e:
+            emit("done", ok=False, stage="remove", error=f"{path}: {e.strerror}")
+            return
+        log("file_removed", "Removed {path}", path=path)
     emit("done", ok=True)
 
 
@@ -739,11 +818,13 @@ def main() -> int:
             op = req.get("op")
             if op == "ping":
                 emit("done", ok=True, uid=os.geteuid())
-            elif op in ("transaction", "local_install", "refresh", "repo_set_enabled", "copr", "clean_cache"):
+            elif op in ("transaction", "local_install", "refresh", "repo_set_enabled", "copr", "clean_cache",
+                        "repo_remove"):
                 if "DownloadProgress" not in globals():
                     DownloadProgress, RpmProgress, KeyImport = _callbacks()
                 {"transaction": run_transaction, "local_install": local_install, "refresh": lambda _r: refresh(),
-                 "repo_set_enabled": set_repos_enabled, "copr": copr, "clean_cache": clean_cache}[op](req)
+                 "repo_set_enabled": set_repos_enabled, "copr": copr, "clean_cache": clean_cache,
+                 "repo_remove": remove_repos}[op](req)
             elif op == "quit":
                 return 0
             else:

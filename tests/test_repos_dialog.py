@@ -1,14 +1,15 @@
 """Settings → Repositories: columns that fit what they show, and the menu of a repository's file."""
 import os
 from collections import Counter
+from types import SimpleNamespace
 
 import pytest
 
 pytest.importorskip("PySide6.QtWidgets")
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-from PySide6.QtCore import QPoint, QUrl
-from PySide6.QtWidgets import QApplication
+from PySide6.QtCore import QPoint, Qt, QUrl
+from PySide6.QtWidgets import QApplication, QDialog
 
 from kram.core.model import Origin, RepoInfo
 from kram.ui import files, repos_dialog
@@ -110,29 +111,149 @@ def test_the_path_menu_copies_and_shows(app, monkeypatch):
     assert shown_paths == [COPR_FILE]
 
 
-def test_only_the_path_cell_has_a_menu(app, monkeypatch):
+class FakeMenu:
+    opened: list = []
+
+    def __init__(self, _parent):
+        FakeMenu.opened.append(self)
+        self.entries = []
+
+    def addAction(self, *args):
+        *_icon, text, slot = args
+        action = SimpleNamespace(text=text, slot=slot, enabled=True)
+        action.setEnabled = lambda on, a=action: setattr(a, "enabled", on)
+        self.entries.append(action)
+        return action
+
+    def addSeparator(self):
+        self.entries.append(None)
+
+    def exec(self, _pos):
+        pass
+
+
+def test_every_cell_has_the_repositorys_menu(app, monkeypatch):
     dlg = shown(app, 1180)
-    opened = []
-
-    class Menu:
-        def __init__(self, _parent):
-            opened.append(self)
-            self.entries = []
-
-        def addAction(self, text, _slot):
-            self.entries.append(text)
-
-        def exec(self, _pos):
-            pass
-    monkeypatch.setattr(repos_dialog, "QMenu", Menu)
-    row = 0
+    FakeMenu.opened = []
+    monkeypatch.setattr(repos_dialog, "QMenu", FakeMenu)
     for col in range(dlg.table.columnCount()):
-        pos = dlg.table.visualItemRect(dlg.table.item(row, col)).center()
-        dlg._context_menu(pos)
-        assert len(opened) == (1 if col >= COL_FILE else 0)  # only the last column, the file
-    assert opened[0].entries == ["Copy Path", "Show in File Manager"]
+        dlg._context_menu(dlg.table.visualItemRect(dlg.table.item(0, col)).center())
+    assert len(FakeMenu.opened) == dlg.table.columnCount()
+    entries = FakeMenu.opened[0].entries
+    assert [e and e.text for e in entries] == ["Show Packages", "Remove Repository…", None, "Copy Path",
+                                               "Show in File Manager"]
     dlg._context_menu(QPoint(-5, -5))  # nowhere: no menu
-    assert len(opened) == 1
+    assert len(FakeMenu.opened) == dlg.table.columnCount()
+
+
+# ---------------------------------------------------------------- show packages, remove
+
+USR_FILE = "/usr/share/dnf5/repos.d/fedora.repo"
+OWNED_FILE = "/etc/yum.repos.d/google-chrome.repo"
+SHARED_FILE = "/etc/yum.repos.d/insync.repo"
+MORE = [RepoInfo("updates", "Fedora 45 - Updates", True, Origin.FEDORA, 60, 99, USR_FILE),
+        RepoInfo("google-chrome", "google-chrome", True, Origin.THIRD_PARTY, 60, 99, OWNED_FILE),
+        RepoInfo("insync", "insync repo", True, Origin.THIRD_PARTY, 60, 99, SHARED_FILE),
+        RepoInfo("insync-source", "insync sources", False, Origin.THIRD_PARTY, None, 99, SHARED_FILE),
+        RepoInfo("cmdline", "no file", True, Origin.THIRD_PARTY, 60, 99, "")]
+
+
+def actions_dialog(app):
+    dlg = ReposDialog(REPOS + MORE, Counter(), None, owners={OWNED_FILE: "fedora-workstation-repositories"},
+                      listed=Counter({"code": 3, "insync": 2, "updates": 7}),
+                      installed=Counter({"insync": 1, "insync-source": 1}))
+    dlg.show_aux.setChecked(True)
+    dlg.show()
+    app.processEvents()
+    return dlg
+
+
+def select(dlg, repo_id):
+    row = next(r for r in range(dlg.table.rowCount()) if dlg.table.item(r, COL_ID).text() == repo_id)
+    dlg.table.selectRow(row)
+    return row
+
+
+@pytest.mark.parametrize(("repo_id", "can_show", "remove_tip"), [
+    ("code", True, ""),
+    ("fedora", False, ""),  # in /etc and nobody's: removable; nothing of it in the list
+    ("updates", True, "Configured by the system"),
+    ("google-chrome", False, "belongs to the package fedora-workstation-repositories"),
+    ("cmdline", False, "Not configured in a file"),
+])
+def test_the_buttons_follow_the_selected_repository(app, repo_id, can_show, remove_tip):
+    dlg = actions_dialog(app)
+    assert not dlg.packages_btn.isEnabled() and not dlg.remove_btn.isEnabled()  # nothing selected
+    select(dlg, repo_id)
+    assert dlg.packages_btn.isEnabled() is can_show
+    assert dlg.remove_btn.isEnabled() is (remove_tip == "")
+    assert remove_tip in dlg.remove_btn.toolTip()
+
+
+def test_unapplied_changes_come_first(app):
+    dlg = actions_dialog(app)
+    row = select(dlg, "code")
+    dlg.table.item(row, repos_dialog.COL_ENABLED).setCheckState(Qt.Unchecked)
+    assert not dlg.packages_btn.isEnabled() and not dlg.remove_btn.isEnabled()
+    assert dlg.remove_btn.toolTip() == "Apply or undo the changes first."
+
+
+def test_show_packages_closes_with_the_repository(app):
+    dlg = actions_dialog(app)
+    select(dlg, "code")
+    dlg.packages_btn.click()
+    assert dlg.show_repo == "code" and not dlg.remove_repos and dlg.result() == QDialog.Rejected
+
+
+class FakeBox:
+    Question = Cancel = DestructiveRole = ActionRole = 0
+    choice = "Remove"
+    last = None
+
+    def __init__(self, _icon, title, text, parent=None):
+        FakeBox.last = self
+        self.text, self.info, self.buttons, self.clicked = text, "", {}, None
+
+    def setInformativeText(self, info):
+        self.info = info
+
+    def addButton(self, button, _role=None):
+        self.buttons[button] = object()
+        return self.buttons[button]
+
+    def exec(self):
+        self.clicked = self.buttons.get(FakeBox.choice)
+
+    def clickedButton(self):
+        return self.clicked
+
+
+@pytest.mark.parametrize("choice", ["Remove", "Show packages", "Cancel"])
+def test_removal_names_every_repository_of_the_file(app, monkeypatch, choice):
+    monkeypatch.setattr(repos_dialog, "QMessageBox", FakeBox)
+    FakeBox.choice = choice
+    dlg = actions_dialog(app)
+    select(dlg, "insync")
+    dlg.remove_btn.click()
+    box = FakeBox.last
+    assert SHARED_FILE in box.text and "2 repositories" in box.text
+    assert "• insync — insync repo" in box.info and "• insync-source — insync sources" in box.info
+    assert "2 installed packages come from them" in box.info
+    assert dlg.remove_repos == (["insync", "insync-source"] if choice == "Remove" else [])
+    assert dlg.show_repo == ("insync" if choice == "Show packages" else None)
+
+
+def test_removal_of_a_single_repository(app, monkeypatch):
+    monkeypatch.setattr(repos_dialog, "QMessageBox", FakeBox)
+    FakeBox.choice = "Remove"
+    dlg = actions_dialog(app)
+    select(dlg, "code")
+    dlg.remove_btn.click()
+    box = FakeBox.last
+    assert box.text == "Remove the repository code from the system?"
+    assert "/etc/yum.repos.d/vscode.repo" in box.info and "installed" not in box.info
+    assert "Show packages" not in box.buttons  # nothing installed from it
+    assert dlg.remove_repos == ["code"]
 
 
 def test_show_in_file_manager_selects_the_file_or_falls_back_to_its_folder():

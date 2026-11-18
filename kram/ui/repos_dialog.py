@@ -1,8 +1,8 @@
-"""Settings → Repositories: enable/disable configured repositories."""
+"""Settings → Repositories: enable/disable configured repositories, show their packages, remove the user's own."""
 from collections import Counter
 
 from PySide6.QtCore import Qt, QTimer
-from PySide6.QtGui import QFontMetrics, QGuiApplication
+from PySide6.QtGui import QFontMetrics, QGuiApplication, QIcon
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QApplication,
@@ -14,6 +14,8 @@ from PySide6.QtWidgets import (
     QLabel,
     QLineEdit,
     QMenu,
+    QMessageBox,
+    QPushButton,
     QStyle,
     QStyledItemDelegate,
     QStyleOptionViewItem,
@@ -23,6 +25,7 @@ from PySide6.QtWidgets import (
 )
 
 from ..core.model import RepoInfo
+from ..core.repo_files import REPO_DIR, Removal, removal
 from ..i18n import _, ngettext
 from .files import show_in_file_manager
 from .icons import ORIGIN_LABEL, origin_icon
@@ -37,11 +40,22 @@ COLUMN_PAD = 14  # px added to a column that fits its contents: the measure leav
 
 
 class ReposDialog(QDialog):
-    def __init__(self, repos: list[RepoInfo], counts: Counter, parent=None):
+    def __init__(self, repos: list[RepoInfo], counts: Counter, parent=None, *, owners: dict[str, str] | None = None,
+                 listed: Counter | None = None, installed: Counter | None = None):
+        """`counts`: available packages per repo; `owners`: .repo file -> the package that owns it; `listed`: rows
+        of the package list per repo (its Origin filter); `installed`: installed packages per repo they came from.
+
+        After exec(), `show_repo` or `remove_repos` says what the user asked for instead of applying changes."""
         super().__init__(parent)
         self.setWindowTitle(_("Repositories"))
         self.resize(1180, 620)
         self._original = {r.id: r.enabled for r in repos}
+        self._repos = {r.id: r for r in repos}
+        self._owners = owners or {}
+        self._listed = listed or Counter()
+        self._installed = installed or Counter()
+        self.show_repo: str | None = None
+        self.remove_repos: list[str] = []
 
         lay = QVBoxLayout(self)
         top = QHBoxLayout()
@@ -60,6 +74,7 @@ class ReposDialog(QDialog):
                                      _("File")])
         t.verticalHeader().hide()
         t.setSelectionBehavior(QAbstractItemView.SelectRows)
+        t.setSelectionMode(QAbstractItemView.SingleSelection)
         t.setEditTriggers(QAbstractItemView.NoEditTriggers)
         t.setSortingEnabled(False)
         middle = _MiddleElide(t)  # a long id or path keeps both its start and its end
@@ -103,7 +118,18 @@ class ReposDialog(QDialog):
         self._user_sized = False
         header.sectionResized.connect(self._section_resized)
         t.itemChanged.connect(self._update_buttons)
+        t.itemSelectionChanged.connect(self._update_buttons)
         lay.addWidget(t, 1)
+
+        row = QHBoxLayout()
+        self.packages_btn = QPushButton(QIcon.fromTheme("view-list-details"), _("Show packages"))
+        self.packages_btn.clicked.connect(lambda: self._show_packages(self._selected_id()))
+        self.remove_btn = QPushButton(QIcon.fromTheme("edit-delete"), _("Remove…"))
+        self.remove_btn.clicked.connect(lambda: self._remove(self._selected_id()))
+        row.addWidget(self.packages_btn)
+        row.addWidget(self.remove_btn)
+        row.addStretch()
+        lay.addLayout(row)
 
         self.summary = QLabel()
         lay.addWidget(self.summary)
@@ -160,12 +186,91 @@ class ReposDialog(QDialog):
 
     def _context_menu(self, pos) -> None:
         item = self.table.itemAt(pos)
-        if item is None or item.column() != COL_FILE or not item.text():
+        if item is None:
             return
+        repo_id = self.table.item(item.row(), COL_ENABLED).data(Qt.UserRole)
         menu = QMenu(self)
-        for text, action in self._file_actions(item.text()):
-            menu.addAction(text, action)
+        show = menu.addAction(QIcon.fromTheme("view-list-details"), _("Show Packages"),
+                              lambda: self._show_packages(repo_id))
+        show.setEnabled(self._packages_blocker(repo_id) is None)
+        remove = menu.addAction(QIcon.fromTheme("edit-delete"), _("Remove Repository…"), lambda: self._remove(repo_id))
+        remove.setEnabled(self._removal_blocker(repo_id) is None)
+        if path := self._repos[repo_id].file_path:
+            menu.addSeparator()
+            for text, action in self._file_actions(path):
+                menu.addAction(text, action)
         menu.exec(self.table.viewport().mapToGlobal(pos))
+
+    # ------------------------------------------------------------ show packages, remove
+
+    def _selected_id(self) -> str | None:
+        rows = self.table.selectionModel().selectedRows()
+        return self.table.item(rows[0].row(), COL_ENABLED).data(Qt.UserRole) if rows else None
+
+    def _packages_blocker(self, repo_id: str) -> str | None:
+        """Why the repository's packages cannot be shown now; None if they can."""
+        if self.changes():
+            return _("Apply or undo the changes first.")
+        if not self._listed.get(repo_id):
+            return _("None of its packages are in the list.")
+        return None
+
+    def _removal_blocker(self, repo_id: str) -> str | None:
+        """Why the repository cannot be removed; None if it can."""
+        if self.changes():
+            return _("Apply or undo the changes first.")
+        path = self._repos[repo_id].file_path
+        match removal(path, self._owners.get(path)):
+            case Removal.OWNED:
+                return _("Its file belongs to the package {package}: remove that package to remove the repository, "
+                         "or disable it here.").format(package=self._owners[path])
+            case Removal.SYSTEM:
+                return _("Configured by the system, not in {folder}: it can only be disabled.").format(folder=REPO_DIR)
+            case Removal.NO_FILE:
+                return _("Not configured in a file.")
+        return None
+
+    def _show_packages(self, repo_id: str | None) -> None:
+        if repo_id is not None and self._packages_blocker(repo_id) is None:
+            self.show_repo = repo_id
+            self.reject()  # nothing to apply: the main window shows the packages
+
+    def _remove(self, repo_id: str | None) -> None:
+        if repo_id is None or self._removal_blocker(repo_id) is not None:
+            return
+        path = self._repos[repo_id].file_path
+        in_file = sorted((r for r in self._repos.values() if r.file_path == path), key=lambda r: r.id)
+        n = sum(self._installed.get(r.id, 0) for r in in_file)
+        if len(in_file) == 1:
+            text = _("Remove the repository {repo} from the system?").format(repo=repo_id)
+            lines = [_("Its file {path} will be deleted.").format(path=path)]
+        else:
+            text = ngettext("The file {path} configures {n} repository. Remove it from the system?",
+                            "The file {path} configures {n} repositories. Remove them all from the system?",
+                            len(in_file)).format(path=path, n=len(in_file))
+            lines = ["\n".join(f"• {r.id} — {r.name}" for r in in_file)]
+        if n:
+            lines.append(ngettext(
+                "{n} installed package comes from it. It stays installed but will no longer get updates "
+                "(it will show as orphaned).",
+                "{n} installed packages come from it. They stay installed but will no longer get updates "
+                "(they will show as orphaned).", n).format(n=n) if len(in_file) == 1 else ngettext(
+                "{n} installed package comes from them. It stays installed but will no longer get updates "
+                "(it will show as orphaned).",
+                "{n} installed packages come from them. They stay installed but will no longer get updates "
+                "(they will show as orphaned).", n).format(n=n))
+        box = QMessageBox(QMessageBox.Question, _("Remove repository"), text, parent=self)
+        box.setInformativeText("\n\n".join(lines))
+        remove = box.addButton(_("Remove"), QMessageBox.DestructiveRole)
+        show = (box.addButton(_("Show packages"), QMessageBox.ActionRole)
+                if n and self._packages_blocker(repo_id) is None else None)
+        box.addButton(QMessageBox.Cancel)
+        box.exec()
+        if box.clickedButton() is remove:
+            self.remove_repos = [r.id for r in in_file]
+            self.reject()  # nothing to apply: the main window runs the removal
+        elif show is not None and box.clickedButton() is show:
+            self._show_packages(repo_id)
 
     def changes(self) -> dict[str, bool]:
         """Repo id -> new enabled state, only for repos the user toggled."""
@@ -181,6 +286,11 @@ class ReposDialog(QDialog):
     def _update_buttons(self, *_args):
         n = len(self.changes())
         self.apply_btn.setEnabled(n > 0)
+        repo_id = self._selected_id()
+        for button, blocker in ((self.packages_btn, self._packages_blocker), (self.remove_btn, self._removal_blocker)):
+            why = blocker(repo_id) if repo_id is not None else None
+            button.setEnabled(repo_id is not None and why is None)
+            button.setToolTip(why or "")
         self.summary.setText(ngettext("{n} repository will change.", "{n} repositories will change.", n).format(n=n)
                              if n else "")
 

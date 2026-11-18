@@ -41,6 +41,7 @@ def test_origin_subentries_add_up():
     assert c[f"repo:{COPR}"] == 2
     assert c["origin:third"] == c["repo:rpmfusion-free"] == 1
     assert c["origin:fedora"] == 3
+    assert c["repo:fedora"] == 2 and c["repo:updates"] == 1  # each Fedora repository too, as in COPR
     assert "origin:local" not in c
     assert next(e for e in entries if e.id == f"repo:{COPR}").label == "owner/proj"
 

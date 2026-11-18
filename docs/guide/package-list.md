@@ -36,7 +36,7 @@ The sidebar on the left narrows the table. The buttons at its bottom switch betw
 - **Status**: all, installed, not installed, upgradable (and below it the security updates and the bug fix
   updates), installed by you, unneeded dependencies, orphaned (installed but in no repository), newer than the
   repository, marked.
-- **Origin**: Fedora, COPR, third-party, local; COPR projects and third-party repositories each on their own.
+- **Origin**: Fedora, COPR, third-party, local; under each, every repository on its own.
 - **Groups**: the comps groups; installed ones are in bold. Right-click a group to mark it for installation,
   or an installed one for upgrade or removal, as `dnf5 group install`, `upgrade` and `remove` do. Installing a
   group brings its mandatory and default packages; removing it removes the packages it brought, unless you

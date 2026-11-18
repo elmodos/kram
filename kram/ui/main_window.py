@@ -2,6 +2,7 @@
 import html
 import json
 import time
+from collections import Counter
 from collections.abc import Callable
 from pathlib import Path
 
@@ -39,6 +40,7 @@ from ..core.filters import (
 )
 from ..core.marks import Action, allowed_actions, allowed_group_actions, dump_marks, parse_marks
 from ..core.model import CatalogSnapshot, GroupInfo, PkgDetails, PkgRow, Status, TransactionPreview
+from ..core.repo_files import file_owners
 from ..core.search import MODE_LABELS, Mode, NarrowingSearch, SearchIndex
 from ..core.worker import DnfWorker
 from ..i18n import N_, _, ngettext
@@ -1232,12 +1234,30 @@ class MainWindow(QMainWindow):
     def open_repos(self):
         if not self.snapshot or self.helper.busy:
             return
-        self.dnf.submit(self.catalog.repo_package_counts, self._show_repos)
+        paths = [r.file_path for r in self.snapshot.repos]
+        self.dnf.submit(lambda: (self.catalog.repo_package_counts(), file_owners(paths)), self._show_repos)
 
-    def _show_repos(self, counts):
-        dlg = ReposDialog(self.snapshot.repos, counts, self)
-        if dlg.exec() == ReposDialog.Accepted and (changes := dlg.changes()):
+    def _show_repos(self, result):
+        counts, owners = result
+        snap = self.snapshot
+        dlg = ReposDialog(snap.repos, counts, self, owners=owners, listed=Counter(r.origin_repo for r in snap.rows),
+                          installed=Counter(r.from_repo_id for r in snap.rows if r.installed))
+        accepted = dlg.exec() == ReposDialog.Accepted
+        if dlg.show_repo:
+            self.show_repo_packages(dlg.show_repo)
+        elif dlg.remove_repos:
+            # back to the list once it is reloaded without them
+            self.catalogLoaded.connect(lambda _snap: self.open_repos(), Qt.SingleShotConnection)
+            title = ngettext("Removing {n} repository", "Removing {n} repositories", len(dlg.remove_repos))
+            self.run_helper_and_reload({"op": "repo_remove", "repos": dlg.remove_repos},
+                                       title.format(n=len(dlg.remove_repos)))
+        elif accepted and (changes := dlg.changes()):
             self.run_helper_and_reload({"op": "repo_set_enabled", "repos": changes}, _("Changing repositories"))
+
+    def show_repo_packages(self, repo_id: str) -> None:
+        """The repository's entry of the Origin filters, with the search cleared."""
+        self.search.clear()
+        self.sidebar.select("origin", f"repo:{repo_id}")
 
     def open_copr(self):
         if not self.snapshot or self.helper.busy:
@@ -1249,8 +1269,7 @@ class MainWindow(QMainWindow):
 
         def show_packages(repo_id):
             dlg.accept()
-            self.search.clear()
-            self.sidebar.select("origin", f"repo:{repo_id}")
+            self.show_repo_packages(repo_id)
         refresh(self.snapshot)
         self.catalogLoaded.connect(refresh)
         dlg.showPackages.connect(show_packages)

@@ -40,6 +40,7 @@ HELPER_MESSAGES = {
     "key_imported": N_("Imported key {key_id}"),
     "copying_package": N_("Copying {name}…"),
     "files_removed": N_("Files removed: {count}"),
+    "file_removed": N_("Removed {path}"),
 }
 STAGE_KEYS = ("loading_repos", "refreshing")  # helper messages that also replace the line above the progress bars
 

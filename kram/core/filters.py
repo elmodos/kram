@@ -98,7 +98,7 @@ def origin_filters(snap: CatalogSnapshot) -> list[FilterEntry]:
 
     entries = [FilterEntry("origin:all", _("All origins"), _all)]
     groups = [
-        (Origin.FEDORA, _("Fedora (official)"), False),
+        (Origin.FEDORA, _("Fedora (official)"), True),
         (Origin.COPR, "COPR", True),
         (Origin.THIRD_PARTY, _("Third-party"), True),
         (Origin.LOCAL, _("Local (@commandline)"), False),

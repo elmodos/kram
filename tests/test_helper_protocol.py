@@ -52,8 +52,14 @@ def test_rejects_bad_input():
         '{"op": "transaction", "group_install": ["kde apps"]}',
         '{"op": "transaction", "group_remove": "kde-apps"}',
         '{"op": "transaction", "group_upgrade": ["@kde-apps"]}',
+        '{"op": "repo_remove"}',
+        '{"op": "repo_remove", "repos": []}',
+        '{"op": "repo_remove", "repos": "code"}',
+        '{"op": "repo_remove", "repos": ["../../etc/passwd"]}',
+        '{"op": "repo_remove", "repos": ["-code"]}',
+        '{"op": "repo_remove", "repos": [7]}',
     )
-    assert len(events) == 33
+    assert len(events) == 39
     assert all(ev["event"] == "done" and ev["ok"] is False and ev["stage"] == "protocol" for ev in events)
 
 
