@@ -123,9 +123,11 @@ class ReposDialog(QDialog):
 
         row = QHBoxLayout()
         self.packages_btn = QPushButton(QIcon.fromTheme("view-list-details"), _("Show packages"))
-        self.packages_btn.clicked.connect(lambda: self._show_packages(self._selected_id()))
+        # bound methods, not lambdas: a lambda holding self keeps a parentless dialog alive until PySide6's cleanup at
+        # exit, which then deletes its widgets in the wrong order and crashes (seen with PySide6 6.12 on rawhide)
+        self.packages_btn.clicked.connect(self._show_selected_packages)
         self.remove_btn = QPushButton(QIcon.fromTheme("edit-delete"), _("Remove…"))
-        self.remove_btn.clicked.connect(lambda: self._remove(self._selected_id()))
+        self.remove_btn.clicked.connect(self._remove_selected)
         row.addWidget(self.packages_btn)
         row.addWidget(self.remove_btn)
         row.addStretch()
@@ -206,6 +208,12 @@ class ReposDialog(QDialog):
     def _selected_id(self) -> str | None:
         rows = self.table.selectionModel().selectedRows()
         return self.table.item(rows[0].row(), COL_ENABLED).data(Qt.UserRole) if rows else None
+
+    def _show_selected_packages(self) -> None:
+        self._show_packages(self._selected_id())
+
+    def _remove_selected(self) -> None:
+        self._remove(self._selected_id())
 
     def _packages_blocker(self, repo_id: str) -> str | None:
         """Why the repository's packages cannot be shown now; None if they can."""
