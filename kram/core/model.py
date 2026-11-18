@@ -83,6 +83,13 @@ class PkgRow:
     # upgradable packages: the advisories of the versions between the installed one and the candidate, the most
     # important first; empty for repositories without advisories (RPM Fusion, COPR, most third-party ones)
     advisories: tuple[Advisory, ...] = ()
+    # dnf autoremove would remove it: installed as a dependency, nothing needs it. Also when the status says
+    # something more pressing (orphaned, upgradable), which is why it is not only a status
+    unneeded: bool = False
+
+    def __post_init__(self) -> None:
+        if self.status is Status.UNNEEDED:
+            self.unneeded = True
 
     @property
     def advisory(self) -> Advisory | None:

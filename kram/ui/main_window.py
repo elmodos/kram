@@ -115,6 +115,7 @@ class MainWindow(QMainWindow):
         self.catalog = Catalog()
         self.snapshot: CatalogSnapshot | None = None
         self._upgrades_of_kind: dict[str, list[PkgRow]] = {}  # see upgrades_by_kind
+        self._unneeded: list[PkgRow] = []  # what dnf autoremove would remove
         self.filter: FilterEntry | None = None
         self.history: list[tuple[str, str]] = []  # packages visited via dependency links, for Alt+Left
         self._details_for: tuple[str, str] | None = None
@@ -196,6 +197,9 @@ class MainWindow(QMainWindow):
         fallback = QIcon.fromTheme("system-software-update")
         self._upgrade_icons = {True: QIcon.fromTheme("update-medium", fallback),
                                False: QIcon.fromTheme("update-none", fallback)}
+        self.act_mark_unneeded = self._action(
+            _("Mark Unneeded Dependencies for Removal"), "edit-delete", None, self.mark_unneeded, enabled=False,
+            tip=_("Mark for removal the dependencies nothing needs any more, as dnf autoremove does"))
         self.act_apply = self._action(_("Apply"), "dialog-ok-apply", "Ctrl+P", self.apply,
                                       tip=_("Review and apply the marked changes"))
         self.act_apply.setEnabled(False)
@@ -319,6 +323,8 @@ class MainWindow(QMainWindow):
         m.addAction(self.act_quit)
         m = mb.addMenu(_("&Edit"))
         m.addMenu(self.mark_upgrades_menu)
+        m.addAction(self.act_mark_unneeded)
+        m.addSeparator()
         m.addActions([self.act_unmark_all, self.act_apply])
         m.addSeparator()
         m.addActions([self.act_copy_name, self.act_copy_nevra])
@@ -548,6 +554,7 @@ class MainWindow(QMainWindow):
         keep = self._current_key()
         self.snapshot = snap
         self._upgrades_of_kind = upgrades_by_kind(snap.rows)
+        self._unneeded = [r for r in snap.rows if r.unneeded]
         self.act_reload.setEnabled(True)
         self.model.set_rows(snap.rows, snap.basearch)
         if any(r.status is Status.UPGRADABLE for r in snap.rows):
@@ -873,6 +880,9 @@ class MainWindow(QMainWindow):
         if entry is not None and entry.group and (group := self._group(entry.group)) is not None:
             self._group_menu(m, group)
             m.addSeparator()
+        if entry is not None and entry.id == "status:unneeded":
+            m.addAction(self.act_mark_unneeded)
+            m.addSeparator()
         if entry is not None and entry.id.startswith("custom:"):
             name = entry.id.removeprefix("custom:")
             m.addAction(QIcon.fromTheme("document-edit"), _("Edit Filter…"), lambda: self.edit_filters(select=name))
@@ -982,6 +992,7 @@ class MainWindow(QMainWindow):
         self._set_upgrades_available(bool(self.snapshot and self.snapshot.n_upgradable))
         for kind, a in self.mark_upgrade_actions.items():
             a.setEnabled(bool(self._upgrades_of_kind.get(kind)))
+        self.act_mark_unneeded.setEnabled(bool(self._unneeded))
 
     def _marks_changed(self, keys):
         self.model.marks_changed(keys)
@@ -1051,6 +1062,15 @@ class MainWindow(QMainWindow):
     def mark_upgrades(self, kind: str):
         """Mark the upgrades of one kind: UPGRADES_SECURITY, UPGRADES_SECURITY_HIGH or UPGRADES_FIXES."""
         self._mark_for_upgrade(self._upgrades_of_kind.get(kind, []))
+
+    def mark_unneeded(self):
+        """Autoremove: mark every unneeded dependency for removal. The Apply dialog then shows what goes, including
+        what becomes unneeded only once these are gone."""
+        changed = [r.key for r in self._unneeded if self.model.marks.set(r, Action.REMOVE)]
+        self._marks_changed(None)
+        self.statusBar().showMessage(ngettext("{n} unneeded dependency marked for removal",
+                                              "{n} unneeded dependencies marked for removal",
+                                              len(changed)).format(n=len(changed)), 8000)
 
     def _mark_for_upgrade(self, rows: list[PkgRow]) -> None:
         """Upgrades that cannot be installed now are left out (see PackageTableModel.blocked): marked one by one,

@@ -433,3 +433,25 @@ def test_upgrades_that_cannot_be_installed_are_dimmed_and_not_marked_by_mark_all
 
     window.model.set_rows(rows, "x86_64")  # a reload starts over; the new resolve fills it again
     assert window.model.blocked == {}
+
+
+def test_mark_unneeded_marks_what_autoremove_would_remove(window):
+    from kram.core.marks import Action
+    from kram.core.model import Origin, PkgRow, Status
+
+    rows = [PkgRow("lib-old", "x86_64", "", "1-1", "1-1", "fedora", 1, Origin.FEDORA, Status.UNNEEDED, False),
+            PkgRow("tool", "x86_64", "", "1-1", "1-1", "fedora", 1, Origin.FEDORA, Status.INSTALLED, True),
+            # orphaned, still what autoremove removes
+            PkgRow("lib-gone", "x86_64", "", "1-1", "", "", 1, Origin.UNKNOWN, Status.ORPHAN, False, unneeded=True)]
+    window.model.set_rows(rows, "x86_64")
+    window._update_actions()
+    assert not window.act_mark_unneeded.isEnabled()  # nothing loaded yet
+    window._unneeded = [r for r in rows if r.unneeded]  # as _on_loaded finds them
+    window._update_actions()
+    assert window.act_mark_unneeded.isEnabled()
+    window.act_mark_unneeded.trigger()
+    marks = window.model.marks
+    assert {k: marks.get(k).action for k in (r.key for r in rows) if k in marks} == {
+        rows[0].key: Action.REMOVE, rows[2].key: Action.REMOVE}
+    assert window.statusBar().currentMessage() == "2 unneeded dependencies marked for removal"
+    assert window.act_apply.isEnabled()

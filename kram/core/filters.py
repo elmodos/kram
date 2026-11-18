@@ -75,7 +75,8 @@ def status_filters(snap: CatalogSnapshot, marked: Container[tuple[str, str]] | N
         FilterEntry("status:bugfix", _("Bug fix updates"), has_update_type("bugfix"), indent=1,
                     tip=_("Upgrades that fix bugs, by their advisories")),
         FilterEntry("status:user", _("Installed by user"), lambda r: r.installed and r.user_installed),
-        FilterEntry("status:unneeded", _("Unneeded dependencies"), status_is(Status.UNNEEDED)),
+        # what dnf autoremove removes, orphaned and upgradable ones included
+        FilterEntry("status:unneeded", _("Unneeded dependencies"), lambda r: r.unneeded),
         FilterEntry("status:orphan", _("Orphaned (no repository)"), status_is(Status.ORPHAN)),
         FilterEntry("status:newer", _("Newer than repository"), status_is(Status.NEWER)),
         *([FilterEntry("status:marked", _("Marked"), lambda r: r.key in marked)] if marked is not None else []),

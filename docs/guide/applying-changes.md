@@ -12,6 +12,11 @@ version. The arrow next to it (and Edit → Mark Upgrades) marks only some of th
 the security upgrades rated critical or important; or the security and bug fix upgrades, without the
 enhancements. Upgrades from repositories without advisories are in none of these.
 
+**Edit → Mark Unneeded Dependencies for Removal** does what `dnf autoremove` does: it marks for removal every
+package that was installed as a dependency and that nothing needs any more (the *Unneeded dependencies* status
+filter lists them; its context menu has the same item). The review shows them all before anything is removed;
+mark a package as installed by you to keep it.
+
 Double-clicking a package marks it for installation or upgrade, or unmarks it if it is already marked. With
 Settings → *Clicking the status icon marks the likely action* on, a single click on the status box does the
 same instead of opening the menu, as in Synaptic.

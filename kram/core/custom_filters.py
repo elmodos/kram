@@ -233,6 +233,8 @@ def _compile(c: Condition, snap: CatalogSnapshot) -> Predicate:
         case Field.STATUS:
             if c.value == STATUS_ANY_INSTALLED:
                 hit = lambda r: r.status in INSTALLED_LIKE
+            elif c.value == Status.UNNEEDED.value:  # as the sidebar entry: orphaned and upgradable ones too
+                hit = lambda r: r.unneeded
             else:
                 hit = lambda r: r.status.value == c.value
         case Field.ORIGIN:

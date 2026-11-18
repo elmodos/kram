@@ -164,6 +164,7 @@ class Catalog:
                 user_installed=key in user_installed, from_repo_id=from_repo, reason=reasons.get(p.get_reason()),
                 candidate_arch=cand.get_arch() if key in arch_changes else "",
                 advisories=advisories.get(key, ()) if status is Status.UPGRADABLE else (),
+                unneeded=key in unneeded,
             ))
             pkgs[key] = (p, cand)
 

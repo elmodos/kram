@@ -24,6 +24,13 @@ def counts(entries):
     return {e.id: e.count for e in entries}
 
 
+def test_unneeded_is_what_autoremove_removes_whatever_the_status():
+    rows = [row("dep", Status.UNNEEDED), row("old-dep", Status.ORPHAN), row("app", Status.INSTALLED)]
+    rows[0].unneeded = rows[1].unneeded = True
+    c = counts(status_filters(CatalogSnapshot(rows, 3, 0, 0.0)))
+    assert c["status:unneeded"] == 2 and c["status:orphan"] == 1
+
+
 def test_status_counts():
     c = counts(status_filters(SNAP))
     assert c["status:all"] == 6

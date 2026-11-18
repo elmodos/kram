@@ -27,7 +27,8 @@ left, the selected package's details below](docs/screenshots/main.png)
   versions, repository, size. [The package list](docs/guide/package-list.md)
 - **Filters and search**: by status, origin, repository and group, your own custom filters ("unneeded
   dependencies over 50 MB"), search ranked by relevance. [Filters](docs/guide/package-list.md#filters)
-- **Mark first, apply later**: install, upgrade, reinstall, downgrade to a chosen version, remove; choose
+- **Mark first, apply later**: install, upgrade, reinstall, downgrade to a chosen version, remove, remove
+  unneeded dependencies as `dnf autoremove`; choose
   which recommended packages to take; review the whole transaction and the equivalent `dnf5` command.
   [Marking and applying](docs/guide/applying-changes.md)
 - **Downloaded .rpm files**, checked before installing: signature, root scripts, dependencies, a newer
