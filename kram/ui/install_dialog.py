@@ -64,7 +64,7 @@ def _browser() -> QTextBrowser:
 def _plain() -> QPlainTextEdit:
     t = QPlainTextEdit()
     t.setReadOnly(True)
-    t.setFont(QFontDatabase.systemFont(QFontDatabase.FixedFont))
+    t.setFont(QFontDatabase.systemFont(QFontDatabase.SystemFont.FixedFont))
     return t
 
 
@@ -100,7 +100,7 @@ class InstallDialog(QDialog):
         head = QHBoxLayout()
         icon = QLabel()
         icon.setPixmap(QIcon.fromTheme("application-x-rpm", QIcon.fromTheme("package-x-generic")).pixmap(48, 48))
-        icon.setAlignment(Qt.AlignTop)
+        icon.setAlignment(Qt.AlignmentFlag.AlignTop)
         head.addWidget(icon)
         text = QVBoxLayout()
         self.title = QLabel(e(os.path.basename(self.path)))
@@ -108,11 +108,11 @@ class InstallDialog(QDialog):
         font.setBold(True)
         font.setPointSizeF(font.pointSizeF() * 1.4)
         self.title.setFont(font)
-        self.title.setTextInteractionFlags(Qt.TextSelectableByMouse)
+        self.title.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         self.title.setWordWrap(True)  # a long name and version must not widen the dialog
         self.subtitle = QLabel()
         self.subtitle.setWordWrap(True)
-        self.subtitle.setTextInteractionFlags(Qt.TextSelectableByMouse)
+        self.subtitle.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         self.notes = QWidget()
         self._notes_layout = QVBoxLayout(self.notes)
         self._notes_layout.setContentsMargins(0, 0, 0, 0)
@@ -127,7 +127,7 @@ class InstallDialog(QDialog):
         self.details = _browser()
         self.changes = ChangesTree(basearch)
         self.deps = _browser()
-        deps = QSplitter(Qt.Vertical)
+        deps = QSplitter(Qt.Orientation.Vertical)
         changes_box = QWidget()
         box_lay = QVBoxLayout(changes_box)
         box_lay.setContentsMargins(0, 0, 0, 0)
@@ -148,7 +148,7 @@ class InstallDialog(QDialog):
         self.recs = RecommendationsList(set())
         self.recs.toggled.connect(self._resolve_again)
         self.recs.setVisible(False)
-        split = QSplitter(Qt.Vertical)
+        split = QSplitter(Qt.Orientation.Vertical)
         split.addWidget(self.tabs)
         split.addWidget(self.recs)
         split.setChildrenCollapsible(False)
@@ -165,7 +165,7 @@ class InstallDialog(QDialog):
         lay.addWidget(self.warning)
         self.cmd = QLineEdit()
         self.cmd.setReadOnly(True)
-        self.cmd.setFont(QFontDatabase.systemFont(QFontDatabase.FixedFont))
+        self.cmd.setFont(QFontDatabase.systemFont(QFontDatabase.SystemFont.FixedFont))
         self.cmd_box = QGroupBox(_("Equivalent command"))
         QVBoxLayout(self.cmd_box).addWidget(self.cmd)
         self.cmd_box.setVisible(False)
@@ -174,8 +174,8 @@ class InstallDialog(QDialog):
         bottom = QHBoxLayout()
         self.status = QLabel()  # what runs now; the buttons wait for it
         bottom.addWidget(self.status, 1)
-        buttons = QDialogButtonBox(QDialogButtonBox.Close)
-        self.install = buttons.addButton(_("Install"), QDialogButtonBox.AcceptRole)
+        buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Close)
+        self.install = buttons.addButton(_("Install"), QDialogButtonBox.ButtonRole.AcceptRole)
         self.install.setIcon(QIcon.fromTheme("list-add"))
         self.install.setDefault(True)
         buttons.accepted.connect(self._install)
@@ -303,7 +303,7 @@ class InstallDialog(QDialog):
         env.insert("LC_ALL", "C.UTF-8")  # parsed: "missing", "(Permission denied)"
         proc.setProcessEnvironment(env)
         proc.finished.connect(lambda _code, _status: self._on_verified(proc))
-        proc.errorOccurred.connect(lambda err: err == QProcess.FailedToStart and self._on_verified(proc))
+        proc.errorOccurred.connect(lambda err: err == QProcess.ProcessError.FailedToStart and self._on_verified(proc))
         self._busy["verify"] = _("Checking the installed files of {name}…").format(name=r.name)
         cmd = local_rpm.verify_command(r.name, r.version, r.release, r.arch)
         proc.start(cmd[0], cmd[1:])
@@ -409,21 +409,21 @@ class InstallDialog(QDialog):
             row = lay.takeAt(0).widget()
             row.setParent(None)  # gone from findChildren now, not at the next event loop
             row.deleteLater()
-        size = self.style().pixelMetric(QStyle.PM_SmallIconSize)
+        size = self.style().pixelMetric(QStyle.PixelMetric.PM_SmallIconSize)
         for kind, text in lines:
             row = QWidget()
             row_lay = QHBoxLayout(row)
             row_lay.setContentsMargins(0, 0, 0, 0)
             icon = QLabel()
             icon.setFixedWidth(size)
-            icon.setAlignment(Qt.AlignTop)
+            icon.setAlignment(Qt.AlignmentFlag.AlignTop)
             if kind != INDENT:
                 name, fallback = ICONS[kind]
                 icon.setPixmap(QIcon.fromTheme(name, QIcon.fromTheme(fallback)).pixmap(size, size))
             label = QLabel(text)
             label.setWordWrap(True)
-            label.setTextFormat(Qt.RichText)
-            label.setTextInteractionFlags(Qt.TextSelectableByMouse)
+            label.setTextFormat(Qt.TextFormat.RichText)
+            label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
             row_lay.addWidget(icon)
             row_lay.addWidget(label, 1)
             lay.addWidget(row)
@@ -588,7 +588,7 @@ class InstallDialog(QDialog):
     def done(self, result: int) -> None:
         if not self._closed:
             self._closed = True
-            if self._verify_proc is not None and self._verify_proc.state() != QProcess.NotRunning:
+            if self._verify_proc is not None and self._verify_proc.state() != QProcess.ProcessState.NotRunning:
                 self._verify_proc.kill()
             self._reader.shutdown()
             self.dnf.submit(self.catalog.forget_local, lambda _result: None)

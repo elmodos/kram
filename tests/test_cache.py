@@ -160,7 +160,7 @@ def test_dialog_shrinks_with_wrapped_text_and_scrolls(monkeypatch):
     dnf.pending()
     settle()
 
-    assert dlg.scroll.horizontalScrollBarPolicy() == Qt.ScrollBarAlwaysOff
+    assert dlg.scroll.horizontalScrollBarPolicy() == Qt.ScrollBarPolicy.ScrollBarAlwaysOff
     narrowest = dlg.minimumSizeHint().width()
     assert narrowest < 600
     dlg.resize(narrowest, 180)
@@ -304,7 +304,8 @@ def test_delete_unused_asks_then_runs_the_helper(monkeypatch):
     module, dlg = leftover_dialog(monkeypatch, REPORT, lambda r, _t: requests.append(r) or {"ok": True})
 
     class Box:
-        Question = Cancel = DestructiveRole = 0
+        Icon, ButtonRole, StandardButton = module.QMessageBox.Icon, module.QMessageBox.ButtonRole, \
+            module.QMessageBox.StandardButton
 
         def __init__(self, *_args, **_kwargs):
             self.delete = object()

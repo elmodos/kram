@@ -86,10 +86,10 @@ RELEASE_CHECK_TIMEOUT_MS = 15000
 # toolbar styles (Settings → Toolbar, or right-click the toolbar): id, label, button style, icon size
 # (an invalid size means the style's default, which on Plasma follows System Settings)
 TOOLBAR_STYLES = [
-    ("system", _("Follow System Settings"), Qt.ToolButtonFollowStyle, QSize()),
-    ("under", _("Text Under Icons"), Qt.ToolButtonTextUnderIcon, QSize(24, 24)),
-    ("beside", _("Compact: Text Beside Icons"), Qt.ToolButtonTextBesideIcon, QSize(16, 16)),
-    ("icons", _("Icons Only"), Qt.ToolButtonIconOnly, QSize(22, 22)),
+    ("system", _("Follow System Settings"), Qt.ToolButtonStyle.ToolButtonFollowStyle, QSize()),
+    ("under", _("Text Under Icons"), Qt.ToolButtonStyle.ToolButtonTextUnderIcon, QSize(24, 24)),
+    ("beside", _("Compact: Text Beside Icons"), Qt.ToolButtonStyle.ToolButtonTextBesideIcon, QSize(16, 16)),
+    ("icons", _("Icons Only"), Qt.ToolButtonStyle.ToolButtonIconOnly, QSize(22, 22)),
 ]
 
 
@@ -124,7 +124,7 @@ class MainWindow(QMainWindow):
         self._candidates_cache: tuple[FilterEntry, CatalogSnapshot, list[int]] | None = None
         self.key_index: dict[tuple[str, str], int] = {}
         self._search_gen = 0                 # drops stale async (provides/file) results
-        self._user_sort = (COL_NAME, Qt.AscendingOrder)
+        self._user_sort = (COL_NAME, Qt.SortOrder.AscendingOrder)
         self._last_count = 0
         self._details: PkgDetails | None = None  # details of the current row, once loaded
         self.helper = HelperClient(post)
@@ -238,7 +238,7 @@ class MainWindow(QMainWindow):
         self.act_upgrade = self._action("Fedora", slot=self.open_upgrade, enabled=False, tip=_("A new Fedora release"))
         self.act_upgrade.setIcon(QIcon.fromTheme("fedora-logo-icon", QIcon.fromTheme("system-upgrade")))
         self.act_upgrade.setVisible(False)
-        self.act_find = self._action(_("Find"), "edit-find", QKeySequence.Find,
+        self.act_find = self._action(_("Find"), "edit-find", QKeySequence.StandardKey.Find,
                                      lambda: (self.search.setFocus(), self.search.selectAll()))
         self.act_back = self._action(_("Back"), "go-previous", "Alt+Left", self.go_back,
                                      tip=_("Go back to the previous package (after following a dependency)"))
@@ -251,14 +251,14 @@ class MainWindow(QMainWindow):
         self.act_open_file = self._action(_("Open Package File…"), "document-open", slot=self.open_package_file,
                                           tip=_("Install a downloaded .rpm file (you can also drop it on the window)"))
         self.act_open_file.setEnabled(False)
-        self.act_quit = self._action(_("Quit"), "application-exit", QKeySequence.Quit, self.close)
+        self.act_quit = self._action(_("Quit"), "application-exit", QKeySequence.StandardKey.Quit, self.close)
         self.act_copy_name = self._action(_("Copy Name"), "edit-copy", "Ctrl+C", self.copy_names)
         self.act_copy_nevra = self._action(_("Copy name-version-release.arch"), "edit-copy", "Ctrl+Shift+C",
                                            self.copy_nevras)
         # scoped to the table, so Ctrl+C still copies text in the search field and the detail tabs
         for a in (self.act_copy_name, self.act_copy_nevra):
             self.removeAction(a)
-            a.setShortcutContext(Qt.WidgetWithChildrenShortcut)
+            a.setShortcutContext(Qt.ShortcutContext.WidgetWithChildrenShortcut)
         self.act_about = self._action(_("About Kram"), "help-about", slot=self.about)
         # package actions are scoped to the table: Del/Ins/Ctrl+Z keep their meaning in the search field
         self.mark_actions: dict[Action, QAction] = {}
@@ -272,7 +272,7 @@ class MainWindow(QMainWindow):
         ]:
             a = self._action(text, icon, shortcut, lambda _c=False, act=action: self.mark_selected(act), tip=text)
             self.removeAction(a)
-            a.setShortcutContext(Qt.WidgetWithChildrenShortcut)
+            a.setShortcutContext(Qt.ShortcutContext.WidgetWithChildrenShortcut)
             self.mark_actions[action] = a
         self.downgrade_menu = QMenu(_("Downgrade to Version"), self)
         self.downgrade_menu.setIcon(QIcon.fromTheme("go-down"))
@@ -280,7 +280,7 @@ class MainWindow(QMainWindow):
         self.act_unmark = self._action(_("Unmark"), "edit-undo", "Ctrl+Z", self.unmark_selected,
                                        tip=_("Unmark the selected packages"))
         self.removeAction(self.act_unmark)
-        self.act_unmark.setShortcutContext(Qt.WidgetWithChildrenShortcut)
+        self.act_unmark.setShortcutContext(Qt.ShortcutContext.WidgetWithChildrenShortcut)
         self._set_upgrades_available(False)
         self.toolbar_styles = QActionGroup(self)
         for style_id, label, _button, _size in TOOLBAR_STYLES:
@@ -355,7 +355,7 @@ class MainWindow(QMainWindow):
         # a click marks every upgrade, as before; the arrow next to it offers the other ways
         mark_button = tb.widgetForAction(self.act_mark_upgrades)
         mark_button.setMenu(self.mark_upgrades_menu)
-        mark_button.setPopupMode(QToolButton.MenuButtonPopup)
+        mark_button.setPopupMode(QToolButton.ToolButtonPopupMode.MenuButtonPopup)
         tb.addSeparator()
         tb.addActions([self.act_repos, self.act_copr, self.act_upgrade])
         spacer = QWidget()
@@ -376,8 +376,9 @@ class MainWindow(QMainWindow):
         # shrinks before anything overflows into the toolbar's ">" menu (where Ctrl+F could not reach it)
         self.search.setMinimumWidth(160)
         self.search.setMaximumWidth(300)
-        self.search.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-        self._search_icon = self.search.addAction(QIcon.fromTheme("edit-find"), QLineEdit.LeadingPosition)
+        self.search.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        self._search_icon = self.search.addAction(QIcon.fromTheme("edit-find"),
+                                                  QLineEdit.ActionPosition.LeadingPosition)
         self.search.textChanged.connect(self._update_search_icon)
         tb.addWidget(self.search)
         self.addToolBar(tb)
@@ -412,15 +413,15 @@ class MainWindow(QMainWindow):
         self.table = PackageView()
         self.table.setModel(self.model)
         self.table.setSortingEnabled(True)
-        self.table.sortByColumn(COL_NAME, Qt.AscendingOrder)
+        self.table.sortByColumn(COL_NAME, Qt.SortOrder.AscendingOrder)
         self.table.header().sortIndicatorChanged.connect(self._on_sort_indicator)
-        self.table.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.table.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.table.customContextMenuRequested.connect(self._context_menu)
         for col, width in enumerate(COLUMN_WIDTHS):
             self.table.setColumnWidth(col, width)
         self.table.setColumnWidth(COL_ADVISORY, ADVISORY_COLUMN_WIDTH)
         self._place_advisory_column()
-        self.table.header().setContextMenuPolicy(Qt.CustomContextMenu)
+        self.table.header().setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.table.header().customContextMenuRequested.connect(self._header_menu)
         self.table.selectionModel().currentRowChanged.connect(self._on_current)
         self.table.selectionModel().selectionChanged.connect(self._update_actions)
@@ -431,12 +432,12 @@ class MainWindow(QMainWindow):
         self.details = DetailsTabs()
         self.details.linkActivated.connect(self._on_link)
 
-        self.vsplit = QSplitter(Qt.Vertical)
+        self.vsplit = QSplitter(Qt.Orientation.Vertical)
         self.vsplit.addWidget(self.table)
         self.vsplit.addWidget(self.details)
         self.vsplit.setSizes([540, 260])
         self.vsplit.setCollapsible(1, False)  # the details can shrink to their tab bar, not vanish
-        self.hsplit = QSplitter(Qt.Horizontal)
+        self.hsplit = QSplitter(Qt.Orientation.Horizontal)
         self.hsplit.addWidget(self.sidebar)
         self.hsplit.addWidget(self.vsplit)
         self.hsplit.setStretchFactor(1, 1)
@@ -530,7 +531,7 @@ class MainWindow(QMainWindow):
                 self, "Kram", ngettext("{n} marked change has not been applied. Quit anyway?",
                                        "{n} marked changes have not been applied. Quit anyway?",
                                        len(self.model.marks)).format(n=len(self.model.marks))) \
-                != QMessageBox.Yes:
+                != QMessageBox.StandardButton.Yes:
             event.ignore()
             return
         self.helper.stop()
@@ -668,7 +669,7 @@ class MainWindow(QMainWindow):
         header = self.table.header()
         if ranked or self.model.sort_column is None:
             header.blockSignals(True)
-            header.setSortIndicator(*((-1, Qt.AscendingOrder) if ranked else self._user_sort))
+            header.setSortIndicator(*((-1, Qt.SortOrder.AscendingOrder) if ranked else self._user_sort))
             header.blockSignals(False)
             self.model.sort(-1) if ranked else self.model.set_sort_column(self._user_sort)
         keep = self._current_key()
@@ -729,7 +730,7 @@ class MainWindow(QMainWindow):
             return False
         self.table.setCurrentIndex(idx)
         if scroll:
-            self.table.scrollTo(idx, QAbstractItemView.PositionAtCenter)
+            self.table.scrollTo(idx, QAbstractItemView.ScrollHint.PositionAtCenter)
         return True
 
     def _on_current(self, current, _previous):
@@ -859,7 +860,7 @@ class MainWindow(QMainWindow):
 
     def delete_filter(self, name: str) -> None:
         if QMessageBox.question(self, _("Custom Filters"), _("Delete the filter “{name}”?").format(name=name)) \
-                != QMessageBox.Yes:
+                != QMessageBox.StandardButton.Yes:
             return
         self.sidebar.custom = [f for f in self.sidebar.custom if f.name != name]
         self._save_custom_filters()
@@ -953,13 +954,13 @@ class MainWindow(QMainWindow):
             self.sidebar.refresh_counts()
 
     def about(self):
-        box = QMessageBox(QMessageBox.NoIcon, _("About Kram"),
+        box = QMessageBox(QMessageBox.Icon.NoIcon, _("About Kram"),
                           f"<h3>Kram {__version__}</h3><p>{_('A Synaptic-style package manager for Fedora.')}</p>"
                           f"<p><a href='{HOMEPAGE}'>{HOMEPAGE}</a></p>"
                           f"<p>Copyright © 2026 Modo Ltunzher<br>{_('Released under the MIT License.')}</p>",
-                          QMessageBox.Close, self)
+                          QMessageBox.StandardButton.Close, self)
         box.setIconPixmap(self.windowIcon().pixmap(64, 64))
-        whats_new = box.addButton(_("What's New"), QMessageBox.ActionRole)
+        whats_new = box.addButton(_("What's New"), QMessageBox.ButtonRole.ActionRole)
         box.exec()
         if box.clickedButton() is whats_new:
             WhatsNewDialog(releases.load(), self).exec()
@@ -1022,14 +1023,14 @@ class MainWindow(QMainWindow):
             extra = [rows[k] for k in dependents if k not in marks and k in rows]
             if not extra:
                 return
-            box = QMessageBox(QMessageBox.Question, "Kram",
+            box = QMessageBox(QMessageBox.Icon.Question, "Kram",
                               ngettext("{n} installed package depends on the packages marked for removal and has to be "
                                        "removed as well:",
                                        "{n} installed packages depend on the packages marked for removal and have to be "
                                        "removed as well:", len(extra)).format(n=len(extra)),
-                              QMessageBox.Cancel, self)
+                              QMessageBox.StandardButton.Cancel, self)
             box.setInformativeText(", ".join(sorted(r.name for r in extra)))
-            mark_btn = box.addButton(_("Mark"), QMessageBox.AcceptRole)
+            mark_btn = box.addButton(_("Mark"), QMessageBox.ButtonRole.AcceptRole)
             box.setDefaultButton(mark_btn)
             box.exec()
             if box.clickedButton() is mark_btn:
@@ -1217,7 +1218,7 @@ class MainWindow(QMainWindow):
     def _on_preview(self, preview: TransactionPreview, request: dict):
         self._update_status()
         if not preview.ok:
-            box = QMessageBox(QMessageBox.Warning, _("Cannot apply changes"),
+            box = QMessageBox(QMessageBox.Icon.Warning, _("Cannot apply changes"),
                               _("The marked changes cannot be carried out. Unmark or change them."), parent=self)
             box.setInformativeText(preview.problems[0][:500])
             box.setDetailedText("\n".join(preview.problems))
@@ -1267,7 +1268,7 @@ class MainWindow(QMainWindow):
             self.show_repo_packages(dlg.show_repo)
         elif dlg.remove_repos:
             # back to the list once it is reloaded without them
-            self.catalogLoaded.connect(lambda _snap: self.open_repos(), Qt.SingleShotConnection)
+            self.catalogLoaded.connect(lambda _snap: self.open_repos(), Qt.ConnectionType.SingleShotConnection)
             title = ngettext("Removing {n} repository", "Removing {n} repositories", len(dlg.remove_repos))
             self.run_helper_and_reload({"op": "repo_remove", "repos": dlg.remove_repos},
                                        title.format(n=len(dlg.remove_repos)))
@@ -1342,7 +1343,7 @@ class MainWindow(QMainWindow):
 
     def _on_release_check(self, reply: QNetworkReply) -> None:
         reply.deleteLater()
-        if reply.error() != QNetworkReply.NoError:
+        if reply.error() != QNetworkReply.NetworkError.NoError:
             return  # no network is no news: the last result stays
         try:
             releases = distro.parse_releases(json.loads(bytes(reply.readAll())))
@@ -1394,7 +1395,8 @@ class MainWindow(QMainWindow):
             return
         if not path:
             s = QSettings()
-            start = s.value("install/dir", QStandardPaths.writableLocation(QStandardPaths.DownloadLocation))
+            downloads = QStandardPaths.writableLocation(QStandardPaths.StandardLocation.DownloadLocation)
+            start = s.value("install/dir", downloads)
             path, _filter = QFileDialog.getOpenFileName(self, _("Open Package File"), start,
                                                         _("RPM packages (*.rpm)"))
             if not path:

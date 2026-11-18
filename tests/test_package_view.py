@@ -34,14 +34,14 @@ def view_with(n):
 
 def test_it_looks_and_behaves_like_the_tree_view(app):
     view, _model = view_with(3)
-    assert view.selectionBehavior() == QAbstractItemView.SelectRows
-    assert view.selectionMode() == QAbstractItemView.ExtendedSelection
+    assert view.selectionBehavior() == QAbstractItemView.SelectionBehavior.SelectRows
+    assert view.selectionMode() == QAbstractItemView.SelectionMode.ExtendedSelection
     assert not view.showGrid() and view.alternatingRowColors() and not view.tabKeyNavigation()
     assert view.verticalHeader().isHidden()
     header = view.header()
     assert header is view.horizontalHeader()
     assert header.sectionsMovable() and header.stretchLastSection() and not header.highlightSections()
-    assert header.defaultAlignment() & Qt.AlignLeft
+    assert header.defaultAlignment() & Qt.AlignmentFlag.AlignLeft
 
 
 def test_rows_are_as_tall_as_the_tree_views(app):
@@ -97,21 +97,21 @@ def test_the_mouse_highlights_the_whole_row(app):
     view, model = view_with(5)
     view.resize(500, 200)
     pos = view.visualRect(model.index(2, 3)).center()
-    view.mouseMoveEvent(QMouseEvent(QEvent.MouseMove, QPointF(pos), QPointF(pos), Qt.NoButton, Qt.NoButton,
-                                    Qt.NoModifier))
+    view.mouseMoveEvent(QMouseEvent(QEvent.Type.MouseMove, QPointF(pos), QPointF(pos), Qt.MouseButton.NoButton,
+                                    Qt.MouseButton.NoButton, Qt.KeyboardModifier.NoModifier))
     assert view.hover_row == 2
 
     def hovered(row, column):
         option = QStyleOptionViewItem()
-        option.state = QStyle.State_Enabled
+        option.state = QStyle.StateFlag.State_Enabled
         if (row, column) == (2, 3):  # what the view itself marks
-            option.state |= QStyle.State_MouseOver
+            option.state |= QStyle.StateFlag.State_MouseOver
         view.itemDelegate().initStyleOption(option, model.index(row, column))
-        return bool(option.state & QStyle.State_MouseOver)
+        return bool(option.state & QStyle.StateFlag.State_MouseOver)
     assert all(hovered(2, c) for c in range(model.columnCount()))
     assert not any(hovered(1, c) for c in range(model.columnCount()))
 
-    view.viewportEvent(QEvent(QEvent.Leave))
+    view.viewportEvent(QEvent(QEvent.Type.Leave))
     assert view.hover_row == -1
 
 
@@ -127,7 +127,7 @@ def test_the_repository_column_names_where_an_installed_package_came_from(app):
     ], "x86_64")
     cells = {model.data(model.index(i, 2)): model.index(i, COL_REPO) for i in range(3)}
     assert cells["kram"].data() == "elmodos/Kram → updates"
-    assert cells["kram"].data(Qt.ToolTipRole) == ("Installed from elmodos/Kram; the latest version comes from "
-                                                  "updates")
+    assert cells["kram"].data(Qt.ItemDataRole.ToolTipRole) == ("Installed from elmodos/Kram; the latest version "
+                                                               "comes from updates")
     assert [cells[n].data() for n in ("bash", "fish")] == ["fedora", "fedora"]
-    assert cells["bash"].data(Qt.ToolTipRole) is None
+    assert cells["bash"].data(Qt.ItemDataRole.ToolTipRole) is None

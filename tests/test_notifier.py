@@ -208,7 +208,7 @@ def test_notifier_dialog_rereads_on_activation(monkeypatch, autostart):
     assert row.toggle.text() == "Turn Back On"
     row.notifier.override().unlink()  # deleted by hand
     enabled[0] = True                 # turned on in a terminal
-    QApplication.sendEvent(dialog, QEvent(QEvent.WindowActivate))
+    QApplication.sendEvent(dialog, QEvent(QEvent.Type.WindowActivate))
     assert row.toggle.text() == "Turn Off"
     assert dialog.enabled.isChecked() and dialog.stale_row.isEnabled()
 

@@ -191,7 +191,7 @@ class FiltersDialog(QDialog):
         split.setSizes([260, 720])
         lay.addWidget(split, 1)
 
-        box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        box = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
         box.accepted.connect(self._accept)
         box.rejected.connect(self.reject)
         lay.addWidget(box)

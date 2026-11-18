@@ -78,8 +78,8 @@ def _fit_columns(tree: QTreeWidget, flexible: int = 0) -> None:
     the others fit their contents."""
     header = tree.header()
     header.setStretchLastSection(False)
-    header.setSectionResizeMode(QHeaderView.ResizeToContents)
-    header.setSectionResizeMode(flexible, QHeaderView.Stretch)
+    header.setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
+    header.setSectionResizeMode(flexible, QHeaderView.ResizeMode.Stretch)
 
 
 class ChangesTree(QTreeWidget):
@@ -91,7 +91,7 @@ class ChangesTree(QTreeWidget):
         self.setHeaderLabels([_("Package"), _("Version"), _("Repository"), _("Size")])
         # the name is what the user reads; a long version ("1:9.18.51^git20261003.d0a87358-2 → …") gives way instead
         _fit_columns(self, flexible=1)
-        self.setTextElideMode(Qt.ElideMiddle)  # keeps both ends of "old → new"
+        self.setTextElideMode(Qt.TextElideMode.ElideMiddle)  # keeps both ends of "old → new"
 
     def set_basearch(self, basearch: str) -> None:
         self._basearch = basearch
@@ -186,12 +186,12 @@ class RecommendationsList(QWidget):
         parent = None
         if nested:
             parent = QTreeWidgetItem([_("Recommended by dependencies ({n})").format(n=len(nested))])
-            parent.setFlags(Qt.ItemIsEnabled)
+            parent.setFlags(Qt.ItemFlag.ItemIsEnabled)
         for rec in preview.recommendations:
             item = QTreeWidgetItem([_rec_label(rec), ", ".join(rec.by) or "—", self._adds(rec)])
-            item.setData(0, Qt.UserRole, rec)
-            item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsUserCheckable)
-            item.setCheckState(0, Qt.Checked if rec.checked else Qt.Unchecked)
+            item.setData(0, Qt.ItemDataRole.UserRole, rec)
+            item.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsUserCheckable)
+            item.setCheckState(0, Qt.CheckState.Checked if rec.checked else Qt.CheckState.Unchecked)
             tip = rec.what if rec.by else _("Pulled in because it complements packages being installed "
                                             "(language support, plugins).")
             item.setToolTip(0, tip)
@@ -217,10 +217,10 @@ class RecommendationsList(QWidget):
         return f"+{human_size(size)}"
 
     def _on_changed(self, item: QTreeWidgetItem, column: int) -> None:
-        rec = item.data(0, Qt.UserRole)
+        rec = item.data(0, Qt.ItemDataRole.UserRole)
         if rec is None or column != 0:
             return
-        if item.checkState(0) == Qt.Checked:
+        if item.checkState(0) == Qt.CheckState.Checked:
             self.exclude -= set(rec.excludes)
         else:
             self.exclude |= set(rec.excludes)
@@ -248,8 +248,8 @@ class ApplyDialog(QDialog):
         lay.addWidget(self.skipped_label)
         self.skipped_text = QPlainTextEdit()
         self.skipped_text.setReadOnly(True)
-        self.skipped_text.setFont(QFontDatabase.systemFont(QFontDatabase.FixedFont))
-        self.skipped_text.setLineWrapMode(QPlainTextEdit.NoWrap)
+        self.skipped_text.setFont(QFontDatabase.systemFont(QFontDatabase.SystemFont.FixedFont))
+        self.skipped_text.setLineWrapMode(QPlainTextEdit.LineWrapMode.NoWrap)
         self.skipped_text.setFixedHeight(110)
         lay.addWidget(self.skipped_text)
 
@@ -258,7 +258,7 @@ class ApplyDialog(QDialog):
         self.recs_box.toggled.connect(self._rec_toggled)
         self.recs = self.recs_box.tree
 
-        split = QSplitter(Qt.Vertical)
+        split = QSplitter(Qt.Orientation.Vertical)
         split.addWidget(self.tree)
         split.addWidget(self.recs_box)
         split.setChildrenCollapsible(False)
@@ -274,7 +274,7 @@ class ApplyDialog(QDialog):
 
         self.cmd = QPlainTextEdit()
         self.cmd.setReadOnly(True)
-        self.cmd.setFont(QFontDatabase.systemFont(QFontDatabase.FixedFont))
+        self.cmd.setFont(QFontDatabase.systemFont(QFontDatabase.SystemFont.FixedFont))
         self.cmd.setFixedHeight(80)
         box = QGroupBox(_("Equivalent command"))
         QVBoxLayout(box).addWidget(self.cmd)
@@ -285,10 +285,10 @@ class ApplyDialog(QDialog):
         lay.addWidget(self.download_only)
 
         buttons = QDialogButtonBox()
-        self.ok = buttons.addButton(_("Apply"), QDialogButtonBox.AcceptRole)
+        self.ok = buttons.addButton(_("Apply"), QDialogButtonBox.ButtonRole.AcceptRole)
         self.ok.setIcon(QIcon.fromTheme("dialog-ok-apply"))
         self.ok.setDefault(True)
-        buttons.addButton(QDialogButtonBox.Cancel)
+        buttons.addButton(QDialogButtonBox.StandardButton.Cancel)
         buttons.accepted.connect(self.accept)
         buttons.rejected.connect(self.reject)
         lay.addWidget(buttons)

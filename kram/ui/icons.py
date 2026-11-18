@@ -53,7 +53,7 @@ def _text(p: QPainter, rect: QRectF, pixels: float, ch: str) -> None:
     p.translate(rect.topLeft())
     p.scale(0.1, 0.1)
     p.setFont(_font(pixels))
-    p.drawText(QRectF(0, 0, rect.width() * 10, rect.height() * 10), Qt.AlignCenter, ch)
+    p.drawText(QRectF(0, 0, rect.width() * 10, rect.height() * 10), Qt.AlignmentFlag.AlignCenter, ch)
     p.restore()
 
 
@@ -68,14 +68,15 @@ class _PaintedIconEngine(QIconEngine):
     def _paint_vectors(self, painter: QPainter, rect: QRect) -> None:
         side = min(rect.width(), rect.height())
         painter.save()
-        painter.setRenderHint(QPainter.Antialiasing)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         painter.translate(rect.x() + (rect.width() - side) / 2, rect.y() + (rect.height() - side) / 2)
         painter.scale(side / _GRID, side / _GRID)
         self._draw(painter)
         painter.restore()
 
     def paint(self, painter: QPainter, rect: QRect, mode, state) -> None:
-        if painter.transform().type().value > QTransform.TxTranslate.value:  # scaled or rotated: a cached pixmap would blur
+        # scaled or rotated: a cached pixmap would blur
+        if painter.transform().type().value > QTransform.TransformationType.TxTranslate.value:
             self._paint_vectors(painter, rect)
             return
         side = min(rect.width(), rect.height())
@@ -89,17 +90,17 @@ class _PaintedIconEngine(QIconEngine):
         painter.restore()
 
     def scaledPixmap(self, size: QSize, mode, state, scale: float) -> QPixmap:
-        key = (size.width(), size.height(), scale, mode == QIcon.Disabled)
+        key = (size.width(), size.height(), scale, mode == QIcon.Mode.Disabled)
         if (cached := self._pixmaps.get(key)) is not None:
             return cached
         pm = QPixmap(size * scale)
-        pm.fill(Qt.transparent)
+        pm.fill(Qt.GlobalColor.transparent)
         p = QPainter(pm)
         self._paint_vectors(p, QRect(0, 0, pm.width(), pm.height()))
         p.end()
         pm.setDevicePixelRatio(scale)
-        if mode == QIcon.Disabled:
-            pm = QApplication.style().generatedIconPixmap(QIcon.Disabled, pm, QStyleOption())
+        if mode == QIcon.Mode.Disabled:
+            pm = QApplication.style().generatedIconPixmap(QIcon.Mode.Disabled, pm, QStyleOption())
         self._pixmaps[key] = pm
         return pm
 
@@ -114,8 +115,8 @@ def _painted(draw: Draw) -> QIcon:
     return QIcon(_PaintedIconEngine(draw))
 
 
-def _arrow_up(p, color=Qt.white):
-    p.setPen(QPen(color, 2, Qt.SolidLine, Qt.RoundCap))
+def _arrow_up(p, color=Qt.GlobalColor.white):
+    p.setPen(QPen(color, 2, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
     p.drawLine(QLineF(8, 12, 8, 4.5))
     p.drawLine(QLineF(5, 7.5, 8, 4.5))
     p.drawLine(QLineF(11, 7.5, 8, 4.5))
@@ -127,20 +128,20 @@ def status_icon(status: Status) -> QIcon:
 
     def draw(p: QPainter) -> None:
         if status is Status.NOT_INSTALLED:
-            _box(p, "#888", Qt.white)
+            _box(p, "#888", Qt.GlobalColor.white)
         elif status is Status.UPGRADABLE:
             _box(p, "#8a5a00", "#e0a020")
             _arrow_up(p)
         elif status is Status.UNNEEDED:
             _box(p, dark, "#9bb98f")
-            p.setPen(Qt.NoPen)
-            p.setBrush(Qt.white)
+            p.setPen(Qt.PenStyle.NoPen)
+            p.setBrush(Qt.GlobalColor.white)
             p.drawEllipse(QRectF(6.5, 6.5, 3, 3))
         else:
             _box(p, dark, green)
             glyph = {Status.ORPHAN: "?", Status.NEWER: "↓"}.get(status)
             if glyph:
-                p.setPen(Qt.white)
+                p.setPen(Qt.GlobalColor.white)
                 _text(p, _BOX, 10.5, glyph)
 
     return _painted(draw)
@@ -162,9 +163,9 @@ def origin_icon(origin: Origin) -> QIcon:
 
     def draw(p: QPainter) -> None:
         p.setBrush(QColor(color))
-        p.setPen(Qt.NoPen)
+        p.setPen(Qt.PenStyle.NoPen)
         p.drawEllipse(QRectF(1, 1, 14, 14))
-        p.setPen(Qt.white)
+        p.setPen(Qt.GlobalColor.white)
         _text(p, QRectF(1, 1, 14, 14), 9.5, ch)
 
     return _painted(draw)
@@ -173,7 +174,7 @@ def origin_icon(origin: Origin) -> QIcon:
 def _glyph_box(fill: str, border: str, glyph: Draw) -> QIcon:
     def draw(p: QPainter) -> None:
         _box(p, border, fill)
-        p.setPen(QPen(Qt.white, 2, Qt.SolidLine, Qt.RoundCap))
+        p.setPen(QPen(Qt.GlobalColor.white, 2, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
         glyph(p)
 
     return _painted(draw)
@@ -196,7 +197,7 @@ def mark_icon(action: Action) -> QIcon:
 
     def letter(ch):
         def draw(p):
-            p.setPen(Qt.white)
+            p.setPen(Qt.GlobalColor.white)
             _text(p, _BOX, 10.5, ch)
         return draw
 
@@ -222,14 +223,14 @@ MARK_BACKGROUND = {
 
 
 def _hammer(p: QPainter) -> None:
-    p.setPen(QPen(Qt.white, 1.8, Qt.SolidLine, Qt.RoundCap))
+    p.setPen(QPen(Qt.GlobalColor.white, 1.8, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
     p.drawLine(QLineF(4.5, 11.5, 9.5, 6.5))
-    p.setPen(QPen(Qt.white, 3, Qt.SolidLine, Qt.FlatCap))
+    p.setPen(QPen(Qt.GlobalColor.white, 3, Qt.PenStyle.SolidLine, Qt.PenCapStyle.FlatCap))
     p.drawLine(QLineF(7.6, 4, 12, 8.4))
 
 
 def _check(p: QPainter) -> None:
-    p.setPen(QPen(Qt.white, 2, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
+    p.setPen(QPen(Qt.GlobalColor.white, 2, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin))
     p.drawPolyline([QPointF(4.5, 8.5), QPointF(7, 11), QPointF(11.5, 5)])
 
 
@@ -237,8 +238,8 @@ def _check(p: QPainter) -> None:
 def _all_icon() -> QIcon:
     """The not-installed box with a grey dot the size of the unneeded one."""
     def draw(p: QPainter) -> None:
-        _box(p, "#888", Qt.white)
-        p.setPen(Qt.NoPen)
+        _box(p, "#888", Qt.GlobalColor.white)
+        p.setPen(Qt.PenStyle.NoPen)
         p.setBrush(QColor("#888"))
         p.drawEllipse(QRectF(6.5, 6.5, 3, 3))
 

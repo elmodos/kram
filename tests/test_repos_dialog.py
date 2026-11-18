@@ -9,7 +9,7 @@ pytest.importorskip("PySide6.QtWidgets")
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from PySide6.QtCore import QPoint, Qt, QUrl
-from PySide6.QtWidgets import QApplication, QDialog
+from PySide6.QtWidgets import QApplication, QDialog, QMessageBox
 
 from kram.core.model import Origin, RepoInfo
 from kram.ui import files, repos_dialog
@@ -61,9 +61,10 @@ def test_every_column_can_be_dragged_and_the_table_scrolls_sideways(app):
 
     dlg = shown(app, 1180)
     header = dlg.table.horizontalHeader()
-    assert all(header.sectionResizeMode(c) == QHeaderView.Interactive for c in range(dlg.table.columnCount()))
+    assert all(header.sectionResizeMode(c) == QHeaderView.ResizeMode.Interactive
+               for c in range(dlg.table.columnCount()))
     assert not header.stretchLastSection()
-    assert dlg.table.horizontalScrollMode() == QAbstractItemView.ScrollPerPixel
+    assert dlg.table.horizontalScrollMode() == QAbstractItemView.ScrollMode.ScrollPerPixel
     assert not dlg._user_sized  # the start sizes are not the user's doing
     assert dlg.table.horizontalScrollBar().maximum() == 0  # and they need no scrolling
     header.resizeSection(COL_NAME, 900)  # what a drag does
@@ -193,7 +194,7 @@ def test_the_buttons_follow_the_selected_repository(app, repo_id, can_show, remo
 def test_unapplied_changes_come_first(app):
     dlg = actions_dialog(app)
     row = select(dlg, "code")
-    dlg.table.item(row, repos_dialog.COL_ENABLED).setCheckState(Qt.Unchecked)
+    dlg.table.item(row, repos_dialog.COL_ENABLED).setCheckState(Qt.CheckState.Unchecked)
     assert not dlg.packages_btn.isEnabled() and not dlg.remove_btn.isEnabled()
     assert dlg.remove_btn.toolTip() == "Apply or undo the changes first."
 
@@ -202,11 +203,11 @@ def test_show_packages_closes_with_the_repository(app):
     dlg = actions_dialog(app)
     select(dlg, "code")
     dlg.packages_btn.click()
-    assert dlg.show_repo == "code" and not dlg.remove_repos and dlg.result() == QDialog.Rejected
+    assert dlg.show_repo == "code" and not dlg.remove_repos and dlg.result() == QDialog.DialogCode.Rejected
 
 
 class FakeBox:
-    Question = Cancel = DestructiveRole = ActionRole = 0
+    Icon, ButtonRole, StandardButton = QMessageBox.Icon, QMessageBox.ButtonRole, QMessageBox.StandardButton
     choice = "Remove"
     last = None
 

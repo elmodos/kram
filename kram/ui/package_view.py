@@ -27,9 +27,9 @@ class RowDelegate(QStyledItemDelegate):
     def initStyleOption(self, option: QStyleOptionViewItem, index) -> None:
         super().initStyleOption(option, index)
         if index.row() == self._view.hover_row:
-            option.state |= QStyle.State_MouseOver
+            option.state |= QStyle.StateFlag.State_MouseOver
         else:
-            option.state &= ~QStyle.State_MouseOver
+            option.state &= ~QStyle.StateFlag.State_MouseOver
 
 
 class PackageView(QTableView):
@@ -38,18 +38,18 @@ class PackageView(QTableView):
         self.setShowGrid(False)
         self.setWordWrap(False)
         self.setAlternatingRowColors(True)
-        self.setSelectionBehavior(QAbstractItemView.SelectRows)
-        self.setSelectionMode(QAbstractItemView.ExtendedSelection)
+        self.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+        self.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
         self.setTabKeyNavigation(False)  # Tab leaves the list, as it did
-        self.setHorizontalScrollMode(QAbstractItemView.ScrollPerPixel)
+        self.setHorizontalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
         rows = self.verticalHeader()
         rows.hide()
-        rows.setSectionResizeMode(QHeaderView.Fixed)
+        rows.setSectionResizeMode(QHeaderView.ResizeMode.Fixed)
         rows.setMinimumSectionSize(1)
         # the tree view's header: left-aligned titles, movable columns, the last one taking the spare width, and no
         # bold title for the column of the current cell
         columns = self.horizontalHeader()
-        columns.setDefaultAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+        columns.setDefaultAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
         columns.setSectionsMovable(True)
         columns.setStretchLastSection(True)
         columns.setHighlightSections(False)
@@ -78,7 +78,7 @@ class PackageView(QTableView):
             self._set_hover_row(self.rowAt(pos.y()) if self.viewport().rect().contains(pos) else -1)
 
     def viewportEvent(self, event) -> bool:
-        if event.type() in (QEvent.Leave, QEvent.HoverLeave):
+        if event.type() in (QEvent.Type.Leave, QEvent.Type.HoverLeave):
             self._set_hover_row(-1)
         return super().viewportEvent(event)
 

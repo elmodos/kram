@@ -82,20 +82,20 @@ def test_apply_dialog_unchecks_a_recommendation(app):
     assert dlg.recs.topLevelItemCount() == 2  # the direct one, then "Recommended by dependencies"
     item = dlg.recs.topLevelItem(0)
     assert item.text(0) == "kvm" and item.text(2) == "+8.8 kB, 3 packages"
-    item.setCheckState(0, Qt.Unchecked)
+    item.setCheckState(0, Qt.CheckState.Unchecked)
     assert asked[-1]["exclude_weak"] == ["kvm", "qemu"]
     assert dlg.request["exclude_weak"] == ["kvm", "qemu"]
     item = dlg.recs.topLevelItem(0)
-    assert item.checkState(0) == Qt.Unchecked and item.text(0) == "kvm or qemu"
+    assert item.checkState(0) == Qt.CheckState.Unchecked and item.text(0) == "kvm or qemu"
     assert "exclude_from_weak=kvm,qemu" in dlg.cmd.toPlainText()
-    item.setCheckState(0, Qt.Checked)
+    item.setCheckState(0, Qt.CheckState.Checked)
     assert "exclude_weak" not in asked[-1]
 
     # the equivalent command follows the checkbox, and survives a new resolve
     assert "--downloadonly" not in dlg.cmd.toPlainText()
     dlg.download_only.setChecked(True)
     assert "--downloadonly" in dlg.cmd.toPlainText()
-    dlg.recs.topLevelItem(0).setCheckState(0, Qt.Unchecked)
+    dlg.recs.topLevelItem(0).setCheckState(0, Qt.CheckState.Unchecked)
     assert "--downloadonly" in dlg.cmd.toPlainText()
     assert "download_only" not in asked[-1]  # the preview still resolves the whole transaction
     dlg.download_only.setChecked(False)
@@ -195,7 +195,7 @@ def test_install_dialog(app, monkeypatch):
     assert "bash — installed: bash" in deps and "libgone.so.1 — unavailable" in deps
     assert "helper — will be installed: helper" in deps
 
-    dlg.recs.tree.topLevelItem(0).setCheckState(0, Qt.Unchecked)
+    dlg.recs.tree.topLevelItem(0).setCheckState(0, Qt.CheckState.Unchecked)
     assert calls[-1] == ("resolve", "install", ["helper"])
     assert "helper — not installed" in dlg.deps.toPlainText()  # unchecked: no longer part of the transaction
     assert dlg.cmd.text() == "sudo dnf5 install --setopt=exclude_from_weak=helper /tmp/tool-2.0-1.x86_64.rpm"

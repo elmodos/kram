@@ -15,8 +15,8 @@ def _show_items_over_dbus(uri: str) -> bool:
     Dolphin, Nautilus, Nemo and others answer). False if nothing answered."""
     message = QDBusMessage.createMethodCall(FILE_MANAGER, "/org/freedesktop/FileManager1", FILE_MANAGER, "ShowItems")
     message.setArguments([[uri], ""])
-    reply = QDBusConnection.sessionBus().call(message, QDBus.Block, DBUS_TIMEOUT_MS)
-    return reply.type() == QDBusMessage.ReplyMessage
+    reply = QDBusConnection.sessionBus().call(message, QDBus.CallMode.Block, DBUS_TIMEOUT_MS)
+    return reply.type() == QDBusMessage.MessageType.ReplyMessage
 
 
 def show_in_file_manager(path: str, show_items: Callable[[str], bool] = _show_items_over_dbus,

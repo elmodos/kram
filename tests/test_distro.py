@@ -88,7 +88,7 @@ class FakeReply:
 
     def error(self):
         from PySide6.QtNetwork import QNetworkReply
-        return QNetworkReply.TimeoutError if self.failed else QNetworkReply.NoError
+        return QNetworkReply.NetworkError.TimeoutError if self.failed else QNetworkReply.NetworkError.NoError
 
     def readAll(self):
         return self.body

@@ -19,7 +19,7 @@ class WhatsNewDialog(QDialog):
         self.text = QTextBrowser()
         self.text.setOpenExternalLinks(True)
         lay.addWidget(self.text)
-        buttons = QDialogButtonBox(QDialogButtonBox.Close)
+        buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Close)
         buttons.rejected.connect(self.reject)
         lay.addWidget(buttons)
 

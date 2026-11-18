@@ -41,9 +41,9 @@ SMALL, LARGE = QSize(16, 16), QSize(32, 32)
 
 def _dimmed(label: QLabel) -> QLabel:
     palette = label.palette()
-    color = palette.color(QPalette.WindowText)
+    color = palette.color(QPalette.ColorRole.WindowText)
     color.setAlpha(170)
-    palette.setColor(QPalette.WindowText, color)
+    palette.setColor(QPalette.ColorRole.WindowText, color)
     label.setPalette(palette)
     return label
 
@@ -68,7 +68,7 @@ def _picture(names: tuple[str, ...], size: QSize) -> QLabel:
 def _beside(picture: QLabel, widget: QWidget, top: bool = False) -> QHBoxLayout:
     row = QHBoxLayout()
     row.setSpacing(8)
-    row.addWidget(picture, 0, Qt.AlignTop if top else Qt.AlignVCenter)
+    row.addWidget(picture, 0, Qt.AlignmentFlag.AlignTop if top else Qt.AlignmentFlag.AlignVCenter)
     row.addWidget(widget, 1)
     return row
 
@@ -99,7 +99,7 @@ class _NotifierRow(QWidget):
         outer = QHBoxLayout(self)
         outer.setContentsMargins(0, 0, 0, 0)
         outer.setSpacing(10)
-        outer.addWidget(_picture(notifier.icons + NOTIFIER_FALLBACK_ICONS, LARGE), 0, Qt.AlignTop)
+        outer.addWidget(_picture(notifier.icons + NOTIFIER_FALLBACK_ICONS, LARGE), 0, Qt.AlignmentFlag.AlignTop)
         lay = QVBoxLayout()
         outer.addLayout(lay, 1)
         self.state = _text()
@@ -212,7 +212,7 @@ class NotifierDialog(QDialog):
                 lay.addWidget(notifier_row)
 
         lay.addStretch(1)
-        buttons = QDialogButtonBox(QDialogButtonBox.Close)
+        buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Close)
         buttons.rejected.connect(self.reject)
         lay.addWidget(buttons)
         self.refresh()
@@ -220,7 +220,7 @@ class NotifierDialog(QDialog):
     def event(self, event: QEvent) -> bool:
         # everything here can change outside Kram while the dialog is open: the user deletes the autostart file in
         # the file manager it showed, turns a timer on in a terminal, a tray host or a notifier starts
-        if event.type() == QEvent.WindowActivate:
+        if event.type() == QEvent.Type.WindowActivate:
             self.refresh()
         return super().event(event)
 

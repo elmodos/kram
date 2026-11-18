@@ -15,8 +15,9 @@ def hand_over(view: str) -> bool:
         return False
     message = QDBusMessage.createMethodCall(BUS_NAME, PATH, INTERFACE, METHOD)
     message.setArguments([view, os.environ.pop("XDG_ACTIVATION_TOKEN", "")])
-    reply = bus.call(message, QDBus.Block, CALL_TIMEOUT_MS)
-    return reply.type() == QDBusMessage.ReplyMessage  # no answer (a hung Kram): better a second window than none
+    reply = bus.call(message, QDBus.CallMode.Block, CALL_TIMEOUT_MS)
+    # no answer (a hung Kram): better a second window than none
+    return reply.type() == QDBusMessage.MessageType.ReplyMessage
 
 
 @ClassInfo({"D-Bus Interface": INTERFACE})
@@ -39,5 +40,5 @@ def serve(activate: Callable[[str], None]) -> Service | None:
     if not bus.isConnected():
         return None
     service = Service(activate)
-    bus.registerObject(PATH, service, QDBusConnection.ExportAllSlots)
+    bus.registerObject(PATH, service, QDBusConnection.RegisterOption.ExportAllSlots)
     return service

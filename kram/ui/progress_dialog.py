@@ -86,7 +86,7 @@ class ProgressDialog(QDialog):
 
         self.log = QPlainTextEdit()
         self.log.setReadOnly(True)
-        self.log.setFont(QFontDatabase.systemFont(QFontDatabase.FixedFont))
+        self.log.setFont(QFontDatabase.systemFont(QFontDatabase.SystemFont.FixedFont))
         box = QGroupBox(_("Details"))
         QVBoxLayout(box).addWidget(self.log)
         lay.addWidget(box, 1)
@@ -94,7 +94,7 @@ class ProgressDialog(QDialog):
         self.auto_close = QCheckBox(_("Close when finished successfully"))
         self.auto_close.setChecked(QSettings().value("progress/auto_close", False, type=bool))
         lay.addWidget(self.auto_close)
-        self.buttons = QDialogButtonBox(QDialogButtonBox.Close)
+        self.buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Close)
         self.buttons.rejected.connect(self.reject)
         self.buttons.setEnabled(False)
         lay.addWidget(self.buttons)
@@ -216,7 +216,7 @@ class ProgressDialog(QDialog):
         text = _("Import the OpenPGP key used to verify packages?\n\n"
                  "User: {user}\nFingerprint: {fingerprint}\nCreated: {created}\nFrom: {url}").format(
             user=", ".join(ev.get("user_ids", [])), fingerprint=ev.get("fingerprint"), created=when, url=ev.get("url"))
-        yes = QMessageBox.question(self, _("Import key"), text) == QMessageBox.Yes
+        yes = QMessageBox.question(self, _("Import key"), text) == QMessageBox.StandardButton.Yes
         self._append((_("Key {key_id}: importing") if yes else _("Key {key_id}: rejected")).format(key_id=ev.get("key_id")))
         self.client.answer(ev["id"], yes)
 
@@ -256,7 +256,7 @@ class ProgressDialog(QDialog):
         self.download_bar.setValue(0)
         first = html.escape((message.splitlines() or [_("unknown error")])[0])
         self.stage.setText(f"<span style='color:#c03030'><b>{_('Error:')}</b> {first}</span>")
-        self.stage.setTextFormat(Qt.RichText)
+        self.stage.setTextFormat(Qt.TextFormat.RichText)
         self._append(_("ERROR: {message}").format(message=message))
         for d in details:
             self._append("  " + d)

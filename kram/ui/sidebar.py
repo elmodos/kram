@@ -49,7 +49,7 @@ class Sidebar(QWidget):
         lay.setContentsMargins(0, 0, 0, 0)
         self.list = QListWidget()
         self.list.currentRowChanged.connect(self._on_row)
-        self.list.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.list.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.list.customContextMenuRequested.connect(
             lambda pos: self.contextMenuRequested.emit(self.list.viewport().mapToGlobal(pos), self._entry_at(pos)))
         self.list.itemDoubleClicked.connect(
@@ -161,7 +161,7 @@ class Sidebar(QWidget):
         if not self._entries:
             placeholder = QListWidgetItem(_("Search history is empty") if self._view == "search" else
                                           _("No custom filters yet.\nRight-click to create one."))
-            placeholder.setFlags(Qt.NoItemFlags)
+            placeholder.setFlags(Qt.ItemFlag.NoItemFlags)
             self.list.addItem(placeholder)
         self.list.setCurrentRow(current)
         self.list.blockSignals(False)

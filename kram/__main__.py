@@ -24,7 +24,8 @@ def main() -> int:
     app.setWindowIcon(QIcon.fromTheme(APP_ID, QIcon(str(source_icon))))
     # Qt's own strings (standard buttons like Yes/No/Close/Cancel) in the same language as ours
     qt_translator = QTranslator(app)
-    if (lang := language()) and qt_translator.load(f"qtbase_{lang}", QLibraryInfo.path(QLibraryInfo.TranslationsPath)):
+    translations = QLibraryInfo.path(QLibraryInfo.LibraryPath.TranslationsPath)
+    if (lang := language()) and qt_translator.load(f"qtbase_{lang}", translations):
         app.installTranslator(qt_translator)
     # `kram file.rpm` (file managers: "Open with Kram"): only the installer, no main window
     files = [a for a in app.arguments()[1:] if not a.startswith("-")]

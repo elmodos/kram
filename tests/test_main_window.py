@@ -163,7 +163,7 @@ def test_only_reload_asks_and_only_when_watching(fedora, monkeypatch):
 
     def get(request):
         asked.append(request.url().host())
-        agents.append((request.header(QNetworkRequest.UserAgentHeader),
+        agents.append((request.header(QNetworkRequest.KnownHeaders.UserAgentHeader),
                        bytes(request.rawHeader("Accept"))))
         return BodhiReplySignal()
     monkeypatch.setattr(fedora._net, "get", get)
@@ -410,18 +410,19 @@ def test_upgrades_that_cannot_be_installed_are_dimmed_and_not_marked_by_mark_all
     window.snapshot = CatalogSnapshot(rows, 2, 2, 0.0)
     window.model.set_rows(rows, "x86_64")
     ffmpeg, gjs = (window.model.index(i, COL_CANDIDATE) for i in range(2))
-    assert ffmpeg.data(Qt.FontRole).bold() and ffmpeg.data(Qt.ForegroundRole) is None
+    assert ffmpeg.data(Qt.ItemDataRole.FontRole).bold() and ffmpeg.data(Qt.ItemDataRole.ForegroundRole) is None
 
     why = ("Problem: package ffmpeg-9.0.2-4.fc45.x86_64 from rpmfusion-free-updates requires ffmpeg-libs(x86-64) = "
            "9.0.2-4.fc45, but none of the providers can be installed\n"
            "  - cannot install the best update candidate for package ffmpeg-9.0.2-3.fc45.x86_64\n"
            "  - nothing provides liboapv.so.11()(64bit) needed by ffmpeg-libs-9.0.2-4.fc45.x86_64 from rpmfusion-free-updates")
     window.model.set_blocked({rows[0].key: why})
-    assert ffmpeg.data(Qt.FontRole) is None and ffmpeg.data(Qt.ForegroundRole) is not None
-    assert ffmpeg.data(Qt.ToolTipRole) == ("The upgrade cannot be installed now\n"
-                                           "nothing provides liboapv.so.11()(64bit) needed by ffmpeg-libs-9.0.2-4.fc45.x86_64")
-    assert "cannot be installed now" in window.model.index(0, COL_STATUS).data(Qt.ToolTipRole)
-    assert gjs.data(Qt.FontRole).bold() and gjs.data(Qt.ToolTipRole) is None
+    assert ffmpeg.data(Qt.ItemDataRole.FontRole) is None and ffmpeg.data(Qt.ItemDataRole.ForegroundRole) is not None
+    assert ffmpeg.data(Qt.ItemDataRole.ToolTipRole) == (
+        "The upgrade cannot be installed now\n"
+        "nothing provides liboapv.so.11()(64bit) needed by ffmpeg-libs-9.0.2-4.fc45.x86_64")
+    assert "cannot be installed now" in window.model.index(0, COL_STATUS).data(Qt.ItemDataRole.ToolTipRole)
+    assert gjs.data(Qt.ItemDataRole.FontRole).bold() and gjs.data(Qt.ItemDataRole.ToolTipRole) is None
 
     window.mark_all_upgrades()
     marks = window.model.marks

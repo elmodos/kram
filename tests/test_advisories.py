@@ -133,9 +133,9 @@ def test_sort_by_update_type(model):
     from PySide6.QtCore import Qt
 
     from kram.ui.package_model import COL_ADVISORY
-    model.sort(COL_ADVISORY, Qt.AscendingOrder)
+    model.sort(COL_ADVISORY, Qt.SortOrder.AscendingOrder)
     assert shown(model) == ["firefox", "openssl", "assimp", "kernel", "plasma", "ibus", "bash", "chrome"]
-    model.sort(COL_ADVISORY, Qt.DescendingOrder)  # the rows without advisories stay at the end
+    model.sort(COL_ADVISORY, Qt.SortOrder.DescendingOrder)  # the rows without advisories stay at the end
     assert shown(model)[:6] == ["ibus", "plasma", "kernel", "assimp", "openssl", "firefox"]
     assert set(shown(model)[6:]) == {"bash", "chrome"}
 
@@ -147,11 +147,11 @@ def test_column_and_tooltip(model):
     model.set_visible(list(range(len(ROWS))), ranked=True)
     assert model.data(model.index(0, COL_ADVISORY)) == "Security: critical"
     assert model.data(model.index(6, COL_ADVISORY)) == ""
-    assert model.data(model.index(1, COL_CANDIDATE), Qt.ToolTipRole) == (
+    assert model.data(model.index(1, COL_CANDIDATE), Qt.ItemDataRole.ToolTipRole) == (
         "Security: moderate — FEDORA-2026-2 — FEDORA-2026-2 title\nBug fix — FEDORA-2026-4 — FEDORA-2026-4 title")
-    assert model.data(model.index(6, COL_CANDIDATE), Qt.ToolTipRole) is None
+    assert model.data(model.index(6, COL_CANDIDATE), Qt.ItemDataRole.ToolTipRole) is None
     # every row has an icon next to its version (a blank one without an advisory), so that the versions line up
-    assert not model.data(model.index(6, COL_CANDIDATE), Qt.DecorationRole).isNull()
+    assert not model.data(model.index(6, COL_CANDIDATE), Qt.ItemDataRole.DecorationRole).isNull()
 
 
 def test_details_tab_comes_and_goes(model):

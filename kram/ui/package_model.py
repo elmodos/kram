@@ -110,7 +110,7 @@ class PackageTableModel(QAbstractTableModel):
         self.rows: list[PkgRow] = []
         self.visible: list[int] = []
         self.basearch = "x86_64"
-        self._sort: tuple[int, Qt.SortOrder] | None = (COL_NAME, Qt.AscendingOrder)
+        self._sort: tuple[int, Qt.SortOrder] | None = (COL_NAME, Qt.SortOrder.AscendingOrder)
         self._evr_rank: dict[str, int] | None = None
         self.marks = MarkSet()
         # upgradable packages whose upgrade cannot be installed now -> the resolver's reason; see
@@ -168,7 +168,7 @@ class PackageTableModel(QAbstractTableModel):
 
     # --- sorting: done on our index list, so no QSortFilterProxyModel overhead on 70k rows
 
-    def sort(self, column: int, order=Qt.AscendingOrder) -> None:
+    def sort(self, column: int, order=Qt.SortOrder.AscendingOrder) -> None:
         if column < 0:  # sort indicator cleared: keep the current (ranked) order
             self._sort = None
             return
@@ -194,16 +194,16 @@ class PackageTableModel(QAbstractTableModel):
             def key(r):
                 evr = getattr(r, attr)
                 # empty versions go last in both directions
-                return (evr == "") != (order == Qt.DescendingOrder), ranks.get(evr, -1), r.name.lower()
+                return (evr == "") != (order == Qt.SortOrder.DescendingOrder), ranks.get(evr, -1), r.name.lower()
         elif column == COL_ADVISORY:
             def key(r):
                 a = r.advisory
                 # the most important first when ascending; packages without an advisory last in both directions
                 rank = a.rank if a else _NO_ADVISORY
-                return (a is None) != (order == Qt.DescendingOrder), rank, r.name.lower()
+                return (a is None) != (order == Qt.SortOrder.DescendingOrder), rank, r.name.lower()
         else:
             key = SORT_KEYS[column]
-        return sorted(visible, key=lambda i: key(rows[i]), reverse=order == Qt.DescendingOrder)
+        return sorted(visible, key=lambda i: key(rows[i]), reverse=order == Qt.SortOrder.DescendingOrder)
 
     # --- Qt model API
 
@@ -213,17 +213,18 @@ class PackageTableModel(QAbstractTableModel):
     def columnCount(self, parent=None):
         return 0 if parent is not None and parent.isValid() else len(HEADERS)
 
-    def headerData(self, section, orientation, role=Qt.DisplayRole):
-        if orientation == Qt.Horizontal and role == Qt.DisplayRole:
+    def headerData(self, section, orientation, role=Qt.ItemDataRole.DisplayRole):
+        if orientation == Qt.Orientation.Horizontal and role == Qt.ItemDataRole.DisplayRole:
             return HEADERS[section]
-        if orientation == Qt.Horizontal and role == Qt.ToolTipRole and section in (COL_STATUS, COL_ORIGIN):
+        if (orientation == Qt.Orientation.Horizontal and role == Qt.ItemDataRole.ToolTipRole
+                and section in (COL_STATUS, COL_ORIGIN)):
             return _("Status") if section == COL_STATUS else _("Origin")
         return None
 
-    def data(self, index, role=Qt.DisplayRole):
+    def data(self, index, role=Qt.ItemDataRole.DisplayRole):
         r = self.rows[self.visible[index.row()]]
         col = index.column()
-        if role == Qt.DisplayRole:
+        if role == Qt.ItemDataRole.DisplayRole:
             match col:
                 case 2: return r.name if r.arch in ("noarch", self.basearch) else f"{r.name}.{r.arch}"
                 case 3: return r.installed_evr
@@ -233,7 +234,7 @@ class PackageTableModel(QAbstractTableModel):
                 case 7: return human_size(r.size)
                 case 8: return r.summary
                 case 9: return ADVISORY_LABEL[r.advisory.level] if r.advisories else ""
-        elif role == Qt.DecorationRole:
+        elif role == Qt.ItemDataRole.DecorationRole:
             if col == COL_STATUS:
                 mark = self.marks.get(r.key)
                 return mark_icon(mark.action) if mark else status_icon(r.status)
@@ -241,7 +242,7 @@ class PackageTableModel(QAbstractTableModel):
                 return origin_icon(r.origin)
             if col == COL_CANDIDATE:  # a blank one without an advisory, so that the versions line up
                 return advisory_icon(r.advisory.level if r.advisories else None)
-        elif role == Qt.ToolTipRole:
+        elif role == Qt.ItemDataRole.ToolTipRole:
             if col in (COL_CANDIDATE, COL_ADVISORY):
                 if r.key in self.blocked:
                     return "\n\n".join(filter(None, (blocked_tip(self.blocked[r.key]), advisory_tip(r))))
@@ -262,16 +263,16 @@ class PackageTableModel(QAbstractTableModel):
                     target = f" {mark.evr}" if mark.evr else ""
                     label += "\n" + _("Marked: {action}").format(action=ACTION_LABELS[mark.action] + target)
                 return label + "\n\n" + _("Click for actions")
-        elif role == Qt.BackgroundRole:
+        elif role == Qt.ItemDataRole.BackgroundRole:
             mark = self.marks.get(r.key)
             if mark:
                 return QColor(*MARK_BACKGROUND[mark.action])
-        elif role == Qt.TextAlignmentRole and col == COL_SIZE:
-            return int(Qt.AlignRight | Qt.AlignVCenter)
-        elif role == Qt.FontRole and col == COL_CANDIDATE and r.status is Status.UPGRADABLE:
+        elif role == Qt.ItemDataRole.TextAlignmentRole and col == COL_SIZE:
+            return int(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+        elif role == Qt.ItemDataRole.FontRole and col == COL_CANDIDATE and r.status is Status.UPGRADABLE:
             return None if r.key in self.blocked else _bold()
-        elif role == Qt.ForegroundRole and col == COL_CANDIDATE and r.key in self.blocked:
-            return QGuiApplication.palette().color(QPalette.Disabled, QPalette.Text)
+        elif role == Qt.ItemDataRole.ForegroundRole and col == COL_CANDIDATE and r.key in self.blocked:
+            return QGuiApplication.palette().color(QPalette.ColorGroup.Disabled, QPalette.ColorRole.Text)
         return None
 
 

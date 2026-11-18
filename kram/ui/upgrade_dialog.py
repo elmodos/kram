@@ -50,7 +50,7 @@ def api_request(url: QUrl, timeout_ms: int) -> QNetworkRequest:
     browsers with an HTML bot check instead of JSON."""
     request = QNetworkRequest(url)
     request.setTransferTimeout(timeout_ms)
-    request.setHeader(QNetworkRequest.UserAgentHeader, f"Kram/{__version__}")
+    request.setHeader(QNetworkRequest.KnownHeaders.UserAgentHeader, f"Kram/{__version__}")
     request.setRawHeader(b"Accept", b"application/json")
     return request
 
@@ -111,14 +111,14 @@ class UpgradeDialog(QDialog):
 
         self.tree = QTreeWidget()
         self.tree.setHeaderHidden(True)
-        self.tree.setSelectionMode(QAbstractItemView.NoSelection)
+        self.tree.setSelectionMode(QAbstractItemView.SelectionMode.NoSelection)
         self.copr_item = QTreeWidgetItem(self.tree, [_("COPR projects: checking…")])
         self.copr_item.setIcon(0, _state_icon(INFO))
         lay.addWidget(self.tree, 1)
 
         self.log = QPlainTextEdit()
         self.log.setReadOnly(True)
-        self.log.setFont(QFontDatabase.systemFont(QFontDatabase.FixedFont))
+        self.log.setFont(QFontDatabase.systemFont(QFontDatabase.SystemFont.FixedFont))
         self.log.setFixedHeight(LOG_HEIGHT)
         self.log.hide()  # nothing to show before the first check
         lay.addWidget(self.log)
@@ -129,8 +129,8 @@ class UpgradeDialog(QDialog):
         self.busy.hide()
         lay.addWidget(self.busy)
 
-        buttons = QDialogButtonBox(QDialogButtonBox.Close)
-        self.close_button = buttons.button(QDialogButtonBox.Close)
+        buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Close)
+        self.close_button = buttons.button(QDialogButtonBox.StandardButton.Close)
         buttons.rejected.connect(self.reject)  # no effect during a check, see done()
         bottom = QHBoxLayout()
         self.notes_button = self._link_button("documentinfo", _("Release notes"),
@@ -196,7 +196,7 @@ class UpgradeDialog(QDialog):
         reply.deleteLater()
         self._waiting -= 1
         try:
-            if reply.error() != QNetworkReply.NoError:
+            if reply.error() != QNetworkReply.NetworkError.NoError:
                 raise ValueError(reply.errorString())
             if chroot not in copr.parse_chroots(json.loads(bytes(reply.readAll()))):
                 self._copr_missing.append(label)

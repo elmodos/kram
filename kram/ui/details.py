@@ -61,7 +61,7 @@ class DetailsTabs(QTabWidget):
         self.general.anchorClicked.connect(self._on_link)
         self.files = QPlainTextEdit()
         self.files.setReadOnly(True)
-        self.files.setFont(QFontDatabase.systemFont(QFontDatabase.FixedFont))
+        self.files.setFont(QFontDatabase.systemFont(QFontDatabase.SystemFont.FixedFont))
         self.versions = QTreeWidget()
         self.versions.setHeaderLabels([_("Version"), _("Repository"), _("State")])
         self.versions.setRootIsDecorated(False)

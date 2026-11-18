@@ -47,9 +47,9 @@ CACHES = (
 
 def _dimmed(label: QLabel) -> QLabel:
     palette = label.palette()
-    color = palette.color(QPalette.WindowText)
+    color = palette.color(QPalette.ColorRole.WindowText)
     color.setAlpha(170)
-    palette.setColor(QPalette.WindowText, color)
+    palette.setColor(QPalette.ColorRole.WindowText, color)
     label.setPalette(palette)
     return label
 
@@ -64,7 +64,7 @@ class _RowsArea(QScrollArea):
     def __init__(self):
         super().__init__()
         self.setWidgetResizable(True)
-        self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
 
     def sizeHint(self) -> QSize:  # every row in full when the dialog opens; the default is a fixed guess
         height = self.widget().layout().totalHeightForWidth(PREFERRED_WIDTH)
@@ -102,7 +102,7 @@ class CacheDialog(QDialog):
         lay = QVBoxLayout(self)
         content = QWidget()
         content.setAutoFillBackground(True)
-        content.setBackgroundRole(QPalette.Base)
+        content.setBackgroundRole(QPalette.ColorRole.Base)
         column = QVBoxLayout(content)
         column.setContentsMargins(0, 0, 0, 0)
         column.setSpacing(0)
@@ -130,7 +130,7 @@ class CacheDialog(QDialog):
         self.note.setWordWrap(True)
         self.note.hide()
         lay.addWidget(self.note)
-        buttons = QDialogButtonBox(QDialogButtonBox.Close)
+        buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Close)
         buttons.rejected.connect(self.reject)
         lay.addWidget(buttons)
         self._show_separators()
@@ -139,8 +139,8 @@ class CacheDialog(QDialog):
 
     def _build_row(self, icons: tuple[str, ...], title: str, description: str, button: str) -> _Row:
         separator = QFrame()
-        separator.setFrameShape(QFrame.HLine)
-        separator.setFrameShadow(QFrame.Plain)
+        separator.setFrameShape(QFrame.Shape.HLine)
+        separator.setFrameShadow(QFrame.Shadow.Plain)
         separator.setStyleSheet("color: palette(midlight);")
 
         frame = QWidget()
@@ -150,7 +150,7 @@ class CacheDialog(QDialog):
         picture = QLabel()
         picture.setPixmap(_themed_icon(icons).pixmap(ICON_SIZE, self.devicePixelRatioF()))
         picture.setFixedSize(ICON_SIZE)
-        lay.addWidget(picture, 0, Qt.AlignVCenter)
+        lay.addWidget(picture, 0, Qt.AlignmentFlag.AlignVCenter)
 
         text = QVBoxLayout()
         text.setSpacing(2)
@@ -162,7 +162,8 @@ class CacheDialog(QDialog):
         text.addWidget(details)
         path = QLabel()
         path.setWordWrap(True)
-        path.setTextInteractionFlags(Qt.TextBrowserInteraction)  # a link that can also be selected and copied
+        # a link that can also be selected and copied
+        path.setTextInteractionFlags(Qt.TextInteractionFlag.TextBrowserInteraction)
         path.setOpenExternalLinks(True)
         path.setToolTip(_("Open in the file manager"))
         text.addWidget(path)
@@ -172,12 +173,12 @@ class CacheDialog(QDialog):
         numbers.setSpacing(2)
         size, files = QLabel(), _dimmed(QLabel())
         for label in (size, files):
-            label.setAlignment(Qt.AlignRight)
+            label.setAlignment(Qt.AlignmentFlag.AlignRight)
             numbers.addWidget(label)
         lay.addLayout(numbers)
 
         push = QPushButton(button)
-        lay.addWidget(push, 0, Qt.AlignVCenter)
+        lay.addWidget(push, 0, Qt.AlignmentFlag.AlignVCenter)
         return _Row(frame, separator, path, size, files, push)
 
     def _show_separators(self) -> None:
@@ -231,7 +232,7 @@ class CacheDialog(QDialog):
                 self, _("Download metadata again"),
                 _("Delete the repository metadata and download it again?\n\nThis needs the internet and can take a few "
                   "minutes. If the download fails, the available packages disappear from Kram until a Reload "
-                  "succeeds.")) != QMessageBox.Yes:
+                  "succeeds.")) != QMessageBox.StandardButton.Yes:
             return
         self._clean_system(target)
         self.refresh()
@@ -248,8 +249,8 @@ class CacheDialog(QDialog):
         outer.setContentsMargins(0, 18, 0, 0)
         outer.setSpacing(0)
         line = QFrame()
-        line.setFrameShape(QFrame.HLine)
-        line.setFrameShadow(QFrame.Plain)
+        line.setFrameShape(QFrame.Shape.HLine)
+        line.setFrameShadow(QFrame.Shadow.Plain)
         line.setStyleSheet("color: palette(mid);")
         outer.addWidget(line)
         frame = QWidget()
@@ -260,7 +261,7 @@ class CacheDialog(QDialog):
         picture.setPixmap(_themed_icon(("document-properties", "preferences-other")).pixmap(
             ICON_SIZE, self.devicePixelRatioF()))
         picture.setFixedSize(ICON_SIZE)
-        lay.addWidget(picture, 0, Qt.AlignTop)
+        lay.addWidget(picture, 0, Qt.AlignmentFlag.AlignTop)
         text = QVBoxLayout()
         text.setSpacing(2)
         heading = QLabel(f"<b>{_('Leftover configuration files')}</b>")
@@ -335,11 +336,11 @@ class CacheDialog(QDialog):
         picture = QLabel()
         picture.setPixmap(_themed_icon(icons).pixmap(ICON_SIZE, self.devicePixelRatioF()))
         picture.setFixedSize(ICON_SIZE)
-        lay.addWidget(picture, 0, Qt.AlignVCenter)
+        lay.addWidget(picture, 0, Qt.AlignmentFlag.AlignVCenter)
         text = QVBoxLayout()
         text.setSpacing(2)
         path = QLabel(f"<a href='#'>{html.escape(leftover.path)}</a>")
-        path.setTextInteractionFlags(Qt.TextBrowserInteraction)
+        path.setTextInteractionFlags(Qt.TextInteractionFlag.TextBrowserInteraction)
         path.setToolTip(_("Show in File Manager"))
         path.linkActivated.connect(lambda _link, p=leftover.path: show_in_file_manager(p))
         text.addWidget(path)
@@ -348,7 +349,7 @@ class CacheDialog(QDialog):
         text.addWidget(details)
         lay.addLayout(text, 1)
         when = _dimmed(QLabel(time.strftime("%x", time.localtime(leftover.mtime)) + "\n" + human_size(leftover.size)))
-        when.setAlignment(Qt.AlignRight)
+        when.setAlignment(Qt.AlignmentFlag.AlignRight)
         lay.addWidget(when)
         compare = QPushButton(_("Compare"))
         if leftover.kind is Kind.ORPHAN:
@@ -363,7 +364,7 @@ class CacheDialog(QDialog):
         delete.setEnabled(self._helper is not None)
         delete.clicked.connect(lambda: self._delete([leftover]))
         for b in (compare, delete):
-            lay.addWidget(b, 0, Qt.AlignVCenter)
+            lay.addWidget(b, 0, Qt.AlignmentFlag.AlignVCenter)
         frame.setObjectName(leftover.path)  # found again by tests
         return frame
 
@@ -385,15 +386,15 @@ class CacheDialog(QDialog):
             question = _("Delete {path}?").format(path=files[0].path)
         else:
             question = ngettext("Delete {n} file?", "Delete {n} files?", len(files)).format(n=len(files))
-        box = QMessageBox(QMessageBox.Question, _("Delete leftover files"), question, parent=self)
+        box = QMessageBox(QMessageBox.Icon.Question, _("Delete leftover files"), question, parent=self)
         lines = ["\n".join(f.path for f in files)] if len(files) > 1 else []
         if any(f.kind is Kind.NEW for f in files):
             lines.append(_("The new default settings in it are lost: compare first to take over what you need."))
         elif any(f.kind is Kind.SAVED for f in files):
             lines.append(_("Your changes in it are lost, unless the current file has them too."))
         box.setInformativeText("\n\n".join(lines))
-        delete = box.addButton(_("Delete"), QMessageBox.DestructiveRole)
-        box.addButton(QMessageBox.Cancel)
+        delete = box.addButton(_("Delete"), QMessageBox.ButtonRole.DestructiveRole)
+        box.addButton(QMessageBox.StandardButton.Cancel)
         box.exec()
         if box.clickedButton() is not delete:
             return
@@ -415,7 +416,7 @@ class CacheDialog(QDialog):
 class _DiffHighlighter(QSyntaxHighlighter):
     def __init__(self, document, palette: QPalette):
         super().__init__(document)
-        dark = palette.color(QPalette.Base).lightness() < 128
+        dark = palette.color(QPalette.ColorRole.Base).lightness() < 128
         self._formats = {}
         for prefix, light_color, dark_color in (("+", "#1b7a1b", "#7fd67f"), ("-", "#b02020", "#ff8a8a"),
                                                 ("@", "#5a5aa0", "#a0a0ff")):
@@ -442,10 +443,10 @@ class _DiffDialog(QDialog):
         lay.addWidget(intro)
         self.view = QPlainTextEdit(text)
         self.view.setReadOnly(True)
-        self.view.setLineWrapMode(QPlainTextEdit.NoWrap)
-        self.view.setFont(QFontDatabase.systemFont(QFontDatabase.FixedFont))
+        self.view.setLineWrapMode(QPlainTextEdit.LineWrapMode.NoWrap)
+        self.view.setFont(QFontDatabase.systemFont(QFontDatabase.SystemFont.FixedFont))
         self._highlighter = _DiffHighlighter(self.view.document(), self.view.palette())
         lay.addWidget(self.view, 1)
-        buttons = QDialogButtonBox(QDialogButtonBox.Close)
+        buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Close)
         buttons.rejected.connect(self.reject)
         lay.addWidget(buttons)

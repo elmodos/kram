@@ -15,7 +15,7 @@ class _Poster(QObject):
         app = QCoreApplication.instance()
         if app is not None:
             self.moveToThread(app.thread())
-        self._call.connect(self._run, Qt.QueuedConnection)
+        self._call.connect(self._run, Qt.ConnectionType.QueuedConnection)
 
     def _run(self, fn: Callable[[], None]) -> None:
         fn()

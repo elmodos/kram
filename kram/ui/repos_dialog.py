@@ -73,20 +73,20 @@ class ReposDialog(QDialog):
         t.setHorizontalHeaderLabels([_("Enabled"), _("ID"), _("Name"), _("Packages"), _("Priority"), _("Origin"),
                                      _("File")])
         t.verticalHeader().hide()
-        t.setSelectionBehavior(QAbstractItemView.SelectRows)
-        t.setSelectionMode(QAbstractItemView.SingleSelection)
-        t.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        t.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+        t.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
+        t.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         t.setSortingEnabled(False)
         middle = _MiddleElide(t)  # a long id or path keeps both its start and its end
         for col in (COL_ID, COL_NAME, COL_FILE):
             t.setItemDelegateForColumn(col, middle)
-        t.setContextMenuPolicy(Qt.CustomContextMenu)
+        t.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         t.customContextMenuRequested.connect(self._context_menu)
         for i, r in enumerate(sorted(repos, key=lambda r: (not r.enabled, r.id))):
             check = QTableWidgetItem()
-            check.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled | Qt.ItemIsSelectable)
-            check.setCheckState(Qt.Checked if r.enabled else Qt.Unchecked)
-            check.setData(Qt.UserRole, r.id)
+            check.setFlags(Qt.ItemFlag.ItemIsUserCheckable | Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable)
+            check.setCheckState(Qt.CheckState.Checked if r.enabled else Qt.CheckState.Unchecked)
+            check.setData(Qt.ItemDataRole.UserRole, r.id)
             t.setItem(i, COL_ENABLED, check)
             t.setItem(i, COL_ID, self._item(r.id))
             t.setItem(i, COL_NAME, self._item(r.name))
@@ -95,10 +95,10 @@ class ReposDialog(QDialog):
                 packages.setToolTip(_("No metadata yet: use Reload"))
             else:
                 packages = QTableWidgetItem(str(counts.get(r.id, 0)) if r.enabled else "")
-            packages.setTextAlignment(Qt.AlignRight | Qt.AlignVCenter)
+            packages.setTextAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
             t.setItem(i, COL_PACKAGES, packages)
             prio = QTableWidgetItem(str(r.priority))
-            prio.setTextAlignment(Qt.AlignRight | Qt.AlignVCenter)
+            prio.setTextAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
             t.setItem(i, COL_PRIORITY, prio)
             origin = QTableWidgetItem(origin_icon(r.origin), ORIGIN_LABEL[r.origin])
             t.setItem(i, COL_ORIGIN, origin)
@@ -110,10 +110,10 @@ class ReposDialog(QDialog):
         # every column can be dragged, and what does not fit scrolls sideways; the sizes below are only a start: they
         # follow the window until the user resizes a column himself, and are then left alone
         header = t.horizontalHeader()
-        header.setSectionResizeMode(QHeaderView.Interactive)
+        header.setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
         header.setStretchLastSection(False)
         header.setMinimumSectionSize(MIN_COLUMN)
-        t.setHorizontalScrollMode(QAbstractItemView.ScrollPerPixel)
+        t.setHorizontalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
         self._fitting = False
         self._user_sized = False
         header.sectionResized.connect(self._section_resized)
@@ -136,8 +136,8 @@ class ReposDialog(QDialog):
         self.summary = QLabel()
         lay.addWidget(self.summary)
         self.buttons = QDialogButtonBox()
-        self.apply_btn = self.buttons.addButton(_("Apply changes"), QDialogButtonBox.AcceptRole)
-        self.buttons.addButton(QDialogButtonBox.Close)
+        self.apply_btn = self.buttons.addButton(_("Apply changes"), QDialogButtonBox.ButtonRole.AcceptRole)
+        self.buttons.addButton(QDialogButtonBox.StandardButton.Close)
         self.buttons.accepted.connect(self.accept)
         self.buttons.rejected.connect(self.reject)
         lay.addWidget(self.buttons)
@@ -190,7 +190,7 @@ class ReposDialog(QDialog):
         item = self.table.itemAt(pos)
         if item is None:
             return
-        repo_id = self.table.item(item.row(), COL_ENABLED).data(Qt.UserRole)
+        repo_id = self.table.item(item.row(), COL_ENABLED).data(Qt.ItemDataRole.UserRole)
         menu = QMenu(self)
         show = menu.addAction(QIcon.fromTheme("view-list-details"), _("Show Packages"),
                               lambda: self._show_packages(repo_id))
@@ -207,7 +207,7 @@ class ReposDialog(QDialog):
 
     def _selected_id(self) -> str | None:
         rows = self.table.selectionModel().selectedRows()
-        return self.table.item(rows[0].row(), COL_ENABLED).data(Qt.UserRole) if rows else None
+        return self.table.item(rows[0].row(), COL_ENABLED).data(Qt.ItemDataRole.UserRole) if rows else None
 
     def _show_selected_packages(self) -> None:
         self._show_packages(self._selected_id())
@@ -266,12 +266,12 @@ class ReposDialog(QDialog):
                 "(it will show as orphaned).",
                 "{n} installed packages come from them. They stay installed but will no longer get updates "
                 "(they will show as orphaned).", n).format(n=n))
-        box = QMessageBox(QMessageBox.Question, _("Remove repository"), text, parent=self)
+        box = QMessageBox(QMessageBox.Icon.Question, _("Remove repository"), text, parent=self)
         box.setInformativeText("\n\n".join(lines))
-        remove = box.addButton(_("Remove"), QMessageBox.DestructiveRole)
-        show = (box.addButton(_("Show packages"), QMessageBox.ActionRole)
+        remove = box.addButton(_("Remove"), QMessageBox.ButtonRole.DestructiveRole)
+        show = (box.addButton(_("Show packages"), QMessageBox.ButtonRole.ActionRole)
                 if n and self._packages_blocker(repo_id) is None else None)
-        box.addButton(QMessageBox.Cancel)
+        box.addButton(QMessageBox.StandardButton.Cancel)
         box.exec()
         if box.clickedButton() is remove:
             self.remove_repos = [r.id for r in in_file]
@@ -284,8 +284,8 @@ class ReposDialog(QDialog):
         out = {}
         for i in range(self.table.rowCount()):
             item = self.table.item(i, COL_ENABLED)
-            repo_id = item.data(Qt.UserRole)
-            enabled = item.checkState() == Qt.Checked
+            repo_id = item.data(Qt.ItemDataRole.UserRole)
+            enabled = item.checkState() == Qt.CheckState.Checked
             if enabled != self._original[repo_id]:
                 out[repo_id] = enabled
         return out
@@ -315,7 +315,7 @@ def elide_middle(text: str, width: int, metrics: QFontMetrics) -> str:
     """`text` cut in the middle to fit `width` px: "/etc/yum.repos.d/_cop…nightly.repo".
 
     Qt's own middle elision of a table cell breaks a long unspaced path at its first "/" and drops the end."""
-    return metrics.elidedText(text, Qt.ElideMiddle, max(width, 0))
+    return metrics.elidedText(text, Qt.TextElideMode.ElideMiddle, max(width, 0))
 
 
 class _MiddleElide(QStyledItemDelegate):
@@ -325,8 +325,8 @@ class _MiddleElide(QStyledItemDelegate):
         widget = option.widget
         style = widget.style() if widget else QApplication.style()
         # the style pads the text on both sides once more when it draws it
-        padding = 2 * (style.pixelMetric(QStyle.PM_FocusFrameHMargin, opt, widget) + 1)
-        room = style.subElementRect(QStyle.SE_ItemViewItemText, opt, widget).width() - padding
+        padding = 2 * (style.pixelMetric(QStyle.PixelMetric.PM_FocusFrameHMargin, opt, widget) + 1)
+        room = style.subElementRect(QStyle.SubElement.SE_ItemViewItemText, opt, widget).width() - padding
         opt.text = elide_middle(opt.text, room, opt.fontMetrics)
-        opt.textElideMode = Qt.ElideNone  # already done, whole
-        style.drawControl(QStyle.CE_ItemViewItem, opt, painter, widget)
+        opt.textElideMode = Qt.TextElideMode.ElideNone  # already done, whole
+        style.drawControl(QStyle.ControlElement.CE_ItemViewItem, opt, painter, widget)

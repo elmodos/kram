@@ -57,10 +57,10 @@ class CoprDialog(QDialog):
         t = self.enabled_table = QTableWidget(0, 5)
         t.setHorizontalHeaderLabels([_("Enabled"), _("Project"), _("Hub"), _("Packages"), _("Installed")])
         t.verticalHeader().hide()
-        t.setSelectionBehavior(QAbstractItemView.SelectRows)
-        t.setSelectionMode(QAbstractItemView.SingleSelection)
-        t.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        t.horizontalHeader().setSectionResizeMode(1, QHeaderView.Stretch)
+        t.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+        t.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
+        t.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
+        t.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
         for col, width in ((0, 70), (2, 220), (3, 90), (4, 90)):
             t.setColumnWidth(col, width)
         t.setMaximumHeight(200)
@@ -98,10 +98,10 @@ class CoprDialog(QDialog):
         r = self.results_table = QTableWidget(0, 3)
         r.setHorizontalHeaderLabels([_("Project"), _("Description"), _("Builds for this system")])
         r.verticalHeader().hide()
-        r.setSelectionBehavior(QAbstractItemView.SelectRows)
-        r.setSelectionMode(QAbstractItemView.SingleSelection)
-        r.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        r.horizontalHeader().setSectionResizeMode(1, QHeaderView.Stretch)
+        r.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+        r.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
+        r.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
+        r.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
         r.setColumnWidth(0, 260)
         r.setColumnWidth(2, 180)
         r.itemSelectionChanged.connect(self._update_buttons)
@@ -115,10 +115,10 @@ class CoprDialog(QDialog):
         lay.addWidget(note)
 
         buttons = QDialogButtonBox()
-        self.add_btn = buttons.addButton(_("Enable selected"), QDialogButtonBox.ActionRole)
+        self.add_btn = buttons.addButton(_("Enable selected"), QDialogButtonBox.ButtonRole.ActionRole)
         self.add_btn.setIcon(QIcon.fromTheme("list-add"))
         self.add_btn.clicked.connect(self._enable_result)
-        buttons.addButton(QDialogButtonBox.Close)
+        buttons.addButton(QDialogButtonBox.StandardButton.Close)
         buttons.rejected.connect(self.reject)
         lay.addWidget(buttons)
         self._update_buttons()
@@ -137,10 +137,10 @@ class CoprDialog(QDialog):
         self._projects = [(repo.id, ref.hub, ref.project) for repo, ref in coprs]
         t = self.enabled_table
         t.setRowCount(len(coprs))
-        right = Qt.AlignRight | Qt.AlignVCenter
+        right = Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
         for i, (repo, ref) in enumerate(coprs):
             state = QTableWidgetItem("✓" if repo.enabled else "")
-            state.setTextAlignment(Qt.AlignCenter)
+            state.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
             t.setItem(i, 0, state)
             t.setItem(i, 1, _item(ref.project))
             t.setItem(i, 2, _item(ref.hub))
@@ -168,7 +168,7 @@ class CoprDialog(QDialog):
             return
         repo_id, hub, project = sel
         n = self._installed_from(repo_id)
-        box = QMessageBox(QMessageBox.Question, _("Remove COPR project"),
+        box = QMessageBox(QMessageBox.Icon.Question, _("Remove COPR project"),
                           _("Remove the {project} repository from the system?").format(project=project), parent=self)
         if n:
             box.setInformativeText(ngettext(
@@ -176,9 +176,9 @@ class CoprDialog(QDialog):
                 "(it will show as orphaned).",
                 "{n} installed packages come from it. They stay installed but will no longer get updates "
                 "(they will show as orphaned).", n).format(n=n))
-        remove = box.addButton(_("Remove"), QMessageBox.DestructiveRole)
-        show = box.addButton(_("Show packages"), QMessageBox.ActionRole) if n else None
-        box.addButton(QMessageBox.Cancel)
+        remove = box.addButton(_("Remove"), QMessageBox.ButtonRole.DestructiveRole)
+        show = box.addButton(_("Show packages"), QMessageBox.ButtonRole.ActionRole) if n else None
+        box.addButton(QMessageBox.StandardButton.Cancel)
         box.exec()
         if box.clickedButton() is remove:
             self._copr("remove", project, hub)
@@ -224,8 +224,8 @@ class CoprDialog(QDialog):
             return
         self._reply = None
         self.search_btn.setEnabled(True)
-        if reply.error() != QNetworkReply.NoError:
-            if reply.error() != QNetworkReply.OperationCanceledError:
+        if reply.error() != QNetworkReply.NetworkError.NoError:
+            if reply.error() != QNetworkReply.NetworkError.OperationCanceledError:
                 self.search_status.setText(_("Search failed: {error}").format(error=reply.errorString()))
             return
         try:
@@ -278,7 +278,8 @@ class CoprDialog(QDialog):
         if snap and not p.has_chroot(snap.releasever, snap.basearch) and QMessageBox.question(
                 self, _("No builds for this system"),
                 _("{project} has no builds for Fedora {release} ({arch}). Enable it anyway?").format(
-                    project=p.full_name, release=snap.releasever, arch=snap.basearch)) != QMessageBox.Yes:
+                    project=p.full_name, release=snap.releasever, arch=snap.basearch),
+        ) != QMessageBox.StandardButton.Yes:
             return
         self._copr("enable", p.full_name, DEFAULT_HUB)
 
