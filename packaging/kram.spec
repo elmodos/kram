@@ -1,5 +1,5 @@
 %global appid io.github.elmodos.Kram
-%global base_version 0.8.2
+%global base_version 0.8.3
 
 Name:           kram
 # A tagged release (v%%{base_version}) is plain %%{base_version}. Any other commit gets a snapshot from
@@ -116,6 +116,9 @@ QT_QPA_PLATFORM=offscreen %pytest
 %{_datadir}/kram/
 
 %changelog
+* Wed Nov 18 2026 Modo Ltunzher <offnormal@gmail.com> - 0.8.3-1
+- Sidebar: "Security updates" and "Bug fix updates" are hidden when there are none
+
 * Wed Nov 18 2026 Modo Ltunzher <offnormal@gmail.com> - 0.8.2-1
 - Fix the Fedora Rawhide build: the test run no longer crashes on exit with PySide6 6.12
 
