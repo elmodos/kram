@@ -13,6 +13,11 @@ and installed version, update type, size, repository and summary. Browsing and s
 The origin icon tells where a package comes from: Fedora, a COPR project, a third-party repository, or a
 local file with no repository at all.
 
+*File → Export List as CSV…* saves the packages listed now, in their order, to a CSV file for a spreadsheet or
+a script. It has the same columns in every language, whatever the table shows: name, arch, status, the
+installed and latest version, the repository, origin, install reason, update type and advisories, the size in
+bytes, the summary and the marking, if any.
+
 The Repository column says where the latest version comes from. When an installed package came from another
 repository, that one comes first: `elmodos/Kram → updates` is a COPR package whose newer version is now in
 Fedora's updates.

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kram\n"
 "Report-Msgid-Bugs-To: https://github.com/elmodos/kram/issues\n"
-"POT-Creation-Date: 2026-11-19 10:42+0200\n"
+"POT-Creation-Date: 2026-11-19 12:22+0200\n"
 "PO-Revision-Date: 2026-11-04 14:07+0200\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -486,86 +486,95 @@ msgid "Mark the changes listed in a saved markings file"
 msgstr "Zaznacz zmiany wymienione w zapisanym pliku zaznaczeń"
 
 #: kram/ui/actions.py:82
+msgid "Export List as CSV…"
+msgstr "Eksportuj listę do CSV…"
+
+#: kram/ui/actions.py:83
+msgid "Save the packages listed now, in their order, to a CSV file"
+msgstr ""
+"Zapisz pakiety widoczne teraz na liście, w ich kolejności, do pliku CSV"
+
+#: kram/ui/actions.py:84
 msgid "Open Package File…"
 msgstr "Otwórz plik pakietu…"
 
-#: kram/ui/actions.py:83
+#: kram/ui/actions.py:85
 msgid "Install a downloaded .rpm file (you can also drop it on the window)"
 msgstr "Zainstaluj pobrany plik .rpm (możesz go też upuścić na okno)"
 
-#: kram/ui/actions.py:84
+#: kram/ui/actions.py:86
 msgid "Quit"
 msgstr "Zakończ"
 
-#: kram/ui/actions.py:85 kram/ui/main_window.py:565
+#: kram/ui/actions.py:87 kram/ui/main_window.py:566
 msgid "About Kram"
 msgstr "O programie Kram"
 
-#: kram/ui/actions.py:89
+#: kram/ui/actions.py:91
 msgid "Copy Name"
 msgstr "Kopiuj nazwę"
 
-#: kram/ui/actions.py:90
+#: kram/ui/actions.py:92
 msgid "Copy name-version-release.arch"
 msgstr "Kopiuj nazwa-wersja-wydanie.arch"
 
-#: kram/ui/actions.py:94
+#: kram/ui/actions.py:96
 msgid "Mark for Installation"
 msgstr "Zaznacz do instalacji"
 
-#: kram/ui/actions.py:95
+#: kram/ui/actions.py:97
 msgid "Mark for Upgrade"
 msgstr "Zaznacz do aktualizacji"
 
-#: kram/ui/actions.py:96
+#: kram/ui/actions.py:98
 msgid "Mark for Reinstallation"
 msgstr "Zaznacz do ponownej instalacji"
 
-#: kram/ui/actions.py:97
+#: kram/ui/actions.py:99
 msgid "Mark for Removal"
 msgstr "Zaznacz do usunięcia"
 
-#: kram/ui/actions.py:98
+#: kram/ui/actions.py:100
 msgid "Mark as Installed by User"
 msgstr "Oznacz jako zainstalowany przez użytkownika"
 
-#: kram/ui/actions.py:99
+#: kram/ui/actions.py:101
 msgid "Mark as Dependency"
 msgstr "Oznacz jako zależność"
 
-#: kram/ui/actions.py:101
+#: kram/ui/actions.py:103
 msgid "Downgrade to Version"
 msgstr "Przywróć wersję"
 
-#: kram/ui/actions.py:103
+#: kram/ui/actions.py:105
 msgid "Unmark"
 msgstr "Odznacz"
 
-#: kram/ui/actions.py:103
+#: kram/ui/actions.py:105
 msgid "Unmark the selected packages"
 msgstr "Odznacz wybrane pakiety"
 
-#: kram/ui/actions.py:138
+#: kram/ui/actions.py:140
 msgid "&File"
 msgstr "&Plik"
 
-#: kram/ui/actions.py:146
+#: kram/ui/actions.py:149
 msgid "&Edit"
 msgstr "&Edycja"
 
-#: kram/ui/actions.py:155
+#: kram/ui/actions.py:158
 msgid "&Package"
 msgstr "P&akiet"
 
-#: kram/ui/actions.py:159
+#: kram/ui/actions.py:162
 msgid "&Settings"
 msgstr "&Ustawienia"
 
-#: kram/ui/actions.py:166
+#: kram/ui/actions.py:169
 msgid "Toolbar"
 msgstr "Pasek narzędzi"
 
-#: kram/ui/actions.py:167
+#: kram/ui/actions.py:170
 msgid "&Help"
 msgstr "Pomo&c"
 
@@ -773,7 +782,7 @@ msgstr "Nic do zrobienia: zaznaczone zmiany są już wprowadzone."
 
 #: kram/ui/apply_dialog.py:342 kram/ui/install_dialog.py:192
 #: kram/ui/install_dialog.py:208 kram/ui/install_dialog.py:265
-#: kram/ui/main_window.py:661
+#: kram/ui/main_window.py:682
 msgid "Resolving dependencies…"
 msgstr "Rozwiązywanie zależności…"
 
@@ -782,7 +791,7 @@ msgid "These choices cannot be carried out:"
 msgstr "Tego wyboru nie da się zrealizować:"
 
 #: kram/ui/apply_dialog.py:356 kram/ui/install_dialog.py:259
-#: kram/ui/install_dialog.py:289 kram/ui/main_window.py:663
+#: kram/ui/install_dialog.py:289 kram/ui/main_window.py:684
 #, python-brace-format
 msgid ""
 "Could not resolve the changes:\n"
@@ -1613,11 +1622,11 @@ msgstr "Skrypty"
 msgid "Reading {file}…"
 msgstr "Odczytywanie {file}…"
 
-#: kram/ui/install_dialog.py:189 kram/ui/main_window.py:282
+#: kram/ui/install_dialog.py:189 kram/ui/main_window.py:283
 msgid "Loading metadata…"
 msgstr "Wczytywanie metadanych…"
 
-#: kram/ui/install_dialog.py:216 kram/ui/main_window.py:331
+#: kram/ui/install_dialog.py:216 kram/ui/main_window.py:332
 #, python-brace-format
 msgid ""
 "Could not load the package catalog:\n"
@@ -1861,11 +1870,11 @@ msgstr "Nie można sprawdzić: {path}"
 msgid "Installing {name}"
 msgstr "Instalowanie {name}"
 
-#: kram/ui/main_window.py:69
+#: kram/ui/main_window.py:70
 msgid "Package Manager"
 msgstr "Menedżer pakietów"
 
-#: kram/ui/main_window.py:268
+#: kram/ui/main_window.py:269
 #, python-brace-format
 msgid "{n} marked change has not been applied. Quit anyway?"
 msgid_plural "{n} marked changes have not been applied. Quit anyway?"
@@ -1874,11 +1883,11 @@ msgstr[1] "{n} zaznaczone zmiany nie zostały zastosowane. Zakończyć mimo to?"
 msgstr[2] ""
 "{n} zaznaczonych zmian nie zostało zastosowanych. Zakończyć mimo to?"
 
-#: kram/ui/main_window.py:298
+#: kram/ui/main_window.py:299
 msgid "Waiting for another package manager to finish…"
 msgstr "Oczekiwanie na zakończenie innego menedżera pakietów…"
 
-#: kram/ui/main_window.py:378
+#: kram/ui/main_window.py:379
 #, python-brace-format
 msgid ""
 "Searching “{text}” ({mode}); the first search also indexes what packages "
@@ -1887,42 +1896,42 @@ msgstr ""
 "Wyszukiwanie „{text}” ({mode}); pierwsze wyszukiwanie indeksuje też, co "
 "dostarczają pakiety…"
 
-#: kram/ui/main_window.py:381
+#: kram/ui/main_window.py:382
 #, python-brace-format
 msgid "Searching “{text}” ({mode})…"
 msgstr "Wyszukiwanie „{text}” ({mode})…"
 
-#: kram/ui/main_window.py:496
+#: kram/ui/main_window.py:497
 #, python-brace-format
 msgid "Nothing provides “{what}”"
 msgstr "Nic nie dostarcza „{what}”"
 
-#: kram/ui/main_window.py:507
+#: kram/ui/main_window.py:508
 #, python-brace-format
 msgid "Package {name} not found in the catalog"
 msgstr "Nie znaleziono pakietu {name} w katalogu"
 
-#: kram/ui/main_window.py:549
+#: kram/ui/main_window.py:550
 msgid "Remove from History"
 msgstr "Usuń z historii"
 
-#: kram/ui/main_window.py:551
+#: kram/ui/main_window.py:552
 msgid "Clear Search History"
 msgstr "Wyczyść historię wyszukiwania"
 
-#: kram/ui/main_window.py:566
+#: kram/ui/main_window.py:567
 msgid "A Synaptic-style package manager for Fedora."
 msgstr "Menedżer pakietów dla Fedory w stylu Synaptic."
 
-#: kram/ui/main_window.py:568
+#: kram/ui/main_window.py:569
 msgid "Released under the MIT License."
 msgstr "Udostępniany na licencji MIT."
 
-#: kram/ui/main_window.py:571
+#: kram/ui/main_window.py:572
 msgid "What's New"
 msgstr "Co nowego"
 
-#: kram/ui/main_window.py:617
+#: kram/ui/main_window.py:619
 #, python-brace-format
 msgid "{n} marking saved to {path}"
 msgid_plural "{n} markings saved to {path}"
@@ -1930,31 +1939,58 @@ msgstr[0] "Zapisano {n} zaznaczenie w {path}"
 msgstr[1] "Zapisano {n} zaznaczenia w {path}"
 msgstr[2] "Zapisano {n} zaznaczeń w {path}"
 
-#: kram/ui/main_window.py:629
+#: kram/ui/main_window.py:623
+msgid "Export List as CSV"
+msgstr "Eksportuj listę do CSV"
+
+#: kram/ui/main_window.py:626
+msgid "CSV files (*.csv);;All files (*)"
+msgstr "Pliki CSV (*.csv);;Wszystkie pliki (*)"
+
+#: kram/ui/main_window.py:634 kram/ui/markings_file.py:34
+#, python-brace-format
+msgid ""
+"Could not save {path}:\n"
+"\n"
+"{error}"
+msgstr ""
+"Nie można zapisać {path}:\n"
+"\n"
+"{error}"
+
+#: kram/ui/main_window.py:638
+#, python-brace-format
+msgid "{n} package exported to {path}"
+msgid_plural "{n} packages exported to {path}"
+msgstr[0] "Wyeksportowano {n} pakiet do {path}"
+msgstr[1] "Wyeksportowano {n} pakiety do {path}"
+msgstr[2] "Wyeksportowano {n} pakietów do {path}"
+
+#: kram/ui/main_window.py:650
 msgid "(loading…)"
 msgstr "(wczytywanie…)"
 
-#: kram/ui/main_window.py:636
+#: kram/ui/main_window.py:657
 msgid "No older versions in the repositories"
 msgstr "Brak starszych wersji w repozytoriach"
 
-#: kram/ui/main_window.py:668
+#: kram/ui/main_window.py:689
 msgid "Cannot apply changes"
 msgstr "Nie można zastosować zmian"
 
-#: kram/ui/main_window.py:669
+#: kram/ui/main_window.py:690
 msgid "The marked changes cannot be carried out. Unmark or change them."
 msgstr "Zaznaczonych zmian nie można wykonać. Odznacz je lub zmień."
 
-#: kram/ui/main_window.py:684
+#: kram/ui/main_window.py:705
 msgid "Applying changes"
 msgstr "Stosowanie zmian"
 
-#: kram/ui/main_window.py:691
+#: kram/ui/main_window.py:712
 msgid "Refreshing metadata"
 msgstr "Odświeżanie metadanych"
 
-#: kram/ui/main_window.py:717
+#: kram/ui/main_window.py:738
 #, python-brace-format
 msgid "Removing {n} repository"
 msgid_plural "Removing {n} repositories"
@@ -1962,23 +1998,23 @@ msgstr[0] "Usuwanie {n} repozytorium"
 msgstr[1] "Usuwanie {n} repozytoriów"
 msgstr[2] "Usuwanie {n} repozytoriów"
 
-#: kram/ui/main_window.py:721
+#: kram/ui/main_window.py:742
 msgid "Changing repositories"
 msgstr "Zmienianie repozytoriów"
 
-#: kram/ui/main_window.py:756
+#: kram/ui/main_window.py:777
 msgid "Downloading metadata again"
 msgstr "Ponowne pobieranie metadanych"
 
-#: kram/ui/main_window.py:758
+#: kram/ui/main_window.py:779
 msgid "Cleaning the package cache"
 msgstr "Czyszczenie pamięci podręcznej pakietów"
 
-#: kram/ui/main_window.py:800
+#: kram/ui/main_window.py:821
 msgid "Open Package File"
 msgstr "Otwórz plik pakietu"
 
-#: kram/ui/main_window.py:801
+#: kram/ui/main_window.py:822
 msgid "RPM packages (*.rpm)"
 msgstr "Pakiety RPM (*.rpm)"
 
@@ -2067,17 +2103,6 @@ msgstr "Pliki tekstowe (*.txt);;Wszystkie pliki (*)"
 #: kram/ui/markings_file.py:27 kram/ui/markings_file.py:34
 msgid "Save Markings"
 msgstr "Zapisz zaznaczenia"
-
-#: kram/ui/markings_file.py:34
-#, python-brace-format
-msgid ""
-"Could not save {path}:\n"
-"\n"
-"{error}"
-msgstr ""
-"Nie można zapisać {path}:\n"
-"\n"
-"{error}"
 
 #: kram/ui/markings_file.py:42 kram/ui/markings_file.py:53
 #: kram/ui/markings_file.py:75

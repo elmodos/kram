@@ -79,6 +79,8 @@ class WindowActions:
                             tip=_("Save the marked changes to a text file"))
         self.read_marks = a(_("Read Markings…"), "document-open", "Ctrl+O", enabled=False,
                             tip=_("Mark the changes listed in a saved markings file"))
+        self.export_csv = a(_("Export List as CSV…"), "document-export", enabled=False,
+                            tip=_("Save the packages listed now, in their order, to a CSV file"))
         self.open_file = a(_("Open Package File…"), "document-open", enabled=False,
                            tip=_("Install a downloaded .rpm file (you can also drop it on the window)"))
         self.quit = a(_("Quit"), "application-exit", QKeySequence.StandardKey.Quit)
@@ -141,6 +143,7 @@ class WindowActions:
         m.addActions([self.reload, self.reload_cache])
         m.addSeparator()
         m.addActions([self.read_marks, self.save_marks])
+        m.addAction(self.export_csv)
         m.addSeparator()
         m.addAction(self.quit)
         m = mb.addMenu(_("&Edit"))

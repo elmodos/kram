@@ -22,6 +22,7 @@ from PySide6.QtWidgets import (
 from .. import HOMEPAGE, __version__, instance
 from ..core import releases
 from ..core.catalog import Catalog
+from ..core.csv_export import write_csv
 from ..core.evr import evr_cmp
 from ..core.filters import FilterEntry
 from ..core.marks import Action, allowed_actions
@@ -117,7 +118,7 @@ class MainWindow(QMainWindow):
             (acts.notifications, self.open_notifications),
             (acts.filters, lambda: self.custom_filters.edit()), (acts.new_filter, self.new_filter_from_view),
             (acts.find, self.search.focus), (acts.back, self.go_back),
-            (acts.save_marks, self.save_marks), (acts.read_marks, self.read_marks),
+            (acts.save_marks, self.save_marks), (acts.read_marks, self.read_marks), (acts.export_csv, self.export_csv),
             (acts.open_file, lambda: self.open_package_file()), (acts.quit, self.close), (acts.about, self.about),
             (acts.copy_name, self.copy_names), (acts.copy_nevra, self.copy_nevras), (acts.unmark, self.unmark_selected),
         ]:
@@ -589,6 +590,7 @@ class MainWindow(QMainWindow):
         self.acts.unmark_all.setEnabled(n > 0)
         self.acts.save_marks.setEnabled(n > 0)
         self.acts.read_marks.setEnabled(self.snapshot is not None)
+        self.acts.export_csv.setEnabled(self.snapshot is not None)
         for needs_catalog in (self.acts.repos, self.acts.copr, self.acts.cache, self.acts.filters, self.acts.new_filter,
                               self.releases.act_upgrade):
             needs_catalog.setEnabled(self.snapshot is not None)
@@ -616,6 +618,25 @@ class MainWindow(QMainWindow):
             n = len(self.model.marks)
             self.statusBar().showMessage(ngettext("{n} marking saved to {path}", "{n} markings saved to {path}", n)
                                          .format(n=n, path=path), 5000)
+
+    def export_csv(self):
+        title = _("Export List as CSV")
+        folder = QSettings().value("export/dir", str(Path.home()))
+        path, _filter = QFileDialog.getSaveFileName(self, title, str(Path(folder) / "kram-packages.csv"),
+                                                    _("CSV files (*.csv);;All files (*)"))
+        if not path:
+            return
+        rows = [self.model.rows[i] for i in self.model.visible]  # in the order shown
+        try:
+            with open(path, "w", encoding="utf-8", newline="") as out:
+                n = write_csv(out, rows, self.model.marks)
+        except OSError as e:
+            QMessageBox.critical(self, title, _("Could not save {path}:\n\n{error}").format(
+                path=path, error=e.strerror or e))
+            return
+        QSettings().setValue("export/dir", str(Path(path).parent))
+        self.statusBar().showMessage(ngettext("{n} package exported to {path}", "{n} packages exported to {path}", n)
+                                     .format(n=n, path=path), 5000)
 
     def read_marks(self):
         if path := ask_markings_file(self):
