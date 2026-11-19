@@ -492,3 +492,21 @@ def test_mark_unneeded_marks_what_autoremove_would_remove(window):
         rows[0].key: Action.REMOVE, rows[2].key: Action.REMOVE}
     assert window.statusBar().currentMessage() == "2 unneeded dependencies marked for removal"
     assert window.acts.apply.isEnabled()
+
+
+def test_sidebar_refreshes_only_an_enabled_repo(window, monkeypatch):
+    from kram.core.filters import FilterEntry
+    from kram.core.model import Origin, RepoInfo
+    repos = [RepoInfo("copr:a", "a", True, Origin.COPR, 60), RepoInfo("old", "old", False, Origin.THIRD_PARTY, None)]
+    window.snapshot = SimpleNamespace(n_upgradable=0, repos=repos)
+
+    def entry(entry_id):
+        return FilterEntry(entry_id, "", lambda _r: True)
+    assert window._enabled_repo(entry("repo:copr:a")) == "copr:a"
+    assert window._enabled_repo(entry("repo:old")) is None   # disabled: nothing to refresh
+    assert window._enabled_repo(entry("origin:copr")) is None
+    sent, reloads = [], []
+    monkeypatch.setattr(window, "_run_helper", lambda request, _title: sent.append(request) or True)
+    monkeypatch.setattr(window, "reload", lambda: reloads.append(1))
+    window.refresh_repo_metadata("copr:a")
+    assert sent == [{"op": "refresh", "repos": ["copr:a"]}] and reloads == [1]

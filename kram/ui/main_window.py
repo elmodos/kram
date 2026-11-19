@@ -550,6 +550,11 @@ class MainWindow(QMainWindow):
         if entry is not None and entry.id == "status:unneeded":
             m.addAction(self.acts.mark_unneeded)
             m.addSeparator()
+        if entry is not None and (repo_id := self._enabled_repo(entry)) is not None:
+            act = m.addAction(QIcon.fromTheme("view-refresh"), _("Refresh Metadata"),
+                              lambda: self.refresh_repo_metadata(repo_id))
+            act.setEnabled(not self.helper.busy)
+            m.addSeparator()
         self.custom_filters.fill_menu(m, entry)
         if self.sidebar.current_view == "search":
             if entry is not None and entry.query is not None:
@@ -758,6 +763,19 @@ class MainWindow(QMainWindow):
         self._run_helper({"op": "refresh"}, _("Refreshing metadata"))
         self.releases.check()
         self.reload()
+
+    def refresh_repo_metadata(self, repo_id: str) -> None:
+        if self.helper.busy:
+            return
+        self._run_helper({"op": "refresh", "repos": [repo_id]}, _("Refreshing metadata"))
+        self.reload()
+
+    def _enabled_repo(self, entry: FilterEntry) -> str | None:
+        """The repo id of a sidebar repository entry, if that repository is enabled."""
+        if not entry.id.startswith("repo:") or self.snapshot is None:
+            return None
+        repo_id = entry.id.removeprefix("repo:")
+        return repo_id if any(r.id == repo_id and r.enabled for r in self.snapshot.repos) else None
 
     def run_helper_and_reload(self, request: dict, title: str) -> bool:
         ok = self._run_helper(request, title)

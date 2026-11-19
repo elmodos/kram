@@ -7,7 +7,8 @@ is the security boundary, so it should stay small enough to review in one sittin
 
 Protocol: one JSON request per line on stdin, JSON event lines on stdout.
   {"op": "ping"}
-  {"op": "refresh"}                                        re-download metadata of enabled repos
+  {"op": "refresh", "repos": ["<repo id>", ...]}          re-download metadata of enabled repos (only of these,
+                                                           when "repos" is given; they must be enabled)
   {"op": "transaction", "install": [...], "remove": [...], "upgrade": [...], "reinstall": [...],
    "downgrade": [...], "mark_user": [...], "mark_dep": [...], "upgrade_all": false,
    "group_install": [...], "group_remove": [...], "group_upgrade": [...],
@@ -349,13 +350,27 @@ def ask(question_id: int, **fields) -> bool:
         and reply.get("yes") is True
 
 
-def refresh() -> None:
+def refresh(req: dict | None = None) -> None:
+    """Expire the enabled repos (or only those in "repos") and load them: the expired ones download their metadata
+    again, the rest load from the cache."""
+    only = (req or {}).get("repos")
+    if only is not None:
+        if not isinstance(only, list) or not 0 < len(only) <= 500:
+            raise ProtocolError("repos: expected a non-empty list of repo ids")
+        for repo_id in only:
+            if not isinstance(repo_id, str) or not REPO_ID_RE.match(repo_id):
+                raise ProtocolError(f"repos: invalid repo id {repo_id!r}")
     import libdnf5
     download_cb = DownloadProgress()
     base = make_base(download_cb, load=False)
-    for repo in libdnf5.repo.RepoQuery(base):
-        if repo.is_enabled():
-            repo.expire()
+    enabled = [repo for repo in libdnf5.repo.RepoQuery(base) if repo.is_enabled()]
+    if only is not None:
+        missing = sorted(set(only) - {repo.get_id() for repo in enabled})
+        if missing:
+            raise ProtocolError(f"repos: not enabled: {', '.join(missing)}")
+        enabled = [repo for repo in enabled if repo.get_id() in only]
+    for repo in enabled:
+        repo.expire()
     log("refreshing", "Refreshing repository metadata…")
     base.get_repo_sack().load_repos()
     emit("done", ok=True)
@@ -956,7 +971,7 @@ def main() -> int:
                         "repo_remove", "find_leftovers", "remove_leftovers", "versionlock"):
                 if "DownloadProgress" not in globals():
                     DownloadProgress, RpmProgress, KeyImport = _callbacks()
-                {"transaction": run_transaction, "local_install": local_install, "refresh": lambda _r: refresh(),
+                {"transaction": run_transaction, "local_install": local_install, "refresh": refresh,
                  "repo_set_enabled": set_repos_enabled, "copr": copr, "clean_cache": clean_cache,
                  "versionlock": versionlock,
                  "repo_remove": remove_repos, "find_leftovers": lambda _r: find_leftovers(),

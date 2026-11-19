@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kram\n"
 "Report-Msgid-Bugs-To: https://github.com/elmodos/kram/issues\n"
-"POT-Creation-Date: 2026-11-19 13:08+0200\n"
+"POT-Creation-Date: 2026-11-19 13:14+0200\n"
 "PO-Revision-Date: 2026-11-05 18:05+0200\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -512,7 +512,7 @@ msgstr "Installera en nedladdad .rpm-fil (du kan också släppa den på fönstre
 msgid "Quit"
 msgstr "Avsluta"
 
-#: kram/ui/actions.py:87 kram/ui/main_window.py:573
+#: kram/ui/actions.py:87 kram/ui/main_window.py:578
 msgid "About Kram"
 msgstr "Om Kram"
 
@@ -807,7 +807,7 @@ msgstr "Inget att göra: de markerade ändringarna är redan genomförda."
 
 #: kram/ui/apply_dialog.py:342 kram/ui/install_dialog.py:192
 #: kram/ui/install_dialog.py:208 kram/ui/install_dialog.py:265
-#: kram/ui/main_window.py:718
+#: kram/ui/main_window.py:723
 msgid "Resolving dependencies…"
 msgstr "Löser beroenden…"
 
@@ -816,7 +816,7 @@ msgid "These choices cannot be carried out:"
 msgstr "Dessa val går inte att genomföra:"
 
 #: kram/ui/apply_dialog.py:356 kram/ui/install_dialog.py:259
-#: kram/ui/install_dialog.py:289 kram/ui/main_window.py:720
+#: kram/ui/install_dialog.py:289 kram/ui/main_window.py:725
 #, python-brace-format
 msgid ""
 "Could not resolve the changes:\n"
@@ -1882,8 +1882,12 @@ msgid "Installing {name}"
 msgstr "Installerar {name}"
 
 #: kram/ui/main_window.py:65
-msgid "To keep an installed package at its version, select it and choose Package → Lock Version: upgrades then leave it out until it is unlocked."
-msgstr "För att behålla ett installerat paket på sin version, markera det och välj Paket → Lås version: uppgraderingar hoppar då över det tills det låses upp."
+msgid ""
+"To keep an installed package at its version, select it and choose Package → "
+"Lock Version: upgrades then leave it out until it is unlocked."
+msgstr ""
+"För att behålla ett installerat paket på sin version, markera det och välj "
+"Paket → Lås version: uppgraderingar hoppar då över det tills det låses upp."
 
 #: kram/ui/main_window.py:75
 msgid "Package Manager"
@@ -1924,27 +1928,31 @@ msgstr "Inget tillhandahåller ”{what}”"
 msgid "Package {name} not found in the catalog"
 msgstr "Paketet {name} finns inte i katalogen"
 
-#: kram/ui/main_window.py:557
+#: kram/ui/main_window.py:554
+msgid "Refresh Metadata"
+msgstr "Uppdatera metadata"
+
+#: kram/ui/main_window.py:562
 msgid "Remove from History"
 msgstr "Ta bort från historiken"
 
-#: kram/ui/main_window.py:559
+#: kram/ui/main_window.py:564
 msgid "Clear Search History"
 msgstr "Rensa sökhistoriken"
 
-#: kram/ui/main_window.py:574
+#: kram/ui/main_window.py:579
 msgid "A Synaptic-style package manager for Fedora."
 msgstr "En pakethanterare för Fedora i Synaptics anda."
 
-#: kram/ui/main_window.py:576
+#: kram/ui/main_window.py:581
 msgid "Released under the MIT License."
 msgstr "Utgiven under MIT-licensen."
 
-#: kram/ui/main_window.py:579
+#: kram/ui/main_window.py:584
 msgid "What's New"
 msgstr "Nyheter"
 
-#: kram/ui/main_window.py:642
+#: kram/ui/main_window.py:647
 #, python-brace-format
 msgid ""
 "{n} upgrade or downgrade unmarked: the version lock keeps the installed "
@@ -1959,36 +1967,36 @@ msgstr[1] ""
 "{n} uppgraderingar eller nedgraderingar avmarkerade: låset behåller de "
 "installerade versionerna"
 
-#: kram/ui/main_window.py:645
+#: kram/ui/main_window.py:650
 #, python-brace-format
 msgid "Locking the version of {n} package"
 msgid_plural "Locking the versions of {n} packages"
 msgstr[0] "Låser versionen av {n} paket"
 msgstr[1] "Låser versionerna av {n} paket"
 
-#: kram/ui/main_window.py:647
+#: kram/ui/main_window.py:652
 #, python-brace-format
 msgid "Unlocking the version of {n} package"
 msgid_plural "Unlocking the versions of {n} packages"
 msgstr[0] "Låser upp versionen av {n} paket"
 msgstr[1] "Låser upp versionerna av {n} paket"
 
-#: kram/ui/main_window.py:655
+#: kram/ui/main_window.py:660
 #, python-brace-format
 msgid "{n} marking saved to {path}"
 msgid_plural "{n} markings saved to {path}"
 msgstr[0] "{n} markering sparad i {path}"
 msgstr[1] "{n} markeringar sparade i {path}"
 
-#: kram/ui/main_window.py:659
+#: kram/ui/main_window.py:664
 msgid "Export List as CSV"
 msgstr "Exportera listan som CSV"
 
-#: kram/ui/main_window.py:662
+#: kram/ui/main_window.py:667
 msgid "CSV files (*.csv);;All files (*)"
 msgstr "CSV-filer (*.csv);;Alla filer (*)"
 
-#: kram/ui/main_window.py:670 kram/ui/markings_file.py:34
+#: kram/ui/main_window.py:675 kram/ui/markings_file.py:34
 #, python-brace-format
 msgid ""
 "Could not save {path}:\n"
@@ -1999,31 +2007,31 @@ msgstr ""
 "\n"
 "{error}"
 
-#: kram/ui/main_window.py:674
+#: kram/ui/main_window.py:679
 #, python-brace-format
 msgid "{n} package exported to {path}"
 msgid_plural "{n} packages exported to {path}"
 msgstr[0] "{n} paket exporterat till {path}"
 msgstr[1] "{n} paket exporterade till {path}"
 
-#: kram/ui/main_window.py:686
+#: kram/ui/main_window.py:691
 msgid "(loading…)"
 msgstr "(läser in…)"
 
-#: kram/ui/main_window.py:693
+#: kram/ui/main_window.py:698
 msgid "No older versions in the repositories"
 msgstr "Inga äldre versioner i förråden"
 
-#: kram/ui/main_window.py:725
+#: kram/ui/main_window.py:730
 msgid "Cannot apply changes"
 msgstr "Kan inte verkställa ändringarna"
 
-#: kram/ui/main_window.py:726
+#: kram/ui/main_window.py:731
 msgid "The marked changes cannot be carried out. Unmark or change them."
 msgstr ""
 "De markerade ändringarna kan inte genomföras. Avmarkera eller ändra dem."
 
-#: kram/ui/main_window.py:730
+#: kram/ui/main_window.py:735
 msgid ""
 "They need a version the version lock excludes. Unlock the package (Package → "
 "Unlock Version) or unmark the change."
@@ -2031,42 +2039,42 @@ msgstr ""
 "De behöver en version som versionslåset utesluter. Lås upp paketet (Paket → "
 "Lås upp version) eller avmarkera ändringen."
 
-#: kram/ui/main_window.py:732
+#: kram/ui/main_window.py:737
 msgid "Show Locked Packages"
 msgstr "Visa låsta paket"
 
-#: kram/ui/main_window.py:751
+#: kram/ui/main_window.py:756
 msgid "Applying changes"
 msgstr "Verkställer ändringar"
 
-#: kram/ui/main_window.py:758
+#: kram/ui/main_window.py:763 kram/ui/main_window.py:770
 msgid "Refreshing metadata"
 msgstr "Uppdaterar metadata"
 
-#: kram/ui/main_window.py:784
+#: kram/ui/main_window.py:802
 #, python-brace-format
 msgid "Removing {n} repository"
 msgid_plural "Removing {n} repositories"
 msgstr[0] "Tar bort {n} förråd"
 msgstr[1] "Tar bort {n} förråd"
 
-#: kram/ui/main_window.py:788
+#: kram/ui/main_window.py:806
 msgid "Changing repositories"
 msgstr "Ändrar förråd"
 
-#: kram/ui/main_window.py:823
+#: kram/ui/main_window.py:841
 msgid "Downloading metadata again"
 msgstr "Hämtar metadata igen"
 
-#: kram/ui/main_window.py:825
+#: kram/ui/main_window.py:843
 msgid "Cleaning the package cache"
 msgstr "Rensar paketcachen"
 
-#: kram/ui/main_window.py:867
+#: kram/ui/main_window.py:885
 msgid "Open Package File"
 msgstr "Öppna paketfil"
 
-#: kram/ui/main_window.py:868
+#: kram/ui/main_window.py:886
 msgid "RPM packages (*.rpm)"
 msgstr "RPM-paket (*.rpm)"
 

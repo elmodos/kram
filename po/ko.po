@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kram\n"
 "Report-Msgid-Bugs-To: https://github.com/elmodos/kram/issues\n"
-"POT-Creation-Date: 2026-11-19 13:08+0200\n"
+"POT-Creation-Date: 2026-11-19 13:14+0200\n"
 "PO-Revision-Date: 2026-11-04 14:07+0200\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -501,7 +501,7 @@ msgstr "내려받은 .rpm 파일을 설치합니다 (창에 끌어다 놓아도 
 msgid "Quit"
 msgstr "끝내기"
 
-#: kram/ui/actions.py:87 kram/ui/main_window.py:573
+#: kram/ui/actions.py:87 kram/ui/main_window.py:578
 msgid "About Kram"
 msgstr "Kram 정보"
 
@@ -791,7 +791,7 @@ msgstr "할 일이 없습니다: 표시한 변경 사항이 이미 적용되어 
 
 #: kram/ui/apply_dialog.py:342 kram/ui/install_dialog.py:192
 #: kram/ui/install_dialog.py:208 kram/ui/install_dialog.py:265
-#: kram/ui/main_window.py:718
+#: kram/ui/main_window.py:723
 msgid "Resolving dependencies…"
 msgstr "의존성을 해결하는 중…"
 
@@ -800,7 +800,7 @@ msgid "These choices cannot be carried out:"
 msgstr "이 선택은 실행할 수 없습니다:"
 
 #: kram/ui/apply_dialog.py:356 kram/ui/install_dialog.py:259
-#: kram/ui/install_dialog.py:289 kram/ui/main_window.py:720
+#: kram/ui/install_dialog.py:289 kram/ui/main_window.py:725
 #, python-brace-format
 msgid ""
 "Could not resolve the changes:\n"
@@ -1838,8 +1838,12 @@ msgid "Installing {name}"
 msgstr "{name} 설치 중"
 
 #: kram/ui/main_window.py:65
-msgid "To keep an installed package at its version, select it and choose Package → Lock Version: upgrades then leave it out until it is unlocked."
-msgstr "설치된 패키지를 현재 버전으로 유지하려면 패키지를 선택하고 패키지 → 버전 잠그기를 고르세요. 잠금을 해제할 때까지 업그레이드에서 제외됩니다."
+msgid ""
+"To keep an installed package at its version, select it and choose Package → "
+"Lock Version: upgrades then leave it out until it is unlocked."
+msgstr ""
+"설치된 패키지를 현재 버전으로 유지하려면 패키지를 선택하고 패키지 → 버전 잠그"
+"기를 고르세요. 잠금을 해제할 때까지 업그레이드에서 제외됩니다."
 
 #: kram/ui/main_window.py:75
 msgid "Package Manager"
@@ -1880,27 +1884,31 @@ msgstr "“{what}”을(를) 제공하는 패키지가 없습니다"
 msgid "Package {name} not found in the catalog"
 msgstr "카탈로그에서 패키지 {name}을(를) 찾을 수 없습니다"
 
-#: kram/ui/main_window.py:557
+#: kram/ui/main_window.py:554
+msgid "Refresh Metadata"
+msgstr "메타데이터 새로 고침"
+
+#: kram/ui/main_window.py:562
 msgid "Remove from History"
 msgstr "기록에서 제거"
 
-#: kram/ui/main_window.py:559
+#: kram/ui/main_window.py:564
 msgid "Clear Search History"
 msgstr "검색 기록 지우기"
 
-#: kram/ui/main_window.py:574
+#: kram/ui/main_window.py:579
 msgid "A Synaptic-style package manager for Fedora."
 msgstr "Synaptic 스타일의 Fedora용 패키지 관리자입니다."
 
-#: kram/ui/main_window.py:576
+#: kram/ui/main_window.py:581
 msgid "Released under the MIT License."
 msgstr "MIT 라이선스로 배포됩니다."
 
-#: kram/ui/main_window.py:579
+#: kram/ui/main_window.py:584
 msgid "What's New"
 msgstr "새로운 기능"
 
-#: kram/ui/main_window.py:642
+#: kram/ui/main_window.py:647
 #, python-brace-format
 msgid ""
 "{n} upgrade or downgrade unmarked: the version lock keeps the installed "
@@ -1912,33 +1920,33 @@ msgstr[0] ""
 "업그레이드 또는 다운그레이드 표시 {n}개를 해제했습니다: 버전 잠금이 설치된 버"
 "전을 유지합니다"
 
-#: kram/ui/main_window.py:645
+#: kram/ui/main_window.py:650
 #, python-brace-format
 msgid "Locking the version of {n} package"
 msgid_plural "Locking the versions of {n} packages"
 msgstr[0] "패키지 {n}개의 버전을 잠그는 중"
 
-#: kram/ui/main_window.py:647
+#: kram/ui/main_window.py:652
 #, python-brace-format
 msgid "Unlocking the version of {n} package"
 msgid_plural "Unlocking the versions of {n} packages"
 msgstr[0] "패키지 {n}개의 버전 잠금을 해제하는 중"
 
-#: kram/ui/main_window.py:655
+#: kram/ui/main_window.py:660
 #, python-brace-format
 msgid "{n} marking saved to {path}"
 msgid_plural "{n} markings saved to {path}"
 msgstr[0] "표시 {n}개를 {path}에 저장했습니다"
 
-#: kram/ui/main_window.py:659
+#: kram/ui/main_window.py:664
 msgid "Export List as CSV"
 msgstr "목록을 CSV로 내보내기"
 
-#: kram/ui/main_window.py:662
+#: kram/ui/main_window.py:667
 msgid "CSV files (*.csv);;All files (*)"
 msgstr "CSV 파일 (*.csv);;모든 파일 (*)"
 
-#: kram/ui/main_window.py:670 kram/ui/markings_file.py:34
+#: kram/ui/main_window.py:675 kram/ui/markings_file.py:34
 #, python-brace-format
 msgid ""
 "Could not save {path}:\n"
@@ -1949,29 +1957,29 @@ msgstr ""
 "\n"
 "{error}"
 
-#: kram/ui/main_window.py:674
+#: kram/ui/main_window.py:679
 #, python-brace-format
 msgid "{n} package exported to {path}"
 msgid_plural "{n} packages exported to {path}"
 msgstr[0] "패키지 {n}개를 {path}(으)로 내보냈습니다"
 
-#: kram/ui/main_window.py:686
+#: kram/ui/main_window.py:691
 msgid "(loading…)"
 msgstr "(불러오는 중…)"
 
-#: kram/ui/main_window.py:693
+#: kram/ui/main_window.py:698
 msgid "No older versions in the repositories"
 msgstr "저장소에 이전 버전이 없습니다"
 
-#: kram/ui/main_window.py:725
+#: kram/ui/main_window.py:730
 msgid "Cannot apply changes"
 msgstr "변경 사항을 적용할 수 없습니다"
 
-#: kram/ui/main_window.py:726
+#: kram/ui/main_window.py:731
 msgid "The marked changes cannot be carried out. Unmark or change them."
 msgstr "표시한 변경 사항을 수행할 수 없습니다. 표시를 해제하거나 변경하십시오."
 
-#: kram/ui/main_window.py:730
+#: kram/ui/main_window.py:735
 msgid ""
 "They need a version the version lock excludes. Unlock the package (Package → "
 "Unlock Version) or unmark the change."
@@ -1979,41 +1987,41 @@ msgstr ""
 "버전 잠금이 제외한 버전이 필요합니다. 패키지의 잠금을 해제하거나 (패키지 → 버"
 "전 잠금 해제) 변경 표시를 해제하세요."
 
-#: kram/ui/main_window.py:732
+#: kram/ui/main_window.py:737
 msgid "Show Locked Packages"
 msgstr "잠긴 패키지 보기"
 
-#: kram/ui/main_window.py:751
+#: kram/ui/main_window.py:756
 msgid "Applying changes"
 msgstr "변경 사항 적용 중"
 
-#: kram/ui/main_window.py:758
+#: kram/ui/main_window.py:763 kram/ui/main_window.py:770
 msgid "Refreshing metadata"
 msgstr "메타데이터 새로 고치는 중"
 
-#: kram/ui/main_window.py:784
+#: kram/ui/main_window.py:802
 #, python-brace-format
 msgid "Removing {n} repository"
 msgid_plural "Removing {n} repositories"
 msgstr[0] "저장소 {n}개 제거 중"
 
-#: kram/ui/main_window.py:788
+#: kram/ui/main_window.py:806
 msgid "Changing repositories"
 msgstr "저장소 변경 중"
 
-#: kram/ui/main_window.py:823
+#: kram/ui/main_window.py:841
 msgid "Downloading metadata again"
 msgstr "메타데이터를 다시 내려받는 중"
 
-#: kram/ui/main_window.py:825
+#: kram/ui/main_window.py:843
 msgid "Cleaning the package cache"
 msgstr "패키지 캐시를 비우는 중"
 
-#: kram/ui/main_window.py:867
+#: kram/ui/main_window.py:885
 msgid "Open Package File"
 msgstr "패키지 파일 열기"
 
-#: kram/ui/main_window.py:868
+#: kram/ui/main_window.py:886
 msgid "RPM packages (*.rpm)"
 msgstr "RPM 패키지 (*.rpm)"
 

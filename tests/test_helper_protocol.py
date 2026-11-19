@@ -66,8 +66,13 @@ def test_rejects_bad_input():
         '{"op": "remove_leftovers", "paths": ["/etc/passwd"]}',
         '{"op": "remove_leftovers", "paths": ["/etc/x/../shadow.rpmsave"]}',
         '{"op": "remove_leftovers", "paths": ["/var/x.rpmsave"]}',
+        '{"op": "refresh", "repos": []}',
+        '{"op": "refresh", "repos": "fedora"}',
+        '{"op": "refresh", "repos": ["-fedora"]}',
+        '{"op": "refresh", "repos": ["fedora; rm -rf /"]}',
+        '{"op": "refresh", "repos": [7]}',
     )
-    assert len(events) == 44
+    assert len(events) == 49
     assert all(ev["event"] == "done" and ev["ok"] is False and ev["stage"] == "protocol" for ev in events)
 
 
