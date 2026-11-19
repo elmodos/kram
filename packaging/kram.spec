@@ -1,5 +1,5 @@
 %global appid io.github.elmodos.Kram
-%global base_version 0.9.0
+%global base_version 0.10.0
 
 Name:           kram
 # A tagged release (v%%{base_version}) is plain %%{base_version}. Any other commit gets a snapshot from
@@ -116,6 +116,16 @@ QT_QPA_PLATFORM=offscreen %pytest
 %{_datadir}/kram/
 
 %changelog
+* Thu Nov 19 2026 Modo Ltunzher <offnormal@gmail.com> - 0.10.0-1
+- Package list: lock a package at its installed version (Package → Lock Version) and unlock it again
+- Package list: a padlock marks locked packages, and the upgrade a lock holds back is shown greyed
+- Sidebar: Status → Locked versions; empty, it tells how to lock a package
+- Package list: an optional Download size column; Size is now Installed size
+- File menu: export the listed packages as CSV
+- Package list: an empty list says why and links to what would fill it
+- F5 reloads, as Ctrl+R does
+- Sidebar: nested entries have their icons indented under their parent
+
 * Thu Nov 19 2026 Modo Ltunzher <offnormal@gmail.com> - 0.9.0-1
 - Package details: the Files tab shows the files in a folder tree or as a list
 - Package details: a filter in the Files tab, with the matched text in bold
