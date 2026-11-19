@@ -31,6 +31,8 @@ left, the selected package's details below](docs/screenshots/main.png)
   unneeded dependencies as `dnf autoremove`; choose
   which recommended packages to take; review the whole transaction and the equivalent `dnf5` command.
   [Marking and applying](docs/guide/applying-changes.md)
+- **Transaction history**: what dnf installed, upgraded and removed, and when; undo a transaction by marking the
+  changes that take it back. [Transaction history](docs/guide/history.md)
 - **Version lock**: keep a package at its installed version, and see which upgrade the lock holds back.
   [Locking a version](docs/guide/package-list.md#locking-a-version)
 - **Downloaded .rpm files**, checked before installing: signature, root scripts, dependencies, a newer
@@ -54,6 +56,7 @@ What each part of Kram does, with screenshots:
   details.
 - [Marking and applying changes](docs/guide/applying-changes.md): marking packages, reviewing the
   transaction, the progress window and key import.
+- [Transaction history](docs/guide/history.md): past transactions, their packages, and undoing one.
 - [Installing a downloaded .rpm file](docs/guide/rpm-files.md): what Kram checks before installing a file.
 - [Repositories and COPR](docs/guide/repositories.md): enabling repositories and COPR projects, searching
   Copr.

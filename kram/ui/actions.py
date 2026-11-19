@@ -81,6 +81,8 @@ class WindowActions:
                             tip=_("Mark the changes listed in a saved markings file"))
         self.export_csv = a(_("Export List as CSV…"), "document-export", enabled=False,
                             tip=_("Save the packages listed now, in their order, to a CSV file"))
+        self.history = a(_("Transaction History…"), "view-history", "Ctrl+H", enabled=False,
+                         tip=_("What dnf installed, upgraded and removed, and when; undo a transaction"))
         self.open_file = a(_("Open Package File…"), "document-open", enabled=False,
                            tip=_("Install a downloaded .rpm file (you can also drop it on the window)"))
         self.quit = a(_("Quit"), "application-exit", QKeySequence.StandardKey.Quit)
@@ -108,6 +110,8 @@ class WindowActions:
                             "password)"))
         self.unlock = a(_("Unlock Version"), "object-unlocked", table=True,
                         tip=_("Remove the version lock: the package gets upgrades again (needs a password)"))
+        self.show_in_history = a(_("Show in History"), "view-history", enabled=False, table=True,
+                                 tip=_("The transactions that changed this package"))
         self.unmark = a(_("Unmark"), "edit-undo", "Ctrl+Z", tip=_("Unmark the selected packages"), table=True)
         self.set_upgrades_available(False)
 
@@ -142,6 +146,8 @@ class WindowActions:
         menu.addActions([self.lock, self.unlock])
         menu.addSeparator()
         menu.addAction(self.unmark)
+        menu.addSeparator()
+        menu.addAction(self.show_in_history)
 
     def fill_menu_bar(self, mb: QMenuBar, settings: list[QAction], toolbar_styles: list[QAction]) -> None:
         """`settings`: checkable settings of other parts, at the end of the Settings menu."""
@@ -152,6 +158,8 @@ class WindowActions:
         m.addSeparator()
         m.addActions([self.read_marks, self.save_marks])
         m.addAction(self.export_csv)
+        m.addSeparator()
+        m.addAction(self.history)
         m.addSeparator()
         m.addAction(self.quit)
         m = mb.addMenu(_("&Edit"))

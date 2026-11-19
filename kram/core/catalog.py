@@ -14,6 +14,7 @@ from ..helper.kram_helper import build_goal, cmdline_package, local_goal
 from ..i18n import language
 from . import capabilities
 from .evr import split_evr
+from .history import ITEM_REASONS, HistoryItem, HistoryTransaction, PackageState, read_items, read_transactions
 from .model import (
     CatalogSnapshot,
     ChangelogEntry,
@@ -698,3 +699,37 @@ class Catalog:
         installed = [k for k in found if k in self._pkgs and self._pkgs[k][0] is not None]
         known = [k for k in found if k in self._pkgs]
         return (installed or known or [None])[0]
+
+    # ---------------------------------------------------------------- history
+
+    def history(self) -> list[HistoryTransaction]:
+        """dnf's transactions, the newest first, without their packages."""
+        return read_transactions(self._base)
+
+    def history_items(self, ids: list[int]) -> dict[int, tuple[HistoryItem, ...]]:
+        return read_items(self._base, ids)
+
+    def package_states(self, keys: Iterable[tuple[str, str]]) -> dict[tuple[str, str], PackageState]:
+        """What the system has now of these name.arch: for planning an undo, see `plan_undo`."""
+        keys = set(keys)
+        names = sorted({name for name, _arch in keys})
+        installed: dict[tuple[str, str], list] = {}
+        available: dict[tuple[str, str], set[str]] = {}
+        q = libdnf5.rpm.PackageQuery(self._base)
+        q.filter_name(names)
+        for p in q:
+            key = p.get_name(), p.get_arch()
+            if key not in keys:
+                continue
+            if p.is_installed():
+                installed.setdefault(key, []).append(p)
+            else:
+                available.setdefault(key, set()).add(p.get_evr())
+        states = {}
+        for key in keys:
+            have = sorted(installed.get(key, []), key=_evr_sort_key)
+            cand = self._pkgs.get(key, (None, None))[1]
+            states[key] = PackageState(tuple(p.get_evr() for p in have), frozenset(available.get(key, ())),
+                                       cand.get_evr() if cand is not None and not cand.is_installed() else "",
+                                       ITEM_REASONS.get(have[-1].get_reason()) if have else None)
+        return states

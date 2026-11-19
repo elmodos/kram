@@ -25,6 +25,7 @@ from ..core.catalog import Catalog
 from ..core.csv_export import write_csv
 from ..core.evr import evr_cmp
 from ..core.filters import FilterEntry
+from ..core.history import UndoProblem, UndoStep, plan_undo
 from ..core.marks import Action, allowed_actions
 from ..core.model import CatalogSnapshot, PkgRow, Status, TransactionPreview
 from ..core.repo_files import file_owners
@@ -41,6 +42,7 @@ from .copr_dialog import CoprDialog
 from .custom_filters import CustomFilters
 from .details import DetailsTabs
 from .details_loader import DetailsLoader
+from .history_dialog import HistoryDialog
 from .install_dialog import InstallDialog
 from .marking import Marker
 from .markings_file import ask_markings_file, save_markings
@@ -92,6 +94,7 @@ class MainWindow(QMainWindow):
         self.releases = ReleaseWatcher(self)
         self.releases.act_upgrade.triggered.connect(self.open_upgrade)
         self._upgrade_dialog: UpgradeDialog | None = None
+        self._history_dialog: HistoryDialog | None = None
         self.search = SearchBar(self)
         self.search.changed.connect(self.apply_filter)
         self.search.submitted.connect(self._on_search_enter)
@@ -120,7 +123,8 @@ class MainWindow(QMainWindow):
             (acts.apply, self.apply), (acts.unmark_all, self.marker.unmark_all),
             (acts.properties, lambda: self.details.select_name("general")),
             (acts.repos, self.open_repos), (acts.copr, self.open_copr), (acts.cache, self.open_cache),
-            (acts.notifications, self.open_notifications),
+            (acts.notifications, self.open_notifications), (acts.history, lambda: self.open_history()),
+            (acts.show_in_history, self.show_in_history),
             (acts.filters, lambda: self.custom_filters.edit()), (acts.new_filter, self.new_filter_from_view),
             (acts.find, self.search.focus), (acts.back, self.go_back),
             (acts.save_marks, self.save_marks), (acts.read_marks, self.read_marks), (acts.export_csv, self.export_csv),
@@ -606,6 +610,10 @@ class MainWindow(QMainWindow):
         self.acts.save_marks.setEnabled(n > 0)
         self.acts.read_marks.setEnabled(self.snapshot is not None)
         self.acts.export_csv.setEnabled(self.snapshot is not None)
+        self.acts.history.setEnabled(self.snapshot is not None)
+        self.acts.show_in_history.setEnabled(self.snapshot is not None and len(rows) == 1)
+        if self._history_dialog is not None:
+            self._history_dialog.set_marking(self.snapshot is not None, self.helper.busy)
         for needs_catalog in (self.acts.repos, self.acts.copr, self.acts.cache, self.acts.filters, self.acts.new_filter,
                               self.releases.act_upgrade):
             needs_catalog.setEnabled(self.snapshot is not None)
@@ -831,6 +839,92 @@ class MainWindow(QMainWindow):
         if not self.snapshot or self.helper.busy:
             return
         CacheDialog(self.dnf, self._clean_cache, self, helper=self._helper_result).exec()
+
+    def open_history(self, name: str | None = None) -> None:
+        """File → Transaction History; with a package name, filtered by it (Package → Show in History)."""
+        if self.snapshot is None:
+            return
+        dlg = self._history_dialog
+        if dlg is None:
+            dlg = self._history_dialog = HistoryDialog(self.dnf, self.catalog, self)
+            dlg.showPackage.connect(self._show_from_history)
+            dlg.undoRequested.connect(self.undo_transaction)
+            # after Apply the new transaction shows; a closed window reads the history again when it opens
+            self.catalogLoaded.connect(lambda _snap: dlg.isVisible() and dlg.reload())
+        if not dlg.isVisible():
+            dlg.reload()
+        if name is not None:
+            dlg.show_package_name(name)
+        dlg.set_marking(self.snapshot is not None, self.helper.busy)
+        dlg.show()
+        dlg.raise_()
+        dlg.activateWindow()
+
+    def _show_from_history(self, key: tuple[str, str]) -> None:
+        """A package double-clicked in the history: the user wants it, so the history closes and the package list
+        gets the focus (selected behind the window, it was easy to miss)."""
+        if self._history_dialog is not None:
+            self._history_dialog.close()
+        self.navigate(key)
+        self.activateWindow()
+        self.table.setFocus()
+
+    def show_in_history(self) -> None:
+        rows = self._selected_rows()
+        if len(rows) == 1:
+            self.open_history(rows[0].name)
+
+    def undo_transaction(self, tid: int) -> None:
+        """Mark the changes that undo transaction `tid`, show them in the Marked list and say what cannot be undone."""
+        dlg = self._history_dialog
+        rows = dlg.rows_of(tid) if dlg is not None else None
+        if not rows or self.snapshot is None or self.helper.busy:
+            return
+        snap = self.snapshot
+
+        def done(states) -> None:
+            if self.snapshot is not snap:
+                return  # reloaded meanwhile: the states may be out of date
+            steps, problems = plan_undo(rows, states)
+            failed = self.marker.mark_undo(steps)
+            problems += [UndoProblem(f"{s.key[0]}.{s.key[1]}", _("cannot be marked")) for s in failed]
+            marked = [s for s in steps if s not in failed]
+            dlg.close()
+            if marked:
+                self.search.clear(quietly=True)
+                self.sidebar.select("status", "status:marked")
+                self.apply_filter()  # already on Marked: the list shows the new marks too
+            self._report_undo(tid, marked, problems)
+        self.dnf.submit(lambda: self.catalog.package_states({r.key for r in rows}), done, self._on_error)
+
+    def _report_undo(self, tid: int, marked: list[UndoStep], problems: list[UndoProblem]) -> None:
+        title = _("Undo Transaction {id}").format(id=tid)
+        text = ngettext("{n} change marked to undo transaction {id}.", "{n} changes marked to undo transaction {id}.",
+                        len(marked)).format(n=len(marked), id=tid)
+        others = [_("{package}: installs {version}, {old} is no longer in the repositories").format(
+                      package=f"{s.key[0]}.{s.key[1]}", version=s.evr, old=s.instead_of)
+                  for s in marked if s.instead_of]
+        if not problems and not others:
+            if marked:
+                self.statusBar().showMessage(text + " " + _("Review them, then apply."), 8000)
+            return
+        if not marked:
+            text = _("Nothing of transaction {id} can be undone.").format(id=tid)
+        lines = [f"{p.package}: {p.why}" for p in problems]
+        info = []
+        if problems:
+            info.append(ngettext("{n} package cannot be undone:", "{n} packages cannot be undone:",
+                                 len(problems)).format(n=len(problems)) + "\n" + "\n".join(lines[:12])
+                        + ("\n…" if len(lines) > 12 else ""))
+        if others:
+            info.append(ngettext("{n} package comes back in another version:",
+                                 "{n} packages come back in another version:", len(others)).format(n=len(others))
+                        + "\n" + "\n".join(others[:6]) + ("\n…" if len(others) > 6 else ""))
+        box = QMessageBox(QMessageBox.Icon.Information if marked else QMessageBox.Icon.Warning, title, text,
+                          QMessageBox.StandardButton.Ok, self)
+        box.setInformativeText("\n\n".join(info))
+        box.setDetailedText("\n".join(lines + others))
+        box.exec()
 
     def open_notifications(self):
         NotifierDialog(self).exec()

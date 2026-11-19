@@ -383,6 +383,28 @@ a `.desktop` file in `/usr/share/applications`: it means "has a menu entry", so 
 - Not done: `dnf5 versionlock exclude` (keep away one bad version) from Kram; such entries made in a terminal show
   as locks with their conditions.
 
+**Transaction history** (designed and built 2026-11-19; decided against on 2026-11-04, taken up again for parity
+with dnf-ui, whose 0.8.4 only browses the history). File → Transaction History… (Ctrl+H), a window of its own, not
+modal; Package → Show in History opens it filtered by the package's name.
+- **Reading**: libdnf5's `TransactionHistory` on the worker thread, no root (`transaction_history.sqlite` is world
+  readable); `kram/core/history.py`. The transactions alone take ~5 ms; their packages ~5 ms per transaction (1.1 s for
+  216 on the development machine), so they load in chunks of 25 jobs after the list shows, the current one first, and
+  other worker jobs (search) get their turn in between. The comps groups of a transaction are left out: the Python
+  binding returns an unwrapped vector for them.
+- **Look**: transactions (id, date, change counts, user, command line; "kram" shows as Kram, failed ones with an error
+  icon) above their packages (action icon as the marks', name.arch, "old → new" version, repository, reason). An
+  upgrade is two items in dnf's record (UPGRADE + REPLACED): shown as one row; a REPLACED of another name is shown
+  as obsoleted. A filter by package name hides the transactions without it and shows it in bold.
+- **Undo is marks, not `dnf5 history undo`**: *Mark Changes to Undo* turns the transaction into ordinary marks (added
+  to the current ones), shows the Marked list, and Apply does the rest; no new helper operation, the user sees and can
+  change every step. `plan_undo`: an install → remove; an upgrade → downgrade to the old version, if a repository still
+  has it; a downgrade → upgrade, only when the old version is the newest one; a removal → install that version, or the
+  newest with a note; a reason change → the opposite mark. A package changed again since is left alone (undoing it
+  would undo the later change too), and so is an installonly package with several versions installed (a removal mark
+  takes name.arch). What cannot be undone is listed with the reason. The main limit: Fedora keeps only the newest
+  update, so undoing upgrades mostly fails; installs and removals undo almost always.
+- Not done: `dnf5 history rollback` (everything after a transaction) and redo; undoing several transactions at once.
+
 **Sleep during a long download** (idea, 2026-11-10, not built: the user decided it is not needed yet). The rpm
 transaction is already covered: `rpm-plugin-systemd-inhibit` (a Recommends of python3-dnf, installed on a default
 Fedora) takes a logind lock `idle:sleep:shutdown`, mode `block`, while `tr.run()` works; Plasma's battery widget shows
@@ -639,8 +661,6 @@ once per session; `dnf5daemon-server` is not installed by default; the `v0` API 
 versions; D-Bus with complex types is awkward from PySide6; harder to test in containers. Both at once only
 makes sense as a migration path.
 
-**Decided against** (2026-11-04): transaction history with undo/rollback (`dnf5 history`). Not planned; `dnf5
-history` covers it from the terminal.
 
 ## 11. Risks
 

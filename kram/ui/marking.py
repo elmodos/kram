@@ -8,6 +8,7 @@ from PySide6.QtWidgets import QMenu, QMessageBox, QWidget
 
 from ..core.catalog import Catalog
 from ..core.filters import upgrades_by_kind
+from ..core.history import UndoStep
 from ..core.marks import Action, Mark, allowed_actions, allowed_group_actions
 from ..core.model import CatalogSnapshot, GroupInfo, PkgRow, Status
 from ..core.worker import DnfWorker
@@ -195,6 +196,22 @@ class Marker(QObject):
             self.groupsChanged.emit()
             self.message.emit(ngettext("{n} package marked", "{n} packages marked", n).format(n=n), 5000)
         read_markings(self._window, path, self.marks, {r.key: r for r in self.snapshot.rows}, self.group, marked)
+
+    def mark_undo(self, steps: list[UndoStep]) -> list[UndoStep]:
+        """Add the marks that undo a transaction (see plan_undo) to the current ones; the steps that could not be
+        marked come back. Removals go together, so the packages that must go with them are asked about once."""
+        rows = {r.key: r for r in self.snapshot.rows}
+        failed, removals = [], []
+        for step in steps:
+            row = rows.get(step.key)
+            if row is not None and step.action is Action.REMOVE and row.installed:
+                removals.append(row)
+            elif row is None or not self.marks.set(row, step.action, step.evr):
+                failed.append(step)
+        self.changed.emit(None)
+        if removals:
+            self.mark(removals, Action.REMOVE)
+        return failed
 
     # ---------------------------------------------------------------- groups
 
