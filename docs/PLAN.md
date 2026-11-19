@@ -119,7 +119,8 @@ Status icon (Synaptic-style box with colour/glyph):
 | ■↓ | installed version is newer than any repository has (local build, version withdrawn) |
 | ■? | installed, no enabled repository provides it ("orphaned") |
 | ■· | installed as a dependency and no longer needed (autoremove candidate) |
-| marks | + install, ↑ upgrade, ↓ downgrade, R reinstall, ✕ remove, U/D install reason; 🔒 versionlock (later) |
+| marks | + install, ↑ upgrade, ↓ downgrade, R reinstall, ✕ remove, U/D install reason |
+| 🔒 | dnf's version lock holds the package (§10, "Version lock"): a padlock in place of the glyph |
 
 A separate narrow **Origin** column (second column, like the Ubuntu icon in Synaptic):
 
@@ -351,8 +352,36 @@ filters run on the GUI thread: the catalog load answers the saved filters' capab
 and the editor asks for new ones in the background ("Counting…"). `application()` is what rpm-build gives a package with
 a `.desktop` file in `/usr/share/applications`: it means "has a menu entry", so it leaves out terminal programs.
 
-**After the MVP**: versionlock (🔒), offline system upgrades
-(`dnf5 offline`), dnf-automatic settings, in-app language override.
+**After the MVP**: offline system upgrades (`dnf5 offline`), dnf-automatic settings, in-app language override.
+
+**Version lock** (designed and built 2026-11-19). `dnf5 versionlock`, as Synaptic's "Lock Version".
+- **What libdnf5 does by itself**: the lock lives in `/etc/dnf/versionlock.toml`, and while loading libdnf5 leaves the
+  versions it excludes out of every query. A locked package therefore has no upgrade, its candidate is the locked
+  version, Mark All Upgrades and the tray checker (which watches the file) skip it with no code of ours. What the lock
+  holds back is only visible through `PackageSack.get_versionlock_excludes()` (`kram/core/versionlock.py`); a
+  `PackageQuery` built from that set applies the excludes again and comes out empty, so it is filtered by hand.
+  `get_versionlock_config()` must stay referenced while its entries are read, or their strings are garbage.
+- **Row**: `PkgRow.locks` (the entries for the name, globs such as `kernel*` included), `held_evr` (the newest
+  excluded version newer than the installed one and the candidate) and `held_advisories` (counted like an upgrade's,
+  `updates.advisories_up_to`). Held advisories are kept apart from `advisories`: Security updates and the ways to mark
+  upgrades must not count an upgrade that cannot be installed.
+- **Look**: a padlock in place of the status glyph (white on the green installed box; grey on the empty box for a lock
+  left without its package), the held version in grey italics in the Latest version column with a ring instead of the
+  advisory dot, greyed update type; the tooltips, the General tab (the entries and dnf's comment), the Versions tab
+  ("excluded by the version lock", left out of Downgrade to Version) and the Advisories tab (what stays out). Status →
+  Locked versions (shown even while empty, so that the feature can be found) and a "Version locked" status in custom filters. A mark still shows over it.
+- **Changing it**: Package → Lock Version / Unlock Version, at once through the helper (`{"op": "versionlock",
+  "action": "add"|"delete", "names": [...]}` → `dnf5 versionlock add|delete`), then a reload; not marked for Apply,
+  since nothing is installed. Names never start with "-". `add` on a package that is not installed locks it to every
+  version the repositories have, which locks nothing, so the helper refuses names `rpm -q` does not know. Locking
+  unmarks the upgrade and downgrade marks of those packages and says so. Unlock deletes every entry of the name.
+- **Apply**: a resolve problem caused by the lock (libdnf5's `GoalProblem_EXCLUDED_VERSIONLOCK`, or the solver naming
+  "versionlock") adds a hint and a "Show Locked Packages" button to the error.
+- Checked in a container (`scripts/container_check.sh`): a package installed from `fedora` while `updates` has a
+  newer one, locked, the catalog's row and versions, the resolve problem, unlocked again; a name that is not
+  installed is refused.
+- Not done: `dnf5 versionlock exclude` (keep away one bad version) from Kram; such entries made in a terminal show
+  as locks with their conditions.
 
 **Sleep during a long download** (idea, 2026-11-10, not built: the user decided it is not needed yet). The rpm
 transaction is already covered: `rpm-plugin-systemd-inhibit` (a Recommends of python3-dnf, installed on a default

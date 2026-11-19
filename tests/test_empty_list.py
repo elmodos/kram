@@ -11,6 +11,16 @@ def test_no_search_names_the_filter():
     assert text == "No packages in “Upgradable”."
 
 
+def test_an_empty_filter_says_how_to_fill_it():
+    """Status → Locked versions stays in the sidebar while nothing is locked, and says how to lock a package."""
+    from kram.ui.main_window import EMPTY_HINTS
+
+    text = explain(EmptyList("Locked versions", False, hint=EMPTY_HINTS["status:locked"]))
+    assert text.startswith("No packages in “Locked versions”.<br><br>")
+    assert "Package → Lock Version" in text
+    assert "Package" not in explain(EmptyList("Locked versions", False, "tmux", hint="Package"))  # not over a search
+
+
 def test_search_in_a_filter_offers_all():
     text = explain(EmptyList("Installed", False, "vlc", found_in_all=3))
     assert "Nothing found for “vlc” in “Installed”." in text

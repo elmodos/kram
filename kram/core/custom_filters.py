@@ -70,8 +70,9 @@ OP_LABELS = {
     Op.LESS: _("less than"),
 }
 
-# "status" values: the Status enum plus "installed" meaning any installed state
+# "status" values: the Status enum plus "installed" meaning any installed state, and "locked" for dnf's version lock
 STATUS_ANY_INSTALLED = "any_installed"
+STATUS_LOCKED = "locked"
 STATUS_CHOICES = {
     STATUS_ANY_INSTALLED: N_("Installed (any)"),
     Status.NOT_INSTALLED.value: N_("Not installed"),
@@ -80,6 +81,7 @@ STATUS_CHOICES = {
     Status.NEWER.value: N_("Newer than repository"),
     Status.ORPHAN.value: N_("Orphaned (no repository)"),
     Status.UNNEEDED.value: N_("Unneeded dependency"),
+    STATUS_LOCKED: N_("Version locked"),
 }
 # "update" values: an advisory type, or a security advisory of one of HIGH_SECURITY_LEVELS
 UPDATE_SECURITY_HIGH = "security_high"
@@ -235,6 +237,8 @@ def _compile(c: Condition, snap: CatalogSnapshot) -> Predicate:
                 hit = lambda r: r.status in INSTALLED_LIKE
             elif c.value == Status.UNNEEDED.value:  # as the sidebar entry: orphaned and upgradable ones too
                 hit = lambda r: r.unneeded
+            elif c.value == STATUS_LOCKED:
+                hit = lambda r: r.locked
             else:
                 hit = lambda r: r.status.value == c.value
         case Field.ORIGIN:
@@ -267,6 +271,7 @@ def conditions_for_view(entry_id: str, search: str, search_field: Field | None) 
         "status:unneeded": (Field.STATUS, Status.UNNEEDED.value),
         "status:orphan": (Field.STATUS, Status.ORPHAN.value),
         "status:newer": (Field.STATUS, Status.NEWER.value),
+        "status:locked": (Field.STATUS, STATUS_LOCKED),
         "status:user": (Field.REASON, "user"),
         "status:security": (Field.UPDATE, "security"),
         "status:bugfix": (Field.UPDATE, "bugfix"),

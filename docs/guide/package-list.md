@@ -42,13 +42,27 @@ one, all of their advisories count: a security fix in one of them is shown even 
 fix. Repositories that publish no advisories (RPM Fusion, COPR, most third-party ones) leave both empty.
 Sorting by the column puts the most important upgrades first; right-click the table header to hide it.
 
+## Locking a version
+
+*Package → Lock Version* keeps an installed package at its installed version, as `dnf5 versionlock add` does:
+upgrades leave it out, whether from Kram, `dnf upgrade` or Discover, until *Package → Unlock Version*. Locking
+is not marked for Apply: it changes dnf's configuration (`/etc/dnf/versionlock.toml`) at once and asks for the
+password. Only installed packages can be locked. Upgrades or downgrades marked for a package are unmarked when
+it is locked.
+
+A locked package has a padlock in its status box: white on green when it is installed, grey on white for a lock
+that outlived its package. When a repository has a newer version, the Latest version column shows it in grey
+italics, and a ring takes the place of the update type's dot: the upgrade is there, but the lock holds it back.
+The General tab shows the lock itself, and the Versions tab the versions it excludes. Locks made with
+`dnf5 versionlock` in a terminal show the same way.
+
 ## Filters
 
 The sidebar on the left narrows the table. The buttons at its bottom switch between groups of filters:
 
 - **Status**: all, installed, not installed, upgradable (and below it the security updates and the bug fix
   updates), installed by you, unneeded dependencies, orphaned (installed but in no repository), newer than the
-  repository, marked.
+  repository, locked versions, marked.
 - **Origin**: Fedora, COPR, third-party, local; under each, every repository on its own.
 - **Groups**: the comps groups; installed ones are in bold. Right-click a group to mark it for installation,
   or an installed one for upgrade or removal, as `dnf5 group install`, `upgrade` and `remove` do. Installing a

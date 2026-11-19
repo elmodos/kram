@@ -7,7 +7,7 @@ from collections.abc import Callable
 from functools import cache
 
 from PySide6.QtCore import QLineF, QPointF, QRect, QRectF, QSize, Qt
-from PySide6.QtGui import QColor, QFont, QIcon, QIconEngine, QPainter, QPen, QPixmap, QTransform
+from PySide6.QtGui import QColor, QFont, QIcon, QIconEngine, QPainter, QPainterPath, QPen, QPixmap, QTransform
 from PySide6.QtWidgets import QApplication, QStyleOption
 
 from ..core.marks import Action
@@ -147,6 +147,35 @@ def status_icon(status: Status) -> QIcon:
     return _painted(draw)
 
 
+def _padlock(p: QPainter, color) -> None:
+    """A padlock filling the inside of the status box: the shackle above, the body below."""
+    p.setPen(QPen(QColor(color), 1.3, Qt.PenStyle.SolidLine, Qt.PenCapStyle.FlatCap))
+    p.setBrush(Qt.BrushStyle.NoBrush)
+    shackle = QPainterPath(QPointF(6.3, 7.6))
+    shackle.lineTo(6.3, 6.1)
+    shackle.arcTo(QRectF(6.3, 4.4, 3.4, 3.4), 180, -180)
+    shackle.lineTo(9.7, 7.6)
+    p.drawPath(shackle)
+    p.setPen(Qt.PenStyle.NoPen)
+    p.setBrush(QColor(color))
+    p.drawRoundedRect(QRectF(5, 7.4, 6, 4.8), 0.6, 0.6)
+
+
+@cache
+def locked_icon(installed: bool) -> QIcon:
+    """A package dnf's version lock holds: the installed box (or the empty one: a lock left without the package)
+    with a padlock in place of the status glyph."""
+    def draw(p: QPainter) -> None:
+        if installed:
+            _box(p, "#2f5a22", "#4e8f3a")
+            _padlock(p, Qt.GlobalColor.white)
+        else:
+            _box(p, "#888", Qt.GlobalColor.white)
+            _padlock(p, "#777")
+
+    return _painted(draw)
+
+
 ORIGIN_LABEL = {
     Origin.FEDORA: "Fedora", Origin.COPR: "COPR", Origin.THIRD_PARTY: _("Third-party origin"),
     Origin.LOCAL: _("Local origin"), Origin.UNKNOWN: _("Unknown origin"),
@@ -270,6 +299,17 @@ def advisory_icon(level: str | None) -> QIcon:
 
 
 @cache
+def held_advisory_icon(level: str) -> QIcon:
+    """A ring in the colour of an advisory level, in place of its dot: an update the version lock holds back."""
+    def draw(p: QPainter) -> None:
+        p.setPen(QPen(QColor(ADVISORY_COLOR[level]), 1.6))
+        p.setBrush(Qt.BrushStyle.NoBrush)
+        p.drawEllipse(QRectF(4.3, 4.3, 7.4, 7.4))
+
+    return _painted(draw)
+
+
+@cache
 def blocked_icon() -> QIcon:
     """A red cross the size of the advisory dot, in its place: the upgrade cannot be installed now. The white halo
     keeps it visible on dark rows, the selection and the reddish background of a row marked for removal."""
@@ -293,6 +333,7 @@ _STATUS_FILTER_ICONS: dict[str, Callable[[], QIcon]] = {
     "status:unneeded": lambda: status_icon(Status.UNNEEDED),
     "status:orphan": lambda: status_icon(Status.ORPHAN),
     "status:newer": lambda: status_icon(Status.NEWER),
+    "status:locked": lambda: locked_icon(True),
     "status:marked": lambda: _glyph_box("#8e5cc2", "#563080", _check),
 }
 

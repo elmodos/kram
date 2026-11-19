@@ -145,17 +145,27 @@ def upgrade_advisories(base, upgradable: set[tuple[str, str]]) -> dict[tuple[str
     would compare apples and pears."""
     if not upgradable:
         return {}
-    installed = libdnf5.rpm.PackageQuery(base)
-    installed.filter_installed()
-    installed.filter_latest_evr()
     newest = libdnf5.rpm.PackageQuery(base)
     newest.filter_upgrades()
     newest.filter_latest_evr()
     newest_evr: dict[tuple[str, str], tuple[str, str, str]] = {}
     for p in newest:
         key = p.get_name(), p.get_arch()
-        if key not in newest_evr or rpm.labelCompare(_evr(p), newest_evr[key]) > 0:
+        if key in upgradable and (key not in newest_evr or rpm.labelCompare(_evr(p), newest_evr[key]) > 0):
             newest_evr[key] = _evr(p)
+    return advisories_up_to(base, newest_evr)
+
+
+def advisories_up_to(base, newest_evr: dict[tuple[str, str], tuple[str, str, str]]
+                     ) -> dict[tuple[str, str], tuple[Advisory, ...]]:
+    """(name, arch) of installed packages -> the advisories of their versions newer than the installed one, up to
+    `newest_evr` of that key (epoch, version, release), the most important first. See upgrade_advisories; the
+    version lock's held-back upgrades are counted the same way."""
+    if not newest_evr:
+        return {}
+    installed = libdnf5.rpm.PackageQuery(base)
+    installed.filter_installed()
+    installed.filter_latest_evr()
     query = libdnf5.advisory.AdvisoryQuery(base)
     query.filter_packages(installed, libdnf5.common.QueryCmp_GT)
     seen: dict[int, Advisory] = {}  # libdnf5's advisory id -> its data, read once for all its packages
@@ -163,7 +173,7 @@ def upgrade_advisories(base, upgradable: set[tuple[str, str]]) -> dict[tuple[str
     for package in query.get_advisory_packages_sorted(installed, libdnf5.common.QueryCmp_GT):
         key = package.get_name(), package.get_arch()
         # an advisory for a version the repositories do not have (yet): its update is not available here
-        if key not in upgradable or key not in newest_evr or rpm.labelCompare(_evr(package), newest_evr[key]) > 0:
+        if key not in newest_evr or rpm.labelCompare(_evr(package), newest_evr[key]) > 0:
             continue
         advisory_id = package.get_advisory_id().id
         if (advisory := seen.get(advisory_id)) is None:

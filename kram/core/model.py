@@ -65,6 +65,13 @@ class Advisory:
         return f"https://bodhi.fedoraproject.org/updates/{self.id}" if self.id.startswith("FEDORA-") else ""
 
 
+@dataclass(frozen=True, slots=True)
+class VersionLock:
+    """An entry of dnf's versionlock configuration (/etc/dnf/versionlock.toml) for a package name."""
+    conditions: str      # "evr = 3.6a-1.fc44"; several are joined with ", " and must all hold
+    comment: str = ""    # dnf5 writes "Added by 'versionlock add' command on <date>"
+
+
 @dataclass(slots=True)
 class PkgRow:
     name: str
@@ -87,6 +94,13 @@ class PkgRow:
     # something more pressing (orphaned, upgradable), which is why it is not only a status
     unneeded: bool = False
     download_size: int | None = None  # the candidate's package file; None without a candidate
+    # dnf's version lock entries for this package name: dnf then ignores the versions they exclude, so the status and
+    # the candidate already follow the lock
+    locks: tuple[VersionLock, ...] = ()
+    # the newest version a repository has that the lock excludes, when it is newer than the installed version and
+    # the candidate: the upgrade the lock holds back. "" if none
+    held_evr: str = ""
+    held_advisories: tuple[Advisory, ...] = ()  # the advisories of that held-back upgrade, as `advisories`
 
     def __post_init__(self) -> None:
         if self.status is Status.UNNEEDED:
@@ -96,6 +110,10 @@ class PkgRow:
     def advisory(self) -> Advisory | None:
         """The most important advisory of the upgrade."""
         return self.advisories[0] if self.advisories else None
+
+    @property
+    def locked(self) -> bool:
+        return bool(self.locks)
 
     @property
     def key(self) -> tuple[str, str]:
@@ -168,6 +186,7 @@ class VersionInfo:
     repo_id: str
     installed: bool = False
     candidate: bool = False
+    locked_out: bool = False   # a version the version lock excludes: dnf will not install it
 
 
 @dataclass(slots=True)
@@ -270,6 +289,7 @@ class TransactionPreview:
     # resolver messages for marked changes it left out: with best=False (Fedora's default) an upgrade whose newest
     # version cannot be installed is skipped without a problem. The rest of the transaction can still run
     skipped: list[str] = field(default_factory=list)
+    versionlock: bool = False    # a problem comes from versions the version lock excludes
 
     @property
     def ok(self) -> bool:

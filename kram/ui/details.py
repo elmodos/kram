@@ -4,15 +4,15 @@ from datetime import datetime
 from urllib.parse import quote, unquote
 
 from PySide6.QtCore import Signal
-from PySide6.QtGui import QDesktopServices, QIcon
+from PySide6.QtGui import QDesktopServices, QIcon, QPalette
 from PySide6.QtWidgets import QTabWidget, QTextBrowser, QTreeWidget, QTreeWidgetItem
 
 from ..core.model import PkgDetails, PkgRow
 from ..core.origin import display_repo
 from ..i18n import _, pgettext
 from .file_list import FileList
-from .icons import ADVISORY_COLOR, ORIGIN_LABEL, advisory_icon, blocked_icon
-from .package_model import ADVISORY_LABEL, blocked_tip, human_size
+from .icons import ADVISORY_COLOR, ORIGIN_LABEL, advisory_icon, blocked_icon, held_advisory_icon
+from .package_model import ADVISORY_LABEL, blocked_tip, held_tip, human_size, shown_advisories
 
 e = html.escape
 
@@ -33,9 +33,13 @@ def _reference(kind: str, ref_id: str) -> str:
 
 
 def _advisories_html(row: PkgRow) -> str:
-    """The advisories of an upgrade: what it fixes, with links to the advisory and to the bugs and CVEs."""
+    """The advisories of an upgrade: what it fixes, with links to the advisory and to the bugs and CVEs. For an
+    upgrade the version lock holds back, that comes first."""
     parts = []
-    for a in row.advisories:
+    if not row.advisories and row.held_evr:
+        parts.append(f"<p><b>{e(held_tip(row))}</b><br>"
+                     f"{e(_('These fixes stay out until the lock is removed (Package → Unlock Version).'))}</p><hr>")
+    for a in shown_advisories(row):
         name = f"<a href='{e(a.url)}'>{e(a.id)}</a>" if a.url else e(a.id)
         parts.append(f"<p><b>{name}</b> — {e(ADVISORY_LABEL[a.level])}"
                      f"{' — ' + _date(a.issued)[:10] if a.issued else ''}"
@@ -123,14 +127,16 @@ class DetailsTabs(QTabWidget):
         index = self.indexOf(self.advisories)
         self._switching = True
         try:
-            if row is None or not row.advisories:
+            if row is None or not (found := shown_advisories(row)):
                 if self.currentIndex() == index:
                     self.setCurrentWidget(self._other_tab)
                 self.setTabVisible(index, False)
                 self.advisories.clear()
                 return
-            self.setTabIcon(index, advisory_icon(row.advisory.level))
-            self.setTabToolTip(index, ADVISORY_LABEL[row.advisory.level])
+            level = found[0].level
+            held = not row.advisories
+            self.setTabIcon(index, held_advisory_icon(level) if held else advisory_icon(level))
+            self.setTabToolTip(index, "\n".join(filter(None, (ADVISORY_LABEL[level], held and held_tip(row)))))
             self.advisories.setHtml(_advisories_html(row))
             self.setTabVisible(index, True)
             if self._wants_advisories:
@@ -182,6 +188,9 @@ class DetailsTabs(QTabWidget):
             tr(_("Built"), _date(d.build_time)),
             tr(pgettext("install date", "Installed"), _date(d.install_time)),
             tr(_("Install reason"), reason),
+            *([tr(_("Version lock"), "<br>".join(
+                e(lock.conditions) + (f" <small>({e(lock.comment)})</small>" if lock.comment else "")
+                for lock in row.locks))] if row.locked else []),
             tr(_("Installed size"), human_size(d.install_size)),
             tr(_("Download size"), human_size(d.download_size) if d.download_size else "—"),
         ]
@@ -211,12 +220,17 @@ class DetailsTabs(QTabWidget):
 
         self.versions.clear()
         for v in d.versions:
-            state = pgettext("version state", "installed") if v.installed else (_("candidate") if v.candidate else "")
+            state = (pgettext("version state", "installed") if v.installed else _("candidate") if v.candidate
+                     else _("excluded by the version lock") if v.locked_out else "")
             item = QTreeWidgetItem([v.evr, display_repo(v.repo_id), state])
             if v.installed or v.candidate:
                 f = item.font(0)
                 f.setBold(True)
                 item.setFont(0, f)
+            if v.locked_out:
+                grey = self.palette().color(QPalette.ColorGroup.Disabled, QPalette.ColorRole.Text)
+                for column in range(3):
+                    item.setForeground(column, grey)
             self.versions.addTopLevelItem(item)
 
         if d.changelog:

@@ -19,6 +19,7 @@ class EmptyList:
     found_in_all: int = 0       # what the same search finds in "All"
     found_in_descriptions: int = 0  # what a description search finds under the same filter
     missing_repos: int = 0      # enabled repositories without metadata: their packages are not in the list
+    hint: str = ""              # what fills the filter, for one that is empty until the user does something
 
 
 def _link(href: str, text: str) -> str:
@@ -30,6 +31,8 @@ def explain(e: EmptyList) -> str:
     filter_, text = escape(e.filter), escape(e.text)
     if not e.text:
         lines = [_("No packages in “{filter}”.").format(filter=filter_)]
+        if e.hint:
+            lines.append(escape(e.hint))
     elif e.in_all:
         lines = [_("Nothing found for “{text}”.").format(text=text)]
     else:

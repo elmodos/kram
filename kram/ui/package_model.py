@@ -8,7 +8,17 @@ from ..core.marks import ACTION_LABELS, MarkSet
 from ..core.model import PkgRow, Reason, Status
 from ..core.origin import display_repo
 from ..i18n import _, pgettext
-from .icons import MARK_BACKGROUND, ORIGIN_LABEL, advisory_icon, blocked_icon, mark_icon, origin_icon, status_icon
+from .icons import (
+    MARK_BACKGROUND,
+    ORIGIN_LABEL,
+    advisory_icon,
+    blocked_icon,
+    held_advisory_icon,
+    locked_icon,
+    mark_icon,
+    origin_icon,
+    status_icon,
+)
 
 # new columns come last (the update type at logical index 9, the download size at 10) so that saved header states
 # keep their columns; the window shows them where they belong: the update type after the latest version, the
@@ -34,11 +44,25 @@ ADVISORY_LABEL = {
 }
 
 
+def shown_advisories(r: PkgRow) -> tuple:
+    """The advisories of the upgrade, or else of the upgrade the version lock holds back."""
+    return r.advisories or r.held_advisories
+
+
 def advisory_tip(r: PkgRow) -> str | None:
     """The advisories of an upgrade, one per line: "Security: important — FEDORA-2026-… — title"."""
-    if not r.advisories:
+    if not (found := shown_advisories(r)):
         return None
-    return "\n".join(" — ".join(filter(None, (ADVISORY_LABEL[a.level], a.id, a.title))) for a in r.advisories)
+    return "\n".join(" — ".join(filter(None, (ADVISORY_LABEL[a.level], a.id, a.title))) for a in found)
+
+
+def held_tip(r: PkgRow) -> str:
+    return _("Version {version} is held back by the version lock").format(version=r.held_evr)
+
+
+def lock_tip(r: PkgRow) -> str:
+    """The lock's entries, one per line: "Version locked: evr = 3.6a-1.fc44"."""
+    return "\n".join(_("Version locked: {conditions}").format(conditions=lock.conditions) for lock in r.locks)
 
 
 REASON_LABEL = {
@@ -89,6 +113,17 @@ def _bold() -> QFont:
     f = QFont()
     f.setBold(True)
     return f
+
+
+def _italic() -> QFont:
+    f = QFont()
+    f.setItalic(True)
+    return f
+
+
+def latest_evr(r: PkgRow) -> str:
+    """The Latest version column: the candidate, or the newer version the version lock holds back."""
+    return r.held_evr or r.candidate_evr
 
 
 def human_size(n: int) -> str:
@@ -189,17 +224,17 @@ class PackageTableModel(QAbstractTableModel):
         rows = self.rows
         if column in (COL_INSTALLED, COL_CANDIDATE):
             if self._evr_rank is None:
-                self._evr_rank = evr_ranks([r.installed_evr for r in rows] + [r.candidate_evr for r in rows])
+                self._evr_rank = evr_ranks([r.installed_evr for r in rows] + [latest_evr(r) for r in rows])
             ranks = self._evr_rank
-            attr = "installed_evr" if column == COL_INSTALLED else "candidate_evr"
+            version = (lambda r: r.installed_evr) if column == COL_INSTALLED else latest_evr
 
             def key(r):
-                evr = getattr(r, attr)
+                evr = version(r)
                 # empty versions go last in both directions
                 return (evr == "") != (order == Qt.SortOrder.DescendingOrder), ranks.get(evr, -1), r.name.lower()
         elif column == COL_ADVISORY:
             def key(r):
-                a = r.advisory
+                a = (shown_advisories(r) or (None,))[0]
                 # the most important first when ascending; packages without an advisory last in both directions
                 rank = a.rank if a else _NO_ADVISORY
                 return (a is None) != (order == Qt.SortOrder.DescendingOrder), rank, r.name.lower()
@@ -231,26 +266,35 @@ class PackageTableModel(QAbstractTableModel):
                 case 2: return r.name if r.arch in ("noarch", self.basearch) else f"{r.name}.{r.arch}"
                 case 3: return r.installed_evr
                 case 4: return REASON_LABEL.get(r.reason, "")
-                case 5: return f"{r.candidate_evr} ({r.candidate_arch})" if r.candidate_arch else r.candidate_evr
+                case 5:
+                    if r.held_evr:
+                        return r.held_evr
+                    return f"{r.candidate_evr} ({r.candidate_arch})" if r.candidate_arch else r.candidate_evr
                 case 6: return repo_text(r)
                 case 7: return human_size(r.size)
                 case 8: return r.summary
-                case 9: return ADVISORY_LABEL[r.advisory.level] if r.advisories else ""
+                case 9: return ADVISORY_LABEL[found[0].level] if (found := shown_advisories(r)) else ""
                 case 10: return "" if r.download_size is None else human_size(r.download_size)
         elif role == Qt.ItemDataRole.DecorationRole:
             if col == COL_STATUS:
                 mark = self.marks.get(r.key)
-                return mark_icon(mark.action) if mark else status_icon(r.status)
+                if mark:
+                    return mark_icon(mark.action)
+                return locked_icon(r.installed) if r.locked else status_icon(r.status)
             if col == COL_ORIGIN:
                 return origin_icon(r.origin)
             if col == COL_CANDIDATE:  # a blank one without an advisory, so that the versions line up
                 if r.key in self.blocked:  # until the repository fixes it, this matters more than the advisory
                     return blocked_icon()
+                if r.held_evr and r.held_advisories:
+                    return held_advisory_icon(r.held_advisories[0].level)
                 return advisory_icon(r.advisory.level if r.advisories else None)
         elif role == Qt.ItemDataRole.ToolTipRole:
             if col in (COL_CANDIDATE, COL_ADVISORY):
                 if r.key in self.blocked:
                     return "\n\n".join(filter(None, (blocked_tip(self.blocked[r.key]), advisory_tip(r))))
+                if r.held_evr:
+                    return "\n\n".join(filter(None, (held_tip(r), advisory_tip(r))))
                 return advisory_tip(r)
             if col == COL_ORIGIN:
                 return f"{ORIGIN_LABEL[r.origin]}: {display_repo(r.origin_repo)}"
@@ -262,6 +306,10 @@ class PackageTableModel(QAbstractTableModel):
             if col == COL_STATUS:
                 mark = self.marks.get(r.key)
                 label = STATUS_LABEL[r.status]
+                if r.locked:
+                    label += "\n" + lock_tip(r)
+                if r.held_evr:
+                    label += "\n" + held_tip(r)
                 if r.key in self.blocked:
                     label += "\n" + _("The upgrade cannot be installed now")
                 if mark:
@@ -274,9 +322,14 @@ class PackageTableModel(QAbstractTableModel):
                 return QColor(*MARK_BACKGROUND[mark.action])
         elif role == Qt.ItemDataRole.TextAlignmentRole and col in (COL_SIZE, COL_DOWNLOAD):
             return int(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
-        elif role == Qt.ItemDataRole.FontRole and col == COL_CANDIDATE and r.status is Status.UPGRADABLE:
-            return None if r.key in self.blocked else _bold()
-        elif role == Qt.ItemDataRole.ForegroundRole and col == COL_CANDIDATE and r.key in self.blocked:
+        elif role == Qt.ItemDataRole.FontRole and col == COL_CANDIDATE:
+            if r.held_evr:
+                return _italic()
+            if r.status is Status.UPGRADABLE:
+                return None if r.key in self.blocked else _bold()
+        elif role == Qt.ItemDataRole.ForegroundRole and (
+                col == COL_CANDIDATE and (r.key in self.blocked or r.held_evr)
+                or col == COL_ADVISORY and r.held_evr and not r.advisories):
             return QGuiApplication.palette().color(QPalette.ColorGroup.Disabled, QPalette.ColorRole.Text)
         return None
 

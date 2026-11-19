@@ -13,6 +13,7 @@ import rpm
 from ..helper.kram_helper import build_goal, cmdline_package, local_goal
 from ..i18n import language
 from . import capabilities
+from .evr import split_evr
 from .model import (
     CatalogSnapshot,
     ChangelogEntry,
@@ -32,7 +33,15 @@ from .model import (
     mark_rotated,
 )
 from .origin import classify
-from .updates import installable_upgrades, open_system_base, upgradable_keys, upgrade_advisories, waiting_for_lock
+from .updates import (
+    advisories_up_to,
+    installable_upgrades,
+    open_system_base,
+    upgradable_keys,
+    upgrade_advisories,
+    waiting_for_lock,
+)
+from .versionlock import excluded_versions, held_back, locks_for, newest_excluded, read_locks
 
 MAX_CHANGELOG = 30
 # a substring of one or two characters matches most of what packages provide: no use as a search
@@ -130,6 +139,8 @@ class Catalog:
         orphans = keys(lambda q: q.filter_extras())
         unneeded = keys(lambda q: q.filter_unneeded())
         user_installed = keys(lambda q: q.filter_userinstalled())
+        locks = read_locks(base)
+        excluded = newest_excluded(base) if locks else {}
 
         T = libdnf5.transaction
         reasons = {T.TransactionItemReason_USER: Reason.USER, T.TransactionItemReason_GROUP: Reason.GROUP,
@@ -165,6 +176,7 @@ class Catalog:
                 candidate_arch=cand.get_arch() if key in arch_changes else "",
                 advisories=advisories.get(key, ()) if status is Status.UPGRADABLE else (),
                 unneeded=key in unneeded, download_size=cand.get_download_size() if cand else None,
+                **self._lock_fields(locks, excluded, key, p, cand),
             ))
             pkgs[key] = (p, cand)
 
@@ -178,9 +190,15 @@ class Catalog:
                 installed_evr="", candidate_evr=cand.get_evr(), repo_id=repo_id,
                 size=cand.get_install_size(), origin=classify(repo_id), status=Status.NOT_INSTALLED,
                 download_size=cand.get_download_size(),
+                **self._lock_fields(locks, excluded, key, None, cand),
             ))
             pkgs[key] = (None, cand)
 
+        held = {r.key: r for r in rows if r.held_evr and r.installed}
+        if held:
+            ceilings = {key: _evr_tuple(excluded[key]) for key in held}
+            for key, found in advisories_up_to(base, ceilings).items():
+                held[key].held_advisories = found
         rows.sort(key=lambda r: (r.name.lower(), r.arch))
         self._pkgs = pkgs
         self._user_installed = user_installed
@@ -190,6 +208,14 @@ class Catalog:
                                basearch=basearch, releasever=base.get_vars().get_value("releasever"),
                                repos=self._repos(), descriptions=descriptions, groups=self._groups(),
                                provides={q: self.provides_keys(*q) for q in provides})
+
+    @staticmethod
+    def _lock_fields(locks, excluded, key, installed, cand) -> dict:
+        """PkgRow's version lock fields: the entries for the name, and the upgrade they hold back."""
+        if not locks:
+            return {}
+        held = held_back(excluded, key, installed, cand)
+        return {"locks": locks_for(locks, key[0]), "held_evr": held.get_evr() if held else ""}
 
     @staticmethod
     def _arch_changes(base, installed, cand_by_key, upgradable, arches) -> dict[tuple[str, str], object]:
@@ -296,7 +322,11 @@ class Catalog:
         q.filter_arch(arches)
         avail = sorted(q, key=_evr_sort_key, reverse=True)
         cand_evr = cand.get_evr() if cand else None
-        versions += [VersionInfo(x.get_evr(), x.get_repo_id(), candidate=x.get_evr() == cand_evr) for x in avail]
+        available = [VersionInfo(x.get_evr(), x.get_repo_id(), candidate=x.get_evr() == cand_evr) for x in avail]
+        # the versions the lock excludes are no longer in any query; listed all the same, as what it holds back
+        available += [VersionInfo(x.get_evr(), x.get_repo_id(), locked_out=True)
+                      for x in excluded_versions(self._base, key[0], arches) if not x.is_installed()]
+        versions += sorted(available, key=lambda v: _evr_cmp_key(split_evr(v.evr)), reverse=True)
 
         changelog = [ChangelogEntry(c.get_timestamp(), c.get_author(), c.get_text())
                      for c in list(p.get_changelogs())[:MAX_CHANGELOG]]
@@ -524,8 +554,13 @@ class Catalog:
 
     def _resolve_preview(self, make_goal, excluded: set[str], marked: set[str], sizes: bool) -> TransactionPreview:
         tr = self._resolve_goal(make_goal, [])
-        if tr.get_problems() != libdnf5.base.GoalProblem_NO_PROBLEM:
-            return TransactionPreview([], list(tr.get_resolve_logs_as_strings()), 0, 0)
+        if (problems := tr.get_problems()) != libdnf5.base.GoalProblem_NO_PROBLEM:
+            logs = list(tr.get_resolve_logs_as_strings())
+            # the problem of a requested version that only the lock excludes has its own flag; the solver's own
+            # problems name the lock in their text ("... is filtered out by versionlock")
+            locked = bool(problems & libdnf5.base.GoalProblem_EXCLUDED_VERSIONLOCK) or any(
+                "versionlock" in text for text in logs)
+            return TransactionPreview([], logs, 0, 0, versionlock=locked)
         preview = self._preview(tr)
         preview.skipped = skipped_changes(tr)
         preview.recommendations = self._recommendations(tr, excluded, marked)

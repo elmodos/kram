@@ -134,6 +134,34 @@ def test_the_repository_column_names_where_an_installed_package_came_from(app):
     assert cells["bash"].data(Qt.ItemDataRole.ToolTipRole) is None
 
 
+def test_a_locked_package_shows_the_padlock_and_the_upgrade_it_holds_back(app):
+    from kram.core.marks import Action
+    from kram.core.model import Advisory, VersionLock
+    from kram.ui.icons import locked_icon, mark_icon, status_icon
+    from kram.ui.package_model import COL_ADVISORY, COL_CANDIDATE, COL_STATUS
+
+    fix = Advisory("FEDORA-2026-1", "security", "important", "tmux fix", 0)
+    lock = (VersionLock("evr = 3.6a-1.fc44"),)
+    model = PackageTableModel()
+    model.set_rows([
+        PkgRow("tmux", "x86_64", "", "3.6a-1.fc44", "3.6a-1.fc44", "fedora", 1, Origin.FEDORA, Status.INSTALLED,
+               locks=lock, held_evr="3.8-2.fc44", held_advisories=(fix,)),
+        PkgRow("jq", "x86_64", "", "", "1.8-1", "fedora", 1, Origin.FEDORA, Status.NOT_INSTALLED, locks=lock),
+        PkgRow("less", "x86_64", "", "679-1", "679-1", "fedora", 1, Origin.FEDORA, Status.INSTALLED),
+    ], "x86_64")
+    deco = Qt.ItemDataRole.DecorationRole
+    assert model.index(0, COL_STATUS).data(deco).cacheKey() == locked_icon(True).cacheKey()
+    assert model.index(1, COL_STATUS).data(deco).cacheKey() == locked_icon(False).cacheKey()
+    assert model.index(2, COL_STATUS).data(deco).cacheKey() == status_icon(Status.INSTALLED).cacheKey()
+    held = model.index(0, COL_CANDIDATE)
+    assert held.data() == "3.8-2.fc44" and held.data(Qt.ItemDataRole.FontRole).italic()
+    assert "3.8-2.fc44 is held back by the version lock" in held.data(Qt.ItemDataRole.ToolTipRole)
+    assert model.index(0, COL_ADVISORY).data() == "Security: important"
+    assert "evr = 3.6a-1.fc44" in model.index(0, COL_STATUS).data(Qt.ItemDataRole.ToolTipRole)
+    model.marks.set(model.rows[0], Action.REINSTALL)  # a mark still shows over the padlock
+    assert model.index(0, COL_STATUS).data(deco).cacheKey() == mark_icon(Action.REINSTALL).cacheKey()
+
+
 def test_the_download_size_column_is_hidden_after_the_installed_size(app):
     from kram.ui.package_model import COL_DOWNLOAD, COL_SIZE, HEADERS
 

@@ -45,6 +45,7 @@ HELPER_MESSAGES = {
     "file_removed": N_("Removed {path}"),
     "repo_not_changed": N_("Could not change repository {repo}"),
     "command_failed": N_("Command failed: {command}"),
+    "lock_not_installed": N_("Only installed packages can be locked: {names}"),
     "files_not_removed": N_("Files not removed: {count}"),
     "file_changed": N_("{path}: the file changed after it was checked"),
     "not_root": N_("The helper must run as root"),

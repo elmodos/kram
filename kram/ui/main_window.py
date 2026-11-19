@@ -60,6 +60,11 @@ from .whats_new import WhatsNewDialog
 
 DETAILS_TAB_KEY = "details/tab-name"  # "details/tab" held its position before the advisories tab came
 FILES_VIEW_KEY = "details/files-view"  # "tree" or "list"
+# the empty list of a sidebar entry that stays empty until the user does something: how to fill it
+EMPTY_HINTS = {
+    "status:locked": _("To keep an installed package at its version, select it and choose Package → Lock Version: "
+                       "upgrades then leave it out until it is unlocked."),
+}
 
 
 class MainWindow(QMainWindow):
@@ -121,6 +126,7 @@ class MainWindow(QMainWindow):
             (acts.save_marks, self.save_marks), (acts.read_marks, self.read_marks), (acts.export_csv, self.export_csv),
             (acts.open_file, lambda: self.open_package_file()), (acts.quit, self.close), (acts.about, self.about),
             (acts.copy_name, self.copy_names), (acts.copy_nevra, self.copy_nevras), (acts.unmark, self.unmark_selected),
+            (acts.lock, lambda: self.set_version_lock(True)), (acts.unlock, lambda: self.set_version_lock(False)),
         ]:
             action.triggered.connect(slot)
         for kind, action in acts.mark_upgrades_of_kind.items():
@@ -433,7 +439,8 @@ class MainWindow(QMainWindow):
             in_descriptions = len(descriptions.search(text, Mode.DESCRIPTION, self._candidates()))
         return empty_list.EmptyList(entry.label, in_all, text, file_search=mode is Mode.FILE,
                                     found_in_all=found_in_all or 0, found_in_descriptions=in_descriptions,
-                                    missing_repos=len(self.snapshot.unavailable_repos))
+                                    missing_repos=len(self.snapshot.unavailable_repos),
+                                    hint=EMPTY_HINTS.get(entry.id, ""))
 
     def _on_empty_link(self, link: str):
         if link == empty_list.ALL:
@@ -585,6 +592,9 @@ class MainWindow(QMainWindow):
             a.setEnabled(action in allowed)
         self.acts.downgrade_menu.setEnabled(len(rows) == 1 and rows[0].installed)
         self.acts.unmark.setEnabled(any(r.key in self.model.marks for r in rows))
+        free = not self.helper.busy
+        self.acts.lock.setEnabled(free and any(r.installed and not r.locked for r in rows))
+        self.acts.unlock.setEnabled(free and any(r.locked for r in rows))
         n = len(self.model.marks)
         self.acts.apply.setEnabled(n > 0 and not self.helper.busy)
         self.acts.unmark_all.setEnabled(n > 0)
@@ -612,6 +622,32 @@ class MainWindow(QMainWindow):
 
     def unmark_selected(self):
         self.marker.unmark(self._selected_rows())
+
+    def set_version_lock(self, lock: bool) -> None:
+        """Lock the selected installed packages to their installed versions (`dnf5 versionlock add`), or remove
+        their locks. A configuration change, not a transaction: it runs at once, and the catalog reloads after it."""
+        if self.helper.busy:
+            return
+        rows = self._selected_rows()
+        names = sorted({r.name for r in rows if (r.installed and not r.locked if lock else r.locked)})
+        if not names:
+            return
+        if lock:
+            # the lock leaves no other version to go to: drop the marks that would need one, and say so
+            moving = [r for r in self.snapshot.rows if r.name in names and (m := self.model.marks.get(r.key))
+                      and m.action in (Action.UPGRADE, Action.DOWNGRADE)]
+            if moving:
+                self.marker.unmark(moving)
+                self.statusBar().showMessage(ngettext(
+                    "{n} upgrade or downgrade unmarked: the version lock keeps the installed version",
+                    "{n} upgrades or downgrades unmarked: the version lock keeps the installed versions",
+                    len(moving)).format(n=len(moving)), 8000)
+            title = ngettext("Locking the version of {n} package", "Locking the versions of {n} packages", len(names))
+        else:
+            title = ngettext("Unlocking the version of {n} package", "Unlocking the versions of {n} packages",
+                             len(names))
+        self.run_helper_and_reload({"op": "versionlock", "action": "add" if lock else "delete", "names": names},
+                                   title.format(n=len(names)))
 
     def save_marks(self):
         if path := save_markings(self, self.model.marks):
@@ -651,7 +687,7 @@ class MainWindow(QMainWindow):
             return
         row = rows[0]
         installed = {v.evr for v in d.versions if v.installed}
-        older = [v for v in d.versions if not v.installed and v.evr not in installed
+        older = [v for v in d.versions if not v.installed and not v.locked_out and v.evr not in installed
                  and evr_cmp(v.evr, row.installed_evr) < 0]
         if not older:
             self.acts.downgrade_menu.addAction(_("No older versions in the repositories")).setEnabled(False)
@@ -688,9 +724,19 @@ class MainWindow(QMainWindow):
         if not preview.ok:
             box = QMessageBox(QMessageBox.Icon.Warning, _("Cannot apply changes"),
                               _("The marked changes cannot be carried out. Unmark or change them."), parent=self)
-            box.setInformativeText(preview.problems[0][:500])
+            info = preview.problems[0][:500]
+            show_locked = None
+            if preview.versionlock:
+                info += "\n\n" + _("They need a version the version lock excludes. Unlock the package "
+                                   "(Package → Unlock Version) or unmark the change.")
+                show_locked = box.addButton(_("Show Locked Packages"), QMessageBox.ButtonRole.ActionRole)
+            box.setInformativeText(info)
             box.setDetailedText("\n".join(preview.problems))
+            box.addButton(QMessageBox.StandardButton.Ok)
             box.exec()
+            if show_locked is not None and box.clickedButton() is show_locked:
+                self.search.clear()
+                self.sidebar.select("status", "status:locked")
             return
         def resolve(req, done, failed):
             self.dnf.submit(lambda: self.catalog.resolve(req, sizes=False), done, failed)

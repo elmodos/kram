@@ -31,6 +31,8 @@ left, the selected package's details below](docs/screenshots/main.png)
   unneeded dependencies as `dnf autoremove`; choose
   which recommended packages to take; review the whole transaction and the equivalent `dnf5` command.
   [Marking and applying](docs/guide/applying-changes.md)
+- **Version lock**: keep a package at its installed version, and see which upgrade the lock holds back.
+  [Locking a version](docs/guide/package-list.md#locking-a-version)
 - **Downloaded .rpm files**, checked before installing: signature, root scripts, dependencies, a newer
   version in a repository. [Installing a file](docs/guide/rpm-files.md)
 - **Repositories and COPR**: enable, disable and remove them, search Copr. [Repositories and

@@ -86,6 +86,9 @@ def status_filters(snap: CatalogSnapshot, marked: Container[tuple[str, str]] | N
         FilterEntry("status:unneeded", _("Unneeded dependencies"), lambda r: r.unneeded),
         FilterEntry("status:orphan", _("Orphaned (no repository)"), status_is(Status.ORPHAN)),
         FilterEntry("status:newer", _("Newer than repository"), status_is(Status.NEWER)),
+        # shown even while empty: it tells that packages can be locked (Package → Lock Version)
+        FilterEntry("status:locked", _("Locked versions"), lambda r: r.locked,
+                    tip=_("Packages dnf's version lock keeps at their version")),
         *([FilterEntry("status:marked", _("Marked"), lambda r: r.key in marked)] if marked is not None else []),
     ], snap.rows)
 

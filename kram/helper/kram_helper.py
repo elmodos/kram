@@ -18,6 +18,8 @@ Protocol: one JSON request per line on stdin, JSON event lines on stdout.
    "exclude_weak": [...], "test": false}                  one package file; see local_install()
   {"op": "repo_set_enabled", "repos": {"<repo id>": bool}}  persist via dnf5 config-manager, then load metadata
   {"op": "copr", "action": "enable"|"disable"|"remove", "project": "owner/name", "hub": "<host>"}
+  {"op": "versionlock", "action": "add"|"delete", "names": ["<package name>", ...]}
+                                                           `dnf5 versionlock add|delete`; add: installed packages only
   {"op": "repo_remove", "repos": ["<repo id>", ...]}      delete their .repo files; see repo_files_to_remove()
   {"op": "find_leftovers"}                                 .rpmnew/.rpmsave/.rpmorig files in /etc ("done" has "files")
   {"op": "remove_leftovers", "paths": ["/etc/...rpmsave", ...]}   see check_leftover()
@@ -60,6 +62,9 @@ COPR_PROJECT_RE = re.compile(r"^@?[A-Za-z0-9][A-Za-z0-9_.+-]{0,99}/[A-Za-z0-9][A
 COPR_HUB_RE = re.compile(r"^[a-z0-9][a-z0-9.-]{0,252}$")
 COPR_DEFAULT_HUB = "copr.fedorainfracloud.org"
 COPR_ACTIONS = ("enable", "disable", "remove")
+# `dnf5 versionlock` package names; must match kram.core.versionlock.NAME_RE. Never starting with "-"
+LOCK_NAME_RE = re.compile(r"^[A-Za-z0-9_+][A-Za-z0-9_.+~^-]{0,255}$")
+LOCK_ACTIONS = ("add", "delete")
 SPEC_FIELDS = ("install", "remove", "upgrade", "reinstall", "downgrade", "mark_user", "mark_dep")
 # comps group ids (`dnf5 group install <id>`); must match kram.core.marks.GROUP_ID_RE
 GROUP_ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.+-]{0,199}$")
@@ -412,6 +417,33 @@ def copr(req: dict) -> None:
         return
     if action == "enable":
         load_metadata()
+    emit("done", ok=True)
+
+
+def versionlock(req: dict) -> None:
+    """Lock installed packages to their installed versions, or remove every lock entry of the names.
+
+    `dnf5 versionlock add` on a package that is not installed locks it to every version the repositories have, which
+    locks nothing: such names are refused."""
+    action, names = req.get("action"), req.get("names")
+    if action not in LOCK_ACTIONS:
+        raise ProtocolError(f"versionlock: unknown action {action!r}")
+    if not isinstance(names, list) or not 0 < len(names) <= MAX_SPECS:
+        raise ProtocolError(f"versionlock: expected a list of 1 to {MAX_SPECS} package names")
+    for name in names:
+        if not isinstance(name, str) or not LOCK_NAME_RE.match(name):
+            raise ProtocolError(f"versionlock: invalid package name {name!r}")
+    names = sorted(set(names))
+    if action == "add":
+        missing = [n for n in names if subprocess.run(["rpm", "-q", "--quiet", n], stdin=subprocess.DEVNULL,
+                                                      check=False).returncode != 0]
+        if missing:
+            fail("versionlock", "lock_not_installed", "Only installed packages can be locked: {names}",
+                 names=", ".join(missing))
+            return
+    if not run_command(argv := ["dnf5", "-y", "versionlock", action, *names]):
+        fail("versionlock", "command_failed", "Command failed: {command}", command=" ".join(argv))
+        return
     emit("done", ok=True)
 
 
@@ -921,11 +953,12 @@ def main() -> int:
             if op == "ping":
                 emit("done", ok=True, uid=os.geteuid())
             elif op in ("transaction", "local_install", "refresh", "repo_set_enabled", "copr", "clean_cache",
-                        "repo_remove", "find_leftovers", "remove_leftovers"):
+                        "repo_remove", "find_leftovers", "remove_leftovers", "versionlock"):
                 if "DownloadProgress" not in globals():
                     DownloadProgress, RpmProgress, KeyImport = _callbacks()
                 {"transaction": run_transaction, "local_install": local_install, "refresh": lambda _r: refresh(),
                  "repo_set_enabled": set_repos_enabled, "copr": copr, "clean_cache": clean_cache,
+                 "versionlock": versionlock,
                  "repo_remove": remove_repos, "find_leftovers": lambda _r: find_leftovers(),
                  "remove_leftovers": remove_leftovers}[op](req)
             elif op == "quit":

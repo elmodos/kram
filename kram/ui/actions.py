@@ -102,6 +102,12 @@ class WindowActions:
             ]}
         self.downgrade_menu = QMenu(_("Downgrade to Version"), window)
         self.downgrade_menu.setIcon(QIcon.fromTheme("go-down"))
+        # dnf's version lock: changed at once through the helper, not marked for Apply (it installs nothing)
+        self.lock = a(_("Lock Version"), "object-locked", table=True,
+                      tip=_("Keep the installed version: upgrades leave it out until it is unlocked (needs a "
+                            "password)"))
+        self.unlock = a(_("Unlock Version"), "object-unlocked", table=True,
+                        tip=_("Remove the version lock: the package gets upgrades again (needs a password)"))
         self.unmark = a(_("Unmark"), "edit-undo", "Ctrl+Z", tip=_("Unmark the selected packages"), table=True)
         self.set_upgrades_available(False)
 
@@ -132,6 +138,8 @@ class WindowActions:
         """The Package menu, the table's context menu and the status icon's menu."""
         menu.addActions(list(self.mark.values()))
         menu.addMenu(self.downgrade_menu)
+        menu.addSeparator()
+        menu.addActions([self.lock, self.unlock])
         menu.addSeparator()
         menu.addAction(self.unmark)
 
