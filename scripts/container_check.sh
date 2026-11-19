@@ -121,5 +121,52 @@ from kram.core.catalog import Catalog
 from kram.core.model import Status
 r = {r.name: r for r in Catalog().load().rows}[\"$lockpkg\"]
 assert not r.locked and r.status is Status.UPGRADABLE and not r.held_evr"
+    echo "### environment: install one through the helper; the catalog shows it installed, with its groups"
+    # as on a real system: the protected packages the environment would bring are there already, else undoing it
+    # would have to remove them and dnf refuses
+    dnf5 -q -y install systemd systemd-udev selinux-policy-targeted >/dev/null
+    rpm -qa | sort > /tmp/before_env
+    $d "{\"op\":\"transaction\",\"environment_install\":[\"custom-environment\"]}"
+    dnf5 -q environment list --installed | grep -q custom-environment
+    PYTHONPATH=/src python3 -c "
+from kram.core.catalog import Catalog
+c = Catalog()
+snap = c.load()
+env = next(e for e in snap.environments if e.id == \"custom-environment\")
+print(env.key, env.installed, env.groups, env.optional_groups)
+assert env.installed and env.groups and env.packages
+print(\"upgradable\", c.upgradable_groups([env.key]))  # the image is older than updates: its packages may be
+removal = c.resolve({\"environment_remove\": [env.id]})
+assert (\"remove\", env.key) in [(g.action, g.id) for g in removal.groups]"
+    echo "### undo the environment install: the history shows its groups; reverting takes packages and records back"
+    envtid=$(PYTHONPATH=/src python3 -c "
+from kram.core.catalog import Catalog
+from kram.core.history import changes_comps, history_rows
+c = Catalog()
+c.load()
+tid = c.history()[0].id
+rows = history_rows(c.history_items([tid])[tid])
+print([(r.comps, r.arch) for r in rows if r.comps][:3], file=__import__(\"sys\").stderr)
+assert changes_comps(rows) and any(r.comps == \"environment\" and r.arch == \"custom-environment\" for r in rows)
+p = c.resolve({\"revert\": [tid]})
+assert p.ok and (\"remove\", \"env:custom-environment\") in [(g.action, g.id) for g in p.groups], p.problems
+print(tid)")
+    $d "{\"op\":\"transaction\",\"revert\":[$envtid]}"
+    ! dnf5 -q environment list --installed | grep -q custom-environment
+    ! dnf5 -q group list --installed | grep -qw core
+    diff <(rpm -qa | sort) /tmp/before_env
+    echo "### group with its optional packages: the smallest group that has some"
+    optgroup=$(PYTHONPATH=/src python3 -c "
+from kram.core.catalog import Catalog
+snap = Catalog().load()
+installed = {r.name for r in snap.rows if r.installed}
+g = min((g for g in snap.groups if g.visible and not g.installed and g.optional and len(g.packages) < 15),
+        key=lambda g: len(g.packages))
+print(g.id, *sorted(g.optional - installed))")
+    set -- $optgroup
+    gid=$1; shift
+    $d "{\"op\":\"transaction\",\"group_install_optional\":[\"$gid\"]}"
+    dnf5 -q group list --installed | grep -q "$gid"
+    rpm -q "$@"
     echo "ALL CHECKS PASSED"
 '

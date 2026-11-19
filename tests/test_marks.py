@@ -7,6 +7,7 @@ from kram.core.marks import (
     allowed_group_actions,
     dnf5_command,
     dump_marks,
+    group_request,
     parse_marks,
 )
 from kram.core.model import GroupInfo, Origin, PkgRow, Status
@@ -70,8 +71,8 @@ def test_markings_file_roundtrip():
     text = dump_marks(m)
     assert text.splitlines()[1:] == ["remove bash.x86_64", "downgrade firefox.x86_64 1:0.9-1.fc44",
                                      "install fish.x86_64"]
-    marks, groups, bad = parse_marks(text)
-    assert bad == [] and groups == []
+    marks, bad = parse_marks(text)
+    assert bad == []
     assert dict(marks) == dict(m.items())
 
 
@@ -85,7 +86,7 @@ def test_markings_file_bad_lines():
         "install",                      # 8: no package
         "  mark_dep  python3-foo.noarch  ",
     ]
-    marks, _groups, bad = parse_marks("\n".join(lines))
+    marks, bad = parse_marks("\n".join(lines))
     assert bad == [4, 5, 6, 7, 8]
     assert [k for k, _m in marks] == [("fish", "x86_64"), ("python3-foo", "noarch")]
 
@@ -139,45 +140,38 @@ def test_upgrade_that_changes_the_arch_names_the_new_package():
 
 
 KDE_APPS = GroupInfo("kde-apps", "KDE Applications", "", False, frozenset({"dolphin"}))
+KDE_ENV = GroupInfo("kde-desktop-environment", "KDE Plasma Workspaces", "", False, frozenset({"plasma-desktop"}),
+                    environment=True, groups=("kde-desktop",), optional_groups=("kde-education",))
 DEV_TOOLS = GroupInfo("development-tools", "Development Tools", "", True, frozenset({"gcc", "make"}))
 
 
-def test_group_marks():
+def test_group_actions():
+    """Groups are not marked: their menu runs one change at once. What it may run, and the request it sends."""
     assert allowed_group_actions(KDE_APPS) == [Action.INSTALL]
     assert allowed_group_actions(DEV_TOOLS) == [Action.UPGRADE, Action.REMOVE]  # not checked yet
     assert allowed_group_actions(replace(DEV_TOOLS, upgradable=False)) == [Action.REMOVE]
-    assert not MarkSet().set_group(replace(DEV_TOOLS, upgradable=False), Action.UPGRADE)
-    m = MarkSet()
-    assert not m.set_group(KDE_APPS, Action.REMOVE)
-    assert not m.set_group(DEV_TOOLS, Action.INSTALL)
-    assert m.set_group(KDE_APPS, Action.INSTALL)
-    assert m.set_group(DEV_TOOLS, Action.UPGRADE)
-    assert m.set_group(DEV_TOOLS, Action.REMOVE)  # a new mark replaces the old one
-    m.set(NEW, Action.INSTALL)
-    assert len(m) == 3 and m.counts() == (1, 0)
-    assert m.group("kde-apps") is Action.INSTALL
-    req = m.request(ROWS)
-    assert req == {"install": ["fish.x86_64"], "group_install": ["kde-apps"], "group_remove": ["development-tools"]}
-    assert dnf5_command(req).splitlines() == [
-        "sudo dnf5 install fish.x86_64", "sudo dnf5 group install kde-apps",
-        "sudo dnf5 group remove development-tools"]
+    assert group_request(KDE_APPS, Action.INSTALL) == {"group_install": ["kde-apps"]}
+    assert group_request(DEV_TOOLS, Action.REMOVE) == {"group_remove": ["development-tools"]}
+    req = group_request(KDE_ENV, Action.INSTALL, optional=True)
+    assert req == {"environment_install_optional": ["kde-desktop-environment"]}
+    assert dnf5_command(req) == "sudo dnf5 group install --with-optional kde-desktop-environment"
     # a download-only run fetches the packages of a group being installed or upgraded, removes nothing
-    assert dnf5_command({**req, "download_only": True}).splitlines() == [
-        "sudo dnf5 install --downloadonly fish.x86_64", "sudo dnf5 group install --downloadonly kde-apps"]
-    m.unmark_group("development-tools")
-    assert m.group("development-tools") is None
-    m.clear()
-    assert len(m) == 0 and m.request(ROWS) == {}
+    assert dnf5_command({"group_install": ["kde-apps"], "download_only": True}) == (
+        "sudo dnf5 group install --downloadonly kde-apps")
+    assert dnf5_command({"group_remove": ["kde-apps"], "download_only": True}) == ""
 
 
-def test_group_markings_file():
+def test_markings_files_no_longer_take_groups():
+    """Kram 0.9 and 0.10 wrote group marks ("install @kde-apps"); reading such a file says those lines are not
+    valid markings."""
     m = MarkSet()
     m.set(NEW, Action.INSTALL)
-    m.set_group(KDE_APPS, Action.INSTALL)
-    m.set_group(DEV_TOOLS, Action.UPGRADE)
     text = dump_marks(m)
-    assert text.splitlines()[1:] == ["install fish.x86_64", "upgrade @development-tools", "install @kde-apps"]
-    marks, groups, bad = parse_marks(text + "reinstall @kde-apps\ninstall @-y\ninstall @kde-apps extra\n")
-    assert [k for k, _m in marks] == [("fish", "x86_64")]
-    assert groups == [("development-tools", Action.UPGRADE), ("kde-apps", Action.INSTALL)]
-    assert bad == [5, 6, 7]  # no group reinstall, an id like an option, too many fields
+    assert text.splitlines()[1:] == ["install fish.x86_64"]
+    marks, bad = parse_marks(text + "install @kde-apps\nupgrade @kde.apps\n")
+    assert [k for k, _m in marks] == [("fish", "x86_64")] and bad == [3, 4]
+
+
+def test_revert_command():
+    assert dnf5_command({"op": "transaction", "revert": [7]}) == "sudo dnf5 history undo 7"
+    assert dnf5_command({"revert": [7], "skip_unavailable": True}) == "sudo dnf5 history undo --skip-unavailable 7"

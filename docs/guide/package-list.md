@@ -66,10 +66,17 @@ The sidebar on the left narrows the table. The buttons at its bottom switch betw
 - **Origin**: Fedora, COPR, third-party, local; under each, every repository on its own. Right-click an enabled
   repository and choose *Refresh Metadata* to download only its package information again, e.g. to see a new
   build in a COPR project without refreshing all the others.
-- **Groups**: the comps groups; installed ones are in bold. Right-click a group to mark it for installation,
-  or an installed one for upgrade or removal, as `dnf5 group install`, `upgrade` and `remove` do. Installing a
-  group brings its mandatory and default packages; removing it removes the packages it brought, unless you
-  installed them yourself or something else needs them.
+- **Groups**: the comps groups; installed ones are in bold. Right-click a group to install it, or an installed
+  one to upgrade or remove it, as `dnf5 group install`, `upgrade` and `remove` do. A group is not marked: Kram
+  shows what the change brings and runs it at once, alone; your marked packages stay marked for later.
+  Installing a group brings its mandatory and default packages; removing it removes the packages it brought,
+  unless you installed them yourself or something else needs them. While a group is selected, its optional
+  packages are in italics in the table: installing the group leaves them out. Mark them one by one, or choose
+  *Install Group with Optional Packages…* (`dnf5 group install --with-optional`).
+- **Environments**: the comps environments, such as KDE Plasma Workspaces or Fedora Workstation: a set of
+  groups for a whole system. Each unfolds into its groups; the optional ones are in italics. Right-click an
+  environment to install, upgrade or remove it like a group; *with Optional Groups* also brings the optional
+  groups and the optional packages of every group.
 - **Search results**: your earlier searches, to go back to one.
 - **Custom filters**: your own filters. A filter combines name, summary, description, provided capability,
   status, origin, repository, group, install reason, architecture, size and update type. For example

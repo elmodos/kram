@@ -1,4 +1,4 @@
-from kram.core.filters import group_filters, origin_filters, status_filters
+from kram.core.filters import environment_filters, environment_id, group_filters, origin_filters, status_filters
 from kram.core.model import CatalogSnapshot, GroupInfo, Origin, PkgRow, Status
 
 
@@ -62,3 +62,31 @@ def test_group_filters():
     assert counts(entries) == {"group:all": 6, "group:tools": 2, "group:empty": 0}
     assert entries[1].bold and entries[1].group == "tools" and entries[1].tip == "Useful tools"
     assert not entries[2].bold and entries[2].group == "empty"
+
+
+def test_environments_are_a_tree_of_their_groups():
+    """Each environment is followed by its groups (indent 1): those it installs, then its optional ones, dim.
+    Groups hidden from the Groups view ("core") show here. No "All environments": it would only be all packages."""
+    core = GroupInfo("core", "Core", "", True, frozenset({"a"}), visible=False)
+    tools = GroupInfo("tools", "Tools", "", False, frozenset({"b", "c"}), optional=frozenset({"c"}))
+    extra = GroupInfo("extra", "Extra", "", False, frozenset({"d"}))
+    env = GroupInfo("work-environment", "Work", "For work", True, frozenset({"a", "b", "c"}),
+                    optional=frozenset({"c"}), environment=True, groups=("tools", "core"),
+                    optional_groups=("extra",))
+    other = GroupInfo("play-environment", "Play", "", False, frozenset(), environment=True)
+    snap = CatalogSnapshot(ROWS, 4, 1, 0.0, groups=[core, extra, tools], environments=[other, env])
+    assert [e.id for e in group_filters(snap)] == ["group:all", "group:extra", "group:tools"]
+
+    entries = environment_filters(snap)
+    assert [(e.id, e.indent, e.dim) for e in entries] == [
+        ("env:play-environment", 0, False), ("env:work-environment", 0, False),
+        ("envgroup:work-environment:core", 1, False), ("envgroup:work-environment:tools", 1, False),
+        ("envgroup:work-environment:extra", 1, True)]
+    work = entries[1]
+    assert work.group == "env:work-environment" and work.bold and work.optional == {"c"}
+    # counted by name, as the predicates match
+    assert [e.count for e in entries] == [sum(e.predicate(r) for r in ROWS) for e in entries]
+    assert entries[3].group == "tools" and entries[3].optional == {"c"}
+    assert "Optional" in entries[4].tip
+    assert [environment_id(e.id) for e in entries[:3]] == ["play-environment", "work-environment",
+                                                         "work-environment"]

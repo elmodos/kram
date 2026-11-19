@@ -140,9 +140,14 @@ class RepoInfo:
     file_path: str = ""
 
 
+ENVIRONMENT_PREFIX = "env:"   # GroupInfo.key of an environment; comps ids never contain ":"
+
+
 @dataclass(slots=True)
 class GroupInfo:
-    """A comps group (Synaptic's "sections"): the package names it lists, of any type."""
+    """A comps group (Synaptic's "sections"), or an environment: a set of groups, like a desktop with its usual
+    applications. `packages` are the names it lists, of any type; for an environment, those of the groups it
+    installs."""
     id: str
     name: str                  # translated when the metadata has the current language
     description: str
@@ -151,6 +156,17 @@ class GroupInfo:
     # installed groups: whether `dnf5 group upgrade` would change anything (newer packages, or packages the
     # distribution added to or dropped from the group); None until Catalog.upgradable_groups has been asked
     upgradable: bool | None = None
+    # the packages of `packages` that `dnf5 group install` leaves out unless asked for (--with-optional)
+    optional: frozenset[str] = frozenset()
+    visible: bool = True       # comps "uservisible": listed in the Groups view; hidden ones show in environments
+    environment: bool = False
+    groups: tuple[str, ...] = ()            # environments: the groups `dnf5 group install` installs, in order
+    optional_groups: tuple[str, ...] = ()   # environments: the groups it adds only with --with-optional
+
+    @property
+    def key(self) -> str:
+        """What marks and sidebar entries use: the id, prefixed for an environment (a group may share its id)."""
+        return ENVIRONMENT_PREFIX + self.id if self.environment else self.id
 
 
 @dataclass(slots=True)
@@ -163,7 +179,9 @@ class CatalogSnapshot:
     releasever: str = ""
     repos: list[RepoInfo] = field(default_factory=list)
     descriptions: list[str] = field(default_factory=list)   # aligned with rows
-    groups: list[GroupInfo] = field(default_factory=list)   # user-visible comps groups, sorted by name
+    # comps groups, sorted by name: the user-visible ones and those environments install
+    groups: list[GroupInfo] = field(default_factory=list)
+    environments: list[GroupInfo] = field(default_factory=list)   # sorted by name
     # (capability, is a glob) -> keys of the packages providing it; only what custom filters asked for (libdnf5 knows
     # the rest, but filters run on the GUI thread)
     provides: dict[tuple[str, bool], frozenset[tuple[str, str]]] = field(default_factory=dict)
@@ -238,6 +256,9 @@ class PreviewItem:
     install_size: int
     reason: str          # user | dependency | weak | group | clean (removed as no longer needed) | ""
     rotated: bool = False  # a removal that makes room for a new version of the same package: see mark_rotated
+    # a removal that comes with a comps group or environment installed after the package: that one's name. The
+    # package was there before it (with the system, or for something else), so the group may take what it never brought
+    before: str = ""
 
 
 def mark_rotated(items: list[PreviewItem]) -> None:
@@ -272,9 +293,9 @@ class Recommendation:
 
 @dataclass(slots=True)
 class PreviewGroup:
-    """A comps group the transaction installs, upgrades or removes."""
+    """A comps group or environment the transaction installs, upgrades or removes."""
     action: str          # install | upgrade | remove
-    id: str
+    id: str              # GroupInfo.key: an environment's is prefixed
     name: str
 
 
@@ -290,6 +311,9 @@ class TransactionPreview:
     # version cannot be installed is skipped without a problem. The rest of the transaction can still run
     skipped: list[str] = field(default_factory=list)
     versionlock: bool = False    # a problem comes from versions the version lock excludes
+    # for the free space check (kram_helper.space_shortfall): what is not in the helper's cache yet, and that cache
+    to_download: int = 0
+    cache_dir: str = ""
 
     @property
     def ok(self) -> bool:

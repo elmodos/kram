@@ -153,6 +153,8 @@ class PackageTableModel(QAbstractTableModel):
         # upgradable packages whose upgrade cannot be installed now -> the resolver's reason; see
         # Catalog.blocked_upgrades. Filled after each load, so it may lag the rows by a moment
         self.blocked: dict[tuple[str, str], str] = {}
+        # the selected comps group's optional package names: in italics, as installing the group leaves them out
+        self.optional: frozenset[str] = frozenset()
 
     def set_rows(self, rows: list[PkgRow], basearch: str) -> None:
         self.beginResetModel()
@@ -298,6 +300,8 @@ class PackageTableModel(QAbstractTableModel):
                 return advisory_tip(r)
             if col == COL_ORIGIN:
                 return f"{ORIGIN_LABEL[r.origin]}: {display_repo(r.origin_repo)}"
+            if col == COL_NAME and r.name in self.optional:
+                return _("Optional in this group: installing the group brings it only with optional packages")
             if col == COL_REASON:
                 return REASON_TIP.get(r.reason)
             if col == COL_REPO and r.from_repo_id and r.from_repo_id != r.repo_id:
@@ -322,6 +326,8 @@ class PackageTableModel(QAbstractTableModel):
                 return QColor(*MARK_BACKGROUND[mark.action])
         elif role == Qt.ItemDataRole.TextAlignmentRole and col in (COL_SIZE, COL_DOWNLOAD):
             return int(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+        elif role == Qt.ItemDataRole.FontRole and col == COL_NAME and r.name in self.optional:
+            return _italic()
         elif role == Qt.ItemDataRole.FontRole and col == COL_CANDIDATE:
             if r.held_evr:
                 return _italic()

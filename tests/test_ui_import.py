@@ -127,6 +127,24 @@ def test_apply_dialog_shows_the_skipped_changes(app):
     dlg = ApplyDialog(TransactionPreview([item], [], 100, 0), request)
     assert dlg.ok.isEnabled() and dlg.skipped_label.isHidden() and dlg.skipped_text.isHidden()
 
+
+def test_apply_dialog_explains_a_group_whose_packages_are_in_place(app):
+    """Installing a group whose packages are all installed only records it: the review says so instead of showing
+    just the group and "0 B"."""
+    from kram.core.model import PreviewGroup, PreviewItem, TransactionPreview
+    from kram.ui.apply_dialog import ApplyDialog
+
+    request = {"op": "transaction", "group_install": ["guest-agents"]}
+    group = PreviewGroup("install", "guest-agents", "Guest Agents")
+    dlg = ApplyDialog(TransactionPreview([], [], 0, 0, groups=[group]), request)
+    assert dlg.ok.isEnabled() and dlg.skipped_label.isHidden()
+    assert not dlg.note.isHidden() and "already installed" in dlg.note.text()
+    gone = ApplyDialog(TransactionPreview([], [], 0, 0, groups=[PreviewGroup("remove", "x", "X")]), request)
+    assert "records the group as removed" in gone.note.text()
+    item = PreviewItem("install", "open-vm-tools", "x86_64", "13-1", "", "fedora", 100, 0, "group")
+    dlg = ApplyDialog(TransactionPreview([item], [], 100, 0, groups=[group]), request)
+    assert dlg.note.isHidden()  # packages to show: nothing to explain
+
 def test_install_dialog(app, monkeypatch):
     import time
 

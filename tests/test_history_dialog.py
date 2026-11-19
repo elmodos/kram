@@ -102,3 +102,20 @@ def test_undo_needs_a_finished_transaction_and_a_catalog(dialog):
     dlg.set_marking(True, False)
     dlg.list.setCurrentItem(dlg._items[2])  # failed
     assert not dlg.undo.isEnabled()
+
+
+def test_a_transaction_with_groups_is_undone_whole(app, monkeypatch):
+    """Groups show above the packages; the button then reverts the transaction instead of marking."""
+    monkeypatch.setitem(ITEMS, 1, ITEMS[1] + (
+        HistoryItem("Sway Desktop", "sway-desktop-environment", "", "install", Reason.USER, "", comps="environment"),))
+    dlg = HistoryDialog(SyncWorker(), FakeCatalog(), None)
+    dlg.reload()
+    for _ in range(5):
+        app.processEvents()
+    dlg.set_marking(True, False)
+    dlg.list.setCurrentItem(dlg._items[1])
+    assert dlg._items[1].text(COL_CHANGES).startswith("1 environment; ")
+    assert dlg.packages.topLevelItem(0).text(1) == "Sway Desktop (environment)"
+    assert dlg.undo.text() == "Undo Transaction…" and dlg.undo.isEnabled()
+    dlg.list.setCurrentItem(dlg._items[3])
+    assert dlg.undo.text() == "Mark Changes to Undo"

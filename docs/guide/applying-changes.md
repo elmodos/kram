@@ -32,9 +32,12 @@ command](../screenshots/apply-preview.png)
 *Before anything happens: every change with its version and size, what it downloads, the disk space it
 takes, and the `dnf5` command that would do the same.*
 
-The review lists the marked packages and groups and everything dnf adds for them, grouped by what happens to
-them. When a package recommends others, each recommendation gets its own checkbox with the size it adds, so you
+The review lists the marked packages (or the group you install or remove from the sidebar) and everything dnf
+adds for them, grouped by what happens to them. When a package recommends others, each recommendation gets its own checkbox with the size it adds, so you
 choose which ones to install. *Download packages only* fetches the packages without installing them.
+If the disk is too full for the transaction, the review says how much space is missing and on which filesystem,
+and *Apply* stays off; when the download alone fits, *Download packages only* can still fetch the packages.
+Packages already downloaded are not counted again.
 
 ## Applying
 

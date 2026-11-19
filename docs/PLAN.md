@@ -162,8 +162,8 @@ Laid out like Synaptic:
   - *Groups*: comps groups and environments (Fedora's equivalent of "Sections"; the RPM `Group` tag is dead). Icons
     come from the system icon theme through a table of group ids with an obvious icon (comps has no icons; the
     dated comps-extras pixmaps are not used), a generic icon otherwise; installed groups are bold. A group's
-    right-click menu marks it for `dnf5 group install` / `upgrade` / `remove` (2026-11-15); a marked group shows the
-    mark's box and tint instead of its icon. Environments are not listed yet.
+    right-click menu runs `dnf5 group install` / `upgrade` / `remove` after the review (marked until 2026-11-19).
+  - *Environments* (2026-11-19): comps environments in a view of their own, a tree of their groups.
   - *Search results*: query history.
   - *Custom filters*: user-defined condition lists (2026-11-04).
 - **Table**: clicking the status box opens the action menu, as in Synaptic; double click installs/upgrades
@@ -403,6 +403,12 @@ modal; Package → Show in History opens it filtered by the package's name.
   would undo the later change too), and so is an installonly package with several versions installed (a removal mark
   takes name.arch). What cannot be undone is listed with the reason. The main limit: Fedora keeps only the newest
   update, so undoing upgrades mostly fails; installs and removals undo almost always.
+- **Transactions with comps changes are reverted** (2026-11-19, after a VM test: undoing an environment install by
+  marks removed its 1042 packages but left the environment and its groups recorded as installed; removing the
+  environment then also took `bolt`, installed with the image). libdnf5's Python bindings return a transaction's comps
+  items as an unusable SWIG pointer, so `read_comps` reads them from the history database (read-only). Such a
+  transaction is undone with `Goal.add_revert_transactions` (helper request `revert`, alone; `dnf5 history undo`):
+  packages and records together, after the review, without marks.
 - Not done: `dnf5 history rollback` (everything after a transaction) and redo; undoing several transactions at once.
 
 **Sleep during a long download** (idea, 2026-11-10, not built: the user decided it is not needed yet). The rpm
@@ -650,8 +656,42 @@ groups that `dnf5 group upgrade` would change: after each load a background job 
 installed group (~0.1 s each, 0.6 s for 7 groups here) and sets `GroupInfo.upgradable`; until then the item is
 disabled with "Checking for upgrades…", and marks read from a file are kept. Measured on this machine: removing an
 installed group removes its packages (reason group), their unneeded dependencies (clean) and changes install
-reasons of the rest. Next stages: environments (`EnvironmentQuery`, `add_group_*` with environments searched),
-then choosing a group's optional packages.
+reasons of the rest.
+
+Stage 2 (2026-11-19): environments, in an Environments view of their own beside Groups (a different level: an
+environment is a set of groups). The sidebar is a QTreeWidget: each environment folds its groups, the ones
+`dnf5 group install` installs (mandatory and default) and then the optional ones in italics; groups hidden from
+the Groups view ("core", "standard") show there. No "All environments" entry: it would only be all packages.
+Counts go by package name (~300 entries over 70k rows). An environment's packages are those of the groups it
+installs; it goes to the helper as `environment_*` with only environments searched.
+Stage 3, same day: optional packages. Choosing them one by one is plain package marking, so no dialog: while a
+group or environment is selected the table shows its optional packages in italics, and "…with Optional
+Packages" (for an environment "…with Optional Groups") installs with `--with-optional` (`*_install_optional`:
+every package type, which also brings an environment's optional groups).
+Groups are no longer marked (user feedback, 2026-11-19): a group mark could not show in Status → Marked, which
+lists packages. The group menu runs the change at once, after the review dialog, alone: the marked packages are
+not added to it (a conflict among them would block the group for reasons the user did not ask about) and stay
+marked. Markings files lose their group lines (`install @kde-apps` from 0.9/0.10 reads as an invalid line).
+
+**Free space before a transaction** (2026-11-19, after an environment install on a small VM disk downloaded
+3.7 GB and then failed in rpm's disk check). `kram_helper.space_shortfall` compares what is still to download
+(packages not in the system cache) and the net install size with the free space of the cache's and /'s
+filesystems, together when they are one. The review shows the shortfall and keeps Apply off, except for
+"Download packages only" when the download fits; the helper checks again before downloading (`no_space`). rpm's
+own check per filesystem stays the last word.
+Known limits, not handled yet (2026-11-19): a separate /usr or /var is counted as /; btrfs compression makes dnf's
+sizes larger than what is written (a false "not enough"); snapper snapshots taken around the transaction use space
+the check does not see; the helper runs as root and may use the blocks reserved for root, while the check counts
+only what users may (f_bavail). Mostly the check refuses too early rather than too late.
+
+**Group removal safeguards** (2026-11-19). A hidden group ("core", "standard", under an environment) has no removal
+of its own. The review flags removals that a removed group or environment takes although the package was installed
+before it (`PreviewItem.before`: the package's rpm install time against the group's last install in the history
+database), and warns when the desktop of the running session goes (kram.core.session: the owner of the session's
+.desktop file, plus a table by XDG_CURRENT_DESKTOP). Undoing a transaction with groups that cannot be reverted whole
+offers `--skip-unavailable`, only when that resolves: a transaction whose environment was removed since cannot be
+reverted at all ("Cannot perform Remove action for Environment … because it is not installed"), checked in a
+container.
 
 **Reasonable, but not planned unless users ask for it** (2026-11-06): moving transactions from our helper to
 dnf5daemon, or supporting both. For: no root code of our own, standard dnf polkit actions, local .rpm and

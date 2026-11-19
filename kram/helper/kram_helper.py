@@ -11,10 +11,15 @@ Protocol: one JSON request per line on stdin, JSON event lines on stdout.
                                                            when "repos" is given; they must be enabled)
   {"op": "transaction", "install": [...], "remove": [...], "upgrade": [...], "reinstall": [...],
    "downgrade": [...], "mark_user": [...], "mark_dep": [...], "upgrade_all": false,
-   "group_install": [...], "group_remove": [...], "group_upgrade": [...],
-   "exclude_weak": [...], "download_only": false, "test": false}
+   "group_install": [...], "group_install_optional": [...], "group_remove": [...], "group_upgrade": [...],
+   "environment_install": [...], "environment_install_optional": [...], "environment_remove": [...],
+   "environment_upgrade": [...], "revert": [<transaction id>], "exclude_weak": [...], "download_only": false,
+   "test": false}
                                                            exclude_weak: names never pulled in as recommendations
-                                                           group_*: comps group ids, as `dnf5 group install ...`
+                                                           group_*, environment_*: comps ids, as `dnf5 group
+                                                           install ...`; *_optional: with --with-optional
+                                                           revert: `dnf5 history undo <id>`, alone in the request;
+                                                           "skip_unavailable": true leaves out what is gone
   {"op": "local_install", "path": "/abs/file.rpm", "sha256": "<hex>", "action": "install"|"reinstall"|"downgrade",
    "exclude_weak": [...], "test": false}                  one package file; see local_install()
   {"op": "repo_set_enabled", "repos": {"<repo id>": bool}}  persist via dnf5 config-manager, then load metadata
@@ -69,7 +74,9 @@ LOCK_ACTIONS = ("add", "delete")
 SPEC_FIELDS = ("install", "remove", "upgrade", "reinstall", "downgrade", "mark_user", "mark_dep")
 # comps group ids (`dnf5 group install <id>`); must match kram.core.marks.GROUP_ID_RE
 GROUP_ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.+-]{0,199}$")
-GROUP_FIELDS = ("group_install", "group_remove", "group_upgrade")
+# group_* name groups, environment_* environments; *_install_optional installs with --with-optional
+GROUP_FIELDS = ("group_install", "group_install_optional", "group_remove", "group_upgrade",
+                "environment_install", "environment_install_optional", "environment_remove", "environment_upgrade")
 
 # local_install: where the helper keeps its private copy of the package file while it installs it
 LOCAL_DIR = "/var/cache/kram"
@@ -125,6 +132,70 @@ class ProtocolError(Exception):
     pass
 
 
+def human_size(n: int) -> str:
+    """As the GUI writes sizes (kram.ui.package_model.human_size): for the messages sent from here."""
+    if n < 1024:
+        return f"{n} B"
+    size = float(n)
+    for unit in ("kB", "MB", "GB"):
+        size /= 1024
+        if size < 1024 or unit == "GB":
+            return f"{size:.1f} {unit}"
+    return f"{n} B"
+
+
+def mount_point(path: str) -> str:
+    """The mount point of the filesystem `path` is on; a path that does not exist yet (a fresh cache) counts as on
+    the filesystem of its nearest existing parent."""
+    p = os.path.realpath(path)
+    while not os.path.exists(p):
+        p = os.path.dirname(p)
+    while not os.path.ismount(p):
+        p = os.path.dirname(p)
+    return p
+
+
+def space_shortfall(download: int, install: int, cache_dir: str, root: str = "/") -> list[tuple[str, int]]:
+    """[(mount point, bytes missing)] for a transaction that downloads `download` bytes into `cache_dir` and then
+    takes `install` more bytes on `root` (net: what it installs less what it removes). On one filesystem both
+    count together: the downloaded packages stay in the cache until the transaction is done. Shared with the GUI's
+    review; rpm checks again, per file system, before it changes anything."""
+    needs: dict[int, list] = {}
+    for path, n in ((cache_dir, download), (root, install)):
+        if n > 0:
+            mount = mount_point(path)
+            needs.setdefault(os.stat(mount).st_dev, [mount, 0])[1] += n
+    missing = []
+    for mount, n in needs.values():
+        st = os.statvfs(mount)
+        free = st.f_bavail * st.f_frsize
+        if n > free:
+            missing.append((mount, n - free))
+    return missing
+
+
+def transaction_space(tr, cache_dir_of=lambda path: path) -> tuple[int, int]:
+    """(bytes still to download, net bytes installed) of a resolved libdnf5 transaction. Packages already in the
+    cache are not downloaded again; `cache_dir_of` maps a package's cache path to where the helper keeps it (the GUI
+    resolves as a user, with a cache of its own)."""
+    import libdnf5
+
+    T = libdnf5.transaction
+    inbound = (T.TransactionItemAction_INSTALL, T.TransactionItemAction_UPGRADE, T.TransactionItemAction_DOWNGRADE,
+               T.TransactionItemAction_REINSTALL)
+    outbound = (T.TransactionItemAction_REPLACED, T.TransactionItemAction_REMOVE)
+    download = install = 0
+    for tp in tr.get_transaction_packages():
+        p, act = tp.get_package(), tp.get_action()
+        if act in inbound:
+            install += p.get_install_size()
+            if not os.path.exists(cache_dir_of(p.get_package_path())):
+                download += p.get_download_size()
+        elif act in outbound:
+            install -= p.get_install_size()
+    return download, install
+
+
 def specs(req: dict, field: str) -> list[str]:
     value = req.get(field, [])
     if not isinstance(value, list) or len(value) > MAX_SPECS:
@@ -145,9 +216,22 @@ def group_ids(req: dict, field: str) -> list[str]:
     return value
 
 
-def validate(req: dict) -> dict[str, list[str]]:
-    fields = {f: specs(req, f) for f in SPEC_FIELDS}
+def revert_ids(req: dict) -> list[int]:
+    value = req.get("revert", [])
+    if not isinstance(value, list) or len(value) > 1 or not all(
+            type(v) is int and 0 < v < 1 << 62 for v in value):
+        raise ProtocolError("revert: expected a list of one transaction id")
+    return value
+
+
+def validate(req: dict) -> dict[str, list]:
+    fields: dict[str, list] = {f: specs(req, f) for f in SPEC_FIELDS}
     fields |= {f: group_ids(req, f) for f in GROUP_FIELDS}
+    fields["revert"] = revert_ids(req)
+    if fields["revert"] and (req.get("upgrade_all") or any(v for f, v in fields.items() if f != "revert")):
+        raise ProtocolError("revert: a transaction is reverted alone")
+    if not isinstance(req.get("skip_unavailable", False), bool):
+        raise ProtocolError("skip_unavailable: expected true or false")
     if not (req.get("upgrade_all") or any(fields.values())):
         raise ProtocolError("empty transaction")
     fields["exclude_weak"] = specs(req, "exclude_weak")
@@ -168,6 +252,17 @@ def build_goal(base, req: dict):
         config = base.get_config()
         config.exclude_from_weak = (*config.exclude_from_weak, *fields["exclude_weak"])
     goal = libdnf5.base.Goal(base)
+    if fields["revert"]:
+        # `dnf5 history undo`: the packages and the comps groups and environments back as they were
+        tid = fields["revert"][0]
+        transactions = libdnf5.transaction.TransactionHistory(base).list_transactions(tid, tid)
+        if len(transactions) != 1:
+            raise ProtocolError(f"revert: no transaction {tid}")
+        settings = libdnf5.base.GoalJobSettings()
+        # `dnf5 history undo --skip-unavailable`: what needs a version no repository has any more is left out
+        settings.set_skip_unavailable(bool(req.get("skip_unavailable")))
+        goal.add_revert_transactions(transactions, settings)
+        return goal
     for s in fields["install"]:
         goal.add_install(s)
     for s in fields["upgrade"]:
@@ -183,20 +278,33 @@ def build_goal(base, req: dict):
     for s in fields["mark_dep"]:
         goal.add_rpm_reason_change(s, libdnf5.transaction.TransactionItemReason_DEPENDENCY)
     if any(fields[f] for f in GROUP_FIELDS):
-        # by id only, groups only: "kde-desktop" must not also match an environment or a translated group name.
-        # Package types stay the configured default (mandatory, default, conditional), as with `dnf5 group install`
-        settings = libdnf5.base.GoalJobSettings()
-        settings.set_group_with_id(True)
-        settings.set_group_with_name(False)
-        settings.set_group_search_groups(True)
-        settings.set_group_search_environments(False)
+        # by id only, groups and environments apart: "kde-desktop" must not also match an environment or a
+        # translated group name. Package types stay the configured default (mandatory, default, conditional), as
+        # with `dnf5 group install`, unless optional ones are asked for: those also bring an environment's optional
+        # groups, as --with-optional does
+        comps = libdnf5.comps
+        with_optional = (comps.PackageType_MANDATORY | comps.PackageType_DEFAULT | comps.PackageType_CONDITIONAL
+                         | comps.PackageType_OPTIONAL)
         user = libdnf5.transaction.TransactionItemReason_USER
-        for gid in fields["group_install"]:
-            goal.add_group_install(gid, user, settings)
-        for gid in fields["group_upgrade"]:
-            goal.add_group_upgrade(gid, settings)
-        for gid in fields["group_remove"]:
-            goal.add_group_remove(gid, user, settings)
+
+        def settings(environments: bool, optional: bool = False):
+            s = libdnf5.base.GoalJobSettings()
+            s.set_group_with_id(True)
+            s.set_group_with_name(False)
+            s.set_group_search_groups(not environments)
+            s.set_group_search_environments(environments)
+            if optional:
+                s.set_group_package_types(with_optional)
+            return s
+        for kind, environments in (("group", False), ("environment", True)):
+            for gid in fields[f"{kind}_install"]:
+                goal.add_group_install(gid, user, settings(environments))
+            for gid in fields[f"{kind}_install_optional"]:
+                goal.add_group_install(gid, user, settings(environments, optional=True))
+            for gid in fields[f"{kind}_upgrade"]:
+                goal.add_group_upgrade(gid, settings(environments))
+            for gid in fields[f"{kind}_remove"]:
+                goal.add_group_remove(gid, user, settings(environments))
     if upgrade_all:
         goal.add_rpm_upgrade()
     return goal
@@ -776,6 +884,13 @@ def run_goal(make_goal, test: bool, download_only: bool) -> None:
          "nevra": tp.get_package().get_nevra()}
         for tp in tr.get_transaction_packages()
     ])
+
+    download, install = transaction_space(tr)
+    if short := space_shortfall(download, 0 if download_only else install, base.get_config().cachedir):
+        mount, missing = short[0]
+        fail("space", "no_space", "Not enough disk space on {mount}: {size} more is needed",
+             details=[f"{m}: {human_size(n)}" for m, n in short], mount=mount, size=human_size(missing))
+        return
 
     tr.download()
     if download_only:

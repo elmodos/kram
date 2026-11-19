@@ -1,7 +1,10 @@
-"""Marking: what the user marks for the next transaction, packages and comps groups, in the table model's marks.
+"""Marking: what the user marks for the next transaction, in the table model's marks. Comps groups are not marked:
+their menu runs the change at once.
 
 The window decides what is selected and repaints; this decides what a mark means: which upgrades "Mark All Upgrades"
 takes, the packages that must go with a removal, the marks a reload leaves without a package."""
+from collections.abc import Callable
+
 from PySide6.QtCore import QObject, Signal
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QMenu, QMessageBox, QWidget
@@ -16,18 +19,26 @@ from ..i18n import N_, _, ngettext
 from .markings_file import read_markings
 from .package_model import PackageTableModel
 
-# sidebar menu of a comps group: (text, theme icon)
-GROUP_MARK_ACTIONS = {
-    Action.INSTALL: (N_("Mark Group for Installation"), "list-add"),
-    Action.UPGRADE: (N_("Mark Group for Upgrade"), "go-up"),
-    Action.REMOVE: (N_("Mark Group for Removal"), "list-remove"),
+# sidebar menu of a comps group: (text, theme icon); None stands for an install with optional packages. Each runs
+# at once, after the review: groups are not marked
+GROUP_MENU = {
+    Action.INSTALL: (N_("Install Group…"), "list-add"),
+    None: (N_("Install Group with Optional Packages…"), "list-add"),
+    Action.UPGRADE: (N_("Upgrade Group…"), "go-up"),
+    Action.REMOVE: (N_("Remove Group…"), "list-remove"),
+}
+ENVIRONMENT_MENU = {
+    Action.INSTALL: (N_("Install Environment…"), "list-add"),
+    None: (N_("Install Environment with Optional Groups…"), "list-add"),
+    Action.UPGRADE: (N_("Upgrade Environment…"), "go-up"),
+    Action.REMOVE: (N_("Remove Environment…"), "list-remove"),
 }
 MESSAGE_MS = 8000  # how long a status bar message about a bulk marking stays
 
 
 class Marker(QObject):
-    """`changed`: the marks of these package keys changed (None: of any number of packages). `groupsChanged`: a group
-    mark changed. `message`: a status bar message and its timeout. `failed`: a background check failed."""
+    """`changed`: the marks of these package keys changed (None: of any number of packages). `groupsChanged`: the
+    check for group upgrades is done. `message`: a status bar message and its timeout. `failed`: a background check failed."""
 
     changed = Signal(object)
     groupsChanged = Signal()
@@ -57,8 +68,11 @@ class Marker(QObject):
         """UPGRADES_SECURITY, UPGRADES_SECURITY_HIGH or UPGRADES_FIXES."""
         return self._upgrades_of_kind.get(kind, [])
 
-    def group(self, group_id: str) -> GroupInfo | None:
-        return next((g for g in self.snapshot.groups if g.id == group_id), None) if self.snapshot else None
+    def group(self, key: str) -> GroupInfo | None:
+        """A comps group or environment by GroupInfo.key."""
+        if self.snapshot is None:
+            return None
+        return next((g for g in (*self.snapshot.groups, *self.snapshot.environments) if g.key == key), None)
 
     def revalidate(self) -> None:
         """After a reload, drop marks that no longer apply (package gone, already installed, ...). Says nothing: the
@@ -69,25 +83,20 @@ class Marker(QObject):
             if row is None or not (mark.action is Action.DOWNGRADE and row.installed
                                    or mark.action in allowed_actions(row)):
                 self.marks.unmark(key)
-        groups = {g.id: g for g in self.snapshot.groups}
-        for gid, action in list(self.marks.group_items()):
-            if (g := groups.get(gid)) is None or action not in allowed_group_actions(g):
-                self.marks.unmark_group(gid)
 
     def _check_group_upgrades(self, snap: CatalogSnapshot) -> None:
         """Find which installed groups `dnf5 group upgrade` would change, after the list is shown (a dry-run
         resolve each, ~0.1 s); until then their Upgrade item is disabled."""
-        installed = [g.id for g in snap.groups if g.installed]
+        installed = [g.key for g in (*snap.groups, *snap.environments) if g.installed]
         if not installed:
             return
 
         def done(found: set[str]) -> None:
             if self.snapshot is not snap:
                 return  # reloaded meanwhile: that load runs its own check
-            for g in snap.groups:
+            for g in (*snap.groups, *snap.environments):
                 if g.installed:
-                    g.upgradable = g.id in found
-            self.revalidate()  # an upgrade mark on a group with nothing to upgrade goes
+                    g.upgradable = g.key in found
             self.groupsChanged.emit()
         self._dnf.submit(lambda: self._catalog.upgradable_groups(installed), done, self.failed.emit)
 
@@ -142,7 +151,6 @@ class Marker(QObject):
     def unmark_all(self) -> None:
         self.marks.clear()
         self.changed.emit(None)
-        self.groupsChanged.emit()
 
     def toggle_likely(self, row: PkgRow) -> bool:
         """Unmark the row, or mark it for the one change it obviously wants: install or upgrade.
@@ -193,9 +201,8 @@ class Marker(QObject):
         """Add the marks from a markings file to the current ones; report what could not be marked."""
         def marked(n: int) -> None:
             self.changed.emit(None)
-            self.groupsChanged.emit()
             self.message.emit(ngettext("{n} package marked", "{n} packages marked", n).format(n=n), 5000)
-        read_markings(self._window, path, self.marks, {r.key: r for r in self.snapshot.rows}, self.group, marked)
+        read_markings(self._window, path, self.marks, {r.key: r for r in self.snapshot.rows}, marked)
 
     def mark_undo(self, steps: list[UndoStep]) -> list[UndoStep]:
         """Add the marks that undo a transaction (see plan_undo) to the current ones; the steps that could not be
@@ -215,26 +222,27 @@ class Marker(QObject):
 
     # ---------------------------------------------------------------- groups
 
-    def fill_group_menu(self, m: QMenu, group: GroupInfo, busy: bool) -> None:
-        """`dnf5 group install / upgrade / remove` for a comps group in the sidebar; nothing to mark while `busy`."""
-        marked = self.marks.group(group.id)
+    def fill_group_menu(self, m: QMenu, group: GroupInfo, busy: bool,
+                        run: Callable[[GroupInfo, Action, bool], None]) -> None:
+        """`dnf5 group install / upgrade / remove` for a comps group or environment in the sidebar; each item calls
+        `run(group, action, with optional packages)`. Nothing to run while `busy`."""
         allowed = allowed_group_actions(group)
+        labels = ENVIRONMENT_MENU if group.environment else GROUP_MENU
         m.setToolTipsVisible(True)
-        for action in [Action.UPGRADE, Action.REMOVE] if group.installed else [Action.INSTALL]:
-            text, icon = GROUP_MARK_ACTIONS[action]
-            a = m.addAction(QIcon.fromTheme(icon), _(text), lambda act=action: self.mark_group(group, act))
+        # a hidden group ("core", "standard", under an environment) is the base of the system: no removal of its own
+        removable = group.visible or group.environment
+        installed = [Action.UPGRADE, Action.REMOVE] if removable else [Action.UPGRADE]
+        for action in installed if group.installed else [Action.INSTALL, None]:
+            text, icon = labels[action]
+            optional = action is None
+            act = Action.INSTALL if optional else action
+            a = m.addAction(QIcon.fromTheme(icon), _(text), lambda act=act, optional=optional: run(group, act, optional))
             # upgrade only once the check after loading has found something to upgrade
             known = action is not Action.UPGRADE or group.upgradable is True
-            a.setEnabled(action in allowed and known and action is not marked and not busy)
+            has_optional = bool(group.optional_groups or group.optional) if optional else True
+            a.setEnabled(act in allowed and known and has_optional and not busy)
             if action is Action.UPGRADE and group.upgradable is not True:
                 a.setToolTip(_("Checking for upgrades…") if group.upgradable is None else
                              _("Nothing to upgrade: its packages are up to date and match the group"))
-        unmark = m.addAction(QIcon.fromTheme("edit-undo"), _("Unmark Group"), lambda: self.mark_group(group, None))
-        unmark.setEnabled(marked is not None)
-
-    def mark_group(self, group: GroupInfo, action: Action | None) -> None:
-        if action is None:
-            self.marks.unmark_group(group.id)
-        elif not self.marks.set_group(group, action):
-            return
-        self.groupsChanged.emit()
+            elif optional and not has_optional:
+                a.setToolTip(_("It has no optional packages"))

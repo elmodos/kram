@@ -25,7 +25,7 @@ left, the selected package's details below](docs/screenshots/main.png)
 
 - **Every package in one table**, installed or not: status, origin (Fedora, COPR, third-party, local),
   versions, repository, size. [The package list](docs/guide/package-list.md)
-- **Filters and search**: by status, origin, repository and group, your own custom filters ("unneeded
+- **Filters and search**: by status, origin, repository, group and environment, your own custom filters ("unneeded
   dependencies over 50 MB"), search ranked by relevance. [Filters](docs/guide/package-list.md#filters)
 - **Mark first, apply later**: install, upgrade, reinstall, downgrade to a chosen version, remove, remove
   unneeded dependencies as `dnf autoremove`; choose

@@ -109,3 +109,50 @@ def test_undo_reason_change():
 def test_undo_skips_reinstall_and_reports_obsoleted():
     steps, problems = undo([hrow(Change.REINSTALL, "a", "1"), hrow(Change.OBSOLETED, "b", "1")])
     assert not steps and problems == [("b.x86_64", "replaced by another package that obsoletes it")]
+
+
+def test_comps_rows_are_not_packages():
+    """An environment install records the environment and its groups next to the packages: they show as rows of
+    their own, are not counted as packages, and the marks to undo leave them out (the transaction is reverted
+    instead, see changes_comps)."""
+    from kram.core.history import changes_comps
+
+    items = (item("sway", "1.10-1", "install"),
+             HistoryItem("Sway Desktop", "sway-desktop-environment", "", "install", Reason.USER, "",
+                         comps="environment"),
+             HistoryItem("Fonts", "fonts", "", "install", Reason.DEPENDENCY, "", comps="group"))
+    rows = history_rows(items)
+    assert {(r.comps, r.name) for r in rows if r.comps} == {("environment", "Sway Desktop"), ("group", "Fonts")}
+    assert change_counts(rows) == {Change.INSTALL: 1} and changes_comps(rows)
+    assert not changes_comps(history_rows(items[:1]))
+    steps, problems = plan_undo(rows, {("sway", "x86_64"): PackageState(("1.10-1",))})
+    assert steps == [UndoStep(("sway", "x86_64"), Action.REMOVE)] and problems == []
+
+
+def test_reading_comps_from_the_history_database(tmp_path):
+    """libdnf5's Python bindings cannot list a transaction's groups: they are read from its database."""
+    import sqlite3
+    from types import SimpleNamespace
+
+    from kram.core.history import read_comps
+
+    db = sqlite3.connect(tmp_path / "transaction_history.sqlite")
+    db.executescript("""
+        CREATE TABLE trans_item (id INTEGER PRIMARY KEY, trans_id INTEGER, item_id INTEGER, repo_id INTEGER,
+                                 action_id INTEGER, reason_id INTEGER, state_id INTEGER);
+        CREATE TABLE comps_group (item_id INTEGER, groupid TEXT, name TEXT, translated_name TEXT, pkg_types INTEGER);
+        CREATE TABLE comps_environment (item_id INTEGER, environmentid TEXT, name TEXT, translated_name TEXT,
+                                        pkg_types INTEGER);
+        INSERT INTO trans_item VALUES (1, 7, 10, 0, 1, 2, 1), (2, 7, 11, 0, 1, 1, 1), (3, 9, 10, 0, 5, 2, 1);
+        INSERT INTO comps_environment VALUES (10, 'sway-desktop-environment', 'Sway Desktop', 'Sway', 0);
+        INSERT INTO comps_group VALUES (11, 'fonts', 'Fonts', 'Шрифти', 0);
+    """)
+    db.commit()
+    db.close()
+    base = SimpleNamespace(get_config=lambda: SimpleNamespace(transaction_history_dir=str(tmp_path)))
+    found = read_comps(base, [7, 9])
+    assert sorted((i.comps, i.arch, i.name, i.action) for i in found[7]) == [
+        ("environment", "sway-desktop-environment", "Sway", "install"), ("group", "fonts", "Шрифти", "install")]
+    assert [(i.arch, i.action) for i in found[9]] == [("sway-desktop-environment", "remove")]
+    missing = SimpleNamespace(get_config=lambda: SimpleNamespace(transaction_history_dir=str(tmp_path / "none")))
+    assert read_comps(missing, [7]) == {}

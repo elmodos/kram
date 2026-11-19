@@ -127,7 +127,7 @@ def choices(f: Field, snap: CatalogSnapshot | None) -> list[tuple[str, str]] | N
         repos = {r.origin_repo for r in snap.rows} | {r.repo_id for r in snap.rows}
         return [(r, r) for r in sorted(repos - {""})]
     if f is Field.GROUP:
-        return [(g.id, g.name) for g in snap.groups]
+        return [(g.id, g.name) for g in snap.groups if g.visible]
     if f is Field.ARCH:
         return [(a, a) for a in sorted({r.arch for r in snap.rows})]
     return None
@@ -286,6 +286,8 @@ def conditions_for_view(entry_id: str, search: str, search_field: Field | None) 
         out.append(Condition(Field.REPO, Op.IS, value))
     elif kind == "group" and value != "all":
         out.append(Condition(Field.GROUP, Op.IS, value))
+    elif kind == "envgroup":  # a group under an environment
+        out.append(Condition(Field.GROUP, Op.IS, value.partition(":")[2]))
     elif kind == "custom":
         pass  # the caller copies that filter's own conditions
     if search and search_field is Field.PROVIDES:

@@ -10,12 +10,21 @@ from collections.abc import Callable, Iterable
 import libdnf5
 import rpm
 
-from ..helper.kram_helper import build_goal, cmdline_package, local_goal
+from ..helper.kram_helper import build_goal, cmdline_package, local_goal, transaction_space
 from ..i18n import language
 from . import capabilities
 from .evr import split_evr
-from .history import ITEM_REASONS, HistoryItem, HistoryTransaction, PackageState, read_items, read_transactions
+from .history import (
+    ITEM_REASONS,
+    HistoryItem,
+    HistoryTransaction,
+    PackageState,
+    comps_install_times,
+    read_items,
+    read_transactions,
+)
 from .model import (
+    ENVIRONMENT_PREFIX,
     CatalogSnapshot,
     ChangelogEntry,
     GroupInfo,
@@ -205,9 +214,10 @@ class Catalog:
         self._user_installed = user_installed
         # ~0.1 s for 70k packages; cheap enough to make full-description search instant
         descriptions = [(pkgs[r.key][0] or pkgs[r.key][1]).get_description() for r in rows]
+        groups, environments = self._groups()
         return CatalogSnapshot(rows, n_installed, n_upgradable, time.monotonic() - t0,
                                basearch=basearch, releasever=base.get_vars().get_value("releasever"),
-                               repos=self._repos(), descriptions=descriptions, groups=self._groups(),
+                               repos=self._repos(), descriptions=descriptions, groups=groups, environments=environments,
                                provides={q: self.provides_keys(*q) for q in provides})
 
     @staticmethod
@@ -244,30 +254,64 @@ class Catalog:
                 changes[key] = max(other, key=_evr_sort_key)
         return changes
 
-    def _groups(self) -> list[GroupInfo]:
-        # an installed group shows up twice (system state + repo metadata): merge by id
+    def _groups(self) -> tuple[list[GroupInfo], list[GroupInfo]]:
+        """(groups, environments), each sorted by name. Groups: the user-visible ones and the hidden ones an
+        environment installs ("core", "standard"), which the Environments view lists under it."""
         lang = language() or ""
+
+        def text(x, name: bool) -> str:
+            if name:
+                return (x.get_translated_name(lang) if lang else "") or x.get_name()
+            return (x.get_translated_description(lang) if lang else "") or x.get_description()
+
+        # an installed group or environment shows up twice (system state + repo metadata): merge by id
+        envs: dict[str, GroupInfo] = {}
+        for e in libdnf5.comps.EnvironmentQuery(self._base):
+            eid = e.get_environmentid()
+            if eid in envs:
+                envs[eid].installed |= e.get_installed()
+                continue
+            # what `dnf5 group install` installs: the mandatory and the default groups (libdnf5 5.2, Fedora 43, has
+            # no default groups: they are among the optional ones there)
+            defaults = e.get_default_groups() if hasattr(e, "get_default_groups") else ()
+            envs[eid] = GroupInfo(eid, text(e, True), text(e, False), e.get_installed(), frozenset(),
+                                  environment=True, groups=tuple(dict.fromkeys((*e.get_groups(), *defaults))),
+                                  optional_groups=tuple(e.get_optional_groups()))
+        in_envs = {gid for env in envs.values() for gid in (*env.groups, *env.optional_groups)}
+        optional = libdnf5.comps.PackageType_OPTIONAL
         groups: dict[str, GroupInfo] = {}
         for g in libdnf5.comps.GroupQuery(self._base):
             gid = g.get_groupid()
             if gid in groups:
                 groups[gid].installed |= g.get_installed()
                 continue
-            if not g.get_uservisible():
+            visible = g.get_uservisible()
+            if not (visible or gid in in_envs):
                 continue
+            packages = g.get_packages()
             groups[gid] = GroupInfo(
-                gid, (g.get_translated_name(lang) if lang else "") or g.get_name(),
-                (g.get_translated_description(lang) if lang else "") or g.get_description(),
-                g.get_installed(), frozenset(p.get_name() for p in g.get_packages()))
-        return sorted(groups.values(), key=lambda g: g.name.lower())
+                gid, text(g, True), text(g, False), g.get_installed(), frozenset(p.get_name() for p in packages),
+                optional=frozenset(p.get_name() for p in packages if p.get_type() == optional), visible=visible)
+        for env in envs.values():
+            mine = [groups[gid] for gid in env.groups if gid in groups]
+            env.packages = frozenset().union(*(g.packages for g in mine))
+            env.optional = frozenset().union(*(g.optional for g in mine)) - frozenset().union(
+                *(g.packages - g.optional for g in mine))
 
-    def upgradable_groups(self, group_ids: Iterable[str]) -> set[str]:
-        """The installed groups that `dnf5 group upgrade` would change: one dry-run resolve each (~0.1 s)."""
+        def by_name(items):
+            return sorted(items, key=lambda g: g.name.lower())
+        return by_name(groups.values()), by_name(envs.values())
+
+    def upgradable_groups(self, keys: Iterable[str]) -> set[str]:
+        """The installed groups and environments (GroupInfo.key) that `dnf5 group upgrade` would change: one dry-run
+        resolve each (~0.1 s)."""
         found = set()
-        for gid in group_ids:
-            tr = self._resolve_goal(lambda _extra, gid=gid: build_goal(self._base, {"group_upgrade": [gid]}), [])
+        for key in keys:
+            env, _prefix, eid = key.partition(ENVIRONMENT_PREFIX)
+            req = {"environment_upgrade": [eid]} if not env and eid else {"group_upgrade": [key]}
+            tr = self._resolve_goal(lambda _extra, req=req: build_goal(self._base, req), [])
             if tr.get_problems() == libdnf5.base.GoalProblem_NO_PROBLEM and len(tr.get_transaction_packages()):
-                found.add(gid)
+                found.add(key)
         return found
 
     def _repos(self) -> list[RepoInfo]:
@@ -622,7 +666,53 @@ class Catalog:
             ))
         items.sort(key=lambda i: (i.action, i.reason != "user", i.name))
         mark_rotated(items)
-        return TransactionPreview(items, [], download, change, groups=self._preview_groups(tr, actions))
+        self._mark_older_than_groups(tr, items)
+        # the helper downloads into the system cache; this base, as a user, has a cache of its own
+        config = self._base.get_config()
+        mine, system = config.cachedir, config.system_cachedir
+        to_download, _change = transaction_space(
+            tr, lambda path: system + path.removeprefix(mine) if path.startswith(mine) else path)
+        return TransactionPreview(items, [], download, change, groups=self._preview_groups(tr, actions),
+                                  to_download=to_download, cache_dir=system)
+
+    def _mark_older_than_groups(self, tr, items: list[PreviewItem]) -> None:
+        """Set PreviewItem.before on the removals a removed group or environment takes although the package was
+        installed before it: `dnf5 group remove` takes the packages of the group, whoever brought them."""
+        T = libdnf5.transaction
+        removed_groups = [tg.get_group() for tg in tr.get_transaction_groups()
+                          if tg.get_action() == T.TransactionItemAction_REMOVE]
+        if not removed_groups:
+            return
+        lang = language() or ""
+
+        def name(x) -> str:
+            return (x.get_translated_name(lang) if lang else "") or x.get_name()
+        times = comps_install_times(self._base)
+        # a package is taken by the removed groups that list it; an environment removed with them counts for its groups
+        envs = {}
+        for te in tr.get_transaction_environments():
+            if te.get_action() == T.TransactionItemAction_REMOVE:
+                e = te.get_environment()
+                for gid in (*e.get_groups(), *(e.get_default_groups() if hasattr(e, "get_default_groups") else ())):
+                    envs.setdefault(gid, []).append((ENVIRONMENT_PREFIX + e.get_environmentid(), name(e)))
+        owners: dict[str, list[tuple[str, str]]] = {}
+        for g in removed_groups:
+            for p in g.get_packages():
+                owners.setdefault(p.get_name(), []).extend(
+                    [(g.get_groupid(), name(g)), *envs.get(g.get_groupid(), [])])
+        installed_at = {}
+        for tp in tr.get_transaction_packages():
+            if tp.get_action() == T.TransactionItemAction_REMOVE:
+                p = tp.get_package()
+                installed_at[(p.get_name(), p.get_arch())] = p.get_install_time()
+        for i in items:
+            if i.action != "remove" or i.name not in owners or (i.name, i.arch) not in installed_at:
+                continue
+            known = [(times[key], label) for key, label in owners[i.name] if key in times]
+            if known:
+                since, label = max(known)
+                if installed_at[(i.name, i.arch)] < since:
+                    i.before = label
 
     @staticmethod
     def _preview_groups(tr, actions: dict) -> list[PreviewGroup]:
@@ -634,6 +724,12 @@ class Catalog:
             g = tg.get_group()
             groups.append(PreviewGroup(kind, g.get_groupid(),
                                        (g.get_translated_name(lang) if lang else "") or g.get_name()))
+        for te in tr.get_transaction_environments():
+            if (kind := actions.get(te.get_action())) not in ("install", "upgrade", "remove"):
+                continue
+            e = te.get_environment()
+            groups.append(PreviewGroup(kind, ENVIRONMENT_PREFIX + e.get_environmentid(),
+                                       (e.get_translated_name(lang) if lang else "") or e.get_name()))
         return sorted(groups, key=lambda g: (g.action, g.name.lower()))
 
     def _marked_names(self, request: dict) -> set[str]:

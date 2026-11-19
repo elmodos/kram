@@ -5,15 +5,19 @@ The history lives in /usr/lib/sysimage/libdnf5/transaction_history.sqlite, reada
 transactions alone takes milliseconds; their packages take ~5 ms per transaction (a thousand transactions: seconds),
 so they are read in chunks, see `read_items`.
 
-Undoing is not `dnf5 history undo`: it turns the transaction into ordinary marks, which the user sees in the list,
-can change, and applies like any other (see `plan_undo`)."""
+Undoing a transaction of packages is not `dnf5 history undo`: it turns the transaction into ordinary marks, which
+the user sees in the list, can change, and applies like any other (see `plan_undo`). A transaction that also changed
+comps groups or environments is undone as `dnf5 history undo` does (libdnf5 reverts it, the group records too):
+groups are not marked, and package marks alone would leave them recorded as installed."""
+import os
 import pwd
+import sqlite3
 from dataclasses import dataclass
 from enum import Enum
 
 from ..i18n import _
 from .marks import Action
-from .model import Reason
+from .model import ENVIRONMENT_PREFIX, Reason
 
 
 class Change(Enum):
@@ -47,6 +51,7 @@ class HistoryItem:
     action: str           # see ITEM_ACTIONS
     reason: Reason | None
     repo_id: str
+    comps: str = ""       # "group" or "environment" for a comps item: `name` is its name, `arch` its id
 
     @property
     def key(self) -> tuple[str, str]:
@@ -71,6 +76,7 @@ class HistoryRow:
     old_evr: str          # upgrades and downgrades: the version before, else ""
     repo_id: str
     reason: Reason | None
+    comps: str = ""       # "group" or "environment": a comps row, `name` its name, `arch` its id; not a package
 
     @property
     def key(self) -> tuple[str, str]:
@@ -107,7 +113,58 @@ def read_items(base, ids: list[int]) -> dict[int, tuple[HistoryItem, ...]]:
                 HistoryItem(p.get_name(), p.get_arch(), _evr(p), ITEM_ACTIONS.get(p.get_action(), "other"),
                             ITEM_REASONS.get(p.get_reason()), p.get_repoid())
                 for p in t.get_packages())
+    for tid, comps in read_comps(base, ids).items():
+        found[tid] = found.get(tid, ()) + comps
     return found
+
+
+def read_comps(base, ids: list[int]) -> dict[int, tuple[HistoryItem, ...]]:
+    """The comps groups and environments of these transactions, from dnf's history database: libdnf5's Python
+    bindings return them as an unusable SWIG pointer. Read-only; nothing when the database cannot be read."""
+    path = os.path.join(base.get_config().transaction_history_dir, "transaction_history.sqlite")
+    marks = ",".join("?" * len(ids))
+    query = f"""
+        SELECT ti.trans_id, ti.action_id, ti.reason_id, 'group', g.groupid, g.name, g.translated_name
+          FROM trans_item ti JOIN comps_group g ON g.item_id = ti.item_id WHERE ti.trans_id IN ({marks})
+        UNION ALL
+        SELECT ti.trans_id, ti.action_id, ti.reason_id, 'environment', e.environmentid, e.name, e.translated_name
+          FROM trans_item ti JOIN comps_environment e ON e.item_id = ti.item_id WHERE ti.trans_id IN ({marks})"""
+    found: dict[int, tuple[HistoryItem, ...]] = {}
+    try:
+        db = sqlite3.connect(f"file:{path}?mode=ro", uri=True)
+        try:
+            rows = db.execute(query, [*ids, *ids]).fetchall()
+        finally:
+            db.close()
+    except sqlite3.Error:
+        return found
+    for tid, action, reason, kind, cid, name, translated in rows:
+        item = HistoryItem(translated or name, cid, "", ITEM_ACTIONS.get(action, "other"), ITEM_REASONS.get(reason),
+                           "", comps=kind)
+        found[tid] = found.get(tid, ()) + (item,)
+    return found
+
+
+def comps_install_times(base) -> dict[str, int]:
+    """When each comps group and environment was last installed (GroupInfo.key -> seconds since the epoch), by a
+    transaction that finished; from dnf's history database, {} when it cannot be read."""
+    path = os.path.join(base.get_config().transaction_history_dir, "transaction_history.sqlite")
+    query = f"""
+        SELECT g.groupid, MAX(t.dt_begin) FROM trans t JOIN trans_item ti ON ti.trans_id = t.id
+          JOIN comps_group g ON g.item_id = ti.item_id WHERE ti.action_id = 1 AND t.state_id = {STATE_OK}
+         GROUP BY g.groupid
+        UNION ALL
+        SELECT '{ENVIRONMENT_PREFIX}' || e.environmentid, MAX(t.dt_begin) FROM trans t
+          JOIN trans_item ti ON ti.trans_id = t.id JOIN comps_environment e ON e.item_id = ti.item_id
+         WHERE ti.action_id = 1 AND t.state_id = {STATE_OK} GROUP BY e.environmentid"""
+    try:
+        db = sqlite3.connect(f"file:{path}?mode=ro", uri=True)
+        try:
+            return dict(db.execute(query).fetchall())
+        finally:
+            db.close()
+    except sqlite3.Error:
+        return {}
 
 
 def user_name(uid: int) -> str:
@@ -129,8 +186,12 @@ def history_rows(items: tuple[HistoryItem, ...]) -> list[HistoryRow]:
         if i.action == "replaced":
             replaced.setdefault(i.name, []).append(i)
     rows = []
+    comps = {"install": Change.INSTALL, "upgrade": Change.UPGRADE, "remove": Change.REMOVE, "reason": Change.REASON}
     for i in items:
-        if i.action in ("upgrade", "downgrade", "reinstall"):
+        if i.comps:
+            if i.action in comps:
+                rows.append(HistoryRow(comps[i.action], i.name, i.arch, "", "", "", i.reason, comps=i.comps))
+        elif i.action in ("upgrade", "downgrade", "reinstall"):
             olds = replaced.get(i.name, [])
             # the same arch first; an upgrade that changes the arch (noarch -> x86_64) replaced the other one
             old = next((o for o in olds if o.arch == i.arch), olds[0] if olds else None)
@@ -149,10 +210,17 @@ def history_rows(items: tuple[HistoryItem, ...]) -> list[HistoryRow]:
 
 
 def change_counts(rows: list[HistoryRow]) -> dict[Change, int]:
+    """Per change, the packages (comps rows are not counted)."""
     counts: dict[Change, int] = {}
     for r in rows:
-        counts[r.change] = counts.get(r.change, 0) + 1
+        if not r.comps:
+            counts[r.change] = counts.get(r.change, 0) + 1
     return counts
+
+
+def changes_comps(rows: list[HistoryRow]) -> bool:
+    """Whether the transaction changed comps groups or environments: then it is undone by reverting it."""
+    return any(r.comps for r in rows)
 
 
 # ---------------------------------------------------------------- undo
@@ -206,6 +274,8 @@ def plan_undo(rows: list[HistoryRow], state: dict[tuple[str, str], PackageState]
         return True
 
     for row in rows:
+        if row.comps:
+            continue  # not a package: a transaction with comps rows is reverted instead, see changes_comps
         now = state.get(row.key, PackageState())
         if row.change is Change.REINSTALL:
             continue  # the same version before and after: nothing to undo

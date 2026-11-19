@@ -25,9 +25,9 @@ from ..core.catalog import Catalog
 from ..core.csv_export import write_csv
 from ..core.evr import evr_cmp
 from ..core.filters import FilterEntry
-from ..core.history import UndoProblem, UndoStep, plan_undo
-from ..core.marks import Action, allowed_actions
-from ..core.model import CatalogSnapshot, PkgRow, Status, TransactionPreview
+from ..core.history import UndoProblem, UndoStep, changes_comps, plan_undo
+from ..core.marks import Action, allowed_actions, group_request
+from ..core.model import CatalogSnapshot, GroupInfo, PkgRow, Status, TransactionPreview
 from ..core.repo_files import file_owners
 from ..core.search import MODE_LABELS, Mode, NarrowingSearch, SearchIndex
 from ..core.worker import DnfWorker
@@ -343,6 +343,7 @@ class MainWindow(QMainWindow):
 
     def _on_filter(self, entry: FilterEntry):
         self.filter = entry
+        self.model.optional = entry.optional  # in italics: what installing the group leaves out
         if entry.query is not None:  # a search-history entry: re-run that search
             self.search.set_query(*entry.query)
             self.apply_filter()
@@ -549,7 +550,7 @@ class MainWindow(QMainWindow):
     def _sidebar_menu(self, pos, entry: FilterEntry | None) -> None:
         m = QMenu(self)
         if entry is not None and entry.group and (group := self.marker.group(entry.group)) is not None:
-            self.marker.fill_group_menu(m, group, busy=self.helper.busy)
+            self.marker.fill_group_menu(m, group, busy=self.helper.busy, run=self.change_group)
             m.addSeparator()
         if entry is not None and entry.id == "status:unneeded":
             m.addAction(self.acts.mark_unneeded)
@@ -575,8 +576,6 @@ class MainWindow(QMainWindow):
 
     def _group_marks_changed(self) -> None:
         self._update_actions()
-        if self.sidebar.current_view == "groups":
-            self.sidebar.refresh_counts()
 
     def about(self):
         box = QMessageBox(QMessageBox.Icon.NoIcon, _("About Kram"),
@@ -727,18 +726,44 @@ class MainWindow(QMainWindow):
         if not len(self.model.marks) or self.helper.busy:
             return
         rows = {r.key: r for r in self.snapshot.rows}
-        request = {"op": "transaction", **self.model.marks.request(rows)}
+        self._review({"op": "transaction", **self.model.marks.request(rows)}, marked=True)
+
+    def change_group(self, group: GroupInfo, action: Action, optional: bool = False) -> None:
+        """Install, upgrade or remove a comps group or environment at once, after the review. Only that: the marks
+        stay for a later Apply (a reload drops the ones it has carried out)."""
+        if self.helper.busy:
+            return
+        self._review({"op": "transaction", **group_request(group, action, optional)}, marked=False)
+
+    def _review(self, request: dict, marked: bool) -> None:
+        """Resolve `request`, show what it does, run it if the user agrees. `marked`: it is the marked changes."""
         self.status.set_text(_("Resolving dependencies…"))
-        self.dnf.submit(lambda: self.catalog.resolve(request), lambda p: self._on_preview(p, request),
+        self.dnf.submit(lambda: self.catalog.resolve(request), lambda p: self._on_preview(p, request, marked),
                         lambda e: QMessageBox.critical(self, "Kram", _("Could not resolve the changes:\n\n{error}").format(error=e)))
 
-    def _on_preview(self, preview: TransactionPreview, request: dict):
+    def _on_preview(self, preview: TransactionPreview, request: dict, marked: bool = True,
+                    can_skip: bool | None = None):
+        """`can_skip` (an undo that cannot be done whole): whether leaving out what is unavailable would work; None
+        until that has been tried."""
         self._update_status()
+        if not preview.ok and request.get("revert") and not request.get("skip_unavailable") and can_skip is None:
+            # offer the partial undo only when it resolves: when the transaction cannot be reverted for another
+            # reason (its environment was removed since), it would fail the same way
+            partial = {**request, "skip_unavailable": True}
+            self.dnf.submit(lambda: self.catalog.resolve(partial, sizes=False).ok,
+                            lambda ok: self._on_preview(preview, request, marked, ok),
+                            lambda _e: self._on_preview(preview, request, marked, False))
+            return
         if not preview.ok:
             box = QMessageBox(QMessageBox.Icon.Warning, _("Cannot apply changes"),
-                              _("The marked changes cannot be carried out. Unmark or change them."), parent=self)
+                              _("The marked changes cannot be carried out. Unmark or change them.") if marked else
+                              _("This change cannot be carried out."), parent=self)
             info = preview.problems[0][:500]
-            show_locked = None
+            show_locked = skip = None
+            if can_skip:
+                info += "\n\n" + _("Undoing the whole transaction needs versions the repositories no longer have. "
+                                   "What is still possible can be undone without them.")
+                skip = box.addButton(_("Undo What Is Possible…"), QMessageBox.ButtonRole.ActionRole)
             if preview.versionlock:
                 info += "\n\n" + _("They need a version the version lock excludes. Unlock the package "
                                    "(Package → Unlock Version) or unmark the change.")
@@ -750,6 +775,8 @@ class MainWindow(QMainWindow):
             if show_locked is not None and box.clickedButton() is show_locked:
                 self.search.clear()
                 self.sidebar.select("status", "status:locked")
+            elif skip is not None and box.clickedButton() is skip:
+                self._review({**request, "skip_unavailable": True}, marked=False)
             return
         def resolve(req, done, failed):
             self.dnf.submit(lambda: self.catalog.resolve(req, sizes=False), done, failed)
@@ -762,7 +789,8 @@ class MainWindow(QMainWindow):
         if download_only:
             request = {**request, "download_only": True}
         if self._run_helper(request, _("Applying changes")) and not download_only:
-            self.marker.unmark_all()
+            if marked:
+                self.marker.unmark_all()
             self.reload()
 
     def refresh_metadata(self):
@@ -879,6 +907,11 @@ class MainWindow(QMainWindow):
         dlg = self._history_dialog
         rows = dlg.rows_of(tid) if dlg is not None else None
         if not rows or self.snapshot is None or self.helper.busy:
+            return
+        if changes_comps(rows):
+            # groups are not marked, and package marks alone would leave the groups recorded as installed:
+            # `dnf5 history undo`, after the review
+            self._review({"op": "transaction", "revert": [tid]}, marked=False)
             return
         snap = self.snapshot
 

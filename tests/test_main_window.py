@@ -288,47 +288,94 @@ def test_status_icon_click_marks_the_likely_action_only_when_chosen(window, monk
     assert marks.get(rows[0].key).action is Action.INSTALL
 
 
-def test_group_marks_from_the_sidebar(window):
-    """A comps group is marked from its sidebar menu, shown there like a marked package and sent to the helper."""
+def test_groups_are_changed_at_once_from_the_sidebar(window, monkeypatch):
+    """A comps group is not marked (the Marked list could not show it): its menu runs the change at once, after the
+    review, alone; the package marks stay for a later Apply."""
     from PySide6.QtWidgets import QMenu
 
     from kram.core.marks import Action
-    from kram.core.model import CatalogSnapshot, GroupInfo, TransactionPreview
-    from kram.ui.apply_dialog import ApplyDialog
+    from kram.core.model import CatalogSnapshot, GroupInfo, Origin, PkgRow, Status
 
-    apps = GroupInfo("kde-apps", "KDE Applications", "", False, frozenset())
+    fish = PkgRow("fish", "x86_64", "", "", "1-1", "fedora", 1, Origin.FEDORA, Status.NOT_INSTALLED)
+    apps = GroupInfo("kde-apps", "KDE Applications", "", False, frozenset(), optional=frozenset({"kgeography"}))
     tools = GroupInfo("development-tools", "Development Tools", "", True, frozenset())
-    window._on_loaded(CatalogSnapshot([], 0, 0, 0.0, groups=[apps, tools]))
+    window._on_loaded(CatalogSnapshot([fish], 0, 0, 0.0, groups=[apps, tools]))
     window.sidebar.set_view("groups")
+    runs = []
+
     def menu_for(group):
         menu = QMenu()
-        window.marker.fill_group_menu(menu, group, busy=False)
-        return {a.text(): a.isEnabled() for a in menu.actions()}
+        window.marker.fill_group_menu(menu, group, busy=False, run=lambda *a: runs.append(a))
+        return menu
 
     # Upgrade waits for the check after loading, and stays off when it finds nothing to upgrade
-    assert menu_for(tools) == {"Mark Group for Upgrade": False, "Mark Group for Removal": True, "Unmark Group": False}
-    tools.upgradable = False
-    assert not menu_for(tools)["Mark Group for Upgrade"]
+    menu = menu_for(tools)
+    assert {a.text(): a.isEnabled() for a in menu.actions()} == {"Upgrade Group…": False, "Remove Group…": True}
     tools.upgradable = True
-    assert menu_for(tools)["Mark Group for Upgrade"]
+    menu = menu_for(tools)
+    assert menu.actions()[0].isEnabled()
+    menu = menu_for(apps)
+    assert [a.text() for a in menu.actions()] == ["Install Group…", "Install Group with Optional Packages…"]
+    menu.actions()[1].trigger()
+    assert runs == [(apps, Action.INSTALL, True)]
 
-    window.marker.mark_group(apps, Action.INSTALL)
-    window.marker.mark_group(tools, Action.REMOVE)
-    assert window.acts.apply.isEnabled()
-    item = next(window.sidebar.list.item(n) for n, e in enumerate(window.sidebar._entries) if e.group == "kde-apps")
-    assert "Marked: install" in item.toolTip()
-    assert window.model.marks.request({}) == {"group_install": ["kde-apps"], "group_remove": ["development-tools"]}
+    window.model.marks.set(fish, Action.INSTALL)
+    reviewed = []
+    monkeypatch.setattr(window, "_review", lambda request, marked: reviewed.append((request, marked)))
+    window.change_group(apps, Action.INSTALL, True)
+    assert reviewed == [({"op": "transaction", "group_install_optional": ["kde-apps"]}, False)]
+    assert len(window.model.marks) == 1  # fish stays marked
 
-    preview = TransactionPreview([], [], 0, 0)
-    dlg = ApplyDialog(preview, {"op": "transaction", **window.model.marks.request({})})
-    assert "sudo dnf5 group install kde-apps" in dlg.cmd.toPlainText()
 
-    # after a reload the removed group is gone: its mark goes too
-    window._on_loaded(CatalogSnapshot([], 0, 0, 0.0, groups=[apps]))
-    assert window.model.marks.request({}) == {"group_install": ["kde-apps"]}
-    window.marker.unmark_all()
-    assert not window.acts.apply.isEnabled()
+def test_environments_are_a_tree(window):
+    """The Environments view is a tree: each environment folds its groups, the optional ones in italics; the list
+    shows a group's optional packages in italics."""
+    from PySide6.QtCore import Qt
+    from PySide6.QtWidgets import QMenu
 
+    from kram.core.model import CatalogSnapshot, GroupInfo, Origin, PkgRow, Status
+    from kram.ui.package_model import COL_NAME
+
+    rows = [PkgRow(n, "x86_64", "", "", "1-1", "fedora", 1, Origin.FEDORA, Status.NOT_INSTALLED)
+            for n in ("plasma-desktop", "kgeography")]
+    kde = GroupInfo("kde-desktop", "KDE", "", False, frozenset({"plasma-desktop", "kgeography"}),
+                    optional=frozenset({"kgeography"}))
+    edu = GroupInfo("kde-education", "KDE Education", "", False, frozenset({"kgeography"}))
+    env = GroupInfo("kde-desktop-environment", "KDE Plasma Workspaces", "", False,
+                    frozenset({"plasma-desktop", "kgeography"}), optional=frozenset({"kgeography"}),
+                    environment=True, groups=("kde-desktop",), optional_groups=("kde-education",))
+    xfce = GroupInfo("xfce-desktop-environment", "Xfce", "", False, frozenset(), environment=True,
+                     groups=("kde-desktop",))
+    window._on_loaded(CatalogSnapshot(rows, 0, 0, 0.0, groups=[kde, edu], environments=[env, xfce]))
+    sidebar = window.sidebar
+    sidebar.set_view("environments")
+    tree = sidebar.list
+    assert tree.topLevelItemCount() == 2 and tree.rootIsDecorated()
+    top = tree.topLevelItem(0)
+    assert sidebar.current_entry_id == "env:kde-desktop-environment"  # the first one, no "All environments"
+    assert top.childCount() == 2 and not top.isExpanded()
+    assert top.child(1).font(0).italic() and not top.child(0).font(0).italic()
+
+    top.setExpanded(True)
+    tree.setCurrentItem(top.child(0))
+    assert sidebar.current_entry_id == "envgroup:kde-desktop-environment:kde-desktop"
+    sidebar.refresh_counts()  # rebuilt: the fold and the selection stay
+    top = tree.topLevelItem(0)
+    assert top.isExpanded() and not tree.topLevelItem(1).isExpanded()
+    assert sidebar.current_entry_id == "envgroup:kde-desktop-environment:kde-desktop"
+
+    names = {window.model.index(i, COL_NAME).data(): window.model.index(i, COL_NAME) for i in range(2)}
+    assert names["kgeography"].data(Qt.ItemDataRole.FontRole).italic()
+    assert names["plasma-desktop"].data(Qt.ItemDataRole.FontRole) is None
+    assert "Optional in this group" in names["kgeography"].data(Qt.ItemDataRole.ToolTipRole)
+
+    menu = QMenu()
+    window.marker.fill_group_menu(menu, env, busy=False, run=lambda *a: None)
+    assert [a.text() for a in menu.actions()] == ["Install Environment…",
+                                                  "Install Environment with Optional Groups…"]
+
+    sidebar.set_view("origin")  # the other views stay open, without arrows
+    assert not tree.rootIsDecorated()
 
 def test_a_provides_search_typed_over_is_skipped_not_run(window, monkeypatch):
     from kram.core.model import CatalogSnapshot, Origin, PkgRow, Status

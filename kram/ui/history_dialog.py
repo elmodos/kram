@@ -26,14 +26,16 @@ from ..core.history import (
     HistoryRow,
     HistoryTransaction,
     change_counts,
+    changes_comps,
     command_label,
     history_rows,
     user_name,
 )
 from ..core.marks import Action
-from ..core.model import Reason
+from ..core.model import ENVIRONMENT_PREFIX, Reason
 from ..core.worker import DnfWorker
 from ..i18n import _, ngettext, pgettext
+from .group_icons import group_icon
 from .icons import mark_icon
 from .package_model import REASON_LABEL
 
@@ -44,6 +46,8 @@ ROLE_ID = Qt.ItemDataRole.UserRole
 GEOMETRY_KEY = "history/geometry"
 SPLITTER_KEY = "history/splitter"
 
+UNDO_TIP = _("Mark the changes that take the packages of this transaction back to where they were. Review them in "
+             "the Marked list, then apply them.")
 CHANGE_LABEL = {
     Change.INSTALL: pgettext("history", "Install"),
     Change.UPGRADE: pgettext("history", "Upgrade"),
@@ -70,10 +74,22 @@ CHANGE_ICON_ACTION = {
 
 
 def counts_text(rows: list[HistoryRow]) -> str:
+    """"1 environment, 16 groups; 1042 installed, 5 upgraded"."""
     counts = change_counts(rows)
-    if not counts:
-        return _("no package changes")
-    return ", ".join(CHANGE_COUNT[c].format(n=counts[c]) for c in Change if c in counts)
+    envs = sum(1 for r in rows if r.comps == "environment")
+    groups = sum(1 for r in rows if r.comps == "group")
+    comps = ", ".join(filter(None, (
+        ngettext("{n} environment", "{n} environments", envs).format(n=envs) if envs else "",
+        ngettext("{n} group", "{n} groups", groups).format(n=groups) if groups else "")))
+    packages = ", ".join(CHANGE_COUNT[c].format(n=counts[c]) for c in Change if c in counts)
+    if not packages:
+        return comps or _("no package changes")
+    return f"{comps}; {packages}" if comps else packages
+
+
+def comps_key(row: HistoryRow) -> str:
+    """The GroupInfo.key of a comps row, for its icon."""
+    return ENVIRONMENT_PREFIX + row.arch if row.comps == "environment" else row.arch
 
 
 def change_icon(row: HistoryRow) -> QIcon:
@@ -125,8 +141,7 @@ class HistoryDialog(QDialog):
         buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Close)
         buttons.rejected.connect(self.close)
         self.undo = QPushButton(QIcon.fromTheme("edit-undo"), _("Mark Changes to Undo"))
-        self.undo.setToolTip(_("Mark the changes that take the packages of this transaction back to where they were. "
-                               "Review them in the Marked list, then apply them."))
+        self.undo.setToolTip(UNDO_TIP)
         self.undo.clicked.connect(lambda: self.undoRequested.emit(self._current_id()))
         buttons.addButton(self.undo, QDialogButtonBox.ButtonRole.ActionRole)
         lay.addWidget(buttons)
@@ -255,7 +270,15 @@ class HistoryDialog(QDialog):
         bold = QFont(self.packages.font())
         bold.setBold(True)
         items = []
-        for r in rows:
+        for r in sorted(rows, key=lambda r: (not r.comps, r.comps != "environment")):  # comps first
+            if r.comps:
+                kind = _("environment") if r.comps == "environment" else _("group")
+                item = QTreeWidgetItem([CHANGE_LABEL[r.change], f"{r.name} ({kind})", "", "",
+                                        REASON_LABEL.get(r.reason, "")])
+                item.setIcon(COL_PACKAGE, group_icon(comps_key(r)))
+                item.setToolTip(COL_PACKAGE, r.arch)
+                items.append(item)
+                continue
             version = f"{r.old_evr} → {r.evr}" if r.old_evr else r.evr
             item = QTreeWidgetItem([CHANGE_LABEL[r.change], f"{r.name}.{r.arch}", version,
                                     r.repo_id, REASON_LABEL.get(r.reason, "")])
@@ -310,6 +333,14 @@ class HistoryDialog(QDialog):
         t = next((t for t in self._transactions if t.id == tid), None)
         rows = self._rows.get(tid)
         self.undo.setEnabled(bool(t and t.ok and rows) and self._can_mark and not self._busy)
+        if rows and changes_comps(rows):
+            self.undo.setText(_("Undo Transaction…"))
+            self.undo.setToolTip(_("The transaction changed groups or environments: it is undone as "
+                                   "“dnf5 history undo” does, packages and groups together. Kram shows what that "
+                                   "does before it runs."))
+        else:
+            self.undo.setText(_("Mark Changes to Undo"))
+            self.undo.setToolTip(UNDO_TIP)
 
     def closeEvent(self, event) -> None:
         settings = QSettings()

@@ -8,6 +8,8 @@ from functools import cache
 
 from PySide6.QtGui import QIcon
 
+from ..core.model import ENVIRONMENT_PREFIX
+
 _DESKTOP = ("user-desktop",)
 _DEVELOPMENT = ("applications-development",)
 _EDUCATION = ("applications-education",)
@@ -77,6 +79,17 @@ _GROUPS: dict[str, tuple[str, ...]] = {
     "security-lab": ("security-high",),
     "virtualization": ("virt-manager", "computer"),
 }
+# environments ("<desktop>-desktop-environment" takes the icon of its "<desktop>-desktop" group)
+_ENVIRONMENTS: dict[str, tuple[str, ...]] = {
+    "workstation-product-environment": ("fedora-logo-icon", "start-here-fedora", *_DESKTOP),
+    "developer-workstation-environment": _DEVELOPMENT,
+    "server-product-environment": ("network-server",),
+    "cloud-server-environment": ("network-server",),
+    "custom-environment": _SYSTEM,
+    "i3-desktop-environment": _WINDOWS,
+    "sway-desktop-environment": _WINDOWS,
+    "miraclewm-desktop-environment": _WINDOWS,
+}
 _GENERIC = ("applications-other", "package-x-generic")
 _ALL = ("applications-all", "view-list-icons", *_GENERIC)
 
@@ -90,8 +103,12 @@ def _themed(names: tuple[str, ...]) -> QIcon:
 
 @cache
 def group_icon(group_id: str) -> QIcon:
-    """The themed icon for a comps group id; "" is the "All groups" entry."""
+    """The themed icon for a comps group id or an environment's GroupInfo.key; "" is the "All groups" entry."""
     if not group_id:
         return _themed(_ALL)
+    if group_id.startswith(ENVIRONMENT_PREFIX):
+        env = group_id.removeprefix(ENVIRONMENT_PREFIX)
+        names = _ENVIRONMENTS.get(env) or (*_GROUPS.get(env.removesuffix("-environment"), ()), *_DESKTOP)
+        return _themed(names)
     icon = _themed(_GROUPS.get(group_id, ()))
     return _themed(_GENERIC) if icon.isNull() else icon

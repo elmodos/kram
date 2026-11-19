@@ -34,6 +34,7 @@ COUNTED = ("Install", "Upgrade", "Downgrade", "Reinstall", "Remove")
 # Kram's own messages from the helper, by the key of a "log" event (kram_helper.log) or of a failed "done"
 # (kram_helper.fail); unknown keys fall back to the English text. What dnf says is shown as it comes
 HELPER_MESSAGES = {
+    "no_space": N_("Not enough disk space on {mount}: {size} more is needed"),
     "command": N_("Running: {command}"),
     "loading_repos": N_("Loading repositories…"),
     "refreshing": N_("Refreshing repository metadata…"),

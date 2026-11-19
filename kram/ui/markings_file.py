@@ -6,7 +6,7 @@ from PySide6.QtCore import QSettings
 from PySide6.QtWidgets import QFileDialog, QMessageBox, QWidget
 
 from ..core.marks import MarkSet, dump_marks, parse_marks
-from ..core.model import GroupInfo, PkgRow
+from ..core.model import PkgRow
 from ..i18n import _, ngettext
 
 
@@ -44,8 +44,8 @@ def ask_markings_file(parent: QWidget) -> str | None:
 
 
 def read_markings(parent: QWidget, path: str, marks: MarkSet, rows: dict[tuple[str, str], PkgRow],
-                  group: Callable[[str], GroupInfo | None], marked: Callable[[int], None]) -> None:
-    """Add the marks from a markings file to `marks`, call `marked` with the number of packages and groups marked
+                  marked: Callable[[int], None]) -> None:
+    """Add the marks from a markings file to `marks`, call `marked` with the number of packages marked
     (not when the file could not be read), then report what could not be marked."""
     try:
         text = Path(path).read_text(encoding="utf-8")
@@ -54,12 +54,10 @@ def read_markings(parent: QWidget, path: str, marks: MarkSet, rows: dict[tuple[s
             path=path, error=getattr(e, "strerror", None) or e))
         return
     _remember_dir(path)
-    package_marks, group_marks, bad_lines = parse_marks(text)
+    package_marks, bad_lines = parse_marks(text)
     skipped = [f"{name}.{arch}" for (name, arch), mark in package_marks
                if not ((row := rows.get((name, arch))) and marks.set(row, mark.action, mark.evr))]
-    skipped += [f"@{gid}" for gid, action in group_marks
-                if not ((g := group(gid)) and marks.set_group(g, action))]
-    n = len(package_marks) + len(group_marks) - len(skipped)
+    n = len(package_marks) - len(skipped)
     marked(n)
     if skipped or bad_lines:
         problems = []

@@ -55,6 +55,15 @@ def test_rejects_bad_input():
         '{"op": "transaction", "group_install": ["kde apps"]}',
         '{"op": "transaction", "group_remove": "kde-apps"}',
         '{"op": "transaction", "group_upgrade": ["@kde-apps"]}',
+        '{"op": "transaction", "environment_install": ["env:kde-desktop-environment"]}',
+        '{"op": "transaction", "environment_install_optional": ["--with-optional"]}',
+        '{"op": "transaction", "group_install_optional": "kde-apps"}',
+        '{"op": "transaction", "revert": [7, 8]}',
+        '{"op": "transaction", "revert": ["7"]}',
+        '{"op": "transaction", "revert": [true]}',
+        '{"op": "transaction", "revert": [0]}',
+        '{"op": "transaction", "revert": [7], "install": ["fish"]}',
+        '{"op": "transaction", "revert": [7], "skip_unavailable": "yes"}',
         '{"op": "repo_remove"}',
         '{"op": "repo_remove", "repos": []}',
         '{"op": "repo_remove", "repos": "code"}',
@@ -72,7 +81,7 @@ def test_rejects_bad_input():
         '{"op": "refresh", "repos": ["fedora; rm -rf /"]}',
         '{"op": "refresh", "repos": [7]}',
     )
-    assert len(events) == 49
+    assert len(events) == 58
     assert all(ev["event"] == "done" and ev["ok"] is False and ev["stage"] == "protocol" for ev in events)
 
 

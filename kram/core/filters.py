@@ -19,8 +19,11 @@ class FilterEntry:
     origin: Origin | None = None   # for the icon
     indent: int = 0
     query: tuple[str, int] | None = None   # search-history entries: (text, search mode)
-    group: str | None = None   # comps group id for its themed icon ("" for all groups)
+    group: str | None = None   # comps GroupInfo.key, for its icon and its marks ("" for all groups)
     bold: bool = False   # comps groups: installed
+    dim: bool = False    # an environment's optional group, in italics: installed only when asked for
+    # comps groups: the package names `dnf5 group install` leaves out unless asked for; in italics in the list
+    optional: frozenset[str] = frozenset()
     tip: str = ""
     hide_empty: bool = False   # left out of the sidebar while it matches nothing
 
@@ -126,15 +129,53 @@ def origin_filters(snap: CatalogSnapshot) -> list[FilterEntry]:
     return _with_counts(entries, rows)
 
 
-def group_filters(snap: CatalogSnapshot) -> list[FilterEntry]:
-    def in_group(names: frozenset[str]) -> Predicate:
-        return lambda r: r.name in names
+def _in_names(names: frozenset[str]) -> Predicate:
+    return lambda r: r.name in names
 
-    entries = [FilterEntry("group:all", _("All groups"), _all, group="")]
-    entries += [FilterEntry(f"group:{g.id}", g.name, in_group(g.packages), tip=g.description,
-                            group=g.id, bold=g.installed)
-                for g in snap.groups]
-    return _with_counts(entries, snap.rows)
+
+def _count_by_names(entries: list[tuple[FilterEntry, frozenset[str]]], rows: list[PkgRow]) -> None:
+    """Counts of entries that match by package name: the rows of each name are counted once, so ~300 groups do
+    not each run over 70k rows."""
+    per_name = Counter(r.name for r in rows)
+    for e, names in entries:
+        e.count = sum(per_name[n] for n in names)
+
+
+def group_filters(snap: CatalogSnapshot) -> list[FilterEntry]:
+    groups = [(FilterEntry(f"group:{g.id}", g.name, _in_names(g.packages), tip=g.description, group=g.id,
+                           bold=g.installed, optional=g.optional), g.packages)
+              for g in snap.groups if g.visible]
+    _count_by_names(groups, snap.rows)
+    return [FilterEntry("group:all", _("All groups"), _all, len(snap.rows), group=""), *(e for e, _n in groups)]
+
+
+def environment_id(entry_id: str) -> str | None:
+    """The environment an Environments view entry belongs to: its own, or that of one of its groups."""
+    kind, _sep, rest = entry_id.partition(":")
+    if kind == "env":
+        return rest
+    if kind == "envgroup":
+        return rest.partition(":")[0]
+    return None
+
+
+def environment_filters(snap: CatalogSnapshot) -> list[FilterEntry]:
+    """The Environments view: every environment, each followed by its groups (indent 1): those it installs, then
+    its optional ones (dim). Group entries are "envgroup:<environment id>:<group id>"."""
+    groups = {g.id: g for g in snap.groups}
+    optional_tip = _("Optional: installed with the environment only when optional groups are asked for")
+    entries: list[tuple[FilterEntry, frozenset[str]]] = []
+    for env in snap.environments:
+        entries.append((FilterEntry(f"env:{env.id}", env.name, _in_names(env.packages), tip=env.description,
+                                    group=env.key, bold=env.installed, optional=env.optional), env.packages))
+        for gids, optional in ((env.groups, False), (env.optional_groups, True)):
+            for g in sorted((groups[gid] for gid in gids if gid in groups), key=lambda g: g.name.lower()):
+                tip = "\n\n".join(filter(None, (g.description, optional_tip if optional else "")))
+                entries.append((FilterEntry(f"envgroup:{env.id}:{g.id}", g.name, _in_names(g.packages), indent=1,
+                                            tip=tip, group=g.id, bold=g.installed, dim=optional,
+                                            optional=g.optional), g.packages))
+    _count_by_names(entries, snap.rows)
+    return [e for e, _n in entries]
 
 
 def custom_filter_entries(snap: CatalogSnapshot, filters: list) -> list[FilterEntry]:

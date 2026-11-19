@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kram\n"
 "Report-Msgid-Bugs-To: https://github.com/elmodos/kram/issues\n"
-"POT-Creation-Date: 2026-11-19 14:19+0200\n"
+"POT-Creation-Date: 2026-11-19 20:07+0000\n"
 "PO-Revision-Date: 2026-11-04 14:07+0200\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -46,19 +46,19 @@ msgstr "Popis"
 msgid "Provides"
 msgstr "Poskytuje"
 
-#: kram/core/custom_filters.py:53 kram/ui/package_model.py:258
-#: kram/ui/sidebar.py:36
+#: kram/core/custom_filters.py:53 kram/ui/package_model.py:260
+#: kram/ui/sidebar.py:37
 msgid "Status"
 msgstr "Stav"
 
 #: kram/core/custom_filters.py:54 kram/ui/details.py:181
-#: kram/ui/package_model.py:258 kram/ui/repos_dialog.py:73
-#: kram/ui/sidebar.py:37
+#: kram/ui/package_model.py:260 kram/ui/repos_dialog.py:73
+#: kram/ui/sidebar.py:38
 msgid "Origin"
 msgstr "Původ"
 
-#: kram/core/custom_filters.py:55 kram/ui/apply_dialog.py:91
-#: kram/ui/details.py:81 kram/ui/history_dialog.py:118
+#: kram/core/custom_filters.py:55 kram/ui/apply_dialog.py:93
+#: kram/ui/details.py:81 kram/ui/history_dialog.py:134
 #: kram/ui/package_model.py:29
 msgid "Repository"
 msgstr "Repozitář"
@@ -115,7 +115,7 @@ msgstr "menší než"
 msgid "Installed (any)"
 msgstr "Nainstalováno (jakýkoli stav)"
 
-#: kram/core/custom_filters.py:78 kram/core/filters.py:78
+#: kram/core/custom_filters.py:78 kram/core/filters.py:81
 msgid "Not installed"
 msgstr "Nenainstalováno"
 
@@ -123,15 +123,15 @@ msgstr "Nenainstalováno"
 msgid "Installed, up to date"
 msgstr "Nainstalováno, aktuální"
 
-#: kram/core/custom_filters.py:80 kram/core/filters.py:79
+#: kram/core/custom_filters.py:80 kram/core/filters.py:82
 msgid "Upgradable"
 msgstr "Lze aktualizovat"
 
-#: kram/core/custom_filters.py:81 kram/core/filters.py:88
+#: kram/core/custom_filters.py:81 kram/core/filters.py:91
 msgid "Newer than repository"
 msgstr "Novější než v repozitáři"
 
-#: kram/core/custom_filters.py:82 kram/core/filters.py:87
+#: kram/core/custom_filters.py:82 kram/core/filters.py:90
 msgid "Orphaned (no repository)"
 msgstr "Osiřelé (bez repozitáře)"
 
@@ -163,111 +163,119 @@ msgstr "Vylepšení"
 msgid "Installed as a dependency"
 msgstr "Nainstalováno jako závislost"
 
-#: kram/core/custom_filters.py:94 kram/core/filters.py:84
+#: kram/core/custom_filters.py:94 kram/core/filters.py:87
 msgid "Installed by user"
 msgstr "Nainstalováno uživatelem"
 
-#: kram/core/custom_filters.py:96 kram/core/filters.py:112
+#: kram/core/custom_filters.py:96 kram/core/filters.py:115
 msgid "Fedora (official)"
 msgstr "Fedora (oficiální)"
 
-#: kram/core/custom_filters.py:97 kram/core/filters.py:115
+#: kram/core/custom_filters.py:97 kram/core/filters.py:118
 msgid "Local (@commandline)"
 msgstr "Místní (@commandline)"
 
-#: kram/core/custom_filters.py:97 kram/core/filters.py:114
+#: kram/core/custom_filters.py:97 kram/core/filters.py:117
 msgid "Third-party"
 msgstr "Třetí strany"
 
-#: kram/core/custom_filters.py:98 kram/core/filters.py:116
+#: kram/core/custom_filters.py:98 kram/core/filters.py:119
 msgid "Unknown (not recorded)"
 msgstr "Neznámý (nezaznamenán)"
 
-#: kram/core/filters.py:76 kram/ui/empty_list.py:43
+#: kram/core/filters.py:79 kram/ui/empty_list.py:43
 msgid "All"
 msgstr "Vše"
 
-#: kram/core/filters.py:77 kram/ui/copr_dialog.py:58
+#: kram/core/filters.py:80 kram/ui/copr_dialog.py:58
 msgid "Installed"
 msgstr "Nainstalované"
 
-#: kram/core/filters.py:80
+#: kram/core/filters.py:83
 msgid "Security updates"
 msgstr "Bezpečnostní aktualizace"
 
-#: kram/core/filters.py:81
+#: kram/core/filters.py:84
 msgid "Upgrades that fix a security issue, by their advisories"
 msgstr ""
 "Aktualizace, které opravují bezpečnostní problém, podle jejich oznámení"
 
-#: kram/core/filters.py:82
+#: kram/core/filters.py:85
 msgid "Bug fix updates"
 msgstr "Opravy chyb"
 
-#: kram/core/filters.py:83
+#: kram/core/filters.py:86
 msgid "Upgrades that fix bugs, by their advisories"
 msgstr "Aktualizace, které opravují chyby, podle jejich oznámení"
 
-#: kram/core/filters.py:86
+#: kram/core/filters.py:89
 msgid "Unneeded dependencies"
 msgstr "Nepotřebné závislosti"
 
-#: kram/core/filters.py:90
+#: kram/core/filters.py:93
 msgid "Locked versions"
 msgstr "Uzamčené verze"
 
-#: kram/core/filters.py:91
+#: kram/core/filters.py:94
 msgid "Packages dnf's version lock keeps at their version"
 msgstr "Balíčky, které zámek verzí dnf drží na jejich verzi"
 
-#: kram/core/filters.py:92
+#: kram/core/filters.py:95
 msgid "Marked"
 msgstr "Označené"
 
-#: kram/core/filters.py:110
+#: kram/core/filters.py:113
 msgid "All origins"
 msgstr "Všechny původy"
 
-#: kram/core/filters.py:133
+#: kram/core/filters.py:149
 msgid "All groups"
 msgstr "Všechny skupiny"
 
-#: kram/core/history.py:203
+#: kram/core/filters.py:166
+msgid ""
+"Optional: installed with the environment only when optional groups are asked "
+"for"
+msgstr ""
+"Volitelná: s prostředím se nainstaluje, jen když jsou vyžádány volitelné "
+"skupiny"
+
+#: kram/core/history.py:271
 #, python-brace-format
 msgid "changed since: {version} is installed now"
 msgstr "od té doby změněn: nyní je nainstalována verze {version}"
 
-#: kram/core/history.py:205 kram/core/history.py:248
+#: kram/core/history.py:273 kram/core/history.py:318
 msgid "removed since"
 msgstr "od té doby odebrán"
 
-#: kram/core/history.py:217
+#: kram/core/history.py:287
 msgid "several versions are installed; remove this one with dnf5 remove"
 msgstr "je nainstalováno více verzí; tuto odeberte příkazem dnf5 remove"
 
-#: kram/core/history.py:224
+#: kram/core/history.py:294
 msgid "the version it replaced is not recorded"
 msgstr "nahrazená verze není zaznamenána"
 
-#: kram/core/history.py:226
+#: kram/core/history.py:296
 #, python-brace-format
 msgid "version {version} is no longer in the repositories"
 msgstr "verze {version} už v repozitářích není"
 
-#: kram/core/history.py:233
+#: kram/core/history.py:303
 #, python-brace-format
 msgid "version {version} is not the newest one in the repositories"
 msgstr "verze {version} není v repozitářích nejnovější"
 
-#: kram/core/history.py:237
+#: kram/core/history.py:307
 msgid "installed again since"
 msgstr "od té doby znovu nainstalován"
 
-#: kram/core/history.py:243
+#: kram/core/history.py:313
 msgid "no longer in the repositories"
 msgstr "už v repozitářích není"
 
-#: kram/core/history.py:245
+#: kram/core/history.py:315
 msgid "replaced by another package that obsoletes it"
 msgstr "nahrazen jiným balíčkem (obsoletes)"
 
@@ -424,7 +432,7 @@ msgid ""
 msgstr ""
 "Označit k odebrání závislosti, které už nic nepotřebuje, jako dnf autoremove"
 
-#: kram/ui/actions.py:51 kram/ui/apply_dialog.py:288
+#: kram/ui/actions.py:51 kram/ui/apply_dialog.py:347
 msgid "Apply"
 msgstr "Použít"
 
@@ -562,7 +570,7 @@ msgstr "Nainstalovat stažený soubor .rpm (můžete jej také přetáhnout na o
 msgid "Quit"
 msgstr "Ukončit"
 
-#: kram/ui/actions.py:89 kram/ui/main_window.py:582
+#: kram/ui/actions.py:89 kram/ui/main_window.py:581
 msgid "About Kram"
 msgstr "O aplikaci Kram"
 
@@ -663,104 +671,179 @@ msgstr "Panel nástrojů"
 msgid "&Help"
 msgstr "Nápo&věda"
 
-#: kram/ui/apply_dialog.py:37
+#: kram/ui/apply_dialog.py:39
 msgid "To be installed"
 msgstr "K instalaci"
 
-#: kram/ui/apply_dialog.py:38
+#: kram/ui/apply_dialog.py:40
 msgid "To be installed with groups"
 msgstr "K instalaci se skupinami"
 
-#: kram/ui/apply_dialog.py:39
+#: kram/ui/apply_dialog.py:41
 msgid "To be installed as dependencies"
 msgstr "K instalaci jako závislosti"
 
-#: kram/ui/apply_dialog.py:40
+#: kram/ui/apply_dialog.py:42
 msgid "To be upgraded"
 msgstr "K aktualizaci"
 
-#: kram/ui/apply_dialog.py:41
+#: kram/ui/apply_dialog.py:43
 msgid "To be downgraded"
 msgstr "K vrácení na starší verzi"
 
-#: kram/ui/apply_dialog.py:42
+#: kram/ui/apply_dialog.py:44
 msgid "To be reinstalled"
 msgstr "K přeinstalaci"
 
-#: kram/ui/apply_dialog.py:43
+#: kram/ui/apply_dialog.py:45
 msgid "To be removed"
 msgstr "K odebrání"
 
-#: kram/ui/apply_dialog.py:44
+#: kram/ui/apply_dialog.py:46
 msgid "To be removed with groups"
 msgstr "K odebrání se skupinami"
 
-#: kram/ui/apply_dialog.py:45
+#: kram/ui/apply_dialog.py:47
 msgid "To be removed as dependent or no longer needed"
 msgstr "K odebrání jako závislé nebo již nepotřebné"
 
-#: kram/ui/apply_dialog.py:47
+#: kram/ui/apply_dialog.py:49
 msgid "Oldest kernels removed to stay within the limit of kept versions"
 msgstr "Nejstarší jádra odstraněna kvůli limitu uchovávaných verzí"
 
-#: kram/ui/apply_dialog.py:48
+#: kram/ui/apply_dialog.py:50
 msgid "Install reason changes"
 msgstr "Změny důvodu instalace"
 
-#: kram/ui/apply_dialog.py:50 kram/ui/package_model.py:72
+#: kram/ui/apply_dialog.py:52 kram/ui/package_model.py:72
 msgid "dependency"
 msgstr "závislost"
 
-#: kram/ui/apply_dialog.py:50 kram/ui/install_dialog.py:53
-#: kram/ui/package_model.py:70
+#: kram/ui/apply_dialog.py:52 kram/ui/history_dialog.py:275
+#: kram/ui/install_dialog.py:53 kram/ui/package_model.py:70
 msgid "group"
 msgstr "skupina"
 
-#: kram/ui/apply_dialog.py:50 kram/ui/package_model.py:69
+#: kram/ui/apply_dialog.py:52 kram/ui/package_model.py:69
 msgid "user"
 msgstr "uživatel"
 
-#: kram/ui/apply_dialog.py:50 kram/ui/package_model.py:73
+#: kram/ui/apply_dialog.py:52 kram/ui/package_model.py:73
 msgid "weak dependency"
 msgstr "slabá závislost"
 
-#: kram/ui/apply_dialog.py:51
+#: kram/ui/apply_dialog.py:53
 msgid "unneeded"
 msgstr "nepotřebné"
 
-#: kram/ui/apply_dialog.py:54
+#: kram/ui/apply_dialog.py:56
 msgid "Groups to be installed"
 msgstr "Skupiny k instalaci"
 
-#: kram/ui/apply_dialog.py:55
+#: kram/ui/apply_dialog.py:57
 msgid "Groups to be upgraded"
 msgstr "Skupiny k aktualizaci"
 
-#: kram/ui/apply_dialog.py:56
+#: kram/ui/apply_dialog.py:58
 msgid "Groups to be removed"
 msgstr "Skupiny k odebrání"
 
-#: kram/ui/apply_dialog.py:91 kram/ui/details.py:180
-#: kram/ui/history_dialog.py:118 kram/ui/install_dialog.py:473
+#: kram/ui/apply_dialog.py:93 kram/ui/details.py:180
+#: kram/ui/history_dialog.py:134 kram/ui/install_dialog.py:473
 #: kram/ui/package_model.py:29
 msgid "Package"
 msgstr "Balíček"
 
-#: kram/ui/apply_dialog.py:91
+#: kram/ui/apply_dialog.py:93
 msgid "Size"
 msgstr "Velikost"
 
-#: kram/ui/apply_dialog.py:91 kram/ui/details.py:81
-#: kram/ui/history_dialog.py:118
+#: kram/ui/apply_dialog.py:93 kram/ui/details.py:81
+#: kram/ui/history_dialog.py:134
 msgid "Version"
 msgstr "Verze"
 
-#: kram/ui/apply_dialog.py:148
+#: kram/ui/apply_dialog.py:139
+#, python-brace-format
+msgid ""
+"Installed before “{group}”: it was there with the system or for something "
+"else, and removing the group takes it too."
+msgstr ""
+"Nainstalováno dříve než „{group}“: byl v systému nebo kvůli něčemu jinému a "
+"odebrání skupiny ho vezme také."
+
+#: kram/ui/apply_dialog.py:162
+msgid ""
+"All packages of the group are already installed: dnf only records the group "
+"as installed."
+msgid_plural ""
+"All packages of the groups are already installed: dnf only records the "
+"groups as installed."
+msgstr[0] ""
+"Všechny balíčky skupiny jsou již nainstalovány: dnf skupinu pouze zaznamená "
+"jako nainstalovanou."
+msgstr[1] ""
+"Všechny balíčky skupin jsou již nainstalovány: dnf skupiny pouze zaznamená "
+"jako nainstalované."
+msgstr[2] ""
+"Všechny balíčky skupin jsou již nainstalovány: dnf skupiny pouze zaznamená "
+"jako nainstalované."
+
+#: kram/ui/apply_dialog.py:166
+msgid ""
+"No package goes with the group (you installed them yourself, or something "
+"else needs them): dnf only records the group as removed."
+msgid_plural ""
+"No package goes with the groups (you installed them yourself, or something "
+"else needs them): dnf only records the groups as removed."
+msgstr[0] ""
+"Se skupinou neodejde žádný balíček (nainstalovali jste je sami, nebo je "
+"potřebuje něco jiného): dnf skupinu pouze zaznamená jako odebranou."
+msgstr[1] ""
+"Se skupinami neodejde žádný balíček (nainstalovali jste je sami, nebo je "
+"potřebuje něco jiného): dnf skupiny pouze zaznamená jako odebrané."
+msgstr[2] ""
+"Se skupinami neodejde žádný balíček (nainstalovali jste je sami, nebo je "
+"potřebuje něco jiného): dnf skupiny pouze zaznamená jako odebrané."
+
+#: kram/ui/apply_dialog.py:170
+msgid "No package changes: dnf only updates its record of the groups."
+msgstr ""
+"Žádné balíčky se nemění: dnf pouze aktualizuje svůj záznam o skupinách."
+
+#: kram/ui/apply_dialog.py:184
+#, python-brace-format
+msgid ""
+"This removes the desktop you are using now ({desktop}: {names}): the session "
+"may stop working, and you may not be able to log in to it again."
+msgstr ""
+"Odebere se pracovní prostředí, které právě používáte ({desktop}: {names}): "
+"sezení může přestat fungovat a znovu se do něj nemusíte přihlásit."
+
+#: kram/ui/apply_dialog.py:188
 #, python-brace-format
 msgid "Essential system packages will be removed: {names}."
 msgstr "Budou odebrány nezbytné systémové balíčky: {names}."
 
-#: kram/ui/apply_dialog.py:150
+#: kram/ui/apply_dialog.py:193
+#, python-brace-format
+msgid ""
+"{n} package was installed before the group that takes it, with the system or "
+"for something else: {names}."
+msgid_plural ""
+"{n} packages were installed before the group that takes them, with the "
+"system or for something else: {names}."
+msgstr[0] ""
+"{n} balíček byl nainstalován dříve než skupina, která ho bere (se systémem "
+"nebo kvůli něčemu jinému): {names}."
+msgstr[1] ""
+"{n} balíčky byly nainstalovány dříve než skupina, která je bere (se systémem "
+"nebo kvůli něčemu jinému): {names}."
+msgstr[2] ""
+"{n} balíčků bylo nainstalováno dříve než skupina, která je bere (se systémem "
+"nebo kvůli něčemu jinému): {names}."
+
+#: kram/ui/apply_dialog.py:197
 #, python-brace-format
 msgid "{n} package will be removed."
 msgid_plural "{n} packages will be removed."
@@ -768,15 +851,15 @@ msgstr[0] "Bude odebrán {n} balíček."
 msgstr[1] "Budou odebrány {n} balíčky."
 msgstr[2] "Bude odebráno {n} balíčků."
 
-#: kram/ui/apply_dialog.py:151
+#: kram/ui/apply_dialog.py:198
 msgid "Make sure this is what you want."
 msgstr "Ujistěte se, že to opravdu chcete."
 
-#: kram/ui/apply_dialog.py:167
+#: kram/ui/apply_dialog.py:214
 msgid "Recommended packages."
 msgstr "Doporučené balíčky."
 
-#: kram/ui/apply_dialog.py:168
+#: kram/ui/apply_dialog.py:215
 msgid ""
 "Not required, but suggested by the packages being installed. Uncheck what "
 "you do not want."
@@ -784,24 +867,24 @@ msgstr ""
 "Nejsou nutné, ale doporučují je instalované balíčky. Zrušte zaškrtnutí u "
 "toho, co nechcete."
 
-#: kram/ui/apply_dialog.py:172
+#: kram/ui/apply_dialog.py:219
 msgid "Adds"
 msgstr "Přidá"
 
-#: kram/ui/apply_dialog.py:172
+#: kram/ui/apply_dialog.py:219
 msgid "Recommended by"
 msgstr "Doporučuje"
 
-#: kram/ui/apply_dialog.py:172
+#: kram/ui/apply_dialog.py:219
 msgid "Recommended package"
 msgstr "Doporučený balíček"
 
-#: kram/ui/apply_dialog.py:188
+#: kram/ui/apply_dialog.py:235
 #, python-brace-format
 msgid "Recommended by dependencies ({n})"
 msgstr "Doporučené závislostmi ({n})"
 
-#: kram/ui/apply_dialog.py:195
+#: kram/ui/apply_dialog.py:242
 msgid ""
 "Pulled in because it complements packages being installed (language support, "
 "plugins)."
@@ -809,11 +892,11 @@ msgstr ""
 "Přidáno, protože doplňuje instalované balíčky (jazyková podpora, zásuvné "
 "moduly)."
 
-#: kram/ui/apply_dialog.py:209
+#: kram/ui/apply_dialog.py:256
 msgid "still installed: something else requires it"
 msgstr "přesto bude nainstalován: vyžaduje jej jiný balíček"
 
-#: kram/ui/apply_dialog.py:216
+#: kram/ui/apply_dialog.py:263
 #, python-brace-format
 msgid "+{size}, {n} package"
 msgid_plural "+{size}, {n} packages"
@@ -821,63 +904,75 @@ msgstr[0] "+{size}, {n} balíček"
 msgstr[1] "+{size}, {n} balíčky"
 msgstr[2] "+{size}, {n} balíčků"
 
-#: kram/ui/apply_dialog.py:234 kram/ui/repos_dialog.py:139
+#: kram/ui/apply_dialog.py:281 kram/ui/repos_dialog.py:139
 msgid "Apply changes"
 msgstr "Použít změny"
 
-#: kram/ui/apply_dialog.py:242
+#: kram/ui/apply_dialog.py:289
 msgid "Review the list before applying."
 msgstr "Před použitím seznam zkontrolujte."
 
-#: kram/ui/apply_dialog.py:242
+#: kram/ui/apply_dialog.py:289
 msgid "The following changes will be made."
 msgstr "Budou provedeny následující změny."
 
-#: kram/ui/apply_dialog.py:279 kram/ui/install_dialog.py:169
+#: kram/ui/apply_dialog.py:337 kram/ui/install_dialog.py:169
 msgid "Equivalent command"
 msgstr "Odpovídající příkaz"
 
-#: kram/ui/apply_dialog.py:283
+#: kram/ui/apply_dialog.py:341
 msgid "Download packages only"
 msgstr "Pouze stáhnout balíčky"
 
-#: kram/ui/apply_dialog.py:304 kram/ui/install_dialog.py:384
+#: kram/ui/apply_dialog.py:363 kram/ui/install_dialog.py:384
 #, python-brace-format
 msgid "To download: {size}."
 msgstr "Ke stažení: {size}."
 
-#: kram/ui/apply_dialog.py:305 kram/ui/install_dialog.py:385
+#: kram/ui/apply_dialog.py:364 kram/ui/install_dialog.py:385
 #, python-brace-format
 msgid "Disk space change: {size}."
 msgstr "Změna místa na disku: {size}."
 
-#: kram/ui/apply_dialog.py:317
+#: kram/ui/apply_dialog.py:385
+#, python-brace-format
+msgid "Not enough disk space on {mount}: {size} more is needed."
+msgstr "Na disku {mount} není dost místa: je potřeba ještě {size}."
+
+#: kram/ui/apply_dialog.py:388
+msgid ""
+"The download alone fits: “Download packages only” can fetch the packages now."
+msgstr ""
+"Samotné stažení se vejde: „Pouze stáhnout balíčky“ může balíčky stáhnout už "
+"teď."
+
+#: kram/ui/apply_dialog.py:397
 msgid "⚠ None of the marked changes can be carried out:"
 msgstr "⚠ Žádnou z označených změn nelze provést:"
 
-#: kram/ui/apply_dialog.py:318
+#: kram/ui/apply_dialog.py:398
 msgid ""
 "⚠ Some marked changes cannot be carried out and are left out; the rest can "
 "be applied:"
 msgstr ""
 "⚠ Některé označené změny nelze provést a jsou vynechány; zbytek lze použít:"
 
-#: kram/ui/apply_dialog.py:320
+#: kram/ui/apply_dialog.py:400
 msgid "Nothing to do: the marked changes are already in place."
 msgstr "Není co dělat: označené změny už jsou provedeny."
 
-#: kram/ui/apply_dialog.py:342 kram/ui/install_dialog.py:192
+#: kram/ui/apply_dialog.py:422 kram/ui/install_dialog.py:192
 #: kram/ui/install_dialog.py:208 kram/ui/install_dialog.py:265
-#: kram/ui/main_window.py:731
+#: kram/ui/main_window.py:740
 msgid "Resolving dependencies…"
 msgstr "Řešení závislostí…"
 
-#: kram/ui/apply_dialog.py:351 kram/ui/install_dialog.py:282
+#: kram/ui/apply_dialog.py:431 kram/ui/install_dialog.py:282
 msgid "These choices cannot be carried out:"
 msgstr "Tento výběr nelze provést:"
 
-#: kram/ui/apply_dialog.py:356 kram/ui/install_dialog.py:259
-#: kram/ui/install_dialog.py:289 kram/ui/main_window.py:733
+#: kram/ui/apply_dialog.py:436 kram/ui/install_dialog.py:259
+#: kram/ui/install_dialog.py:289 kram/ui/main_window.py:742
 #, python-brace-format
 msgid ""
 "Could not resolve the changes:\n"
@@ -1635,127 +1730,7 @@ msgstr "Každý filtr musí mít název."
 msgid "Two filters have the same name."
 msgstr "Dva filtry mají stejný název."
 
-#: kram/ui/history_dialog.py:48
-msgctxt "history"
-msgid "Install"
-msgstr "Instalace"
-
 #: kram/ui/history_dialog.py:49
-msgctxt "history"
-msgid "Upgrade"
-msgstr "Aktualizace"
-
-#: kram/ui/history_dialog.py:50
-msgctxt "history"
-msgid "Downgrade"
-msgstr "Návrat verze"
-
-#: kram/ui/history_dialog.py:51
-msgctxt "history"
-msgid "Reinstall"
-msgstr "Přeinstalace"
-
-#: kram/ui/history_dialog.py:52
-msgctxt "history"
-msgid "Remove"
-msgstr "Odebrání"
-
-#: kram/ui/history_dialog.py:53
-msgctxt "history"
-msgid "Obsoleted"
-msgstr "Nahrazen"
-
-#: kram/ui/history_dialog.py:54
-msgctxt "history"
-msgid "Reason change"
-msgstr "Změna důvodu"
-
-#: kram/ui/history_dialog.py:58
-#, python-brace-format
-msgid "{n} installed"
-msgstr "nainstalováno: {n}"
-
-#: kram/ui/history_dialog.py:59
-#, python-brace-format
-msgid "{n} upgraded"
-msgstr "aktualizováno: {n}"
-
-#: kram/ui/history_dialog.py:60
-#, python-brace-format
-msgid "{n} downgraded"
-msgstr "vráceno: {n}"
-
-#: kram/ui/history_dialog.py:61
-#, python-brace-format
-msgid "{n} reinstalled"
-msgstr "přeinstalováno: {n}"
-
-#: kram/ui/history_dialog.py:62
-#, python-brace-format
-msgid "{n} removed"
-msgstr "odebráno: {n}"
-
-#: kram/ui/history_dialog.py:63
-#, python-brace-format
-msgid "{n} obsoleted"
-msgstr "nahrazeno: {n}"
-
-#: kram/ui/history_dialog.py:64
-#, python-brace-format
-msgid "{n} reasons changed"
-msgstr "změněno důvodů: {n}"
-
-#: kram/ui/history_dialog.py:75
-msgid "no package changes"
-msgstr "beze změn balíčků"
-
-#: kram/ui/history_dialog.py:94
-msgid "Transaction History"
-msgstr "Historie transakcí"
-
-#: kram/ui/history_dialog.py:108
-msgid "Filter by package name"
-msgstr "Filtrovat podle názvu balíčku"
-
-#: kram/ui/history_dialog.py:116
-msgid "Changes"
-msgstr "Změny"
-
-#: kram/ui/history_dialog.py:116
-msgid "Command"
-msgstr "Příkaz"
-
-#: kram/ui/history_dialog.py:116
-msgid "Date"
-msgstr "Datum"
-
-#: kram/ui/history_dialog.py:116 kram/ui/repos_dialog.py:73
-msgid "ID"
-msgstr "ID"
-
-#: kram/ui/history_dialog.py:116
-msgid "User"
-msgstr "Uživatel"
-
-#: kram/ui/history_dialog.py:118
-msgid "Action"
-msgstr "Akce"
-
-#: kram/ui/history_dialog.py:118 kram/ui/package_model.py:29
-msgid "Reason"
-msgstr "Důvod"
-
-#: kram/ui/history_dialog.py:120
-msgid ""
-"Double-click a package to close the history and show the package in the list"
-msgstr ""
-"Dvojitým kliknutím na balíček zavřete historii a zobrazíte balíček v seznamu"
-
-#: kram/ui/history_dialog.py:127
-msgid "Mark Changes to Undo"
-msgstr "Označit změny k vrácení"
-
-#: kram/ui/history_dialog.py:128
 msgid ""
 "Mark the changes that take the packages of this transaction back to where "
 "they were. Review them in the Marked list, then apply them."
@@ -1763,29 +1738,165 @@ msgstr ""
 "Označit změny, které vrátí balíčky této transakce do předchozího stavu. "
 "Zkontrolujte je v seznamu „Označené“ a pak je použijte."
 
-#: kram/ui/history_dialog.py:161
+#: kram/ui/history_dialog.py:52
+msgctxt "history"
+msgid "Install"
+msgstr "Instalace"
+
+#: kram/ui/history_dialog.py:53
+msgctxt "history"
+msgid "Upgrade"
+msgstr "Aktualizace"
+
+#: kram/ui/history_dialog.py:54
+msgctxt "history"
+msgid "Downgrade"
+msgstr "Návrat verze"
+
+#: kram/ui/history_dialog.py:55
+msgctxt "history"
+msgid "Reinstall"
+msgstr "Přeinstalace"
+
+#: kram/ui/history_dialog.py:56
+msgctxt "history"
+msgid "Remove"
+msgstr "Odebrání"
+
+#: kram/ui/history_dialog.py:57
+msgctxt "history"
+msgid "Obsoleted"
+msgstr "Nahrazen"
+
+#: kram/ui/history_dialog.py:58
+msgctxt "history"
+msgid "Reason change"
+msgstr "Změna důvodu"
+
+#: kram/ui/history_dialog.py:62
+#, python-brace-format
+msgid "{n} installed"
+msgstr "nainstalováno: {n}"
+
+#: kram/ui/history_dialog.py:63
+#, python-brace-format
+msgid "{n} upgraded"
+msgstr "aktualizováno: {n}"
+
+#: kram/ui/history_dialog.py:64
+#, python-brace-format
+msgid "{n} downgraded"
+msgstr "vráceno: {n}"
+
+#: kram/ui/history_dialog.py:65
+#, python-brace-format
+msgid "{n} reinstalled"
+msgstr "přeinstalováno: {n}"
+
+#: kram/ui/history_dialog.py:66
+#, python-brace-format
+msgid "{n} removed"
+msgstr "odebráno: {n}"
+
+#: kram/ui/history_dialog.py:67
+#, python-brace-format
+msgid "{n} obsoleted"
+msgstr "nahrazeno: {n}"
+
+#: kram/ui/history_dialog.py:68
+#, python-brace-format
+msgid "{n} reasons changed"
+msgstr "změněno důvodů: {n}"
+
+#: kram/ui/history_dialog.py:82
+#, python-brace-format
+msgid "{n} environment"
+msgid_plural "{n} environments"
+msgstr[0] "{n} prostředí"
+msgstr[1] "{n} prostředí"
+msgstr[2] "{n} prostředí"
+
+#: kram/ui/history_dialog.py:83
+#, python-brace-format
+msgid "{n} group"
+msgid_plural "{n} groups"
+msgstr[0] "{n} skupina"
+msgstr[1] "{n} skupiny"
+msgstr[2] "{n} skupin"
+
+#: kram/ui/history_dialog.py:86
+msgid "no package changes"
+msgstr "beze změn balíčků"
+
+#: kram/ui/history_dialog.py:110
+msgid "Transaction History"
+msgstr "Historie transakcí"
+
+#: kram/ui/history_dialog.py:124
+msgid "Filter by package name"
+msgstr "Filtrovat podle názvu balíčku"
+
+#: kram/ui/history_dialog.py:132
+msgid "Changes"
+msgstr "Změny"
+
+#: kram/ui/history_dialog.py:132
+msgid "Command"
+msgstr "Příkaz"
+
+#: kram/ui/history_dialog.py:132
+msgid "Date"
+msgstr "Datum"
+
+#: kram/ui/history_dialog.py:132 kram/ui/repos_dialog.py:73
+msgid "ID"
+msgstr "ID"
+
+#: kram/ui/history_dialog.py:132
+msgid "User"
+msgstr "Uživatel"
+
+#: kram/ui/history_dialog.py:134
+msgid "Action"
+msgstr "Akce"
+
+#: kram/ui/history_dialog.py:134 kram/ui/package_model.py:29
+msgid "Reason"
+msgstr "Důvod"
+
+#: kram/ui/history_dialog.py:136
+msgid ""
+"Double-click a package to close the history and show the package in the list"
+msgstr ""
+"Dvojitým kliknutím na balíček zavřete historii a zobrazíte balíček v seznamu"
+
+#: kram/ui/history_dialog.py:143 kram/ui/history_dialog.py:342
+msgid "Mark Changes to Undo"
+msgstr "Označit změny k vrácení"
+
+#: kram/ui/history_dialog.py:176
 msgid "Loading…"
 msgstr "Načítání…"
 
-#: kram/ui/history_dialog.py:165
+#: kram/ui/history_dialog.py:180
 #, python-brace-format
 msgid "Could not read the history: {error}"
 msgstr "Historii nelze přečíst: {error}"
 
-#: kram/ui/history_dialog.py:186
+#: kram/ui/history_dialog.py:201
 msgid "The transaction failed or did not finish"
 msgstr "Transakce selhala nebo nebyla dokončena"
 
-#: kram/ui/history_dialog.py:225
+#: kram/ui/history_dialog.py:240
 #, python-brace-format
 msgid "Reading packages: {done} of {total} transactions"
 msgstr "Čtení balíčků: {done} z {total} transakcí"
 
-#: kram/ui/history_dialog.py:228
+#: kram/ui/history_dialog.py:243
 msgid "No transactions recorded"
 msgstr "Nejsou zaznamenány žádné transakce"
 
-#: kram/ui/history_dialog.py:231
+#: kram/ui/history_dialog.py:246
 #, python-brace-format
 msgid "{shown} of {n} transaction"
 msgid_plural "{shown} of {n} transactions"
@@ -1793,13 +1904,30 @@ msgstr[0] "{shown} z {n} transakce"
 msgstr[1] "{shown} z {n} transakcí"
 msgstr[2] "{shown} z {n} transakcí"
 
-#: kram/ui/history_dialog.py:234
+#: kram/ui/history_dialog.py:249
 #, python-brace-format
 msgid "{n} transaction"
 msgid_plural "{n} transactions"
 msgstr[0] "{n} transakce"
 msgstr[1] "{n} transakce"
 msgstr[2] "{n} transakcí"
+
+#: kram/ui/history_dialog.py:275
+msgid "environment"
+msgstr "prostředí"
+
+#: kram/ui/history_dialog.py:337
+msgid "Undo Transaction…"
+msgstr "Vrátit transakci…"
+
+#: kram/ui/history_dialog.py:338
+msgid ""
+"The transaction changed groups or environments: it is undone as “dnf5 "
+"history undo” does, packages and groups together. Kram shows what that does "
+"before it runs."
+msgstr ""
+"Transakce změnila skupiny nebo prostředí: vrátí se tak jako „dnf5 history "
+"undo“, balíčky i skupiny společně. Kram předem ukáže, co se stane."
 
 #: kram/ui/icons.py:180
 msgid "Third-party origin"
@@ -1869,7 +1997,7 @@ msgstr "Instalace souboru balíčku"
 msgid "What installing it changes"
 msgstr "Co instalace změní"
 
-#: kram/ui/install_dialog.py:143 kram/ui/progress_dialog.py:98
+#: kram/ui/install_dialog.py:143 kram/ui/progress_dialog.py:99
 msgid "Details"
 msgstr "Podrobnosti"
 
@@ -2147,7 +2275,7 @@ msgstr[2] "{n} označených změn nebylo použito. Přesto ukončit?"
 msgid "Waiting for another package manager to finish…"
 msgstr "Čekání na dokončení jiného správce balíčků…"
 
-#: kram/ui/main_window.py:389
+#: kram/ui/main_window.py:390
 #, python-brace-format
 msgid ""
 "Searching “{text}” ({mode}); the first search also indexes what packages "
@@ -2155,46 +2283,46 @@ msgid ""
 msgstr ""
 "Hledání „{text}“ ({mode}); první hledání také indexuje, co balíčky poskytují…"
 
-#: kram/ui/main_window.py:392
+#: kram/ui/main_window.py:393
 #, python-brace-format
 msgid "Searching “{text}” ({mode})…"
 msgstr "Hledání „{text}“ ({mode})…"
 
-#: kram/ui/main_window.py:508
+#: kram/ui/main_window.py:509
 #, python-brace-format
 msgid "Nothing provides “{what}”"
 msgstr "Nic neposkytuje „{what}“"
 
-#: kram/ui/main_window.py:519
+#: kram/ui/main_window.py:520
 #, python-brace-format
 msgid "Package {name} not found in the catalog"
 msgstr "Balíček {name} nebyl v katalogu nalezen"
 
-#: kram/ui/main_window.py:558
+#: kram/ui/main_window.py:559
 msgid "Refresh Metadata"
 msgstr "Obnovit metadata"
 
-#: kram/ui/main_window.py:566
+#: kram/ui/main_window.py:567
 msgid "Remove from History"
 msgstr "Odebrat z historie"
 
-#: kram/ui/main_window.py:568
+#: kram/ui/main_window.py:569
 msgid "Clear Search History"
 msgstr "Vymazat historii hledání"
 
-#: kram/ui/main_window.py:583
+#: kram/ui/main_window.py:582
 msgid "A Synaptic-style package manager for Fedora."
 msgstr "Správce balíčků pro Fedoru ve stylu Synaptic."
 
-#: kram/ui/main_window.py:585
+#: kram/ui/main_window.py:584
 msgid "Released under the MIT License."
 msgstr "Šířeno pod licencí MIT."
 
-#: kram/ui/main_window.py:588
+#: kram/ui/main_window.py:587
 msgid "What's New"
 msgstr "Co je nového"
 
-#: kram/ui/main_window.py:655
+#: kram/ui/main_window.py:654
 #, python-brace-format
 msgid ""
 "{n} upgrade or downgrade unmarked: the version lock keeps the installed "
@@ -2212,7 +2340,7 @@ msgstr[2] ""
 "Zrušeno označení {n} aktualizací nebo návratů verze: zámek ponechává "
 "nainstalované verze"
 
-#: kram/ui/main_window.py:658
+#: kram/ui/main_window.py:657
 #, python-brace-format
 msgid "Locking the version of {n} package"
 msgid_plural "Locking the versions of {n} packages"
@@ -2220,7 +2348,7 @@ msgstr[0] "Zamykání verze {n} balíčku"
 msgstr[1] "Zamykání verzí {n} balíčků"
 msgstr[2] "Zamykání verzí {n} balíčků"
 
-#: kram/ui/main_window.py:660
+#: kram/ui/main_window.py:659
 #, python-brace-format
 msgid "Unlocking the version of {n} package"
 msgid_plural "Unlocking the versions of {n} packages"
@@ -2228,7 +2356,7 @@ msgstr[0] "Odemykání verze {n} balíčku"
 msgstr[1] "Odemykání verzí {n} balíčků"
 msgstr[2] "Odemykání verzí {n} balíčků"
 
-#: kram/ui/main_window.py:668
+#: kram/ui/main_window.py:667
 #, python-brace-format
 msgid "{n} marking saved to {path}"
 msgid_plural "{n} markings saved to {path}"
@@ -2236,15 +2364,15 @@ msgstr[0] "{n} označení uloženo do {path}"
 msgstr[1] "{n} označení uložena do {path}"
 msgstr[2] "{n} označení uloženo do {path}"
 
-#: kram/ui/main_window.py:672
+#: kram/ui/main_window.py:671
 msgid "Export List as CSV"
 msgstr "Exportovat seznam do CSV"
 
-#: kram/ui/main_window.py:675
+#: kram/ui/main_window.py:674
 msgid "CSV files (*.csv);;All files (*)"
 msgstr "Soubory CSV (*.csv);;Všechny soubory (*)"
 
-#: kram/ui/main_window.py:683 kram/ui/markings_file.py:34
+#: kram/ui/main_window.py:682 kram/ui/markings_file.py:34
 #, python-brace-format
 msgid ""
 "Could not save {path}:\n"
@@ -2255,7 +2383,7 @@ msgstr ""
 "\n"
 "{error}"
 
-#: kram/ui/main_window.py:687
+#: kram/ui/main_window.py:686
 #, python-brace-format
 msgid "{n} package exported to {path}"
 msgid_plural "{n} packages exported to {path}"
@@ -2263,23 +2391,39 @@ msgstr[0] "{n} balíček exportován do {path}"
 msgstr[1] "{n} balíčky exportovány do {path}"
 msgstr[2] "{n} balíčků exportováno do {path}"
 
-#: kram/ui/main_window.py:699
+#: kram/ui/main_window.py:698
 msgid "(loading…)"
 msgstr "(načítání…)"
 
-#: kram/ui/main_window.py:706
+#: kram/ui/main_window.py:705
 msgid "No older versions in the repositories"
 msgstr "V repozitářích nejsou žádné starší verze"
 
-#: kram/ui/main_window.py:738
+#: kram/ui/main_window.py:758
 msgid "Cannot apply changes"
 msgstr "Změny nelze použít"
 
-#: kram/ui/main_window.py:739
+#: kram/ui/main_window.py:759
 msgid "The marked changes cannot be carried out. Unmark or change them."
 msgstr "Označené změny nelze provést. Zrušte jejich označení nebo je upravte."
 
-#: kram/ui/main_window.py:743
+#: kram/ui/main_window.py:760
+msgid "This change cannot be carried out."
+msgstr "Tuto změnu nelze provést."
+
+#: kram/ui/main_window.py:764
+msgid ""
+"Undoing the whole transaction needs versions the repositories no longer "
+"have. What is still possible can be undone without them."
+msgstr ""
+"Vrácení celé transakce potřebuje verze, které už repozitáře nemají. Co je "
+"ještě možné, lze vrátit bez nich."
+
+#: kram/ui/main_window.py:766
+msgid "Undo What Is Possible…"
+msgstr "Vrátit, co je možné…"
+
+#: kram/ui/main_window.py:768
 msgid ""
 "They need a version the version lock excludes. Unlock the package (Package → "
 "Unlock Version) or unmark the change."
@@ -2287,19 +2431,19 @@ msgstr ""
 "Vyžadují verzi, kterou zámek verzí vylučuje. Odemkněte balíček (Balíček → "
 "Odemknout verzi) nebo zrušte označení změny."
 
-#: kram/ui/main_window.py:745
+#: kram/ui/main_window.py:770
 msgid "Show Locked Packages"
 msgstr "Zobrazit uzamčené balíčky"
 
-#: kram/ui/main_window.py:764
+#: kram/ui/main_window.py:791
 msgid "Applying changes"
 msgstr "Použití změn"
 
-#: kram/ui/main_window.py:771 kram/ui/main_window.py:778
+#: kram/ui/main_window.py:799 kram/ui/main_window.py:806
 msgid "Refreshing metadata"
 msgstr "Obnovování metadat"
 
-#: kram/ui/main_window.py:810
+#: kram/ui/main_window.py:838
 #, python-brace-format
 msgid "Removing {n} repository"
 msgid_plural "Removing {n} repositories"
@@ -2307,20 +2451,20 @@ msgstr[0] "Odebírání {n} repozitáře"
 msgstr[1] "Odebírání {n} repozitářů"
 msgstr[2] "Odebírání {n} repozitářů"
 
-#: kram/ui/main_window.py:814
+#: kram/ui/main_window.py:842
 msgid "Changing repositories"
 msgstr "Změna repozitářů"
 
-#: kram/ui/main_window.py:890
+#: kram/ui/main_window.py:923
 msgid "cannot be marked"
 msgstr "nelze označit"
 
-#: kram/ui/main_window.py:901
+#: kram/ui/main_window.py:934
 #, python-brace-format
 msgid "Undo Transaction {id}"
 msgstr "Vrácení transakce {id}"
 
-#: kram/ui/main_window.py:902
+#: kram/ui/main_window.py:935
 #, python-brace-format
 msgid "{n} change marked to undo transaction {id}."
 msgid_plural "{n} changes marked to undo transaction {id}."
@@ -2328,21 +2472,21 @@ msgstr[0] "Označena {n} změna k vrácení transakce {id}."
 msgstr[1] "Označeny {n} změny k vrácení transakce {id}."
 msgstr[2] "Označeno {n} změn k vrácení transakce {id}."
 
-#: kram/ui/main_window.py:904
+#: kram/ui/main_window.py:937
 #, python-brace-format
 msgid "{package}: installs {version}, {old} is no longer in the repositories"
 msgstr "{package}: nainstaluje se {version}, {old} už v repozitářích není"
 
-#: kram/ui/main_window.py:909
+#: kram/ui/main_window.py:942
 msgid "Review them, then apply."
 msgstr "Zkontrolujte je a pak je použijte."
 
-#: kram/ui/main_window.py:912
+#: kram/ui/main_window.py:945
 #, python-brace-format
 msgid "Nothing of transaction {id} can be undone."
 msgstr "Z transakce {id} nelze nic vrátit."
 
-#: kram/ui/main_window.py:916
+#: kram/ui/main_window.py:949
 #, python-brace-format
 msgid "{n} package cannot be undone:"
 msgid_plural "{n} packages cannot be undone:"
@@ -2350,7 +2494,7 @@ msgstr[0] "{n} balíček nelze vrátit:"
 msgstr[1] "{n} balíčky nelze vrátit:"
 msgstr[2] "{n} balíčků nelze vrátit:"
 
-#: kram/ui/main_window.py:920
+#: kram/ui/main_window.py:953
 #, python-brace-format
 msgid "{n} package comes back in another version:"
 msgid_plural "{n} packages come back in another version:"
@@ -2358,35 +2502,55 @@ msgstr[0] "{n} balíček se vrátí v jiné verzi:"
 msgstr[1] "{n} balíčky se vrátí v jiné verzi:"
 msgstr[2] "{n} balíčků se vrátí v jiné verzi:"
 
-#: kram/ui/main_window.py:935
+#: kram/ui/main_window.py:968
 msgid "Downloading metadata again"
 msgstr "Opětovné stahování metadat"
 
-#: kram/ui/main_window.py:937
+#: kram/ui/main_window.py:970
 msgid "Cleaning the package cache"
 msgstr "Čištění mezipaměti balíčků"
 
-#: kram/ui/main_window.py:979
+#: kram/ui/main_window.py:1012
 msgid "Open Package File"
 msgstr "Otevřít soubor balíčku"
 
-#: kram/ui/main_window.py:980
+#: kram/ui/main_window.py:1013
 msgid "RPM packages (*.rpm)"
 msgstr "Balíčky RPM (*.rpm)"
 
-#: kram/ui/marking.py:21
-msgid "Mark Group for Installation"
-msgstr "Označit skupinu k instalaci"
+#: kram/ui/marking.py:25
+msgid "Install Group…"
+msgstr "Nainstalovat skupinu…"
 
-#: kram/ui/marking.py:22
-msgid "Mark Group for Upgrade"
-msgstr "Označit skupinu k aktualizaci"
+#: kram/ui/marking.py:26
+msgid "Install Group with Optional Packages…"
+msgstr "Nainstalovat skupinu s volitelnými balíčky…"
 
-#: kram/ui/marking.py:23
-msgid "Mark Group for Removal"
-msgstr "Označit skupinu k odebrání"
+#: kram/ui/marking.py:27
+msgid "Upgrade Group…"
+msgstr "Aktualizovat skupinu…"
 
-#: kram/ui/marking.py:117
+#: kram/ui/marking.py:28
+msgid "Remove Group…"
+msgstr "Odebrat skupinu…"
+
+#: kram/ui/marking.py:31
+msgid "Install Environment…"
+msgstr "Nainstalovat prostředí…"
+
+#: kram/ui/marking.py:32
+msgid "Install Environment with Optional Groups…"
+msgstr "Nainstalovat prostředí s volitelnými skupinami…"
+
+#: kram/ui/marking.py:33
+msgid "Upgrade Environment…"
+msgstr "Aktualizovat prostředí…"
+
+#: kram/ui/marking.py:34
+msgid "Remove Environment…"
+msgstr "Odebrat prostředí…"
+
+#: kram/ui/marking.py:126
 #, python-brace-format
 msgid ""
 "{n} installed package depends on the packages marked for removal and has to "
@@ -2404,11 +2568,11 @@ msgstr[2] ""
 "{n} nainstalovaných balíčků závisí na balíčcích označených k odebrání a musí "
 "být také odebrány:"
 
-#: kram/ui/marking.py:123
+#: kram/ui/marking.py:132
 msgid "Mark"
 msgstr "Označit"
 
-#: kram/ui/marking.py:176
+#: kram/ui/marking.py:184
 #, python-brace-format
 msgid "{n} package marked for upgrade"
 msgid_plural "{n} packages marked for upgrade"
@@ -2416,7 +2580,7 @@ msgstr[0] "{n} balíček označen k aktualizaci"
 msgstr[1] "{n} balíčky označeny k aktualizaci"
 msgstr[2] "{n} balíčků označeno k aktualizaci"
 
-#: kram/ui/marking.py:179
+#: kram/ui/marking.py:187
 #, python-brace-format
 msgid "{n} upgrade left out: it cannot be installed now"
 msgid_plural "{n} upgrades left out: they cannot be installed now"
@@ -2424,7 +2588,7 @@ msgstr[0] "{n} aktualizace vynechána: nyní ji nelze nainstalovat"
 msgstr[1] "{n} aktualizace vynechány: nyní je nelze nainstalovat"
 msgstr[2] "{n} aktualizací vynecháno: nyní je nelze nainstalovat"
 
-#: kram/ui/marking.py:188
+#: kram/ui/marking.py:196
 #, python-brace-format
 msgid "{n} unneeded dependency marked for removal"
 msgid_plural "{n} unneeded dependencies marked for removal"
@@ -2432,7 +2596,7 @@ msgstr[0] "{n} nepotřebná závislost označena k odebrání"
 msgstr[1] "{n} nepotřebné závislosti označeny k odebrání"
 msgstr[2] "{n} nepotřebných závislostí označeno k odebrání"
 
-#: kram/ui/marking.py:197
+#: kram/ui/marking.py:204
 #, python-brace-format
 msgid "{n} package marked"
 msgid_plural "{n} packages marked"
@@ -2440,18 +2604,18 @@ msgstr[0] "Označen {n} balíček"
 msgstr[1] "Označeny {n} balíčky"
 msgstr[2] "Označeno {n} balíčků"
 
-#: kram/ui/marking.py:230
+#: kram/ui/marking.py:245
 msgid "Checking for upgrades…"
 msgstr "Hledání aktualizací…"
 
-#: kram/ui/marking.py:231
+#: kram/ui/marking.py:246
 msgid "Nothing to upgrade: its packages are up to date and match the group"
 msgstr ""
 "Není co aktualizovat: balíčky skupiny jsou aktuální a odpovídají skupině"
 
-#: kram/ui/marking.py:232
-msgid "Unmark Group"
-msgstr "Zrušit označení skupiny"
+#: kram/ui/marking.py:248
+msgid "It has no optional packages"
+msgstr "Nemá žádné volitelné balíčky"
 
 #: kram/ui/markings_file.py:14
 msgid "Text files (*.txt);;All files (*)"
@@ -2462,7 +2626,7 @@ msgid "Save Markings"
 msgstr "Uložit označení"
 
 #: kram/ui/markings_file.py:42 kram/ui/markings_file.py:53
-#: kram/ui/markings_file.py:75
+#: kram/ui/markings_file.py:73
 msgid "Read Markings"
 msgstr "Načíst označení"
 
@@ -2477,7 +2641,7 @@ msgstr ""
 "\n"
 "{error}"
 
-#: kram/ui/markings_file.py:68
+#: kram/ui/markings_file.py:66
 #, python-brace-format
 msgid ""
 "{n} marking no longer applies (package not found, already in that state, …):"
@@ -2490,7 +2654,7 @@ msgstr[1] ""
 msgstr[2] ""
 "{n} označení už neplatí (balíčky nenalezeny, už jsou v tomto stavu, …):"
 
-#: kram/ui/markings_file.py:72
+#: kram/ui/markings_file.py:70
 #, python-brace-format
 msgid "{n} line is not a valid marking: {lines}"
 msgid_plural "{n} lines are not valid markings: {lines}"
@@ -2498,7 +2662,7 @@ msgstr[0] "{n} řádek není platné označení: {lines}"
 msgstr[1] "{n} řádky nejsou platná označení: {lines}"
 msgstr[2] "{n} řádků nejsou platná označení: {lines}"
 
-#: kram/ui/markings_file.py:76
+#: kram/ui/markings_file.py:74
 #, python-brace-format
 msgid "{n} package marked."
 msgid_plural "{n} packages marked."
@@ -2704,47 +2868,55 @@ msgstr ""
 "Nainstalováno jako slabá závislost (doporučená jiným balíčkem):\n"
 "autoremove jej odebere, jakmile jej nic nepotřebuje"
 
-#: kram/ui/package_model.py:109 kram/ui/package_model.py:314
+#: kram/ui/package_model.py:109 kram/ui/package_model.py:318
 msgid "The upgrade cannot be installed now"
 msgstr "Aktualizaci nyní nelze nainstalovat"
 
 #: kram/ui/package_model.py:304
+msgid ""
+"Optional in this group: installing the group brings it only with optional "
+"packages"
+msgstr ""
+"V této skupině volitelný: instalace skupiny jej přinese jen s volitelnými "
+"balíčky"
+
+#: kram/ui/package_model.py:308
 #, python-brace-format
 msgid "Installed from {installed}; the latest version comes from {latest}"
 msgstr "Nainstalováno z {installed}; nejnovější verze pochází z {latest}"
 
-#: kram/ui/package_model.py:317 kram/ui/sidebar.py:159
+#: kram/ui/package_model.py:321
 #, python-brace-format
 msgid "Marked: {action}"
 msgstr "Označeno: {action}"
 
-#: kram/ui/package_model.py:318
+#: kram/ui/package_model.py:322
 msgid "Click for actions"
 msgstr "Klepnutím zobrazíte akce"
 
-#: kram/ui/package_model.py:346
+#: kram/ui/package_model.py:352
 msgctxt "package status"
 msgid "Not installed"
 msgstr "Nenainstalováno"
 
-#: kram/ui/package_model.py:347
+#: kram/ui/package_model.py:353
 msgctxt "package status"
 msgid "Installed"
 msgstr "Nainstalováno"
 
-#: kram/ui/package_model.py:348
+#: kram/ui/package_model.py:354
 msgid "Installed, upgrade available"
 msgstr "Nainstalováno, je dostupná aktualizace"
 
-#: kram/ui/package_model.py:349
+#: kram/ui/package_model.py:355
 msgid "Installed version is newer than the repository"
 msgstr "Nainstalovaná verze je novější než v repozitáři"
 
-#: kram/ui/package_model.py:350
+#: kram/ui/package_model.py:356
 msgid "Installed, no repository provides it"
 msgstr "Nainstalováno, žádný repozitář ho neposkytuje"
 
-#: kram/ui/package_model.py:351
+#: kram/ui/package_model.py:357
 msgid "Installed as a dependency, no longer needed"
 msgstr "Nainstalováno jako závislost, už není potřeba"
 
@@ -2778,93 +2950,98 @@ msgstr "změna důvodu"
 
 #: kram/ui/progress_dialog.py:37
 #, python-brace-format
+msgid "Not enough disk space on {mount}: {size} more is needed"
+msgstr "Na disku {mount} není dost místa: je potřeba ještě {size}"
+
+#: kram/ui/progress_dialog.py:38
+#, python-brace-format
 msgid "Running: {command}"
 msgstr "Spouštění: {command}"
 
-#: kram/ui/progress_dialog.py:38
+#: kram/ui/progress_dialog.py:39
 msgid "Loading repositories…"
 msgstr "Načítání repozitářů…"
 
-#: kram/ui/progress_dialog.py:39
+#: kram/ui/progress_dialog.py:40
 msgid "Refreshing repository metadata…"
 msgstr "Obnovování metadat repozitářů…"
 
-#: kram/ui/progress_dialog.py:40 kram/ui/upgrade_dialog.py:41
+#: kram/ui/progress_dialog.py:41 kram/ui/upgrade_dialog.py:41
 #, python-brace-format
 msgid "Mirror unavailable: {url}: {error}"
 msgstr "Zrcadlo nedostupné: {url}: {error}"
 
-#: kram/ui/progress_dialog.py:41
+#: kram/ui/progress_dialog.py:42
 #, python-brace-format
 msgid "Scriptlet {script} of {nevra} failed with exit code {code}"
 msgstr "Skript {script} balíčku {nevra} selhal s návratovým kódem {code}"
 
-#: kram/ui/progress_dialog.py:42
+#: kram/ui/progress_dialog.py:43
 #, python-brace-format
 msgid "Imported key {key_id}"
 msgstr "Importován klíč {key_id}"
 
-#: kram/ui/progress_dialog.py:43
+#: kram/ui/progress_dialog.py:44
 #, python-brace-format
 msgid "Copying {name}…"
 msgstr "Kopírování {name}…"
 
-#: kram/ui/progress_dialog.py:44
+#: kram/ui/progress_dialog.py:45
 #, python-brace-format
 msgid "Files removed: {count}"
 msgstr "Odstraněné soubory: {count}"
 
-#: kram/ui/progress_dialog.py:45
+#: kram/ui/progress_dialog.py:46
 #, python-brace-format
 msgid "Removed {path}"
 msgstr "Odstraněno {path}"
 
-#: kram/ui/progress_dialog.py:46
+#: kram/ui/progress_dialog.py:47
 #, python-brace-format
 msgid "Could not change repository {repo}"
 msgstr "Repozitář {repo} nelze změnit"
 
-#: kram/ui/progress_dialog.py:47
+#: kram/ui/progress_dialog.py:48
 #, python-brace-format
 msgid "Command failed: {command}"
 msgstr "Příkaz selhal: {command}"
 
-#: kram/ui/progress_dialog.py:48
+#: kram/ui/progress_dialog.py:49
 #, python-brace-format
 msgid "Only installed packages can be locked: {names}"
 msgstr "Uzamknout lze jen nainstalované balíčky: {names}"
 
-#: kram/ui/progress_dialog.py:49
+#: kram/ui/progress_dialog.py:50
 #, python-brace-format
 msgid "Files not removed: {count}"
 msgstr "Neodstraněné soubory: {count}"
 
-#: kram/ui/progress_dialog.py:50
+#: kram/ui/progress_dialog.py:51
 #, python-brace-format
 msgid "{path}: the file changed after it was checked"
 msgstr "{path}: soubor se po kontrole změnil"
 
-#: kram/ui/progress_dialog.py:51
+#: kram/ui/progress_dialog.py:52
 msgid "The helper must run as root"
 msgstr "Pomocník musí běžet jako root"
 
-#: kram/ui/progress_dialog.py:78
+#: kram/ui/progress_dialog.py:79
 msgid "Waiting for authentication…"
 msgstr "Čekání na ověření…"
 
-#: kram/ui/progress_dialog.py:81
+#: kram/ui/progress_dialog.py:82
 msgid "Download"
 msgstr "Stahování"
 
-#: kram/ui/progress_dialog.py:83
+#: kram/ui/progress_dialog.py:84
 msgid "Installation"
 msgstr "Instalace"
 
-#: kram/ui/progress_dialog.py:102
+#: kram/ui/progress_dialog.py:103
 msgid "Close when finished successfully"
 msgstr "Po úspěšném dokončení zavřít"
 
-#: kram/ui/progress_dialog.py:136
+#: kram/ui/progress_dialog.py:137
 #, python-brace-format
 msgid "The transaction has {n} package. Downloading…"
 msgid_plural "The transaction has {n} packages. Downloading…"
@@ -2872,31 +3049,31 @@ msgstr[0] "Transakce obsahuje {n} balíček. Stahování…"
 msgstr[1] "Transakce obsahuje {n} balíčky. Stahování…"
 msgstr[2] "Transakce obsahuje {n} balíčků. Stahování…"
 
-#: kram/ui/progress_dialog.py:166 kram/ui/upgrade_dialog.py:38
+#: kram/ui/progress_dialog.py:167 kram/ui/upgrade_dialog.py:38
 #, python-brace-format
 msgid "Downloading {name}"
 msgstr "Stahování {name}"
 
-#: kram/ui/progress_dialog.py:171 kram/ui/upgrade_dialog.py:40
+#: kram/ui/progress_dialog.py:172 kram/ui/upgrade_dialog.py:40
 #, python-brace-format
 msgid "Download failed: {error}"
 msgstr "Stahování selhalo: {error}"
 
-#: kram/ui/progress_dialog.py:181
+#: kram/ui/progress_dialog.py:182
 #, python-brace-format
 msgid "Downloaded {done} of {total}"
 msgstr "Staženo {done} z {total}"
 
-#: kram/ui/progress_dialog.py:189
+#: kram/ui/progress_dialog.py:190
 msgid "Preparing the rpm transaction…"
 msgstr "Příprava transakce rpm…"
 
-#: kram/ui/progress_dialog.py:217
+#: kram/ui/progress_dialog.py:218
 #, python-brace-format
 msgid "Package {index} of {count}"
 msgstr "Balíček {index} z {count}"
 
-#: kram/ui/progress_dialog.py:225
+#: kram/ui/progress_dialog.py:226
 #, python-brace-format
 msgid ""
 "Import the OpenPGP key used to verify packages?\n"
@@ -2913,45 +3090,45 @@ msgstr ""
 "Vytvořen: {created}\n"
 "Zdroj: {url}"
 
-#: kram/ui/progress_dialog.py:228
+#: kram/ui/progress_dialog.py:229
 msgid "Import key"
 msgstr "Importovat klíč"
 
-#: kram/ui/progress_dialog.py:229
+#: kram/ui/progress_dialog.py:230
 #, python-brace-format
 msgid "Key {key_id}: importing"
 msgstr "Klíč {key_id}: importuje se"
 
-#: kram/ui/progress_dialog.py:229
+#: kram/ui/progress_dialog.py:230
 #, python-brace-format
 msgid "Key {key_id}: rejected"
 msgstr "Klíč {key_id}: odmítnut"
 
-#: kram/ui/progress_dialog.py:245 kram/ui/progress_dialog.py:246
+#: kram/ui/progress_dialog.py:246 kram/ui/progress_dialog.py:247
 #: kram/ui/upgrade_dialog.py:301
 msgid "Done."
 msgstr "Hotovo."
 
-#: kram/ui/progress_dialog.py:245
+#: kram/ui/progress_dialog.py:246
 msgid "Packages downloaded."
 msgstr "Balíčky staženy."
 
-#: kram/ui/progress_dialog.py:250 kram/ui/progress_dialog.py:266
+#: kram/ui/progress_dialog.py:251 kram/ui/progress_dialog.py:267
 msgid "unknown error"
 msgstr "neznámá chyba"
 
-#: kram/ui/progress_dialog.py:252
+#: kram/ui/progress_dialog.py:253
 #, python-brace-format
 msgid ""
 "Another package operation is running: {process}. Try again when it has "
 "finished."
 msgstr "Probíhá jiná operace s balíčky: {process}. Zkuste to znovu, až skončí."
 
-#: kram/ui/progress_dialog.py:267
+#: kram/ui/progress_dialog.py:268
 msgid "Error:"
 msgstr "Chyba:"
 
-#: kram/ui/progress_dialog.py:269
+#: kram/ui/progress_dialog.py:270
 #, python-brace-format
 msgid "ERROR: {message}"
 msgstr "CHYBA: {message}"
@@ -3096,28 +3273,32 @@ msgstr "Hledat (Ctrl+F)"
 msgid "The list is filtered by the search text"
 msgstr "Seznam je filtrován podle hledaného textu"
 
-#: kram/ui/sidebar.py:38
+#: kram/ui/sidebar.py:39
 msgid "Groups"
 msgstr "Skupiny"
 
-#: kram/ui/sidebar.py:39
+#: kram/ui/sidebar.py:40
+msgid "Environments"
+msgstr "Prostředí"
+
+#: kram/ui/sidebar.py:41
 msgid "Search results"
 msgstr "Výsledky hledání"
 
-#: kram/ui/sidebar.py:40
+#: kram/ui/sidebar.py:42
 msgid "Custom filters"
 msgstr "Vlastní filtry"
 
-#: kram/ui/sidebar.py:116
+#: kram/ui/sidebar.py:127
 #, python-brace-format
 msgid "“{text}” — {mode}"
 msgstr "„{text}“ — {mode}"
 
-#: kram/ui/sidebar.py:175
+#: kram/ui/sidebar.py:196
 msgid "Search history is empty"
 msgstr "Historie hledání je prázdná"
 
-#: kram/ui/sidebar.py:176
+#: kram/ui/sidebar.py:197
 msgid ""
 "No custom filters yet.\n"
 "Right-click to create one."
@@ -3412,6 +3593,3 @@ msgstr "tato verze"
 #: kram/ui/whats_new.py:33
 msgid "The list of changes is not available."
 msgstr "Seznam změn není k dispozici."
-
-#~ msgid "Coming in a later version"
-#~ msgstr "Přijde v některé z dalších verzí"

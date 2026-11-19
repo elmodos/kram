@@ -22,6 +22,8 @@ from PySide6.QtWidgets import (
 from ..core.marks import dnf5_command
 from ..core.model import Recommendation, TransactionPreview
 from ..core.origin import display_repo
+from ..core.session import current_session
+from ..helper.kram_helper import space_shortfall
 from ..i18n import N_, _, ngettext
 from .group_icons import group_icon
 from .package_model import human_size
@@ -132,20 +134,65 @@ class ChangesTree(QTreeWidget):
                 size = human_size(i.download_size if i.download_size else i.install_size)
                 row = QTreeWidgetItem(top, [name, version, display_repo(i.repo_id), size])
                 row.setToolTip(1, version)  # in full, whatever is left of it on screen
+                if i.before:
+                    row.setIcon(0, QIcon.fromTheme("dialog-warning"))
+                    row.setToolTip(0, _("Installed before “{group}”: it was there with the system or for something "
+                                        "else, and removing the group takes it too.").format(group=i.before))
             self.addTopLevelItem(top)
             top.setFirstColumnSpanned(True)  # a group title must not widen the name column
             top.setExpanded(True)
 
 
-def removal_warning(preview: TransactionPreview) -> str:
-    """A loud warning when essential packages or very many go away; "" otherwise."""
+def shortfall(preview: TransactionPreview, download_only: bool) -> list[tuple[str, int]]:
+    """[(mount point, bytes missing)] for applying the preview, or only downloading its packages."""
+    if not preview.cache_dir:  # a preview made without one (a test): nothing to check against
+        return []
+    try:
+        return space_shortfall(preview.to_download, 0 if download_only else preview.size_change, preview.cache_dir)
+    except OSError:  # cannot tell: rpm still checks
+        return []
+
+
+def groups_only_note(preview: TransactionPreview) -> str:
+    """Why a transaction of groups alone touches no package: what they need is already in place, so dnf only
+    records the change of the groups. Without it the review looks broken: a group and "0 B"."""
+    n = len(preview.groups)
+    actions = {g.action for g in preview.groups}
+    if actions == {"install"}:
+        return ngettext("All packages of the group are already installed: dnf only records the group as installed.",
+                        "All packages of the groups are already installed: dnf only records the groups as installed.",
+                        n)
+    if actions == {"remove"}:
+        return ngettext("No package goes with the group (you installed them yourself, or something else needs "
+                        "them): dnf only records the group as removed.",
+                        "No package goes with the groups (you installed them yourself, or something else needs "
+                        "them): dnf only records the groups as removed.", n)
+    return _("No package changes: dnf only updates its record of the groups.")
+
+
+def removal_warning(preview: TransactionPreview, session: tuple[str, frozenset[str]] | None = None) -> str:
+    """A loud warning when essential packages, the desktop of the running session (`session`: see
+    kram.core.session.current_session) or very many packages go away; "" otherwise."""
     # a rotated removal (the oldest kernel, next to a new one) leaves the package installed: no warning for it
     going = [i for i in preview.items if i.action == "remove" and not i.rotated]
     critical = sorted({i.name for i in going if i.name in CRITICAL})
+    desktop, session_names = session if session is not None else current_session()
+    ending = sorted({i.name for i in going if i.name in session_names})
     removed = len(going)
     warnings = []
+    if ending:
+        warnings.append(_("This removes the desktop you are using now ({desktop}: {names}): the session may stop "
+                          "working, and you may not be able to log in to it again.").format(
+            desktop=desktop, names=", ".join(ending)))
     if critical:
         warnings.append(_("Essential system packages will be removed: {names}.").format(names=", ".join(critical)))
+    older = sorted({i.name for i in going if i.before})
+    if older:
+        shown = ", ".join(older[:8]) + (", …" if len(older) > 8 else "")
+        warnings.append(ngettext(
+            "{n} package was installed before the group that takes it, with the system or for something else: {names}.",
+            "{n} packages were installed before the group that takes them, with the system or for something else: "
+            "{names}.", len(older)).format(n=len(older), names=shown))
     if removed >= 20:
         warnings.append(ngettext("{n} package will be removed.", "{n} packages will be removed.", removed).format(n=removed))
     return "⚠ " + " ".join(warnings) + " " + _("Make sure this is what you want.") if warnings else ""
@@ -267,10 +314,21 @@ class ApplyDialog(QDialog):
 
         self.sizes = QLabel()
         lay.addWidget(self.sizes)
+        # groups whose packages are already in place: why the list has no packages (see groups_only_note)
+        self.note = QLabel()
+        self.note.setWordWrap(True)
+        self.note.setVisible(False)
+        lay.addWidget(self.note)
         self.warning = QLabel()
         self.warning.setWordWrap(True)
         self.warning.setStyleSheet("color: #c03030; font-weight: bold")
         lay.addWidget(self.warning)
+        # not enough free space: Apply stays off (see _check_space)
+        self.space = QLabel()
+        self.space.setWordWrap(True)
+        self.space.setStyleSheet("color: #c03030; font-weight: bold")
+        self.space.setVisible(False)
+        lay.addWidget(self.space)
 
         self.cmd = QPlainTextEdit()
         self.cmd.setReadOnly(True)
@@ -282,6 +340,7 @@ class ApplyDialog(QDialog):
 
         self.download_only = QCheckBox(_("Download packages only"))
         self.download_only.toggled.connect(self._show_command)
+        self.download_only.toggled.connect(self._check_space)
         lay.addWidget(self.download_only)
 
         buttons = QDialogButtonBox()
@@ -304,11 +363,32 @@ class ApplyDialog(QDialog):
             _("To download: {size}.").format(size=f"<b>{human_size(preview.download_size)}</b>") + "   "
             + _("Disk space change: {size}.").format(size=f"<b>{signed_size(preview.size_change)}</b>"))
 
+        note = groups_only_note(preview) if preview.groups and not preview.items else ""
+        self.note.setText(note)
+        self.note.setVisible(bool(note))
         warning = removal_warning(preview)
         self.warning.setText(warning)
         self.warning.setVisible(bool(warning))
         self._show_skipped(preview)
         self._show_command()
+        self._check_space()
+
+    def _check_space(self) -> None:
+        """Say when the disk is too full for the transaction, and keep Apply off then: rpm would refuse it only
+        after the download. A download alone may still fit."""
+        preview = self._preview
+        download_only = self.download_only.isChecked()
+        short = shortfall(preview, download_only)
+        text = ""
+        if short:
+            mount, missing = short[0]
+            text = "⚠ " + _("Not enough disk space on {mount}: {size} more is needed.").format(
+                mount=mount, size=human_size(missing))
+            if not download_only and not shortfall(preview, True):
+                text += " " + _("The download alone fits: “Download packages only” can fetch the packages now.")
+        self.space.setText(text)
+        self.space.setVisible(bool(text))
+        self.ok.setEnabled(bool(preview.items or preview.groups) and not short)
 
     def _show_skipped(self, preview: TransactionPreview) -> None:
         nothing = not preview.items and not preview.groups

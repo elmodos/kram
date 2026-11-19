@@ -1,14 +1,14 @@
-"""Left panel: one filter list whose content is chosen by the buttons below it, as in Synaptic."""
+"""Left panel: one filter list whose content is chosen by the buttons below it, as in Synaptic. A tree: nested
+entries (an origin's repositories, an environment's groups) are children of the entry above them."""
 from PySide6.QtCore import QPoint, Qt, Signal
-from PySide6.QtGui import QColor, QFont, QPalette
+from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
     QButtonGroup,
-    QListWidget,
-    QListWidgetItem,
+    QHeaderView,
     QPushButton,
     QStyle,
-    QStyledItemDelegate,
-    QStyleOptionViewItem,
+    QTreeWidget,
+    QTreeWidgetItem,
     QVBoxLayout,
     QWidget,
 )
@@ -16,26 +16,28 @@ from PySide6.QtWidgets import (
 from ..core.filters import (
     FilterEntry,
     custom_filter_entries,
+    environment_filters,
     group_filters,
     origin_filters,
     status_filters,
     visible_entries,
 )
-from ..core.marks import ACTION_LABELS
 from ..core.model import CatalogSnapshot
 from ..core.search import MODE_LABELS, Mode
 from ..i18n import _
 from .group_icons import group_icon
-from .icons import MARK_BACKGROUND, mark_icon, origin_icon, status_filter_icon
+from .icons import origin_icon, status_filter_icon
 
 MAX_HISTORY = 30
-INDENT_ROLE = Qt.ItemDataRole.UserRole + 1  # FilterEntry.indent: nesting level of the row
+INDEX_ROLE = Qt.ItemDataRole.UserRole + 1  # the item's position in Sidebar._entries
+COLLAPSIBLE = {"environments"}  # views whose parents fold, with the style's arrows; the others stay open
 
 # (id, label, builder); "search" and "custom" are built from the sidebar's own history / custom filters
 VIEWS = [
     ("status", _("Status"), status_filters),
     ("origin", _("Origin"), origin_filters),
     ("groups", _("Groups"), group_filters),
+    ("environments", _("Environments"), environment_filters),
     ("search", _("Search results"), "history"),
     ("custom", _("Custom filters"), "custom"),
 ]
@@ -50,22 +52,31 @@ class Sidebar(QWidget):
         super().__init__(parent)
         self._snap: CatalogSnapshot | None = None
         self._entries: list[FilterEntry] = []
+        self._items: list[QTreeWidgetItem] = []  # aligned with _entries
         self._view = "status"
         self._selected: dict[str, str] = {}  # view -> selected entry id
+        self._expanded: set[str] = set()  # ids of the unfolded entries of the collapsible views
         self.history: list[tuple[str, int, int]] = []  # (text, mode, result count), newest first
-        self.marked = None  # the MarkSet: marked keys for the "Marked" status entry, marked comps groups
+        self.marked = None  # the MarkSet: marked keys for the "Marked" status entry
         self.custom: list = []  # kram.core.custom_filters.CustomFilter, in sidebar order
 
         lay = QVBoxLayout(self)
         lay.setContentsMargins(0, 0, 0, 0)
-        self.list = QListWidget()
-        self.list.setItemDelegate(_IndentDelegate(self.list))
-        self.list.currentRowChanged.connect(self._on_row)
+        self.list = _Tree()
+        self.list.setHeaderHidden(True)
+        self.list.setUniformRowHeights(True)
+        # one step puts a child's icon under its parent's text, as the old flat list's indent did
+        style = self.list.style()
+        self._indent = style.pixelMetric(QStyle.PixelMetric.PM_SmallIconSize) + 2 * (
+            style.pixelMetric(QStyle.PixelMetric.PM_FocusFrameHMargin) + 1)
+        self.list.currentItemChanged.connect(lambda item, _prev: self._on_item(item))
+        self.list.itemExpanded.connect(lambda item: self._fold(item, True))
+        self.list.itemCollapsed.connect(lambda item: self._fold(item, False))
         self.list.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.list.customContextMenuRequested.connect(
             lambda pos: self.contextMenuRequested.emit(self.list.viewport().mapToGlobal(pos), self._entry_at(pos)))
         self.list.itemDoubleClicked.connect(
-            lambda item: (e := self._entry_at(self.list.visualItemRect(item).center())) and self.entryActivated.emit(e))
+            lambda item, _col: (e := self._entry_of(item)) and self.entryActivated.emit(e))
         lay.addWidget(self.list, 1)
 
         self._buttons = QButtonGroup(self)
@@ -127,8 +138,11 @@ class Sidebar(QWidget):
 
     @property
     def current_entry_id(self) -> str | None:
-        row = self.list.currentRow()
-        return self._entries[row].id if 0 <= row < len(self._entries) else None
+        e = self._entry_of(self.list.currentItem())
+        return e.id if e is not None else None
+
+    def item_of(self, entry_id: str) -> QTreeWidgetItem | None:
+        return next((item for e, item in zip(self._entries, self._items, strict=True) if e.id == entry_id), None)
 
     def _rebuild(self, emit: bool = True) -> None:
         if self._snap is None:
@@ -142,99 +156,94 @@ class Sidebar(QWidget):
             self._entries = visible_entries(status_filters(self._snap, self.marked), self._selected.get(self._view))
         else:
             self._entries = builder(self._snap)
-        self.list.blockSignals(True)
-        self.list.clear()
+        collapsible = self._view in COLLAPSIBLE
+        tree = self.list
+        tree.blockSignals(True)
+        tree.clear()
+        tree.setRootIsDecorated(collapsible)
+        tree.setItemsExpandable(collapsible)
+        tree.setIndentation(self._indent)
+        self._items = []
         want = self._selected.get(self._view)
-        current = 0
+        current = None
+        parent = None
         for i, e in enumerate(self._entries):
-            item = QListWidgetItem(e.label + (f"   ({e.count})" if e.count is not None else ""))
-            item.setData(INDENT_ROLE, e.indent)
-            tip = e.tip
+            item = QTreeWidgetItem([e.label + (f"   ({e.count})" if e.count is not None else "")])
+            item.setData(0, INDEX_ROLE, i)
             if e.origin is not None:
-                item.setIcon(origin_icon(e.origin))
-            elif e.group and self.marked is not None and (action := self.marked.group(e.group)) is not None:
-                # like a marked package row: the mark's box and tint instead of the group's icon
-                item.setIcon(mark_icon(action))
-                item.setBackground(QColor(*MARK_BACKGROUND[action]))
-                marked = _("Marked: {action}").format(action=ACTION_LABELS[action])
-                tip = f"{tip}\n{marked}" if tip else marked
+                item.setIcon(0, origin_icon(e.origin))
             elif e.group is not None:
-                item.setIcon(group_icon(e.group))
+                item.setIcon(0, group_icon(e.group))
             elif (icon := status_filter_icon(e.id)) is not None:
-                item.setIcon(icon)
-            if tip:
-                item.setToolTip(tip)
-            if e.bold or (i == 0 and e.query is None):
-                f = QFont(item.font())
-                f.setBold(True)
-                item.setFont(f)
-            self.list.addItem(item)
+                item.setIcon(0, icon)
+            if e.tip:
+                item.setToolTip(0, e.tip)
+            # an "All …" entry heads the view; installed groups; an environment's optional groups in italics
+            if e.bold or e.dim or e.id.endswith(":all"):
+                f = QFont(item.font(0))
+                f.setBold(e.bold or e.id.endswith(":all"))
+                f.setItalic(e.dim)
+                item.setFont(0, f)
+            if e.indent and parent is not None:
+                parent.addChild(item)
+            else:
+                tree.addTopLevelItem(item)
+                parent = item
+            self._items.append(item)
             if e.id == want:
-                current = i
+                current = item
         if not self._entries:
-            placeholder = QListWidgetItem(_("Search history is empty") if self._view == "search" else
-                                          _("No custom filters yet.\nRight-click to create one."))
+            placeholder = QTreeWidgetItem([_("Search history is empty") if self._view == "search" else
+                                           _("No custom filters yet.\nRight-click to create one.")])
             placeholder.setFlags(Qt.ItemFlag.NoItemFlags)
-            self.list.addItem(placeholder)
-        self.list.setCurrentRow(current)
-        self.list.blockSignals(False)
+            tree.addTopLevelItem(placeholder)
+        if collapsible:
+            for e, item in zip(self._entries, self._items, strict=True):
+                item.setExpanded(e.id in self._expanded)
+            if current is not None and current.parent() is not None:  # a selected child shows
+                current.parent().setExpanded(True)
+                self._expanded.add(self._entry_of(current.parent()).id)
+        else:
+            tree.expandAll()
+        if current is None and self._items:
+            current = self._items[0]
+        tree.setCurrentItem(current)
+        tree.blockSignals(False)
         if emit:
-            self._on_row(current)
+            self._on_item(current)
+
+    def _entry_of(self, item: QTreeWidgetItem | None) -> FilterEntry | None:
+        i = item.data(0, INDEX_ROLE) if item is not None else None
+        return self._entries[i] if i is not None and 0 <= i < len(self._entries) else None
 
     def _entry_at(self, pos) -> FilterEntry | None:
-        row = self.list.indexAt(pos).row()
-        return self._entries[row] if 0 <= row < len(self._entries) else None
+        return self._entry_of(self.list.itemAt(pos))
 
-    def _on_row(self, row: int) -> None:
-        if 0 <= row < len(self._entries):
-            e = self._entries[row]
+    def _fold(self, item: QTreeWidgetItem, expanded: bool) -> None:
+        if (e := self._entry_of(item)) is not None:
+            (self._expanded.add if expanded else self._expanded.discard)(e.id)
+
+    def _on_item(self, item: QTreeWidgetItem | None) -> None:
+        if (e := self._entry_of(item)) is not None:
             self._selected[self._view] = e.id
             self.filterChanged.emit(e)
         elif not self._entries:
             self.filterChanged.emit(FilterEntry("empty", "", lambda _r: True))
 
 
-class _IndentDelegate(QStyledItemDelegate):
-    """Shifts a nested row's icon and text right; the selection and the row's tint stay full width."""
+class _Tree(QTreeWidget):
+    """The sidebar's tree: its one column is as wide as the longest entry, scrolled sideways as the flat list was
+    (a stretched column elides instead), and never narrower than the view, so the selection spans the whole row."""
 
-    def _shift(self, option: QStyleOptionViewItem, index) -> int:
-        level = index.data(INDENT_ROLE) or 0
-        if not level:
-            return 0
-        style = option.widget.style() if option.widget else None
-        margin = style.pixelMetric(QStyle.PixelMetric.PM_FocusFrameHMargin, option, option.widget) + 1 if style else 3
-        # one step puts a child's icon under its parent's text
-        return level * (option.decorationSize.width() + 2 * margin)
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.header().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
+        self.header().setStretchLastSection(False)
 
-    def paint(self, painter, option, index) -> None:
-        shift = self._shift(option, index)
-        if not shift:
-            super().paint(painter, option, index)
-            return
-        opt = QStyleOptionViewItem(option)
-        self.initStyleOption(opt, index)
-        style = opt.widget.style() if opt.widget else None
-        if style is None:
-            super().paint(painter, option, index)
-            return
-        # background, selection, hover and focus over the whole row
-        style.drawPrimitive(QStyle.PrimitiveElement.PE_PanelItemViewItem, opt, painter, opt.widget)
-        # then icon and text in the shifted rect, without a second panel
-        content = QStyleOptionViewItem(opt)
-        content.rect = opt.rect.adjusted(shift, 0, 0, 0)
-        if opt.state & QStyle.StateFlag.State_Selected:
-            group = (QPalette.ColorGroup.Active if opt.state & QStyle.StateFlag.State_Active
-                     else QPalette.ColorGroup.Inactive)
-            content.palette.setColor(QPalette.ColorRole.Text, opt.palette.color(group, QPalette.ColorRole.HighlightedText))
-        content.state &= ~(QStyle.StateFlag.State_Selected | QStyle.StateFlag.State_MouseOver
-                           | QStyle.StateFlag.State_HasFocus)
-        content.backgroundBrush = Qt.BrushStyle.NoBrush
-        style.drawControl(QStyle.ControlElement.CE_ItemViewItem, content, painter, opt.widget)
-
-    def sizeHint(self, option, index):
-        size = super().sizeHint(option, index)
-        size.setWidth(size.width() + self._shift(option, index))
-        return size
+    def resizeEvent(self, event) -> None:
+        super().resizeEvent(event)
+        # ResizeToContents never goes below the minimum section size
+        self.header().setMinimumSectionSize(self.viewport().width())
 
 
 def _history_id(text: str, mode: int) -> str:
