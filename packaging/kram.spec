@@ -1,5 +1,5 @@
 %global appid io.github.elmodos.Kram
-%global base_version 0.8.5
+%global base_version 0.9.0
 
 Name:           kram
 # A tagged release (v%%{base_version}) is plain %%{base_version}. Any other commit gets a snapshot from
@@ -116,6 +116,11 @@ QT_QPA_PLATFORM=offscreen %pytest
 %{_datadir}/kram/
 
 %changelog
+* Thu Nov 19 2026 Modo Ltunzher <offnormal@gmail.com> - 0.9.0-1
+- Package details: the Files tab shows the files in a folder tree or as a list
+- Package details: a filter in the Files tab, with the matched text in bold
+- Package details: copy a file's path or show it in the file manager from the Files tab
+
 * Wed Nov 18 2026 Modo Ltunzher <offnormal@gmail.com> - 0.8.5-1
 - Progress dialog: dnf's error messages appear in your language where dnf has a translation
 - Progress dialog: Kram's own messages there are translated too, such as the dnf5 command being run
