@@ -10,15 +10,16 @@ from ..core.origin import display_repo
 from ..i18n import _, pgettext
 from .icons import MARK_BACKGROUND, ORIGIN_LABEL, advisory_icon, blocked_icon, mark_icon, origin_icon, status_icon
 
-# the update type column came last (logical index 9) so that saved header states keep their columns; the window
-# shows it after the latest version
+# new columns come last (the update type at logical index 9, the download size at 10) so that saved header states
+# keep their columns; the window shows them where they belong: the update type after the latest version, the
+# download size after the installed size
 (COL_STATUS, COL_ORIGIN, COL_NAME, COL_INSTALLED, COL_REASON, COL_CANDIDATE, COL_REPO, COL_SIZE, COL_SUMMARY,
- COL_ADVISORY) = range(10)
+ COL_ADVISORY, COL_DOWNLOAD) = range(11)
 # TRANSLATORS: "S" is the narrow status column (Synaptic convention); keep it one letter
 HEADERS = [_("S"), "", _("Package"), _("Installed version"), _("Reason"), _("Latest version"), _("Repository"),
-           _("Size"), _("Summary"), _("Update type")]
+           _("Installed size"), _("Summary"), _("Update type"), _("Download size")]
 # columns the header's context menu can hide (the first three identify the row), in the order it lists them
-HIDEABLE = (COL_INSTALLED, COL_REASON, COL_CANDIDATE, COL_ADVISORY, COL_REPO, COL_SIZE, COL_SUMMARY)
+HIDEABLE = (COL_INSTALLED, COL_REASON, COL_CANDIDATE, COL_ADVISORY, COL_REPO, COL_SIZE, COL_DOWNLOAD, COL_SUMMARY)
 
 # kram.core.model.ADVISORY_LEVELS
 ADVISORY_LABEL = {
@@ -68,6 +69,7 @@ SORT_KEYS = {
     COL_REASON: lambda r: (r.reason is None, _REASON_ORDER.get(r.reason, 0), r.name.lower()),
     COL_REPO: lambda r: (repo_text(r).lower(), r.name.lower()),
     COL_SIZE: lambda r: (r.size, r.name.lower()),
+    COL_DOWNLOAD: lambda r: (r.download_size is not None, r.download_size or 0, r.name.lower()),
     COL_SUMMARY: lambda r: (r.summary.lower(), r.name.lower()),
 }
 _NO_ADVISORY = len(ADVISORY_LABEL)
@@ -234,6 +236,7 @@ class PackageTableModel(QAbstractTableModel):
                 case 7: return human_size(r.size)
                 case 8: return r.summary
                 case 9: return ADVISORY_LABEL[r.advisory.level] if r.advisories else ""
+                case 10: return "" if r.download_size is None else human_size(r.download_size)
         elif role == Qt.ItemDataRole.DecorationRole:
             if col == COL_STATUS:
                 mark = self.marks.get(r.key)
@@ -269,7 +272,7 @@ class PackageTableModel(QAbstractTableModel):
             mark = self.marks.get(r.key)
             if mark:
                 return QColor(*MARK_BACKGROUND[mark.action])
-        elif role == Qt.ItemDataRole.TextAlignmentRole and col == COL_SIZE:
+        elif role == Qt.ItemDataRole.TextAlignmentRole and col in (COL_SIZE, COL_DOWNLOAD):
             return int(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
         elif role == Qt.ItemDataRole.FontRole and col == COL_CANDIDATE and r.status is Status.UPGRADABLE:
             return None if r.key in self.blocked else _bold()

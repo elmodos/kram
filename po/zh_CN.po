@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kram\n"
 "Report-Msgid-Bugs-To: https://github.com/elmodos/kram/issues\n"
-"POT-Creation-Date: 2026-11-19 12:22+0200\n"
+"POT-Creation-Date: 2026-11-19 12:28+0200\n"
 "PO-Revision-Date: 2026-11-04 14:07+0200\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -46,19 +46,19 @@ msgstr "描述"
 msgid "Provides"
 msgstr "提供"
 
-#: kram/core/custom_filters.py:53 kram/ui/package_model.py:221
+#: kram/core/custom_filters.py:53 kram/ui/package_model.py:223
 #: kram/ui/sidebar.py:36
 msgid "Status"
 msgstr "状态"
 
 #: kram/core/custom_filters.py:54 kram/ui/details.py:175
-#: kram/ui/package_model.py:221 kram/ui/repos_dialog.py:73
+#: kram/ui/package_model.py:223 kram/ui/repos_dialog.py:73
 #: kram/ui/sidebar.py:37
 msgid "Origin"
 msgstr "来源"
 
 #: kram/core/custom_filters.py:55 kram/ui/apply_dialog.py:91
-#: kram/ui/details.py:77 kram/ui/package_model.py:18
+#: kram/ui/details.py:77 kram/ui/package_model.py:19
 msgid "Repository"
 msgstr "软件源"
 
@@ -78,7 +78,7 @@ msgstr "架构"
 msgid "Installed size (MB)"
 msgstr "安装大小（MB）"
 
-#: kram/core/custom_filters.py:60 kram/ui/package_model.py:19
+#: kram/core/custom_filters.py:60 kram/ui/package_model.py:20
 msgid "Update type"
 msgstr "更新类型"
 
@@ -138,7 +138,7 @@ msgstr "孤立（无软件源）"
 msgid "Unneeded dependency"
 msgstr "不再需要的依赖"
 
-#: kram/core/custom_filters.py:87 kram/ui/package_model.py:29
+#: kram/core/custom_filters.py:87 kram/ui/package_model.py:30
 msgid "Security"
 msgstr "安全"
 
@@ -146,11 +146,11 @@ msgstr "安全"
 msgid "Security: critical or important"
 msgstr "安全：严重或重要"
 
-#: kram/core/custom_filters.py:89 kram/ui/package_model.py:30
+#: kram/core/custom_filters.py:89 kram/ui/package_model.py:31
 msgid "Bug fix"
 msgstr "错误修复"
 
-#: kram/core/custom_filters.py:90 kram/ui/package_model.py:31
+#: kram/core/custom_filters.py:90 kram/ui/package_model.py:32
 msgid "Enhancement"
 msgstr "功能增强"
 
@@ -603,20 +603,20 @@ msgstr "删除最旧的内核，以保持在保留版本数量的限制内"
 msgid "Install reason changes"
 msgstr "安装原因变更"
 
-#: kram/ui/apply_dialog.py:50 kram/ui/package_model.py:47
+#: kram/ui/apply_dialog.py:50 kram/ui/package_model.py:48
 msgid "dependency"
 msgstr "依赖"
 
 #: kram/ui/apply_dialog.py:50 kram/ui/install_dialog.py:53
-#: kram/ui/package_model.py:45
+#: kram/ui/package_model.py:46
 msgid "group"
 msgstr "组"
 
-#: kram/ui/apply_dialog.py:50 kram/ui/package_model.py:44
+#: kram/ui/apply_dialog.py:50 kram/ui/package_model.py:45
 msgid "user"
 msgstr "用户"
 
-#: kram/ui/apply_dialog.py:50 kram/ui/package_model.py:48
+#: kram/ui/apply_dialog.py:50 kram/ui/package_model.py:49
 msgid "weak dependency"
 msgstr "弱依赖"
 
@@ -637,11 +637,11 @@ msgid "Groups to be removed"
 msgstr "将删除的组"
 
 #: kram/ui/apply_dialog.py:91 kram/ui/details.py:174
-#: kram/ui/install_dialog.py:473 kram/ui/package_model.py:18
+#: kram/ui/install_dialog.py:473 kram/ui/package_model.py:19
 msgid "Package"
 msgstr "软件包"
 
-#: kram/ui/apply_dialog.py:91 kram/ui/package_model.py:19
+#: kram/ui/apply_dialog.py:91
 msgid "Size"
 msgstr "大小"
 
@@ -1268,10 +1268,11 @@ msgid "Installed"
 msgstr "安装时间"
 
 #: kram/ui/details.py:185 kram/ui/install_dialog.py:482
+#: kram/ui/package_model.py:20
 msgid "Installed size"
 msgstr "安装大小"
 
-#: kram/ui/details.py:186
+#: kram/ui/details.py:186 kram/ui/package_model.py:20
 msgid "Download size"
 msgstr "下载大小"
 
@@ -2111,61 +2112,61 @@ msgid "day"
 msgid_plural "days"
 msgstr[0] "天"
 
-#: kram/ui/package_model.py:18
+#: kram/ui/package_model.py:19
 msgid "Installed version"
 msgstr "已安装版本"
 
-#: kram/ui/package_model.py:18
+#: kram/ui/package_model.py:19
 msgid "Latest version"
 msgstr "最新版本"
 
-#: kram/ui/package_model.py:18
+#: kram/ui/package_model.py:19
 msgid "Reason"
 msgstr "原因"
 
 #. TRANSLATORS: "S" is the narrow status column (Synaptic convention); keep it one letter
-#: kram/ui/package_model.py:18
+#: kram/ui/package_model.py:19
 msgid "S"
 msgstr "S"
 
-#: kram/ui/package_model.py:19
+#: kram/ui/package_model.py:20
 msgid "Summary"
 msgstr "摘要"
 
-#: kram/ui/package_model.py:25
+#: kram/ui/package_model.py:26
 msgid "Security: critical"
 msgstr "安全：严重"
 
-#: kram/ui/package_model.py:26
+#: kram/ui/package_model.py:27
 msgid "Security: important"
 msgstr "安全：重要"
 
-#: kram/ui/package_model.py:27
+#: kram/ui/package_model.py:28
 msgid "Security: moderate"
 msgstr "安全：中等"
 
-#: kram/ui/package_model.py:28
+#: kram/ui/package_model.py:29
 msgid "Security: low"
 msgstr "安全：低"
 
-#: kram/ui/package_model.py:32
+#: kram/ui/package_model.py:33
 msgctxt "update type"
 msgid "Other"
 msgstr "其他"
 
-#: kram/ui/package_model.py:46
+#: kram/ui/package_model.py:47
 msgid "not recorded"
 msgstr "未记录"
 
-#: kram/ui/package_model.py:51
+#: kram/ui/package_model.py:52
 msgid "Installed by the user: autoremove keeps it"
 msgstr "由用户安装：autoremove 会保留它"
 
-#: kram/ui/package_model.py:52
+#: kram/ui/package_model.py:53
 msgid "Installed with a package group: autoremove keeps it"
 msgstr "随软件包组安装：autoremove 会保留它"
 
-#: kram/ui/package_model.py:53
+#: kram/ui/package_model.py:54
 msgid ""
 "Installed outside dnf, or dnf lost the record: treated as installed by the "
 "user,\n"
@@ -2175,11 +2176,11 @@ msgstr ""
 "在 dnf 之外安装，或 dnf 丢失了记录：视为由用户安装，\n"
 "因此 autoremove 会保留它。如果它是被其他软件包带入的，请将其标记为依赖。"
 
-#: kram/ui/package_model.py:55
+#: kram/ui/package_model.py:56
 msgid "Installed as a dependency: autoremove removes it once nothing needs it"
 msgstr "作为依赖安装：不再被需要时 autoremove 会删除它"
 
-#: kram/ui/package_model.py:56
+#: kram/ui/package_model.py:57
 msgid ""
 "Installed as a weak dependency (recommended by another package):\n"
 "autoremove removes it once nothing needs it"
@@ -2187,47 +2188,47 @@ msgstr ""
 "作为弱依赖安装（由其他软件包推荐）：\n"
 "不再被需要时 autoremove 会删除它"
 
-#: kram/ui/package_model.py:83 kram/ui/package_model.py:263
+#: kram/ui/package_model.py:85 kram/ui/package_model.py:266
 msgid "The upgrade cannot be installed now"
 msgstr "此更新目前无法安装"
 
-#: kram/ui/package_model.py:257
+#: kram/ui/package_model.py:260
 #, python-brace-format
 msgid "Installed from {installed}; the latest version comes from {latest}"
 msgstr "从 {installed} 安装；最新版本来自 {latest}"
 
-#: kram/ui/package_model.py:266 kram/ui/sidebar.py:159
+#: kram/ui/package_model.py:269 kram/ui/sidebar.py:159
 #, python-brace-format
 msgid "Marked: {action}"
 msgstr "已标记：{action}"
 
-#: kram/ui/package_model.py:267
+#: kram/ui/package_model.py:270
 msgid "Click for actions"
 msgstr "点击查看操作"
 
-#: kram/ui/package_model.py:290
+#: kram/ui/package_model.py:293
 msgctxt "package status"
 msgid "Not installed"
 msgstr "未安装"
 
-#: kram/ui/package_model.py:291
+#: kram/ui/package_model.py:294
 msgctxt "package status"
 msgid "Installed"
 msgstr "已安装"
 
-#: kram/ui/package_model.py:292
+#: kram/ui/package_model.py:295
 msgid "Installed, upgrade available"
 msgstr "已安装，有可用升级"
 
-#: kram/ui/package_model.py:293
+#: kram/ui/package_model.py:296
 msgid "Installed version is newer than the repository"
 msgstr "已安装的版本比软件源中的更新"
 
-#: kram/ui/package_model.py:294
+#: kram/ui/package_model.py:297
 msgid "Installed, no repository provides it"
 msgstr "已安装，没有软件源提供"
 
-#: kram/ui/package_model.py:295
+#: kram/ui/package_model.py:298
 msgid "Installed as a dependency, no longer needed"
 msgstr "作为依赖安装，已不再需要"
 

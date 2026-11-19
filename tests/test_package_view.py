@@ -7,6 +7,7 @@ pytest.importorskip("PySide6.QtWidgets")
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QStandardItemModel
 from PySide6.QtWidgets import QAbstractItemView, QApplication, QTreeView
 
 from kram.core.model import Origin, PkgRow, Status
@@ -131,3 +132,55 @@ def test_the_repository_column_names_where_an_installed_package_came_from(app):
                                                                "comes from updates")
     assert [cells[n].data() for n in ("bash", "fish")] == ["fedora", "fedora"]
     assert cells["bash"].data(Qt.ItemDataRole.ToolTipRole) is None
+
+
+def test_the_download_size_column_is_hidden_after_the_installed_size(app):
+    from kram.ui.package_model import COL_DOWNLOAD, COL_SIZE, HEADERS
+
+    view, model = view_with(0)
+    header = view.header()
+    assert header.isSectionHidden(COL_DOWNLOAD) and not header.isSectionHidden(COL_SIZE)
+    assert header.visualIndex(COL_DOWNLOAD) == header.visualIndex(COL_SIZE) + 1
+    assert (HEADERS[COL_SIZE], HEADERS[COL_DOWNLOAD]) == ("Installed size", "Download size")
+    model.set_rows([
+        PkgRow("vlc", "x86_64", "", "", "3-1", "fedora", 4096, Origin.FEDORA, Status.NOT_INSTALLED,
+               download_size=2048),
+        PkgRow("gone", "x86_64", "", "1-1", "", "fedora", 1, Origin.FEDORA, Status.ORPHAN),  # nothing to download
+    ], "x86_64")
+    assert [model.data(model.index(i, COL_DOWNLOAD)) for i in range(2)] == ["2.0 kB", ""]
+    model.sort(COL_DOWNLOAD, Qt.SortOrder.DescendingOrder)
+    assert model.data(model.index(0, 2)) == "vlc"
+
+
+def test_a_header_state_saved_before_the_download_size_keeps_it_hidden(app, tmp_path):
+    from PySide6.QtCore import QSettings
+
+    from kram.ui.package_model import COL_DOWNLOAD, COL_SIZE
+    from kram.ui.package_view import ADVISORY_COLUMN_KEY, HEADER_STATE_KEY, SIZE_COLUMN_WIDTH
+
+    old = QTreeView()  # ten columns, as Kram 0.9.0 saved them
+    old.setModel(QStandardItemModel(1, 10))
+    old.setColumnWidth(COL_SIZE, 80)
+    old.setColumnWidth(2, 333)
+    old.header().setSectionHidden(4, True)
+    old.header().moveSection(3, 1)
+    old.header().setSortIndicator(COL_SIZE, Qt.SortOrder.DescendingOrder)
+    settings = QSettings(str(tmp_path / "kram.conf"), QSettings.Format.IniFormat)
+    settings.setValue(HEADER_STATE_KEY, old.header().saveState())
+    settings.setValue(ADVISORY_COLUMN_KEY, True)
+
+    view, _model = view_with(1)
+    view.restore_columns(settings)
+    header = view.header()
+    assert header.isSectionHidden(COL_DOWNLOAD) and header.isSectionHidden(4)
+    assert header.visualIndex(COL_DOWNLOAD) == header.visualIndex(COL_SIZE) + 1
+    assert view.columnWidth(COL_SIZE) == SIZE_COLUMN_WIDTH and view.columnWidth(2) == 333
+    assert header.visualIndex(3) == 1
+    assert (header.sortIndicatorSection(), header.sortIndicatorOrder()) == (COL_SIZE, Qt.SortOrder.DescendingOrder)
+
+    header.setSectionHidden(COL_DOWNLOAD, False)  # shown by the user: stays shown
+    view.save_columns(settings)
+    again, _model = view_with(1)
+    again.restore_columns(settings)  # Qt takes the state saved after the move back
+    assert not again.header().isSectionHidden(COL_DOWNLOAD) and again.header().isSectionHidden(4)
+    assert again.columnWidth(2) == 333 and again.header().visualIndex(3) == 1

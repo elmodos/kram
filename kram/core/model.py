@@ -86,6 +86,7 @@ class PkgRow:
     # dnf autoremove would remove it: installed as a dependency, nothing needs it. Also when the status says
     # something more pressing (orphaned, upgradable), which is why it is not only a status
     unneeded: bool = False
+    download_size: int | None = None  # the candidate's package file; None without a candidate
 
     def __post_init__(self) -> None:
         if self.status is Status.UNNEEDED:

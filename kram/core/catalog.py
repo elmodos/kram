@@ -164,7 +164,7 @@ class Catalog:
                 user_installed=key in user_installed, from_repo_id=from_repo, reason=reasons.get(p.get_reason()),
                 candidate_arch=cand.get_arch() if key in arch_changes else "",
                 advisories=advisories.get(key, ()) if status is Status.UPGRADABLE else (),
-                unneeded=key in unneeded,
+                unneeded=key in unneeded, download_size=cand.get_download_size() if cand else None,
             ))
             pkgs[key] = (p, cand)
 
@@ -177,6 +177,7 @@ class Catalog:
                 name=key[0], arch=key[1], summary=cand.get_summary(),
                 installed_evr="", candidate_evr=cand.get_evr(), repo_id=repo_id,
                 size=cand.get_install_size(), origin=classify(repo_id), status=Status.NOT_INSTALLED,
+                download_size=cand.get_download_size(),
             ))
             pkgs[key] = (None, cand)
 

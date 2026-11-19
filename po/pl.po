@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kram\n"
 "Report-Msgid-Bugs-To: https://github.com/elmodos/kram/issues\n"
-"POT-Creation-Date: 2026-11-19 12:22+0200\n"
+"POT-Creation-Date: 2026-11-19 12:28+0200\n"
 "PO-Revision-Date: 2026-11-04 14:07+0200\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -46,19 +46,19 @@ msgstr "Opis"
 msgid "Provides"
 msgstr "Dostarcza"
 
-#: kram/core/custom_filters.py:53 kram/ui/package_model.py:221
+#: kram/core/custom_filters.py:53 kram/ui/package_model.py:223
 #: kram/ui/sidebar.py:36
 msgid "Status"
 msgstr "Stan"
 
 #: kram/core/custom_filters.py:54 kram/ui/details.py:175
-#: kram/ui/package_model.py:221 kram/ui/repos_dialog.py:73
+#: kram/ui/package_model.py:223 kram/ui/repos_dialog.py:73
 #: kram/ui/sidebar.py:37
 msgid "Origin"
 msgstr "Pochodzenie"
 
 #: kram/core/custom_filters.py:55 kram/ui/apply_dialog.py:91
-#: kram/ui/details.py:77 kram/ui/package_model.py:18
+#: kram/ui/details.py:77 kram/ui/package_model.py:19
 msgid "Repository"
 msgstr "Repozytorium"
 
@@ -78,7 +78,7 @@ msgstr "Architektura"
 msgid "Installed size (MB)"
 msgstr "Rozmiar po instalacji (MB)"
 
-#: kram/core/custom_filters.py:60 kram/ui/package_model.py:19
+#: kram/core/custom_filters.py:60 kram/ui/package_model.py:20
 msgid "Update type"
 msgstr "Typ aktualizacji"
 
@@ -138,7 +138,7 @@ msgstr "Osierocony (brak repozytorium)"
 msgid "Unneeded dependency"
 msgstr "Niepotrzebna zależność"
 
-#: kram/core/custom_filters.py:87 kram/ui/package_model.py:29
+#: kram/core/custom_filters.py:87 kram/ui/package_model.py:30
 msgid "Security"
 msgstr "Bezpieczeństwo"
 
@@ -146,11 +146,11 @@ msgstr "Bezpieczeństwo"
 msgid "Security: critical or important"
 msgstr "Bezpieczeństwo: krytyczne lub ważne"
 
-#: kram/core/custom_filters.py:89 kram/ui/package_model.py:30
+#: kram/core/custom_filters.py:89 kram/ui/package_model.py:31
 msgid "Bug fix"
 msgstr "Poprawka błędów"
 
-#: kram/core/custom_filters.py:90 kram/ui/package_model.py:31
+#: kram/core/custom_filters.py:90 kram/ui/package_model.py:32
 msgid "Enhancement"
 msgstr "Ulepszenie"
 
@@ -623,20 +623,20 @@ msgstr ""
 msgid "Install reason changes"
 msgstr "Zmiany powodu instalacji"
 
-#: kram/ui/apply_dialog.py:50 kram/ui/package_model.py:47
+#: kram/ui/apply_dialog.py:50 kram/ui/package_model.py:48
 msgid "dependency"
 msgstr "zależność"
 
 #: kram/ui/apply_dialog.py:50 kram/ui/install_dialog.py:53
-#: kram/ui/package_model.py:45
+#: kram/ui/package_model.py:46
 msgid "group"
 msgstr "grupa"
 
-#: kram/ui/apply_dialog.py:50 kram/ui/package_model.py:44
+#: kram/ui/apply_dialog.py:50 kram/ui/package_model.py:45
 msgid "user"
 msgstr "użytkownik"
 
-#: kram/ui/apply_dialog.py:50 kram/ui/package_model.py:48
+#: kram/ui/apply_dialog.py:50 kram/ui/package_model.py:49
 msgid "weak dependency"
 msgstr "słaba zależność"
 
@@ -657,11 +657,11 @@ msgid "Groups to be removed"
 msgstr "Grupy do usunięcia"
 
 #: kram/ui/apply_dialog.py:91 kram/ui/details.py:174
-#: kram/ui/install_dialog.py:473 kram/ui/package_model.py:18
+#: kram/ui/install_dialog.py:473 kram/ui/package_model.py:19
 msgid "Package"
 msgstr "Pakiet"
 
-#: kram/ui/apply_dialog.py:91 kram/ui/package_model.py:19
+#: kram/ui/apply_dialog.py:91
 msgid "Size"
 msgstr "Rozmiar"
 
@@ -1328,10 +1328,11 @@ msgid "Installed"
 msgstr "Zainstalowany"
 
 #: kram/ui/details.py:185 kram/ui/install_dialog.py:482
+#: kram/ui/package_model.py:20
 msgid "Installed size"
 msgstr "Rozmiar po instalacji"
 
-#: kram/ui/details.py:186
+#: kram/ui/details.py:186 kram/ui/package_model.py:20
 msgid "Download size"
 msgstr "Rozmiar do pobrania"
 
@@ -2266,61 +2267,61 @@ msgstr[0] "dzień"
 msgstr[1] "dni"
 msgstr[2] "dni"
 
-#: kram/ui/package_model.py:18
+#: kram/ui/package_model.py:19
 msgid "Installed version"
 msgstr "Zainstalowana wersja"
 
-#: kram/ui/package_model.py:18
+#: kram/ui/package_model.py:19
 msgid "Latest version"
 msgstr "Najnowsza wersja"
 
-#: kram/ui/package_model.py:18
+#: kram/ui/package_model.py:19
 msgid "Reason"
 msgstr "Powód"
 
 #. TRANSLATORS: "S" is the narrow status column (Synaptic convention); keep it one letter
-#: kram/ui/package_model.py:18
+#: kram/ui/package_model.py:19
 msgid "S"
 msgstr "S"
 
-#: kram/ui/package_model.py:19
+#: kram/ui/package_model.py:20
 msgid "Summary"
 msgstr "Podsumowanie"
 
-#: kram/ui/package_model.py:25
+#: kram/ui/package_model.py:26
 msgid "Security: critical"
 msgstr "Bezpieczeństwo: krytyczne"
 
-#: kram/ui/package_model.py:26
+#: kram/ui/package_model.py:27
 msgid "Security: important"
 msgstr "Bezpieczeństwo: ważne"
 
-#: kram/ui/package_model.py:27
+#: kram/ui/package_model.py:28
 msgid "Security: moderate"
 msgstr "Bezpieczeństwo: umiarkowane"
 
-#: kram/ui/package_model.py:28
+#: kram/ui/package_model.py:29
 msgid "Security: low"
 msgstr "Bezpieczeństwo: niskie"
 
-#: kram/ui/package_model.py:32
+#: kram/ui/package_model.py:33
 msgctxt "update type"
 msgid "Other"
 msgstr "Inne"
 
-#: kram/ui/package_model.py:46
+#: kram/ui/package_model.py:47
 msgid "not recorded"
 msgstr "nie zapisano"
 
-#: kram/ui/package_model.py:51
+#: kram/ui/package_model.py:52
 msgid "Installed by the user: autoremove keeps it"
 msgstr "Zainstalowany przez użytkownika: autoremove go zachowuje"
 
-#: kram/ui/package_model.py:52
+#: kram/ui/package_model.py:53
 msgid "Installed with a package group: autoremove keeps it"
 msgstr "Zainstalowany z grupą pakietów: autoremove go zachowuje"
 
-#: kram/ui/package_model.py:53
+#: kram/ui/package_model.py:54
 msgid ""
 "Installed outside dnf, or dnf lost the record: treated as installed by the "
 "user,\n"
@@ -2332,13 +2333,13 @@ msgstr ""
 "więc autoremove go zachowuje. Oznacz go jako zależność, jeśli wciągnął go "
 "inny pakiet."
 
-#: kram/ui/package_model.py:55
+#: kram/ui/package_model.py:56
 msgid "Installed as a dependency: autoremove removes it once nothing needs it"
 msgstr ""
 "Zainstalowany jako zależność: autoremove usunie go, gdy nic go już nie "
 "potrzebuje"
 
-#: kram/ui/package_model.py:56
+#: kram/ui/package_model.py:57
 msgid ""
 "Installed as a weak dependency (recommended by another package):\n"
 "autoremove removes it once nothing needs it"
@@ -2346,47 +2347,47 @@ msgstr ""
 "Zainstalowany jako słaba zależność (zalecany przez inny pakiet):\n"
 "autoremove usunie go, gdy nic go już nie potrzebuje"
 
-#: kram/ui/package_model.py:83 kram/ui/package_model.py:263
+#: kram/ui/package_model.py:85 kram/ui/package_model.py:266
 msgid "The upgrade cannot be installed now"
 msgstr "Aktualizacji nie można teraz zainstalować"
 
-#: kram/ui/package_model.py:257
+#: kram/ui/package_model.py:260
 #, python-brace-format
 msgid "Installed from {installed}; the latest version comes from {latest}"
 msgstr "Zainstalowano z {installed}; najnowsza wersja pochodzi z {latest}"
 
-#: kram/ui/package_model.py:266 kram/ui/sidebar.py:159
+#: kram/ui/package_model.py:269 kram/ui/sidebar.py:159
 #, python-brace-format
 msgid "Marked: {action}"
 msgstr "Zaznaczono: {action}"
 
-#: kram/ui/package_model.py:267
+#: kram/ui/package_model.py:270
 msgid "Click for actions"
 msgstr "Kliknij, aby zobaczyć działania"
 
-#: kram/ui/package_model.py:290
+#: kram/ui/package_model.py:293
 msgctxt "package status"
 msgid "Not installed"
 msgstr "Niezainstalowany"
 
-#: kram/ui/package_model.py:291
+#: kram/ui/package_model.py:294
 msgctxt "package status"
 msgid "Installed"
 msgstr "Zainstalowany"
 
-#: kram/ui/package_model.py:292
+#: kram/ui/package_model.py:295
 msgid "Installed, upgrade available"
 msgstr "Zainstalowany, dostępna aktualizacja"
 
-#: kram/ui/package_model.py:293
+#: kram/ui/package_model.py:296
 msgid "Installed version is newer than the repository"
 msgstr "Zainstalowana wersja jest nowsza niż w repozytorium"
 
-#: kram/ui/package_model.py:294
+#: kram/ui/package_model.py:297
 msgid "Installed, no repository provides it"
 msgstr "Zainstalowany, żadne repozytorium go nie dostarcza"
 
-#: kram/ui/package_model.py:295
+#: kram/ui/package_model.py:298
 msgid "Installed as a dependency, no longer needed"
 msgstr "Zainstalowany jako zależność, już niepotrzebny"
 

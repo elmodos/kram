@@ -5,7 +5,7 @@ on a ThinkPad X220), on every search keystroke that changes the row set and ever
 QTableView keeps nothing per row (its row heights are one uniform size): 40 ms, whatever the number of rows.
 """
 from PySide6.QtCore import QEvent, QSettings, Qt, Signal
-from PySide6.QtGui import QCursor, QPalette
+from PySide6.QtGui import QCursor, QPalette, QStandardItemModel
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QHeaderView,
@@ -17,15 +17,19 @@ from PySide6.QtWidgets import (
     QTableView,
 )
 
-from .package_model import COL_ADVISORY, COL_CANDIDATE, HEADERS, HIDEABLE
+from .package_model import COL_ADVISORY, COL_CANDIDATE, COL_DOWNLOAD, COL_SIZE, HEADERS, HIDEABLE
 
 # bumped when columns change: an old saved state would put widths and hidden flags on the wrong columns
 HEADER_STATE_KEY = "table/header-v2"
-COLUMN_WIDTHS = [26, 24, 230, 175, 110, 175, 150, 80]
+SIZE_COLUMN_WIDTH = 100
+COLUMN_WIDTHS = [26, 24, 230, 175, 110, 175, 150, SIZE_COLUMN_WIDTH]
 ADVISORY_COLUMN_WIDTH = 150
 # set once the update type column has been moved next to the latest version: a header state saved before 0.7 has
 # it at the end, after the summary that stretches over the spare width
 ADVISORY_COLUMN_KEY = "table/advisory-column"
+# the same for the download size (hidden until the user shows it), which a header state saved before it lacks:
+# restoring one shows it at the end
+DOWNLOAD_COLUMN_KEY = "table/download-column"
 
 
 class RowDelegate(QStyledItemDelegate):
@@ -149,6 +153,7 @@ class PackageView(QTableView):
             self.setColumnWidth(col, width)
         self.setColumnWidth(COL_ADVISORY, ADVISORY_COLUMN_WIDTH)
         self._place_advisory_column()
+        self._place_download_column()
         header = self.header()
         header.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         header.customContextMenuRequested.connect(self._header_menu)
@@ -158,6 +163,13 @@ class PackageView(QTableView):
     def _place_advisory_column(self) -> None:
         header = self.header()
         header.moveSection(header.visualIndex(COL_ADVISORY), header.visualIndex(COL_CANDIDATE) + 1)
+
+    def _place_download_column(self) -> None:
+        """Hidden, after the installed size, as wide as it."""
+        header = self.header()
+        header.moveSection(header.visualIndex(COL_DOWNLOAD), header.visualIndex(COL_SIZE) + 1)
+        self.setColumnWidth(COL_DOWNLOAD, SIZE_COLUMN_WIDTH)
+        header.setSectionHidden(COL_DOWNLOAD, True)
 
     def _header_menu(self, pos) -> None:
         """Right-click on the column titles: show or hide the columns that may be hidden."""
@@ -172,15 +184,40 @@ class PackageView(QTableView):
 
     def restore_columns(self, settings: QSettings) -> None:
         """Widths, order and hidden columns as the user left them."""
-        if state := settings.value(HEADER_STATE_KEY):
+        if not (state := settings.value(HEADER_STATE_KEY)):
+            return
+        if settings.value(DOWNLOAD_COLUMN_KEY, False, type=bool):
             self.header().restoreState(state)
+        else:
+            self._restore_older(state, COL_DOWNLOAD)
             if not settings.value(ADVISORY_COLUMN_KEY, False, type=bool):
                 self.setColumnWidth(COL_ADVISORY, ADVISORY_COLUMN_WIDTH)
                 self._place_advisory_column()
+            if not settings.value(DOWNLOAD_COLUMN_KEY, False, type=bool):
+                self._place_download_column()
+                # "Size" became "Installed size": the old default width cuts the title short
+                self.setColumnWidth(COL_SIZE, max(self.columnWidth(COL_SIZE), SIZE_COLUMN_WIDTH))
+
+    def _restore_older(self, state, count: int) -> None:
+        """A header state saved with the first `count` columns only. Qt restores one into a header with more, but
+        the state it saves afterwards is one it then refuses to restore; so read it with a header of its own size
+        and take the order, widths, hidden columns and sort column over by hand."""
+        old = QHeaderView(Qt.Orientation.Horizontal)
+        old.setModel(QStandardItemModel(0, count, old))
+        if not old.restoreState(state):
+            return
+        header = self.header()
+        for visual, logical in enumerate(sorted(range(count), key=old.visualIndex)):
+            header.moveSection(header.visualIndex(logical), visual)
+        for logical in range(count):
+            header.resizeSection(logical, old.sectionSize(logical))
+            header.setSectionHidden(logical, old.isSectionHidden(logical))
+        header.setSortIndicator(old.sortIndicatorSection(), old.sortIndicatorOrder())
 
     def save_columns(self, settings: QSettings) -> None:
         settings.setValue(HEADER_STATE_KEY, self.header().saveState())
         settings.setValue(ADVISORY_COLUMN_KEY, True)
+        settings.setValue(DOWNLOAD_COLUMN_KEY, True)
 
     def _fit_row_height(self) -> None:
         """Rows as tall as the tree view made them: what the delegate asks for (text, status and origin icons), not

@@ -8,7 +8,7 @@ from kram.core.model import Advisory, Origin, PkgRow, Reason, Status
 
 ROWS = [
     PkgRow("kram", "noarch", "Synaptic for dnf, with a \"quote\", and a comma", "0.9-1", "0.9.1-1", "copr:elmodos:Kram",
-           2048, Origin.COPR, Status.UPGRADABLE, from_repo_id="copr:elmodos:Kram", reason=Reason.USER,
+           2048, Origin.COPR, Status.UPGRADABLE, from_repo_id="copr:elmodos:Kram", reason=Reason.USER, download_size=1024,
            advisories=(Advisory("FEDORA-1", "bugfix", "", "t", 0), Advisory("FEDORA-2", "enhancement", "", "t", 0))),
     PkgRow("vlc", "x86_64", "Media player\nsecond line", "", "3.0-1", "rpmfusion-free", 10, Origin.THIRD_PARTY,
            Status.NOT_INSTALLED),
@@ -29,8 +29,9 @@ def test_columns_and_values_are_language_neutral():
         "name": "kram", "arch": "noarch", "status": "upgradable", "installed_version": "0.9-1",
         "latest_version": "0.9.1-1", "latest_arch": "noarch", "repository": "copr:elmodos:Kram",
         "installed_from": "copr:elmodos:Kram", "origin": "copr", "reason": "user", "update_type": "bugfix",
-        "advisories": "FEDORA-1 FEDORA-2", "size": "2048", "summary": ROWS[0].summary, "marked": ""}
+        "advisories": "FEDORA-1 FEDORA-2", "installed_size": "2048", "download_size": "1024", "summary": ROWS[0].summary, "marked": ""}
     assert vlc["status"] == "none" and vlc["reason"] == "" and vlc["installed_version"] == ""
+    assert vlc["download_size"] == ""  # not known
     assert vlc["summary"] == "Media player\nsecond line"  # quoted, read back whole
 
 

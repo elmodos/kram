@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kram\n"
 "Report-Msgid-Bugs-To: https://github.com/elmodos/kram/issues\n"
-"POT-Creation-Date: 2026-11-19 12:22+0200\n"
+"POT-Creation-Date: 2026-11-19 12:28+0200\n"
 "PO-Revision-Date: 2026-11-04 14:07+0200\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -46,19 +46,19 @@ msgstr "Popis"
 msgid "Provides"
 msgstr "Poskytuje"
 
-#: kram/core/custom_filters.py:53 kram/ui/package_model.py:221
+#: kram/core/custom_filters.py:53 kram/ui/package_model.py:223
 #: kram/ui/sidebar.py:36
 msgid "Status"
 msgstr "Stav"
 
 #: kram/core/custom_filters.py:54 kram/ui/details.py:175
-#: kram/ui/package_model.py:221 kram/ui/repos_dialog.py:73
+#: kram/ui/package_model.py:223 kram/ui/repos_dialog.py:73
 #: kram/ui/sidebar.py:37
 msgid "Origin"
 msgstr "Původ"
 
 #: kram/core/custom_filters.py:55 kram/ui/apply_dialog.py:91
-#: kram/ui/details.py:77 kram/ui/package_model.py:18
+#: kram/ui/details.py:77 kram/ui/package_model.py:19
 msgid "Repository"
 msgstr "Repozitář"
 
@@ -78,7 +78,7 @@ msgstr "Architektura"
 msgid "Installed size (MB)"
 msgstr "Velikost po instalaci (MB)"
 
-#: kram/core/custom_filters.py:60 kram/ui/package_model.py:19
+#: kram/core/custom_filters.py:60 kram/ui/package_model.py:20
 msgid "Update type"
 msgstr "Typ aktualizace"
 
@@ -138,7 +138,7 @@ msgstr "Osiřelé (bez repozitáře)"
 msgid "Unneeded dependency"
 msgstr "Nepotřebná závislost"
 
-#: kram/core/custom_filters.py:87 kram/ui/package_model.py:29
+#: kram/core/custom_filters.py:87 kram/ui/package_model.py:30
 msgid "Security"
 msgstr "Zabezpečení"
 
@@ -146,11 +146,11 @@ msgstr "Zabezpečení"
 msgid "Security: critical or important"
 msgstr "Zabezpečení: kritické nebo důležité"
 
-#: kram/core/custom_filters.py:89 kram/ui/package_model.py:30
+#: kram/core/custom_filters.py:89 kram/ui/package_model.py:31
 msgid "Bug fix"
 msgstr "Oprava chyb"
 
-#: kram/core/custom_filters.py:90 kram/ui/package_model.py:31
+#: kram/core/custom_filters.py:90 kram/ui/package_model.py:32
 msgid "Enhancement"
 msgstr "Vylepšení"
 
@@ -618,20 +618,20 @@ msgstr "Nejstarší jádra odstraněna kvůli limitu uchovávaných verzí"
 msgid "Install reason changes"
 msgstr "Změny důvodu instalace"
 
-#: kram/ui/apply_dialog.py:50 kram/ui/package_model.py:47
+#: kram/ui/apply_dialog.py:50 kram/ui/package_model.py:48
 msgid "dependency"
 msgstr "závislost"
 
 #: kram/ui/apply_dialog.py:50 kram/ui/install_dialog.py:53
-#: kram/ui/package_model.py:45
+#: kram/ui/package_model.py:46
 msgid "group"
 msgstr "skupina"
 
-#: kram/ui/apply_dialog.py:50 kram/ui/package_model.py:44
+#: kram/ui/apply_dialog.py:50 kram/ui/package_model.py:45
 msgid "user"
 msgstr "uživatel"
 
-#: kram/ui/apply_dialog.py:50 kram/ui/package_model.py:48
+#: kram/ui/apply_dialog.py:50 kram/ui/package_model.py:49
 msgid "weak dependency"
 msgstr "slabá závislost"
 
@@ -652,11 +652,11 @@ msgid "Groups to be removed"
 msgstr "Skupiny k odebrání"
 
 #: kram/ui/apply_dialog.py:91 kram/ui/details.py:174
-#: kram/ui/install_dialog.py:473 kram/ui/package_model.py:18
+#: kram/ui/install_dialog.py:473 kram/ui/package_model.py:19
 msgid "Package"
 msgstr "Balíček"
 
-#: kram/ui/apply_dialog.py:91 kram/ui/package_model.py:19
+#: kram/ui/apply_dialog.py:91
 msgid "Size"
 msgstr "Velikost"
 
@@ -1317,10 +1317,11 @@ msgid "Installed"
 msgstr "Nainstalováno"
 
 #: kram/ui/details.py:185 kram/ui/install_dialog.py:482
+#: kram/ui/package_model.py:20
 msgid "Installed size"
 msgstr "Velikost po instalaci"
 
-#: kram/ui/details.py:186
+#: kram/ui/details.py:186 kram/ui/package_model.py:20
 msgid "Download size"
 msgstr "Velikost ke stažení"
 
@@ -2239,61 +2240,61 @@ msgstr[0] "den"
 msgstr[1] "dny"
 msgstr[2] "dní"
 
-#: kram/ui/package_model.py:18
+#: kram/ui/package_model.py:19
 msgid "Installed version"
 msgstr "Nainstalovaná verze"
 
-#: kram/ui/package_model.py:18
+#: kram/ui/package_model.py:19
 msgid "Latest version"
 msgstr "Nejnovější verze"
 
-#: kram/ui/package_model.py:18
+#: kram/ui/package_model.py:19
 msgid "Reason"
 msgstr "Důvod"
 
 #. TRANSLATORS: "S" is the narrow status column (Synaptic convention); keep it one letter
-#: kram/ui/package_model.py:18
+#: kram/ui/package_model.py:19
 msgid "S"
 msgstr "S"
 
-#: kram/ui/package_model.py:19
+#: kram/ui/package_model.py:20
 msgid "Summary"
 msgstr "Shrnutí"
 
-#: kram/ui/package_model.py:25
+#: kram/ui/package_model.py:26
 msgid "Security: critical"
 msgstr "Zabezpečení: kritické"
 
-#: kram/ui/package_model.py:26
+#: kram/ui/package_model.py:27
 msgid "Security: important"
 msgstr "Zabezpečení: důležité"
 
-#: kram/ui/package_model.py:27
+#: kram/ui/package_model.py:28
 msgid "Security: moderate"
 msgstr "Zabezpečení: střední"
 
-#: kram/ui/package_model.py:28
+#: kram/ui/package_model.py:29
 msgid "Security: low"
 msgstr "Zabezpečení: nízké"
 
-#: kram/ui/package_model.py:32
+#: kram/ui/package_model.py:33
 msgctxt "update type"
 msgid "Other"
 msgstr "Jiné"
 
-#: kram/ui/package_model.py:46
+#: kram/ui/package_model.py:47
 msgid "not recorded"
 msgstr "nezaznamenáno"
 
-#: kram/ui/package_model.py:51
+#: kram/ui/package_model.py:52
 msgid "Installed by the user: autoremove keeps it"
 msgstr "Nainstalováno uživatelem: autoremove jej ponechá"
 
-#: kram/ui/package_model.py:52
+#: kram/ui/package_model.py:53
 msgid "Installed with a package group: autoremove keeps it"
 msgstr "Nainstalováno se skupinou balíčků: autoremove jej ponechá"
 
-#: kram/ui/package_model.py:53
+#: kram/ui/package_model.py:54
 msgid ""
 "Installed outside dnf, or dnf lost the record: treated as installed by the "
 "user,\n"
@@ -2305,13 +2306,13 @@ msgstr ""
 "takže jej autoremove ponechá. Označte jej jako závislost, pokud jej přinesl "
 "jiný balíček."
 
-#: kram/ui/package_model.py:55
+#: kram/ui/package_model.py:56
 msgid "Installed as a dependency: autoremove removes it once nothing needs it"
 msgstr ""
 "Nainstalováno jako závislost: autoremove jej odebere, jakmile jej nic "
 "nepotřebuje"
 
-#: kram/ui/package_model.py:56
+#: kram/ui/package_model.py:57
 msgid ""
 "Installed as a weak dependency (recommended by another package):\n"
 "autoremove removes it once nothing needs it"
@@ -2319,47 +2320,47 @@ msgstr ""
 "Nainstalováno jako slabá závislost (doporučená jiným balíčkem):\n"
 "autoremove jej odebere, jakmile jej nic nepotřebuje"
 
-#: kram/ui/package_model.py:83 kram/ui/package_model.py:263
+#: kram/ui/package_model.py:85 kram/ui/package_model.py:266
 msgid "The upgrade cannot be installed now"
 msgstr "Aktualizaci nyní nelze nainstalovat"
 
-#: kram/ui/package_model.py:257
+#: kram/ui/package_model.py:260
 #, python-brace-format
 msgid "Installed from {installed}; the latest version comes from {latest}"
 msgstr "Nainstalováno z {installed}; nejnovější verze pochází z {latest}"
 
-#: kram/ui/package_model.py:266 kram/ui/sidebar.py:159
+#: kram/ui/package_model.py:269 kram/ui/sidebar.py:159
 #, python-brace-format
 msgid "Marked: {action}"
 msgstr "Označeno: {action}"
 
-#: kram/ui/package_model.py:267
+#: kram/ui/package_model.py:270
 msgid "Click for actions"
 msgstr "Klepnutím zobrazíte akce"
 
-#: kram/ui/package_model.py:290
+#: kram/ui/package_model.py:293
 msgctxt "package status"
 msgid "Not installed"
 msgstr "Nenainstalováno"
 
-#: kram/ui/package_model.py:291
+#: kram/ui/package_model.py:294
 msgctxt "package status"
 msgid "Installed"
 msgstr "Nainstalováno"
 
-#: kram/ui/package_model.py:292
+#: kram/ui/package_model.py:295
 msgid "Installed, upgrade available"
 msgstr "Nainstalováno, je dostupná aktualizace"
 
-#: kram/ui/package_model.py:293
+#: kram/ui/package_model.py:296
 msgid "Installed version is newer than the repository"
 msgstr "Nainstalovaná verze je novější než v repozitáři"
 
-#: kram/ui/package_model.py:294
+#: kram/ui/package_model.py:297
 msgid "Installed, no repository provides it"
 msgstr "Nainstalováno, žádný repozitář ho neposkytuje"
 
-#: kram/ui/package_model.py:295
+#: kram/ui/package_model.py:298
 msgid "Installed as a dependency, no longer needed"
 msgstr "Nainstalováno jako závislost, už není potřeba"
 
