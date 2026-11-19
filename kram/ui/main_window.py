@@ -56,6 +56,7 @@ from .upgrade_dialog import UpgradeDialog
 from .whats_new import WhatsNewDialog
 
 DETAILS_TAB_KEY = "details/tab-name"  # "details/tab" held its position before the advisories tab came
+FILES_VIEW_KEY = "details/files-view"  # "tree" or "list"
 
 
 class MainWindow(QMainWindow):
@@ -205,6 +206,7 @@ class MainWindow(QMainWindow):
         else:  # saved before 0.7 by position, from the tabs before the advisories tab came
             old = ("description", "general", "dependencies", "files", "versions", "changelog")
             self.details.select_name(old[min(max(int(s.value("details/tab", 0)), 0), len(old) - 1)])
+        self.details.files.tree_mode = s.value(FILES_VIEW_KEY, "tree") != "list"
         self.search.set_mode(int(s.value("search/mode", Mode.NAME)))
         try:
             self.sidebar.history = [tuple(h) for h in json.loads(s.value("search/history", "[]"))]
@@ -248,6 +250,7 @@ class MainWindow(QMainWindow):
         s.setValue("window/vsplit", self.vsplit.saveState())
         self.table.save_columns(s)
         s.setValue(DETAILS_TAB_KEY, self.details.current_name())
+        s.setValue(FILES_VIEW_KEY, "tree" if self.details.files.tree_mode else "list")
         s.setValue("search/mode", self.search.mode_box.currentIndex())
         s.setValue("sidebar/view", self.sidebar.current_view)
         if entry := self.sidebar.current_entry_id:

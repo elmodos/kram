@@ -63,4 +63,11 @@ The tabs under the table show the selected package: its description, general inf
 repository, license, install reason, sizes), the advisories of an upgrade, its dependencies (each one
 clickable), its files, every available version and the changelog.
 
+The Files tab shows the files in their folders, every folder open, or as a list of full paths (the buttons
+next to the filter switch between them). The filter field keeps the files with the text anywhere in their path,
+or the ones matching a pattern such as `*.so*`, `libfoo*` or `/usr/bin/*`; what it matched is in bold, so a
+file that is there only because of its folder's name is easy to tell. It stays when you select another
+package, to look for the same file there. Right-click a file to copy its path or, for an installed package, to
+show it in the file manager.
+
 Next: [Marking and applying changes](applying-changes.md).

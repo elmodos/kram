@@ -171,7 +171,7 @@ Laid out like Synaptic:
   is no obvious change (an installed package without an upgrade): removal is never one click. Multi-selection applies an action to all rows it fits. Marked rows are tinted.
 - **Detail tabs**: Description · General (NEVRA, repos, license, URL, packager, build date, sizes, install
   reason) · Dependencies (Requires / Recommends / Suggests / Required by / Conflicts / Obsoletes / Provides,
-  clickable) · Files · Versions (all installed and available) · Changelog.
+  clickable) · Files (a folder tree or a list, with a filter) · Versions (all installed and available) · Changelog.
 - **Status bar**: "N listed, M installed, K upgrades. X to install/upgrade, Y to remove." + metadata age.
 - **Apply dialog**: tree of changes (dependencies and unneeded removals listed separately), download size
   and disk space change, the equivalent dnf5 command, "download only". Removing essential packages

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kram\n"
 "Report-Msgid-Bugs-To: https://github.com/elmodos/kram/issues\n"
-"POT-Creation-Date: 2026-11-18 19:35+0200\n"
+"POT-Creation-Date: 2026-11-18 20:34+0200\n"
 "PO-Revision-Date: 2026-11-05 18:05+0200\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -40,7 +40,7 @@ msgctxt "filter field"
 msgid "Description"
 msgstr "Beskrivning"
 
-#: kram/core/custom_filters.py:52 kram/core/search.py:35 kram/ui/details.py:207
+#: kram/core/custom_filters.py:52 kram/core/search.py:35 kram/ui/details.py:206
 #: kram/ui/install_dialog.py:527
 msgid "Provides"
 msgstr "Tillhandahåller"
@@ -50,14 +50,14 @@ msgstr "Tillhandahåller"
 msgid "Status"
 msgstr "Status"
 
-#: kram/core/custom_filters.py:54 kram/ui/details.py:176
+#: kram/core/custom_filters.py:54 kram/ui/details.py:175
 #: kram/ui/package_model.py:221 kram/ui/repos_dialog.py:73
 #: kram/ui/sidebar.py:26
 msgid "Origin"
 msgstr "Ursprung"
 
 #: kram/core/custom_filters.py:55 kram/ui/apply_dialog.py:91
-#: kram/ui/details.py:78 kram/ui/package_model.py:18
+#: kram/ui/details.py:77 kram/ui/package_model.py:18
 msgid "Repository"
 msgstr "Förråd"
 
@@ -65,7 +65,7 @@ msgstr "Förråd"
 msgid "Group"
 msgstr "Grupp"
 
-#: kram/core/custom_filters.py:57 kram/ui/details.py:185
+#: kram/core/custom_filters.py:57 kram/ui/details.py:184
 msgid "Install reason"
 msgstr "Installationsorsak"
 
@@ -492,7 +492,7 @@ msgstr "Installera en nedladdad .rpm-fil (du kan också släppa den på fönstre
 msgid "Quit"
 msgstr "Avsluta"
 
-#: kram/ui/actions.py:84 kram/ui/main_window.py:518
+#: kram/ui/actions.py:84 kram/ui/main_window.py:521
 msgid "About Kram"
 msgstr "Om Kram"
 
@@ -641,7 +641,7 @@ msgstr "Grupper som uppgraderas"
 msgid "Groups to be removed"
 msgstr "Grupper som tas bort"
 
-#: kram/ui/apply_dialog.py:91 kram/ui/details.py:175
+#: kram/ui/apply_dialog.py:91 kram/ui/details.py:174
 #: kram/ui/install_dialog.py:473 kram/ui/package_model.py:18
 msgid "Package"
 msgstr "Paket"
@@ -650,7 +650,7 @@ msgstr "Paket"
 msgid "Size"
 msgstr "Storlek"
 
-#: kram/ui/apply_dialog.py:91 kram/ui/details.py:78
+#: kram/ui/apply_dialog.py:91 kram/ui/details.py:77
 msgid "Version"
 msgstr "Version"
 
@@ -766,7 +766,7 @@ msgstr "Inget att göra: de markerade ändringarna är redan genomförda."
 
 #: kram/ui/apply_dialog.py:342 kram/ui/install_dialog.py:192
 #: kram/ui/install_dialog.py:208 kram/ui/install_dialog.py:265
-#: kram/ui/main_window.py:614
+#: kram/ui/main_window.py:617
 msgid "Resolving dependencies…"
 msgstr "Löser beroenden…"
 
@@ -775,7 +775,7 @@ msgid "These choices cannot be carried out:"
 msgstr "Dessa val går inte att genomföra:"
 
 #: kram/ui/apply_dialog.py:356 kram/ui/install_dialog.py:259
-#: kram/ui/install_dialog.py:289 kram/ui/main_window.py:616
+#: kram/ui/install_dialog.py:289 kram/ui/main_window.py:619
 #, python-brace-format
 msgid ""
 "Could not resolve the changes:\n"
@@ -840,7 +840,7 @@ msgstr "Öppna i filhanteraren"
 msgid "Could not count the caches: {error}"
 msgstr "Kunde inte räkna cacharna: {error}"
 
-#: kram/ui/cache_dialog.py:211
+#: kram/ui/cache_dialog.py:211 kram/ui/file_list.py:249
 #, python-brace-format
 msgid "{n} file"
 msgid_plural "{n} files"
@@ -958,8 +958,8 @@ msgstr "Din tidigare version, undanlagd av ett paket."
 msgid "Compare and take over your changes, then delete it."
 msgstr "Jämför, ta över dina ändringar och ta sedan bort den."
 
-#: kram/ui/cache_dialog.py:344 kram/ui/notifier_dialog.py:110
-#: kram/ui/repos_dialog.py:187
+#: kram/ui/cache_dialog.py:344 kram/ui/file_list.py:271
+#: kram/ui/notifier_dialog.py:110 kram/ui/repos_dialog.py:187
 msgid "Show in File Manager"
 msgstr "Visa i filhanteraren"
 
@@ -1100,7 +1100,7 @@ msgstr "Sök i Copr"
 msgid "Builds for this system"
 msgstr "Byggen för detta system"
 
-#: kram/ui/copr_dialog.py:99 kram/ui/details.py:87
+#: kram/ui/copr_dialog.py:99 kram/ui/details.py:86
 #: kram/ui/install_dialog.py:143
 msgid "Description"
 msgstr "Beskrivning"
@@ -1220,11 +1220,11 @@ msgstr "Redigera filter…"
 msgid "Delete Filter"
 msgstr "Ta bort filter"
 
-#: kram/ui/details.py:47
+#: kram/ui/details.py:48
 msgid "References:"
 msgstr "Referenser:"
 
-#: kram/ui/details.py:56
+#: kram/ui/details.py:57
 msgid ""
 "The repository has to fix it. Until then Mark All Upgrades leaves this "
 "package out."
@@ -1232,131 +1232,162 @@ msgstr ""
 "Förrådet måste rätta det. Till dess hoppar ”Markera alla uppgraderingar” "
 "över det här paketet."
 
-#: kram/ui/details.py:78
+#: kram/ui/details.py:77
 msgid "State"
 msgstr "Tillstånd"
 
-#: kram/ui/details.py:87
+#: kram/ui/details.py:86
 msgid "General"
 msgstr "Allmänt"
 
-#: kram/ui/details.py:88
+#: kram/ui/details.py:87
 msgid "Advisories"
 msgstr "Meddelanden"
 
-#: kram/ui/details.py:88 kram/ui/install_dialog.py:144
+#: kram/ui/details.py:87 kram/ui/install_dialog.py:144
 msgid "Dependencies"
 msgstr "Beroenden"
 
-#: kram/ui/details.py:89 kram/ui/install_dialog.py:144
+#: kram/ui/details.py:88 kram/ui/install_dialog.py:144
 msgid "Files"
 msgstr "Filer"
 
-#: kram/ui/details.py:89
+#: kram/ui/details.py:88
 msgid "Versions"
 msgstr "Versioner"
 
-#: kram/ui/details.py:90 kram/ui/install_dialog.py:145
+#: kram/ui/details.py:89 kram/ui/install_dialog.py:145
 msgid "Changelog"
 msgstr "Ändringslogg"
 
-#: kram/ui/details.py:173
+#: kram/ui/details.py:172
 msgid "as a dependency"
 msgstr "som beroende"
 
-#: kram/ui/details.py:173
+#: kram/ui/details.py:172
 msgid "by the user"
 msgstr "av användaren"
 
-#: kram/ui/details.py:177
+#: kram/ui/details.py:176
 msgid "Candidate repository"
 msgstr "Kandidatförråd"
 
-#: kram/ui/details.py:178 kram/ui/install_dialog.py:477
+#: kram/ui/details.py:177 kram/ui/install_dialog.py:477
 msgid "License"
 msgstr "Licens"
 
-#: kram/ui/details.py:179 kram/ui/install_dialog.py:478
+#: kram/ui/details.py:178 kram/ui/install_dialog.py:478
 msgid "Website"
 msgstr "Webbplats"
 
-#: kram/ui/details.py:180 kram/ui/install_dialog.py:479
+#: kram/ui/details.py:179 kram/ui/install_dialog.py:479
 msgid "Vendor"
 msgstr "Leverantör"
 
-#: kram/ui/details.py:181 kram/ui/install_dialog.py:480
+#: kram/ui/details.py:180 kram/ui/install_dialog.py:480
 msgid "Packager"
 msgstr "Paketerare"
 
-#: kram/ui/details.py:182
+#: kram/ui/details.py:181
 msgid "Source package"
 msgstr "Källpaket"
 
-#: kram/ui/details.py:183 kram/ui/install_dialog.py:481
+#: kram/ui/details.py:182 kram/ui/install_dialog.py:481
 msgid "Built"
 msgstr "Byggt"
 
-#: kram/ui/details.py:184
+#: kram/ui/details.py:183
 msgctxt "install date"
 msgid "Installed"
 msgstr "Installerat"
 
-#: kram/ui/details.py:186 kram/ui/install_dialog.py:482
+#: kram/ui/details.py:185 kram/ui/install_dialog.py:482
 msgid "Installed size"
 msgstr "Installerad storlek"
 
-#: kram/ui/details.py:187
+#: kram/ui/details.py:186
 msgid "Download size"
 msgstr "Hämtningsstorlek"
 
-#: kram/ui/details.py:201 kram/ui/install_dialog.py:521
+#: kram/ui/details.py:200 kram/ui/install_dialog.py:521
 msgid "Requires"
 msgstr "Kräver"
 
-#: kram/ui/details.py:202 kram/ui/install_dialog.py:522
+#: kram/ui/details.py:201 kram/ui/install_dialog.py:522
 msgid "Recommends"
 msgstr "Rekommenderar"
 
-#: kram/ui/details.py:203 kram/ui/install_dialog.py:523
+#: kram/ui/details.py:202 kram/ui/install_dialog.py:523
 msgid "Suggests"
 msgstr "Föreslår"
 
-#: kram/ui/details.py:204
+#: kram/ui/details.py:203
 msgid "Required by installed packages"
 msgstr "Krävs av installerade paket"
 
-#: kram/ui/details.py:205 kram/ui/install_dialog.py:525
+#: kram/ui/details.py:204 kram/ui/install_dialog.py:525
 msgid "Conflicts"
 msgstr "Står i konflikt med"
 
-#: kram/ui/details.py:206 kram/ui/install_dialog.py:526
+#: kram/ui/details.py:205 kram/ui/install_dialog.py:526
 msgid "Obsoletes"
 msgstr "Ersätter"
 
-#: kram/ui/details.py:208 kram/ui/install_dialog.py:528
+#: kram/ui/details.py:207 kram/ui/install_dialog.py:528
 msgid "No dependencies"
 msgstr "Inga beroenden"
 
-#: kram/ui/details.py:212
-msgid "Not installed: repository metadata lists only some of the files."
-msgstr "Inte installerat: förrådets metadata listar bara en del av filerna."
-
-#: kram/ui/details.py:217
+#: kram/ui/details.py:214
 msgid "candidate"
 msgstr "kandidat"
 
-#: kram/ui/details.py:217
+#: kram/ui/details.py:214
 msgctxt "version state"
 msgid "installed"
 msgstr "installerad"
 
-#: kram/ui/details.py:230
+#: kram/ui/details.py:227
 msgid ""
 "The changelog is available for installed packages only (dnf5 does not "
 "download it for repositories by default)."
 msgstr ""
 "Ändringsloggen finns bara för installerade paket (dnf5 hämtar den inte från "
 "förråd som standard)."
+
+#: kram/ui/file_list.py:148
+msgid "Filter files: text, or a pattern like *.so"
+msgstr "Filtrera filer: text eller ett mönster som *.so"
+
+#: kram/ui/file_list.py:155
+msgid "Tree"
+msgstr "Träd"
+
+#: kram/ui/file_list.py:158
+msgid "Show the files in their folders"
+msgstr "Visa filerna i sina mappar"
+
+#: kram/ui/file_list.py:159
+msgid "List"
+msgstr "Lista"
+
+#: kram/ui/file_list.py:162
+msgid "Show the full path of every file, one per line"
+msgstr "Visa den fullständiga sökvägen för varje fil, en per rad"
+
+#: kram/ui/file_list.py:169
+msgid "Not installed: repository metadata lists only some of the files."
+msgstr "Inte installerat: förrådets metadata listar bara en del av filerna."
+
+#: kram/ui/file_list.py:185 kram/ui/repos_dialog.py:186
+msgid "Copy Path"
+msgstr "Kopiera sökväg"
+
+#: kram/ui/file_list.py:251
+#, python-brace-format
+msgid "{shown} of {n} file"
+msgid_plural "{shown} of {n} files"
+msgstr[0] "{shown} av {n} fil"
+msgstr[1] "{shown} av {n} filer"
 
 #: kram/ui/filters_dialog.py:66
 msgid "Remove this condition"
@@ -1498,11 +1529,11 @@ msgstr "Skript"
 msgid "Reading {file}…"
 msgstr "Läser {file}…"
 
-#: kram/ui/install_dialog.py:189 kram/ui/main_window.py:275
+#: kram/ui/install_dialog.py:189 kram/ui/main_window.py:278
 msgid "Loading metadata…"
 msgstr "Läser in metadata…"
 
-#: kram/ui/install_dialog.py:216 kram/ui/main_window.py:320
+#: kram/ui/install_dialog.py:216 kram/ui/main_window.py:323
 #, python-brace-format
 msgid ""
 "Could not load the package catalog:\n"
@@ -1734,22 +1765,22 @@ msgstr "Kunde inte kontrollera: {path}"
 msgid "Installing {name}"
 msgstr "Installerar {name}"
 
-#: kram/ui/main_window.py:66
+#: kram/ui/main_window.py:67
 msgid "Package Manager"
 msgstr "Pakethanterare"
 
-#: kram/ui/main_window.py:261
+#: kram/ui/main_window.py:264
 #, python-brace-format
 msgid "{n} marked change has not been applied. Quit anyway?"
 msgid_plural "{n} marked changes have not been applied. Quit anyway?"
 msgstr[0] "{n} markerad ändring har inte verkställts. Avsluta ändå?"
 msgstr[1] "{n} markerade ändringar har inte verkställts. Avsluta ändå?"
 
-#: kram/ui/main_window.py:289
+#: kram/ui/main_window.py:292
 msgid "Waiting for another package manager to finish…"
 msgstr "Väntar på att en annan pakethanterare ska bli klar…"
 
-#: kram/ui/main_window.py:367
+#: kram/ui/main_window.py:370
 #, python-brace-format
 msgid ""
 "Searching “{text}” ({mode}); the first search also indexes what packages "
@@ -1758,97 +1789,97 @@ msgstr ""
 "Söker ”{text}” ({mode}); den första sökningen indexerar också vad paketen "
 "tillhandahåller…"
 
-#: kram/ui/main_window.py:370
+#: kram/ui/main_window.py:373
 #, python-brace-format
 msgid "Searching “{text}” ({mode})…"
 msgstr "Söker efter ”{text}” ({mode})…"
 
-#: kram/ui/main_window.py:449
+#: kram/ui/main_window.py:452
 #, python-brace-format
 msgid "Nothing provides “{what}”"
 msgstr "Inget tillhandahåller ”{what}”"
 
-#: kram/ui/main_window.py:460
+#: kram/ui/main_window.py:463
 #, python-brace-format
 msgid "Package {name} not found in the catalog"
 msgstr "Paketet {name} finns inte i katalogen"
 
-#: kram/ui/main_window.py:502
+#: kram/ui/main_window.py:505
 msgid "Remove from History"
 msgstr "Ta bort från historiken"
 
-#: kram/ui/main_window.py:504
+#: kram/ui/main_window.py:507
 msgid "Clear Search History"
 msgstr "Rensa sökhistoriken"
 
-#: kram/ui/main_window.py:519
+#: kram/ui/main_window.py:522
 msgid "A Synaptic-style package manager for Fedora."
 msgstr "En pakethanterare för Fedora i Synaptics anda."
 
-#: kram/ui/main_window.py:521
+#: kram/ui/main_window.py:524
 msgid "Released under the MIT License."
 msgstr "Utgiven under MIT-licensen."
 
-#: kram/ui/main_window.py:524
+#: kram/ui/main_window.py:527
 msgid "What's New"
 msgstr "Nyheter"
 
-#: kram/ui/main_window.py:570
+#: kram/ui/main_window.py:573
 #, python-brace-format
 msgid "{n} marking saved to {path}"
 msgid_plural "{n} markings saved to {path}"
 msgstr[0] "{n} markering sparad i {path}"
 msgstr[1] "{n} markeringar sparade i {path}"
 
-#: kram/ui/main_window.py:582
+#: kram/ui/main_window.py:585
 msgid "(loading…)"
 msgstr "(läser in…)"
 
-#: kram/ui/main_window.py:589
+#: kram/ui/main_window.py:592
 msgid "No older versions in the repositories"
 msgstr "Inga äldre versioner i förråden"
 
-#: kram/ui/main_window.py:621
+#: kram/ui/main_window.py:624
 msgid "Cannot apply changes"
 msgstr "Kan inte verkställa ändringarna"
 
-#: kram/ui/main_window.py:622
+#: kram/ui/main_window.py:625
 msgid "The marked changes cannot be carried out. Unmark or change them."
 msgstr ""
 "De markerade ändringarna kan inte genomföras. Avmarkera eller ändra dem."
 
-#: kram/ui/main_window.py:637
+#: kram/ui/main_window.py:640
 msgid "Applying changes"
 msgstr "Verkställer ändringar"
 
-#: kram/ui/main_window.py:644
+#: kram/ui/main_window.py:647
 msgid "Refreshing metadata"
 msgstr "Uppdaterar metadata"
 
-#: kram/ui/main_window.py:670
+#: kram/ui/main_window.py:673
 #, python-brace-format
 msgid "Removing {n} repository"
 msgid_plural "Removing {n} repositories"
 msgstr[0] "Tar bort {n} förråd"
 msgstr[1] "Tar bort {n} förråd"
 
-#: kram/ui/main_window.py:674
+#: kram/ui/main_window.py:677
 msgid "Changing repositories"
 msgstr "Ändrar förråd"
 
-#: kram/ui/main_window.py:709
+#: kram/ui/main_window.py:712
 msgid "Downloading metadata again"
 msgstr "Hämtar metadata igen"
 
-#: kram/ui/main_window.py:711
+#: kram/ui/main_window.py:714
 msgid "Cleaning the package cache"
 msgstr "Rensar paketcachen"
 
-#: kram/ui/main_window.py:753
+#: kram/ui/main_window.py:756
 msgid "Open Package File"
 msgstr "Öppna paketfil"
 
-#: kram/ui/main_window.py:754
+#: kram/ui/main_window.py:757
 msgid "RPM packages (*.rpm)"
 msgstr "RPM-paket (*.rpm)"
 
@@ -2458,10 +2489,6 @@ msgstr "Prioritet"
 #: kram/ui/repos_dialog.py:95
 msgid "No metadata yet: use Reload"
 msgstr "Ingen metadata ännu: använd Läs in igen"
-
-#: kram/ui/repos_dialog.py:186
-msgid "Copy Path"
-msgstr "Kopiera sökväg"
 
 #: kram/ui/repos_dialog.py:195
 msgid "Show Packages"

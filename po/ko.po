@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kram\n"
 "Report-Msgid-Bugs-To: https://github.com/elmodos/kram/issues\n"
-"POT-Creation-Date: 2026-11-18 19:35+0200\n"
+"POT-Creation-Date: 2026-11-18 20:34+0200\n"
 "PO-Revision-Date: 2026-11-04 14:07+0200\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -40,7 +40,7 @@ msgctxt "filter field"
 msgid "Description"
 msgstr "설명"
 
-#: kram/core/custom_filters.py:52 kram/core/search.py:35 kram/ui/details.py:207
+#: kram/core/custom_filters.py:52 kram/core/search.py:35 kram/ui/details.py:206
 #: kram/ui/install_dialog.py:527
 msgid "Provides"
 msgstr "제공"
@@ -50,14 +50,14 @@ msgstr "제공"
 msgid "Status"
 msgstr "상태"
 
-#: kram/core/custom_filters.py:54 kram/ui/details.py:176
+#: kram/core/custom_filters.py:54 kram/ui/details.py:175
 #: kram/ui/package_model.py:221 kram/ui/repos_dialog.py:73
 #: kram/ui/sidebar.py:26
 msgid "Origin"
 msgstr "출처"
 
 #: kram/core/custom_filters.py:55 kram/ui/apply_dialog.py:91
-#: kram/ui/details.py:78 kram/ui/package_model.py:18
+#: kram/ui/details.py:77 kram/ui/package_model.py:18
 msgid "Repository"
 msgstr "저장소"
 
@@ -65,7 +65,7 @@ msgstr "저장소"
 msgid "Group"
 msgstr "그룹"
 
-#: kram/core/custom_filters.py:57 kram/ui/details.py:185
+#: kram/core/custom_filters.py:57 kram/ui/details.py:184
 msgid "Install reason"
 msgstr "설치 이유"
 
@@ -481,7 +481,7 @@ msgstr "내려받은 .rpm 파일을 설치합니다 (창에 끌어다 놓아도 
 msgid "Quit"
 msgstr "끝내기"
 
-#: kram/ui/actions.py:84 kram/ui/main_window.py:518
+#: kram/ui/actions.py:84 kram/ui/main_window.py:521
 msgid "About Kram"
 msgstr "Kram 정보"
 
@@ -630,7 +630,7 @@ msgstr "업그레이드 예정 그룹"
 msgid "Groups to be removed"
 msgstr "제거 예정 그룹"
 
-#: kram/ui/apply_dialog.py:91 kram/ui/details.py:175
+#: kram/ui/apply_dialog.py:91 kram/ui/details.py:174
 #: kram/ui/install_dialog.py:473 kram/ui/package_model.py:18
 msgid "Package"
 msgstr "패키지"
@@ -639,7 +639,7 @@ msgstr "패키지"
 msgid "Size"
 msgstr "크기"
 
-#: kram/ui/apply_dialog.py:91 kram/ui/details.py:78
+#: kram/ui/apply_dialog.py:91 kram/ui/details.py:77
 msgid "Version"
 msgstr "버전"
 
@@ -751,7 +751,7 @@ msgstr "할 일이 없습니다: 표시한 변경 사항이 이미 적용되어 
 
 #: kram/ui/apply_dialog.py:342 kram/ui/install_dialog.py:192
 #: kram/ui/install_dialog.py:208 kram/ui/install_dialog.py:265
-#: kram/ui/main_window.py:614
+#: kram/ui/main_window.py:617
 msgid "Resolving dependencies…"
 msgstr "의존성을 해결하는 중…"
 
@@ -760,7 +760,7 @@ msgid "These choices cannot be carried out:"
 msgstr "이 선택은 실행할 수 없습니다:"
 
 #: kram/ui/apply_dialog.py:356 kram/ui/install_dialog.py:259
-#: kram/ui/install_dialog.py:289 kram/ui/main_window.py:616
+#: kram/ui/install_dialog.py:289 kram/ui/main_window.py:619
 #, python-brace-format
 msgid ""
 "Could not resolve the changes:\n"
@@ -825,7 +825,7 @@ msgstr "파일 관리자에서 열기"
 msgid "Could not count the caches: {error}"
 msgstr "캐시를 집계할 수 없습니다: {error}"
 
-#: kram/ui/cache_dialog.py:211
+#: kram/ui/cache_dialog.py:211 kram/ui/file_list.py:249
 #, python-brace-format
 msgid "{n} file"
 msgid_plural "{n} files"
@@ -937,8 +937,8 @@ msgstr "패키지가 따로 보관한 이전 버전입니다."
 msgid "Compare and take over your changes, then delete it."
 msgstr "비교하여 변경 사항을 가져온 다음 삭제하십시오."
 
-#: kram/ui/cache_dialog.py:344 kram/ui/notifier_dialog.py:110
-#: kram/ui/repos_dialog.py:187
+#: kram/ui/cache_dialog.py:344 kram/ui/file_list.py:271
+#: kram/ui/notifier_dialog.py:110 kram/ui/repos_dialog.py:187
 msgid "Show in File Manager"
 msgstr "파일 관리자에서 보기"
 
@@ -1074,7 +1074,7 @@ msgstr "Copr 검색"
 msgid "Builds for this system"
 msgstr "이 시스템용 빌드"
 
-#: kram/ui/copr_dialog.py:99 kram/ui/details.py:87
+#: kram/ui/copr_dialog.py:99 kram/ui/details.py:86
 #: kram/ui/install_dialog.py:143
 msgid "Description"
 msgstr "설명"
@@ -1190,11 +1190,11 @@ msgstr "필터 편집…"
 msgid "Delete Filter"
 msgstr "필터 삭제"
 
-#: kram/ui/details.py:47
+#: kram/ui/details.py:48
 msgid "References:"
 msgstr "참조:"
 
-#: kram/ui/details.py:56
+#: kram/ui/details.py:57
 msgid ""
 "The repository has to fix it. Until then Mark All Upgrades leaves this "
 "package out."
@@ -1202,131 +1202,161 @@ msgstr ""
 "저장소에서 수정해야 합니다. 그때까지 '모든 업그레이드 표시'는 이 패키지를 건"
 "너뜁니다."
 
-#: kram/ui/details.py:78
+#: kram/ui/details.py:77
 msgid "State"
 msgstr "상태"
 
-#: kram/ui/details.py:87
+#: kram/ui/details.py:86
 msgid "General"
 msgstr "일반"
 
-#: kram/ui/details.py:88
+#: kram/ui/details.py:87
 msgid "Advisories"
 msgstr "권고문"
 
-#: kram/ui/details.py:88 kram/ui/install_dialog.py:144
+#: kram/ui/details.py:87 kram/ui/install_dialog.py:144
 msgid "Dependencies"
 msgstr "의존성"
 
-#: kram/ui/details.py:89 kram/ui/install_dialog.py:144
+#: kram/ui/details.py:88 kram/ui/install_dialog.py:144
 msgid "Files"
 msgstr "파일"
 
-#: kram/ui/details.py:89
+#: kram/ui/details.py:88
 msgid "Versions"
 msgstr "버전"
 
-#: kram/ui/details.py:90 kram/ui/install_dialog.py:145
+#: kram/ui/details.py:89 kram/ui/install_dialog.py:145
 msgid "Changelog"
 msgstr "변경 기록"
 
-#: kram/ui/details.py:173
+#: kram/ui/details.py:172
 msgid "as a dependency"
 msgstr "의존성으로"
 
-#: kram/ui/details.py:173
+#: kram/ui/details.py:172
 msgid "by the user"
 msgstr "사용자가"
 
-#: kram/ui/details.py:177
+#: kram/ui/details.py:176
 msgid "Candidate repository"
 msgstr "후보 저장소"
 
-#: kram/ui/details.py:178 kram/ui/install_dialog.py:477
+#: kram/ui/details.py:177 kram/ui/install_dialog.py:477
 msgid "License"
 msgstr "라이선스"
 
-#: kram/ui/details.py:179 kram/ui/install_dialog.py:478
+#: kram/ui/details.py:178 kram/ui/install_dialog.py:478
 msgid "Website"
 msgstr "웹사이트"
 
-#: kram/ui/details.py:180 kram/ui/install_dialog.py:479
+#: kram/ui/details.py:179 kram/ui/install_dialog.py:479
 msgid "Vendor"
 msgstr "공급업체"
 
-#: kram/ui/details.py:181 kram/ui/install_dialog.py:480
+#: kram/ui/details.py:180 kram/ui/install_dialog.py:480
 msgid "Packager"
 msgstr "패키저"
 
-#: kram/ui/details.py:182
+#: kram/ui/details.py:181
 msgid "Source package"
 msgstr "소스 패키지"
 
-#: kram/ui/details.py:183 kram/ui/install_dialog.py:481
+#: kram/ui/details.py:182 kram/ui/install_dialog.py:481
 msgid "Built"
 msgstr "빌드 날짜"
 
-#: kram/ui/details.py:184
+#: kram/ui/details.py:183
 msgctxt "install date"
 msgid "Installed"
 msgstr "설치 날짜"
 
-#: kram/ui/details.py:186 kram/ui/install_dialog.py:482
+#: kram/ui/details.py:185 kram/ui/install_dialog.py:482
 msgid "Installed size"
 msgstr "설치 크기"
 
-#: kram/ui/details.py:187
+#: kram/ui/details.py:186
 msgid "Download size"
 msgstr "다운로드 크기"
 
-#: kram/ui/details.py:201 kram/ui/install_dialog.py:521
+#: kram/ui/details.py:200 kram/ui/install_dialog.py:521
 msgid "Requires"
 msgstr "필요로 함"
 
-#: kram/ui/details.py:202 kram/ui/install_dialog.py:522
+#: kram/ui/details.py:201 kram/ui/install_dialog.py:522
 msgid "Recommends"
 msgstr "추천"
 
-#: kram/ui/details.py:203 kram/ui/install_dialog.py:523
+#: kram/ui/details.py:202 kram/ui/install_dialog.py:523
 msgid "Suggests"
 msgstr "제안"
 
-#: kram/ui/details.py:204
+#: kram/ui/details.py:203
 msgid "Required by installed packages"
 msgstr "설치된 패키지가 필요로 함"
 
-#: kram/ui/details.py:205 kram/ui/install_dialog.py:525
+#: kram/ui/details.py:204 kram/ui/install_dialog.py:525
 msgid "Conflicts"
 msgstr "충돌"
 
-#: kram/ui/details.py:206 kram/ui/install_dialog.py:526
+#: kram/ui/details.py:205 kram/ui/install_dialog.py:526
 msgid "Obsoletes"
 msgstr "대체"
 
-#: kram/ui/details.py:208 kram/ui/install_dialog.py:528
+#: kram/ui/details.py:207 kram/ui/install_dialog.py:528
 msgid "No dependencies"
 msgstr "의존성 없음"
 
-#: kram/ui/details.py:212
-msgid "Not installed: repository metadata lists only some of the files."
-msgstr "설치 안 됨: 저장소 메타데이터에는 일부 파일만 나열되어 있습니다."
-
-#: kram/ui/details.py:217
+#: kram/ui/details.py:214
 msgid "candidate"
 msgstr "후보"
 
-#: kram/ui/details.py:217
+#: kram/ui/details.py:214
 msgctxt "version state"
 msgid "installed"
 msgstr "설치됨"
 
-#: kram/ui/details.py:230
+#: kram/ui/details.py:227
 msgid ""
 "The changelog is available for installed packages only (dnf5 does not "
 "download it for repositories by default)."
 msgstr ""
 "변경 기록은 설치된 패키지에서만 볼 수 있습니다 (dnf5는 기본적으로 저장소에서 "
 "내려받지 않습니다)."
+
+#: kram/ui/file_list.py:148
+msgid "Filter files: text, or a pattern like *.so"
+msgstr "파일 필터: 텍스트 또는 *.so 같은 패턴"
+
+#: kram/ui/file_list.py:155
+msgid "Tree"
+msgstr "트리"
+
+#: kram/ui/file_list.py:158
+msgid "Show the files in their folders"
+msgstr "파일을 폴더별로 표시"
+
+#: kram/ui/file_list.py:159
+msgid "List"
+msgstr "목록"
+
+#: kram/ui/file_list.py:162
+msgid "Show the full path of every file, one per line"
+msgstr "각 파일의 전체 경로를 한 줄에 하나씩 표시"
+
+#: kram/ui/file_list.py:169
+msgid "Not installed: repository metadata lists only some of the files."
+msgstr "설치 안 됨: 저장소 메타데이터에는 일부 파일만 나열되어 있습니다."
+
+#: kram/ui/file_list.py:185 kram/ui/repos_dialog.py:186
+msgid "Copy Path"
+msgstr "경로 복사"
+
+#: kram/ui/file_list.py:251
+#, python-brace-format
+msgid "{shown} of {n} file"
+msgid_plural "{shown} of {n} files"
+msgstr[0] "파일 {n}개 중 {shown}개"
 
 #: kram/ui/filters_dialog.py:66
 msgid "Remove this condition"
@@ -1467,11 +1497,11 @@ msgstr "스크립트"
 msgid "Reading {file}…"
 msgstr "{file} 읽는 중…"
 
-#: kram/ui/install_dialog.py:189 kram/ui/main_window.py:275
+#: kram/ui/install_dialog.py:189 kram/ui/main_window.py:278
 msgid "Loading metadata…"
 msgstr "메타데이터를 불러오는 중…"
 
-#: kram/ui/install_dialog.py:216 kram/ui/main_window.py:320
+#: kram/ui/install_dialog.py:216 kram/ui/main_window.py:323
 #, python-brace-format
 msgid ""
 "Could not load the package catalog:\n"
@@ -1695,22 +1725,22 @@ msgstr "확인할 수 없음: {path}"
 msgid "Installing {name}"
 msgstr "{name} 설치 중"
 
-#: kram/ui/main_window.py:66
+#: kram/ui/main_window.py:67
 msgid "Package Manager"
 msgstr "패키지 관리자"
 
-#: kram/ui/main_window.py:261
+#: kram/ui/main_window.py:264
 #, python-brace-format
 msgid "{n} marked change has not been applied. Quit anyway?"
 msgid_plural "{n} marked changes have not been applied. Quit anyway?"
 msgstr[0] ""
 "표시한 변경 사항 {n}개가 아직 적용되지 않았습니다. 그래도 끝내시겠습니까?"
 
-#: kram/ui/main_window.py:289
+#: kram/ui/main_window.py:292
 msgid "Waiting for another package manager to finish…"
 msgstr "다른 패키지 관리자가 끝나기를 기다리는 중…"
 
-#: kram/ui/main_window.py:367
+#: kram/ui/main_window.py:370
 #, python-brace-format
 msgid ""
 "Searching “{text}” ({mode}); the first search also indexes what packages "
@@ -1719,94 +1749,94 @@ msgstr ""
 "“{text}” 검색 중 ({mode}). 첫 검색에서는 패키지가 제공하는 항목의 색인도 만듭"
 "니다…"
 
-#: kram/ui/main_window.py:370
+#: kram/ui/main_window.py:373
 #, python-brace-format
 msgid "Searching “{text}” ({mode})…"
 msgstr "“{text}” 검색 중 ({mode})…"
 
-#: kram/ui/main_window.py:449
+#: kram/ui/main_window.py:452
 #, python-brace-format
 msgid "Nothing provides “{what}”"
 msgstr "“{what}”을(를) 제공하는 패키지가 없습니다"
 
-#: kram/ui/main_window.py:460
+#: kram/ui/main_window.py:463
 #, python-brace-format
 msgid "Package {name} not found in the catalog"
 msgstr "카탈로그에서 패키지 {name}을(를) 찾을 수 없습니다"
 
-#: kram/ui/main_window.py:502
+#: kram/ui/main_window.py:505
 msgid "Remove from History"
 msgstr "기록에서 제거"
 
-#: kram/ui/main_window.py:504
+#: kram/ui/main_window.py:507
 msgid "Clear Search History"
 msgstr "검색 기록 지우기"
 
-#: kram/ui/main_window.py:519
+#: kram/ui/main_window.py:522
 msgid "A Synaptic-style package manager for Fedora."
 msgstr "Synaptic 스타일의 Fedora용 패키지 관리자입니다."
 
-#: kram/ui/main_window.py:521
+#: kram/ui/main_window.py:524
 msgid "Released under the MIT License."
 msgstr "MIT 라이선스로 배포됩니다."
 
-#: kram/ui/main_window.py:524
+#: kram/ui/main_window.py:527
 msgid "What's New"
 msgstr "새로운 기능"
 
-#: kram/ui/main_window.py:570
+#: kram/ui/main_window.py:573
 #, python-brace-format
 msgid "{n} marking saved to {path}"
 msgid_plural "{n} markings saved to {path}"
 msgstr[0] "표시 {n}개를 {path}에 저장했습니다"
 
-#: kram/ui/main_window.py:582
+#: kram/ui/main_window.py:585
 msgid "(loading…)"
 msgstr "(불러오는 중…)"
 
-#: kram/ui/main_window.py:589
+#: kram/ui/main_window.py:592
 msgid "No older versions in the repositories"
 msgstr "저장소에 이전 버전이 없습니다"
 
-#: kram/ui/main_window.py:621
+#: kram/ui/main_window.py:624
 msgid "Cannot apply changes"
 msgstr "변경 사항을 적용할 수 없습니다"
 
-#: kram/ui/main_window.py:622
+#: kram/ui/main_window.py:625
 msgid "The marked changes cannot be carried out. Unmark or change them."
 msgstr "표시한 변경 사항을 수행할 수 없습니다. 표시를 해제하거나 변경하십시오."
 
-#: kram/ui/main_window.py:637
+#: kram/ui/main_window.py:640
 msgid "Applying changes"
 msgstr "변경 사항 적용 중"
 
-#: kram/ui/main_window.py:644
+#: kram/ui/main_window.py:647
 msgid "Refreshing metadata"
 msgstr "메타데이터 새로 고치는 중"
 
-#: kram/ui/main_window.py:670
+#: kram/ui/main_window.py:673
 #, python-brace-format
 msgid "Removing {n} repository"
 msgid_plural "Removing {n} repositories"
 msgstr[0] "저장소 {n}개 제거 중"
 
-#: kram/ui/main_window.py:674
+#: kram/ui/main_window.py:677
 msgid "Changing repositories"
 msgstr "저장소 변경 중"
 
-#: kram/ui/main_window.py:709
+#: kram/ui/main_window.py:712
 msgid "Downloading metadata again"
 msgstr "메타데이터를 다시 내려받는 중"
 
-#: kram/ui/main_window.py:711
+#: kram/ui/main_window.py:714
 msgid "Cleaning the package cache"
 msgstr "패키지 캐시를 비우는 중"
 
-#: kram/ui/main_window.py:753
+#: kram/ui/main_window.py:756
 msgid "Open Package File"
 msgstr "패키지 파일 열기"
 
-#: kram/ui/main_window.py:754
+#: kram/ui/main_window.py:757
 msgid "RPM packages (*.rpm)"
 msgstr "RPM 패키지 (*.rpm)"
 
@@ -2396,10 +2426,6 @@ msgstr "우선순위"
 #: kram/ui/repos_dialog.py:95
 msgid "No metadata yet: use Reload"
 msgstr "아직 메타데이터 없음: 다시 불러오기를 사용하십시오"
-
-#: kram/ui/repos_dialog.py:186
-msgid "Copy Path"
-msgstr "경로 복사"
 
 #: kram/ui/repos_dialog.py:195
 msgid "Show Packages"

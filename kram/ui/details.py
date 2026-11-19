@@ -4,12 +4,13 @@ from datetime import datetime
 from urllib.parse import quote, unquote
 
 from PySide6.QtCore import Signal
-from PySide6.QtGui import QDesktopServices, QFontDatabase, QIcon
-from PySide6.QtWidgets import QPlainTextEdit, QTabWidget, QTextBrowser, QTreeWidget, QTreeWidgetItem
+from PySide6.QtGui import QDesktopServices, QIcon
+from PySide6.QtWidgets import QTabWidget, QTextBrowser, QTreeWidget, QTreeWidgetItem
 
 from ..core.model import PkgDetails, PkgRow
 from ..core.origin import display_repo
 from ..i18n import _, pgettext
+from .file_list import FileList
 from .icons import ADVISORY_COLOR, ORIGIN_LABEL, advisory_icon, blocked_icon
 from .package_model import ADVISORY_LABEL, blocked_tip, human_size
 
@@ -71,9 +72,7 @@ class DetailsTabs(QTabWidget):
         self._blocked = ""  # its HTML
         self._deps_body = ""
         self.general.anchorClicked.connect(self._on_link)
-        self.files = QPlainTextEdit()
-        self.files.setReadOnly(True)
-        self.files.setFont(QFontDatabase.systemFont(QFontDatabase.SystemFont.FixedFont))
+        self.files = FileList()
         self.versions = QTreeWidget()
         self.versions.setHeaderLabels([_("Version"), _("Repository"), _("State")])
         self.versions.setRootIsDecorated(False)
@@ -208,9 +207,7 @@ class DetailsTabs(QTabWidget):
         ]) or f"<i>{e(_('No dependencies'))}</i>"
         self._set_deps()
 
-        header = "" if d.files_complete else (
-            "# " + _("Not installed: repository metadata lists only some of the files.") + "\n")
-        self.files.setPlainText(header + "\n".join(d.files))
+        self.files.set_files(d.files, d.files_complete)
 
         self.versions.clear()
         for v in d.versions:
