@@ -1,7 +1,17 @@
 """Left panel: one filter list whose content is chosen by the buttons below it, as in Synaptic."""
 from PySide6.QtCore import QPoint, Qt, Signal
-from PySide6.QtGui import QColor, QFont
-from PySide6.QtWidgets import QButtonGroup, QListWidget, QListWidgetItem, QPushButton, QVBoxLayout, QWidget
+from PySide6.QtGui import QColor, QFont, QPalette
+from PySide6.QtWidgets import (
+    QButtonGroup,
+    QListWidget,
+    QListWidgetItem,
+    QPushButton,
+    QStyle,
+    QStyledItemDelegate,
+    QStyleOptionViewItem,
+    QVBoxLayout,
+    QWidget,
+)
 
 from ..core.filters import (
     FilterEntry,
@@ -19,6 +29,7 @@ from .group_icons import group_icon
 from .icons import MARK_BACKGROUND, mark_icon, origin_icon, status_filter_icon
 
 MAX_HISTORY = 30
+INDENT_ROLE = Qt.ItemDataRole.UserRole + 1  # FilterEntry.indent: nesting level of the row
 
 # (id, label, builder); "search" and "custom" are built from the sidebar's own history / custom filters
 VIEWS = [
@@ -48,6 +59,7 @@ class Sidebar(QWidget):
         lay = QVBoxLayout(self)
         lay.setContentsMargins(0, 0, 0, 0)
         self.list = QListWidget()
+        self.list.setItemDelegate(_IndentDelegate(self.list))
         self.list.currentRowChanged.connect(self._on_row)
         self.list.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.list.customContextMenuRequested.connect(
@@ -135,7 +147,8 @@ class Sidebar(QWidget):
         want = self._selected.get(self._view)
         current = 0
         for i, e in enumerate(self._entries):
-            item = QListWidgetItem("    " * e.indent + e.label + (f"   ({e.count})" if e.count is not None else ""))
+            item = QListWidgetItem(e.label + (f"   ({e.count})" if e.count is not None else ""))
+            item.setData(INDENT_ROLE, e.indent)
             tip = e.tip
             if e.origin is not None:
                 item.setIcon(origin_icon(e.origin))
@@ -179,6 +192,49 @@ class Sidebar(QWidget):
             self.filterChanged.emit(e)
         elif not self._entries:
             self.filterChanged.emit(FilterEntry("empty", "", lambda _r: True))
+
+
+class _IndentDelegate(QStyledItemDelegate):
+    """Shifts a nested row's icon and text right; the selection and the row's tint stay full width."""
+
+    def _shift(self, option: QStyleOptionViewItem, index) -> int:
+        level = index.data(INDENT_ROLE) or 0
+        if not level:
+            return 0
+        style = option.widget.style() if option.widget else None
+        margin = style.pixelMetric(QStyle.PixelMetric.PM_FocusFrameHMargin, option, option.widget) + 1 if style else 3
+        # one step puts a child's icon under its parent's text
+        return level * (option.decorationSize.width() + 2 * margin)
+
+    def paint(self, painter, option, index) -> None:
+        shift = self._shift(option, index)
+        if not shift:
+            super().paint(painter, option, index)
+            return
+        opt = QStyleOptionViewItem(option)
+        self.initStyleOption(opt, index)
+        style = opt.widget.style() if opt.widget else None
+        if style is None:
+            super().paint(painter, option, index)
+            return
+        # background, selection, hover and focus over the whole row
+        style.drawPrimitive(QStyle.PrimitiveElement.PE_PanelItemViewItem, opt, painter, opt.widget)
+        # then icon and text in the shifted rect, without a second panel
+        content = QStyleOptionViewItem(opt)
+        content.rect = opt.rect.adjusted(shift, 0, 0, 0)
+        if opt.state & QStyle.StateFlag.State_Selected:
+            group = (QPalette.ColorGroup.Active if opt.state & QStyle.StateFlag.State_Active
+                     else QPalette.ColorGroup.Inactive)
+            content.palette.setColor(QPalette.ColorRole.Text, opt.palette.color(group, QPalette.ColorRole.HighlightedText))
+        content.state &= ~(QStyle.StateFlag.State_Selected | QStyle.StateFlag.State_MouseOver
+                           | QStyle.StateFlag.State_HasFocus)
+        content.backgroundBrush = Qt.BrushStyle.NoBrush
+        style.drawControl(QStyle.ControlElement.CE_ItemViewItem, content, painter, opt.widget)
+
+    def sizeHint(self, option, index):
+        size = super().sizeHint(option, index)
+        size.setWidth(size.width() + self._shift(option, index))
+        return size
 
 
 def _history_id(text: str, mode: int) -> str:
