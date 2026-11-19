@@ -4,11 +4,12 @@ QTreeView rebuilds an internal item for every row on each model reset: 240 ms fo
 on a ThinkPad X220), on every search keystroke that changes the row set and every time a search is cleared.
 QTableView keeps nothing per row (its row heights are one uniform size): 40 ms, whatever the number of rows.
 """
-from PySide6.QtCore import QEvent, QSettings, Qt
-from PySide6.QtGui import QCursor
+from PySide6.QtCore import QEvent, QSettings, Qt, Signal
+from PySide6.QtGui import QCursor, QPalette
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QHeaderView,
+    QLabel,
     QMenu,
     QStyle,
     QStyledItemDelegate,
@@ -44,8 +45,20 @@ class RowDelegate(QStyledItemDelegate):
 
 
 class PackageView(QTableView):
+    emptyLinkActivated = Signal(str)  # a link in the text shown while the list is empty
+
     def __init__(self, parent=None):
         super().__init__(parent)
+        # why the list is empty, in the middle of it: kram.ui.empty_list
+        self._empty = QLabel(self.viewport())
+        self._empty.setWordWrap(True)
+        self._empty.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self._empty.setTextFormat(Qt.TextFormat.RichText)
+        self._empty.setTextInteractionFlags(Qt.TextInteractionFlag.LinksAccessibleByMouse
+                                            | Qt.TextInteractionFlag.LinksAccessibleByKeyboard)
+        self._empty.setForegroundRole(QPalette.ColorRole.PlaceholderText)
+        self._empty.linkActivated.connect(self.emptyLinkActivated)
+        self._empty.hide()
         self.setShowGrid(False)
         self.setWordWrap(False)
         self.setAlternatingRowColors(True)
@@ -93,6 +106,36 @@ class PackageView(QTableView):
             self._set_hover_row(-1)
         return super().viewportEvent(event)
 
+    # ---------------------------------------------------------------- the empty list
+
+    def set_empty_text(self, text: str) -> None:
+        """Rich text shown while the list has no rows."""
+        self._empty.setText(text)
+        self._sync_empty()
+
+    def empty_text(self) -> str:
+        """What the empty list shows now, "" while it has rows."""
+        return self._empty.text() if self._empty.isVisibleTo(self) else ""
+
+    def _sync_empty(self) -> None:
+        model = self.model()
+        show = bool(self._empty.text()) and (model is None or model.rowCount() == 0)
+        if show:
+            self._place_empty()
+        self._empty.setVisible(show)
+
+    def _place_empty(self) -> None:
+        area = self.viewport().rect()
+        width = max(1, min(area.width() - 32, 520))
+        height = self._empty.heightForWidth(width)
+        self._empty.setGeometry(area.center().x() - width // 2, max(16, area.height() // 4 - height // 2),
+                                width, height)
+
+    def resizeEvent(self, event) -> None:
+        super().resizeEvent(event)
+        if self._empty.isVisible():
+            self._place_empty()
+
     def header(self) -> QHeaderView:
         """QTreeView's name for it, which the window uses throughout."""
         return self.horizontalHeader()
@@ -100,6 +143,8 @@ class PackageView(QTableView):
     def setModel(self, model) -> None:
         super().setModel(model)
         model.modelReset.connect(self._fit_row_height)
+        for signal in (model.modelReset, model.rowsInserted, model.rowsRemoved, model.layoutChanged):
+            signal.connect(self._sync_empty)
         for col, width in enumerate(COLUMN_WIDTHS):
             self.setColumnWidth(col, width)
         self.setColumnWidth(COL_ADVISORY, ADVISORY_COLUMN_WIDTH)

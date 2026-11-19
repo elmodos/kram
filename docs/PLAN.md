@@ -178,7 +178,7 @@ Laid out like Synaptic:
   (kernel-core, systemd, dnf5, …) shows a red warning.
 - **Progress window**: download and rpm progress, current step, expandable log, "close when finished".
 
-Keyboard: `Ctrl+F` search, `Ctrl+R` reload, `Ctrl+P` apply, `Ctrl+U` mark upgrades, `Ins` install,
+Keyboard: `Ctrl+F` search, `Ctrl+R`/`F5` reload, `Ctrl+P` apply, `Ctrl+U` mark upgrades, `Ins` install,
 `Del` remove, `Ctrl+Z` unmark, `Alt+←` back.
 
 ## 6. Search (that works)

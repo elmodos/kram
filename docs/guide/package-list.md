@@ -57,6 +57,10 @@ The sidebar on the left narrows the table. The buttons at its bottom switch betw
 Search (Ctrl+F) ranks results by relevance. The drop-down next to it chooses what to search: the name, the
 name and summary, the description, a provided capability, or a file.
 
+When nothing is found, the empty list says why and offers what would help: the same search in *All* when a
+sidebar filter hid the results, a search of the descriptions when the name gave nothing, and Reload when some
+repositories have no metadata, so their packages are missing.
+
 ## Package details
 
 The tabs under the table show the selected package: its description, general information (origin,

@@ -17,6 +17,7 @@ class WindowActions:
         a = self._action
         self.reload = a(_("Reload"), "view-refresh", "Ctrl+R",
                         tip=_("Refresh repository metadata and reload the catalog (needs a password)"))
+        self.reload.setShortcuts([QKeySequence("Ctrl+R"), QKeySequence("F5")])  # F5: what browsers and file managers use
         self.reload_cache = a(_("Reload from cache"), "view-refresh", "Ctrl+Shift+R",
                               tip=_("Reload the catalog from the local cache, without network or password"))
         self.mark_upgrades = a(_("Mark All Upgrades"), None, "Ctrl+U",

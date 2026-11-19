@@ -1,4 +1,5 @@
 """Main window: Synaptic layout — browse, mark, preview, apply."""
+import html
 import json
 import time
 from collections import Counter
@@ -31,6 +32,7 @@ from ..core.worker import DnfWorker
 from ..i18n import _, ngettext
 from ..ipc.client import HelperClient
 from ..notifier import control as notifier_control
+from . import empty_list
 from .actions import WindowActions
 from .apply_dialog import ApplyDialog
 from .cache_dialog import CacheDialog
@@ -79,6 +81,7 @@ class MainWindow(QMainWindow):
         self._search_gen = 0                 # drops stale async (provides/file) results
         self._user_sort = (COL_NAME, Qt.SortOrder.AscendingOrder)
         self._last_count = 0
+        self._wider_searches: tuple[SearchIndex, NarrowingSearch, NarrowingSearch] | None = None  # see _why_empty
         self.helper = HelperClient(post)
         self.releases = ReleaseWatcher(self)
         self.releases.act_upgrade.triggered.connect(self.open_upgrade)
@@ -171,6 +174,7 @@ class MainWindow(QMainWindow):
         self.table.selectionModel().selectionChanged.connect(self._update_actions)
         self.table.clicked.connect(self._on_table_click)
         self.table.doubleClicked.connect(self._on_double_click)
+        self.table.emptyLinkActivated.connect(self._on_empty_link)
 
         self.details = DetailsTabs()
         self.details.linkActivated.connect(self._on_link)
@@ -277,6 +281,8 @@ class MainWindow(QMainWindow):
     def reload(self):
         self.status.set_text(_("Loading metadata…"))
         self.acts.reload.setEnabled(False)
+        if self.snapshot is None:
+            self.table.set_empty_text(empty_list.loading())
         queries = self.custom_filters.queries()
         self.dnf.submit(lambda: self.catalog.load(queries, self._waiting_for_lock), self._on_loaded, self._on_error)
 
@@ -320,6 +326,8 @@ class MainWindow(QMainWindow):
     def _on_error(self, e: BaseException):
         self.acts.reload.setEnabled(True)
         self.status.show_error(e)
+        if self.snapshot is None:
+            self.table.set_empty_text(empty_list.failed())
         QMessageBox.critical(self, "Kram", _("Could not load the package catalog:\n\n{error}").format(error=e))
 
     def _on_filter(self, entry: FilterEntry):
@@ -371,17 +379,21 @@ class MainWindow(QMainWindow):
                                       "provide…").format(text=text, mode=MODE_LABELS[mode]))
             else:
                 self.status.set_text(_("Searching “{text}” ({mode})…").format(text=text, mode=MODE_LABELS[mode]))
+            # not the empty list's last explanation, which was about another search
+            self.table.set_empty_text(html.escape(self.status.text()))
 
             def done(keys):
                 if keys is None or gen != self._search_gen:
                     return
-                found = [i for k in keys if (i := self.key_index.get(k)) is not None and i in allowed]
-                self._show(self.index.rank_keys(found), ranked=True, ms=(time.perf_counter() - t0) * 1000)
+                everywhere = [i for k in keys if (i := self.key_index.get(k)) is not None]
+                found = [i for i in everywhere if i in allowed]
+                self._show(self.index.rank_keys(found), ranked=True, ms=(time.perf_counter() - t0) * 1000,
+                           found_in_all=len(everywhere))
                 self.search.start_history()
             # the dnf thread takes jobs one after the other: a search typed over by then is skipped, not run for nothing
             self.dnf.submit(lambda: lookup(text) if gen == self._search_gen else None, done, self._on_error)
 
-    def _show(self, visible: list[int], ranked: bool, ms: float):
+    def _show(self, visible: list[int], ranked: bool, ms: float, found_in_all: int | None = None):
         # switch the header between "ranked" (no indicator) and the user's column sort without
         # triggering a sort of the old rows; set_visible sorts the new ones
         header = self.table.header()
@@ -396,11 +408,43 @@ class MainWindow(QMainWindow):
         self._update_status(len(visible), ms)
         if not visible:
             self.details_loader.clear()
+            self.table.set_empty_text(empty_list.explain(self._why_empty(found_in_all)))
         elif ranked:  # best match first: select it rather than keeping an old selection
             self.table.setCurrentIndex(self.model.index(0, COL_NAME))
             self.table.scrollToTop()
         elif not (keep and self._select_key(keep, scroll=True)):
             self.table.setCurrentIndex(self.model.index(0, COL_NAME))
+
+    def _why_empty(self, found_in_all: int | None) -> empty_list.EmptyList:
+        """What the empty list says. The searches over all packages or descriptions run only when it is empty, and
+        narrow as the user types on, as the search itself does (`found_in_all`: an async search counted them)."""
+        entry, text, mode = self.filter, self.search.text(), self.search.mode()
+        in_all = entry.id == "status:all" or entry.query is not None  # a search-history entry lets every row in
+        wider = self._wider_searches
+        if wider is None or wider[0] is not self.index:
+            wider = self._wider_searches = (self.index, NarrowingSearch(self.index), NarrowingSearch(self.index))
+        _index, everywhere, descriptions = wider
+        everything = range(len(self.snapshot.rows))
+        if text and not in_all and found_in_all is None:
+            found_in_all = len(everywhere.search(text, mode, everything)) if mode.local else 0
+        in_descriptions = 0
+        if text and mode < Mode.DESCRIPTION and self.index.descriptions and not (found_in_all and not in_all):
+            in_descriptions = len(descriptions.search(text, Mode.DESCRIPTION, self._candidates()))
+        return empty_list.EmptyList(entry.label, in_all, text, file_search=mode is Mode.FILE,
+                                    found_in_all=found_in_all or 0, found_in_descriptions=in_descriptions,
+                                    missing_repos=len(self.snapshot.unavailable_repos))
+
+    def _on_empty_link(self, link: str):
+        if link == empty_list.ALL:
+            self.sidebar.select("status", "status:all")  # the search stays and runs in "All"
+        elif link == empty_list.DESCRIPTIONS:
+            self.search.set_mode(Mode.DESCRIPTION)  # searches again
+        elif link == empty_list.RELOAD:
+            self.acts.reload.trigger()
+        elif link == empty_list.REPOS:
+            self.open_repos()
+        elif link == empty_list.RETRY:
+            self.reload()
 
     def _on_sort_indicator(self, column: int, order):
         if column >= 0:
