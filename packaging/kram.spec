@@ -1,5 +1,5 @@
 %global appid io.github.elmodos.Kram
-%global base_version 0.11.1
+%global base_version 0.11.2
 
 Name:           kram
 # A tagged release (v%%{base_version}) is plain %%{base_version}. Any other commit gets a snapshot from
@@ -119,6 +119,9 @@ QT_QPA_PLATFORM=offscreen %pytest
 %{_datadir}/kram/
 
 %changelog
+* Fri Nov 20 2026 Modo Ltunzher <offnormal@gmail.com> - 0.11.2-1
+- Apply works again (in 0.11.1 it did nothing)
+
 * Fri Nov 20 2026 Modo Ltunzher <offnormal@gmail.com> - 0.11.1-1
 - If Kram is closed or crashes during a transaction, the helper now finishes it instead of aborting rpm halfway
 - Apply and Refresh can no longer start twice while dependencies are being resolved
