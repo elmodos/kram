@@ -71,3 +71,18 @@ def test_update_check_skips_a_locked_count(monkeypatch, tmp_path, capsys):
     assert check.main() == 0
     assert notifier.read_state()["count"] == 3  # the previous state stays, so the next run counts again
     assert "skipped" in capsys.readouterr().out
+
+
+def test_a_cancelled_wait_stops_at_once():
+    """Closing the application must not wait for the lock: a set `cancel` ends the wait without another poll."""
+    import threading
+
+    from kram.core.updates import Cancelled
+
+    cancel = threading.Event()
+    cancel.set()
+
+    def load():
+        raise Error(LOCKED)
+    with pytest.raises(Cancelled):
+        waiting_for_lock(load, cancel=cancel, sleep=lambda s: pytest.fail("slept"))

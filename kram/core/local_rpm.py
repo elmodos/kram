@@ -27,7 +27,7 @@ class LocalRpmError(Exception):
 
 @dataclass(slots=True)
 class Signature:
-    state: str            # ok | nokey | unsigned | bad (a digest or the signature does not match: damaged)
+    state: str            # ok | nokey | unsigned | bad (a digest or the signature does not match: damaged) | unknown
     key: str = ""         # fingerprint or key ID, as rpmkeys prints it
     signer: str = ""      # the imported key's name ("Fedora (44) <…>"), for "ok"
 
@@ -60,7 +60,7 @@ class LocalRpm:
     obsoletes: list[str]
     files: list[str]
     changelog: list[ChangelogEntry]
-    scripts: str          # `rpm -qp --scripts --triggers --filetriggers`, "" if none
+    scripts: str | None   # `rpm -qp --scripts --triggers --filetriggers`, "" if none; None when rpm could not say
     signature: Signature = field(default_factory=lambda: Signature("unsigned"))
 
     @property
@@ -105,8 +105,11 @@ def read(path: str) -> LocalRpm:
         except rpm.error as e:
             raise LocalRpmError("not an rpm package") from e
         same_file = f"/dev/fd/{fd}"
-        signature = _signature(_run(["rpmkeys", "-Kv", same_file], fd))
-        scripts = _run(["rpm", "-qp", "--scripts", "--triggers", "--filetriggers", same_file], fd).strip()
+        # rpmkeys hashes the whole file: a big package needs more than the default time
+        timeout = max(RUN_TIMEOUT, before.st_size // (50 << 20))
+        signature = _signature(_run(["rpmkeys", "-Kv", same_file], fd, timeout))
+        output = _run(["rpm", "-qp", "--scripts", "--triggers", "--filetriggers", same_file], fd, timeout)
+        scripts = None if output is None else output.strip()
         if _identity(os.fstat(fd)) != _identity(before):
             raise LocalRpmError("the file changed while it was being read")
     finally:
@@ -116,7 +119,7 @@ def read(path: str) -> LocalRpm:
         return list(dict.fromkeys(d for d in hdr[tag] if not d.startswith("rpmlib(")))
 
     changelog = [ChangelogEntry(t, a, x) for t, a, x in zip(
-        hdr[rpm.RPMTAG_CHANGELOGTIME], hdr[rpm.RPMTAG_CHANGELOGNAME], hdr[rpm.RPMTAG_CHANGELOGTEXT])]
+        hdr[rpm.RPMTAG_CHANGELOGTIME], hdr[rpm.RPMTAG_CHANGELOGNAME], hdr[rpm.RPMTAG_CHANGELOGTEXT], strict=True)]
     return LocalRpm(
         path=path, sha256=digest.hexdigest(), file_size=before.st_size,
         name=hdr[rpm.RPMTAG_NAME], epoch=hdr[rpm.RPMTAG_EPOCH], version=hdr[rpm.RPMTAG_VERSION],
@@ -133,17 +136,24 @@ def read(path: str) -> LocalRpm:
     )
 
 
-def _run(cmd: list[str], fd: int) -> str:
+RUN_TIMEOUT = 120  # s
+
+
+def _run(cmd: list[str], fd: int, timeout: int = RUN_TIMEOUT) -> str | None:
+    """The output of an rpm command on the package file, or None when it could not be run to the end: a failure
+    must not look like a verdict ("unsigned", "no scripts")."""
     env = {**os.environ, "LC_ALL": "C.UTF-8"}  # parsed, and rpm's script headers stay as rpm users know them
     try:
         out = subprocess.run(cmd, pass_fds=(fd,), capture_output=True, text=True, errors="replace", env=env,
-                             timeout=120, check=False)
+                             timeout=timeout, check=False)
     except (OSError, subprocess.TimeoutExpired):
-        return ""
+        return None
     return out.stdout
 
 
-def _signature(rpmkeys_output: str) -> Signature:
+def _signature(rpmkeys_output: str | None) -> Signature:
+    if rpmkeys_output is None:
+        return Signature("unknown")
     if any(re.search(r":\s*BAD\b", line) for line in rpmkeys_output.splitlines()):
         return Signature("bad")
     m = SIGNATURE_RE.search(rpmkeys_output)

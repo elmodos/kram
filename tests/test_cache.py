@@ -337,3 +337,47 @@ def test_search_as_root_replaces_the_list(monkeypatch):
     assert [(f.path, f.kind, f.package) for f in dlg.leftovers.files] == [
         ("/etc/firewalld/firewalld.conf.rpmnew", K.NEW, "firewalld")]
     assert dlg.search_root_btn.isHidden()
+
+
+def test_a_leftover_directory_swapped_for_a_symlink_is_not_followed(etc, tmp_path):
+    (etc / "sub").mkdir()
+    leftover = etc / "sub" / "app.conf.rpmsave"
+    leftover.write_text("old")
+    checked = helper.check_leftover(str(leftover), lambda _p: None, str(etc))
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    victim = outside / "app.conf.rpmsave"
+    victim.write_text("keep me")
+    (etc / "sub").rename(tmp_path / "moved")  # after the check, the directory is replaced by a link
+    (etc / "sub").symlink_to(outside)
+    with pytest.raises(OSError):
+        helper._unlink_leftover(checked)
+    assert victim.read_text() == "keep me"
+
+
+def test_a_checked_leftover_is_deleted(etc):
+    leftover = etc / "app.conf.rpmsave"
+    checked = helper.check_leftover(str(leftover), lambda _p: None, str(etc))
+    helper._unlink_leftover(checked)
+    assert not leftover.exists() and (etc / "ssh" / "sshd_config").exists()
+
+
+def test_clone_copies_everything_even_when_writes_are_short(tmp_path, monkeypatch):
+    import hashlib
+    data = os.urandom(3 << 20)
+    src = tmp_path / "src.rpm"
+    src.write_bytes(data)
+    real_write = os.write
+    def no_reflink(*_args):
+        raise OSError("no reflink")
+    monkeypatch.setattr(helper.fcntl, "ioctl", no_reflink)
+    monkeypatch.setattr(helper.os, "write", lambda fd, buf: real_write(fd, bytes(buf)[: max(1, len(buf) // 2)]))
+    work = tmp_path / "work"
+    work.mkdir()
+    fd = os.open(src, os.O_RDONLY)
+    try:
+        path, digest = helper.clone_file(fd, len(data), str(work))
+    finally:
+        os.close(fd)
+    assert digest == hashlib.sha256(data).hexdigest()
+    assert open(path, "rb").read() == data

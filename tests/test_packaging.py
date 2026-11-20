@@ -68,3 +68,19 @@ def test_docs_list_every_translation():
     table = (ROOT / "docs" / "TRANSLATING.md").read_text()
     listed = sorted(re.findall(r"^\| [^|]+ \| [^|]+ \| `([a-zA-Z_]+)` \|", table, re.MULTILINE))
     assert listed == codes
+
+
+def test_polkit_does_not_keep_the_authorization_for_the_session():
+    # auth_admin_keep would let other processes of the user drive the helper (it runs root scriptlets) for minutes
+    action = ET.parse(DATA / f"{kram.APP_ID}.policy").find("action")
+    assert action.find("defaults/allow_active").text == "auth_admin"
+
+
+def test_user_units_run_python_isolated():
+    # a user unit's working directory is the home directory: without -I, a json.py there shadows the stdlib
+    units = sorted((DATA / "systemd").glob("*.service"))
+    assert units
+    for unit in units:
+        for line in unit.read_text().splitlines():
+            if line.startswith("ExecStart=") and "python3" in line:
+                assert " -I " in line, f"{unit.name}: {line}"

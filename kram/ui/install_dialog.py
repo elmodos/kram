@@ -6,7 +6,7 @@ import html
 import os
 
 from PySide6.QtCore import QProcess, QProcessEnvironment, Qt
-from PySide6.QtGui import QDesktopServices, QFont, QFontDatabase, QIcon, QTextDocumentFragment
+from PySide6.QtGui import QFont, QFontDatabase, QIcon, QTextDocumentFragment
 from PySide6.QtWidgets import (
     QDialog,
     QDialogButtonBox,
@@ -33,6 +33,7 @@ from ..core.worker import DnfWorker
 from ..i18n import N_, _, ngettext
 from .apply_dialog import ChangesTree, RecommendationsList, removal_warning, signed_size
 from .details import _date
+from .links import open_web_link
 from .package_model import human_size
 from .progress_dialog import ProgressDialog
 from .qt_loop import post
@@ -57,7 +58,7 @@ VERIFY_FLAGS = {"S": N_("size"), "M": N_("permissions"), "5": N_("contents"), "D
 def _browser() -> QTextBrowser:
     b = QTextBrowser()
     b.setOpenLinks(False)
-    b.anchorClicked.connect(QDesktopServices.openUrl)
+    b.anchorClicked.connect(open_web_link)
     return b
 
 
@@ -457,6 +458,9 @@ class InstallDialog(QDialog):
         if s.state == "nokey":
             return _line(WARN, e(_("Signed with a key this system does not know ({key}). Install it only if you "
                                    "trust where the file came from.").format(key=s.key)))
+        if s.state == "unknown":
+            return _line(WARN, e(_("The signature could not be checked. Install it only if you trust where the file "
+                                   "came from.")))
         return _line(WARN, e(_("Not signed. Install it only if you trust where the file came from.")))
 
     def _fill_tabs(self) -> None:
@@ -491,7 +495,10 @@ class InstallDialog(QDialog):
                 f"{e(c.text).replace(chr(10), '<br>')}</p>" for c in r.changelog))
         else:
             self.changelog.setHtml(f"<i>{e(_('No changelog'))}</i>")
-        self.scripts.setPlainText(r.scripts or _("This package runs no scripts."))
+        if r.scripts is None:
+            self.scripts.setPlainText(_("The scripts could not be read."))
+        else:
+            self.scripts.setPlainText(r.scripts or _("This package runs no scripts."))
 
     def _fill_deps(self) -> None:
         """The file's dependencies; once the catalog has looked, with what satisfies each of them."""
@@ -573,7 +580,9 @@ class InstallDialog(QDialog):
         self.changed_system = True
         progress = ProgressDialog(self.helper, request, _("Installing {name}").format(name=self.rpm.name), self)
         progress.exec()
-        if progress.ok:
+        ok = progress.ok
+        progress.deleteLater()  # with its whole log
+        if ok:
             self.accept()
         else:
             self._render()

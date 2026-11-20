@@ -1,5 +1,6 @@
 """Settings → Cleanup: the size of each package cache and a button to clean it; rpm's leftover configuration files."""
 import html
+import shlex
 import time
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -96,6 +97,7 @@ class CacheDialog(QDialog):
         self._dnf = dnf
         self._clean_system = clean_system
         self._helper = helper
+        self._closed = False
         self.rows: dict[str, _Row] = {}
         self.leftovers = LeftoverReport([], 0)
 
@@ -188,7 +190,13 @@ class CacheDialog(QDialog):
             row.separator.setVisible(not first and not row.frame.isHidden())
             first = first and row.frame.isHidden()
 
+    def done(self, result: int) -> None:
+        self._closed = True  # results that arrive later are for a dialog that is gone (it is deleted after use)
+        super().done(result)
+
     def refresh(self) -> None:
+        if self._closed:
+            return
         for row in self.rows.values():
             row.size.setText("…")
             row.files.clear()
@@ -197,6 +205,8 @@ class CacheDialog(QDialog):
             _("Could not count the caches: {error}").format(error=e)))
 
     def _show(self, report: CacheReport) -> None:
+        if self._closed:
+            return
         locations = report.locations()
         for target, row in self.rows.items():
             usage = getattr(report, target)
@@ -220,6 +230,8 @@ class CacheDialog(QDialog):
             self.note.hide()
 
     def _show_note(self, text: str) -> None:
+        if self._closed:
+            return
         self.note.setText("⚠ " + text)
         self.note.show()
 
@@ -238,6 +250,8 @@ class CacheDialog(QDialog):
         self.refresh()
 
     def _user_clean_failed(self, error: BaseException) -> None:
+        if self._closed:
+            return
         self.refresh()
         QMessageBox.warning(self, _("Cleanup"), _("Could not clean the cache: {error}").format(error=error))
 
@@ -292,10 +306,15 @@ class CacheDialog(QDialog):
         self.leftovers_status.setText(_("Searching…"))
         self.search_root_btn.hide()
         self.delete_unused_btn.setEnabled(False)
-        self._dnf.submit(scan_leftovers, self._show_leftovers, lambda e: self.leftovers_status.setText(
-            _("Could not search: {error}").format(error=e)))
+        self._dnf.submit(scan_leftovers, self._show_leftovers, self._leftovers_failed)
+
+    def _leftovers_failed(self, error: BaseException) -> None:
+        if not self._closed:
+            self.leftovers_status.setText(_("Could not search: {error}").format(error=error))
 
     def _show_leftovers(self, report: LeftoverReport) -> None:
+        if self._closed:
+            return
         self.leftovers = report
         while (item := self._leftover_column.takeAt(0)) is not None:
             if item.widget():
@@ -358,7 +377,7 @@ class CacheDialog(QDialog):
         elif not leftover.comparable:
             compare.setEnabled(False)
             compare.setToolTip(_("Only root can read it. In a terminal: {command}").format(
-                command=f"sudo diff -u {leftover.current} {leftover.path}"))
+                command=f"sudo diff -u {shlex.quote(leftover.current)} {shlex.quote(leftover.path)}"))
         compare.clicked.connect(lambda: self._compare(leftover))
         delete = QPushButton(QIcon.fromTheme("edit-delete"), _("Delete…"))
         delete.setEnabled(self._helper is not None)

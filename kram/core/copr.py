@@ -54,7 +54,9 @@ def parse_search(payload: dict) -> list[CoprProject]:
     """Copr API v3 /project/search response -> projects."""
     projects = []
     for item in payload.get("items", []):
-        name = item.get("full_name") or ""
+        if not isinstance(item, dict) or not isinstance(item.get("full_name"), str):
+            continue  # the API is remote data: an item of another shape is skipped, not a crash
+        name = item["full_name"]
         if not PROJECT_RE.match(name):
             continue
         projects.append(CoprProject(

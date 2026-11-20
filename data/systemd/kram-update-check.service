@@ -5,7 +5,7 @@ Documentation=https://github.com/elmodos/kram
 
 [Service]
 Type=oneshot
-ExecStart=/usr/bin/python3 -s -m kram.notifier.check
+ExecStart=/usr/bin/python3 -I -m kram.notifier.check
 # a count must never slow the user down
 CPUWeight=idle
 Nice=19

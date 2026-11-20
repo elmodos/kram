@@ -19,6 +19,10 @@ WATCHED = [
     f"{SYSTEM_CACHEDIR}/*/repodata/repomd.xml",  # a repository refreshed (dnf-makecache.timer, Kram's Reload)
     "/var/lib/rpm/rpmdb.sqlite",                 # a transaction ran
     "/etc/yum.repos.d/*.repo",                   # a repository enabled, disabled, added or removed
+    "/etc/dnf/repos.override.d/*.repo",          # Kram's own enable and disable (dnf5 config-manager)
+    "/usr/share/dnf5/repos.d/*.repo",            # the distribution's repositories
+    "/etc/distro.repos.d/*.repo",                # the distribution's repositories, as some releases ship them
+    "/etc/dnf/libdnf5.conf.d/*",                 # drop-in configuration
     "/etc/dnf/dnf.conf",                         # excludes
     "/etc/dnf/versionlock.toml",
 ]

@@ -19,9 +19,10 @@ def test_parse_search():
          "chroot_repos": {"fedora-44-x86_64": "u", "fedora-43-x86_64": "u"}},
         {"full_name": "bad name/x", "chroot_repos": {}},
         {"full_name": "@kde/plasma", "description": None, "chroot_repos": None},
+        {"full_name": 5}, "x", {"full_name": "a/b"},
     ]}
     projects = parse_search(payload)
-    assert [p.full_name for p in projects] == ["solopasha/hyprland", "@kde/plasma"]
+    assert [p.full_name for p in projects] == ["solopasha/hyprland", "@kde/plasma", "a/b"]
     assert projects[0].description == "Hyprland and friends"
     assert projects[0].has_chroot("44", "x86_64")
     assert not projects[0].has_chroot("45", "x86_64")

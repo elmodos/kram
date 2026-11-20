@@ -4,8 +4,6 @@ import sys
 import threading
 import time
 
-import pytest
-
 from kram.ipc import client as ipc
 
 FAKE_HELPER = r'''
@@ -106,9 +104,55 @@ def test_no_pkexec_is_reported_from_the_main_loop(monkeypatch, tmp_path):
 
 def test_busy_refuses_a_second_request(monkeypatch, tmp_path):
     loop, client, *_ = _client(monkeypatch, tmp_path)
-    client.request({"op": "refresh"})
-    with pytest.raises(RuntimeError):
-        client.request({"op": "refresh"})
+    assert client.request({"op": "refresh"}) is True
+    written = []
+    monkeypatch.setattr(client, "_write", written.append)
+    assert client.request({"op": "refresh"}) is False
+    assert written == []  # nothing is sent to the helper
     loop.run_until(lambda: not client.busy)
     client.stop()
+
+
+def test_a_non_object_json_line_becomes_a_log_event(monkeypatch, tmp_path):
+    script = tmp_path / "numbers.py"
+    script.write_text('import sys\nfor line in sys.stdin:\n    print(42, flush=True)\n'
+                      '    print(\'{"event": "done", "ok": true}\', flush=True)\n')
+    loop, client, events, _failures = _client(monkeypatch, tmp_path, command=[sys.executable, str(script)])
+    client.request({"op": "refresh"})
+    loop.run_until(lambda: not client.busy)
+    assert {"event": "log", "text": "42"} in events and events[-1] == {"event": "done", "ok": True}
+    client.stop()
+
+
+class _StubbornProc:
+    """A helper that does not quit in time and cannot be signalled, as after pkexec's uid change."""
+
+    class _Stdin:
+        def write(self, data):
+            pass
+
+        def flush(self):
+            pass
+
+        def close(self):
+            pass
+
+    def __init__(self):
+        self.stdin = self._Stdin()
+
+    def poll(self):
+        return None
+
+    def wait(self, timeout=None):
+        raise ipc.subprocess.TimeoutExpired("helper", timeout)
+
+    def kill(self):
+        raise PermissionError("Operation not permitted")
+
+
+def test_stop_survives_a_helper_it_cannot_kill(monkeypatch):
+    monkeypatch.setattr(ipc.HelperClient, "_running", lambda self: True)
+    client = ipc.HelperClient(lambda fn: None)
+    client._proc = _StubbornProc()
+    client.stop()  # must not raise
 

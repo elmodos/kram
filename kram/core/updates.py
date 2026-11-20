@@ -2,6 +2,7 @@
 
 Shared by the catalog (the "Upgradable" filter) and the tray update checker, so both count the same packages.
 """
+import threading
 import time
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -27,14 +28,20 @@ def is_lock_error(e: BaseException) -> bool:
     return "system repo lock" in str(e)
 
 
+class Cancelled(Exception):
+    """A wait was cancelled because the application is closing."""
+
+
 def waiting_for_lock[T](load: Callable[[], T], on_wait: Callable[[], None] | None = None,
-                     timeout: float = LOCK_WAIT, poll: float = LOCK_POLL,
-                     sleep: Callable[[float], None] = time.sleep) -> T:
+                        timeout: float = LOCK_WAIT, poll: float = LOCK_POLL,
+                        sleep: Callable[[float], None] = time.sleep,
+                        cancel: threading.Event | None = None) -> T:
     """Run `load` (it builds a fresh Base and loads its repos) again while the system repo lock is taken.
 
     Another package manager holds the lock while it changes the rpm database: right after Kram's own transaction
     that is often akmods installing the kmods it built for a new kernel. `on_wait` is called once, on the first
-    wait. After `timeout` seconds the last lock error is raised."""
+    wait. After `timeout` seconds the last lock error is raised. `cancel` set: Cancelled, at once instead of after the
+    next poll, so that the application does not wait for the lock when it closes."""
     waited = 0.0
     while True:
         try:
@@ -44,15 +51,20 @@ def waiting_for_lock[T](load: Callable[[], T], on_wait: Callable[[], None] | Non
                 raise
         if waited == 0.0 and on_wait is not None:
             on_wait()
-        sleep(poll)
+        if cancel is not None:
+            if cancel.wait(poll):
+                raise Cancelled()
+        else:
+            sleep(poll)
         waited += poll
 
 
-def open_system_base(on_wait: Callable[[], None] | None = None) -> libdnf5.base.Base:
+def open_system_base(on_wait: Callable[[], None] | None = None,
+                     cancel: threading.Event | None = None) -> libdnf5.base.Base:
     """A Base over the system metadata cache (/var/cache/libdnf5), read-only, every repo loaded that can be.
 
     Waits while another package manager holds the system repo lock, see waiting_for_lock."""
-    return waiting_for_lock(_open_system_base, on_wait)
+    return waiting_for_lock(_open_system_base, on_wait, cancel=cancel)
 
 
 def _open_system_base() -> libdnf5.base.Base:

@@ -212,3 +212,22 @@ def test_a_header_state_saved_before_the_download_size_keeps_it_hidden(app, tmp_
     again.restore_columns(settings)  # Qt takes the state saved after the move back
     assert not again.header().isSectionHidden(COL_DOWNLOAD) and again.header().isSectionHidden(4)
     assert again.columnWidth(2) == 333 and again.header().visualIndex(3) == 1
+
+
+def test_marking_every_row_is_one_change_and_finds_rows_at_once(app):
+    """Marking thousands of rows: one repaint for the whole list, and each row found without a scan of the list."""
+    import time
+
+    _view, model = view_with(20000)
+    signals = []
+    model.dataChanged.connect(lambda *args: signals.append(args))
+    keys = [r.key for r in model.rows]
+    t0 = time.perf_counter()
+    model.marks_changed(keys)
+    assert time.perf_counter() - t0 < 0.5
+    assert len(signals) == 1
+    idx = model.index_of_key(keys[12345])
+    assert idx.isValid() and idx.row() == 12345
+    model.marks_changed(keys[:3])
+    assert len(signals) == 4  # three rows, one signal each
+    assert not model.index_of_key(("no-such", "x86_64")).isValid()

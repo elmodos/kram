@@ -133,6 +133,15 @@ class Sidebar(QWidget):
         """Recount entries (e.g. after marking) without changing the selection or re-filtering."""
         self._rebuild(emit=False)
 
+    def refresh_marked_count(self) -> None:
+        """After marking: only the "Marked" entry's count changes. Recounting every status filter over the whole
+        catalog on each mark made marking slow."""
+        for e, item in zip(self._entries, self._items, strict=True):
+            if e.id == "status:marked":
+                e.count = len(self.marked) if self.marked is not None else 0
+                item.setText(0, f"{e.label}   ({e.count})")
+                return
+
     @property
     def current_view(self) -> str:
         return self._view

@@ -135,6 +135,9 @@ def human_size(n: int) -> str:
             return f"{n:.1f} {unit}"
 
 
+# more changed rows than this: one change signal for the whole list
+MANY_MARKS = 1000
+
 class PackageTableModel(QAbstractTableModel):
     """Table over a flat list of rows; `visible` holds indices into `rows` (filtered and sorted).
 
@@ -146,6 +149,7 @@ class PackageTableModel(QAbstractTableModel):
         super().__init__(parent)
         self.rows: list[PkgRow] = []
         self.visible: list[int] = []
+        self._positions_cache: dict[tuple[str, str], int] | None = None  # key -> row, see _positions
         self.basearch = "x86_64"
         self._sort: tuple[int, Qt.SortOrder] | None = (COL_NAME, Qt.SortOrder.AscendingOrder)
         self._evr_rank: dict[str, int] | None = None
@@ -163,6 +167,7 @@ class PackageTableModel(QAbstractTableModel):
         self.basearch = basearch
         self.blocked.clear()
         self.visible = list(range(len(rows)))
+        self._positions_cache = None
         self._evr_rank = None
         self.endResetModel()
 
@@ -185,6 +190,7 @@ class PackageTableModel(QAbstractTableModel):
         """`ranked`: keep the given order (search relevance) instead of the column sort."""
         self.beginResetModel()
         self.visible = visible if ranked or self._sort is None else self._sorted(visible)
+        self._positions_cache = None
         self.endResetModel()
 
     def set_sort_column(self, sort: tuple[int, Qt.SortOrder]) -> None:
@@ -202,6 +208,11 @@ class PackageTableModel(QAbstractTableModel):
         if keys is None:
             self.dataChanged.emit(self.index(0, 0), self.index(len(self.visible) - 1, len(HEADERS) - 1))
             return
+        keys = list(keys)
+        if len(keys) > MANY_MARKS:
+            # one signal for the whole list: a signal per row would make marking every row take minutes
+            self.dataChanged.emit(self.index(0, 0), self.index(len(self.visible) - 1, len(HEADERS) - 1))
+            return
         for key in keys:
             idx = self.index_of_key(key)
             if idx.isValid():
@@ -211,10 +222,15 @@ class PackageTableModel(QAbstractTableModel):
         return self.rows[self.visible[index.row()]]
 
     def index_of_key(self, key: tuple[str, str]) -> QModelIndex:
-        for pos, i in enumerate(self.visible):
-            if self.rows[i].key == key:
-                return self.index(pos, COL_NAME)
-        return QModelIndex()
+        pos = self._positions().get(key)
+        return self.index(pos, COL_NAME) if pos is not None else QModelIndex()
+
+    def _positions(self) -> dict[tuple[str, str], int]:
+        """The row of each visible key, built once per change of the list: a linear scan per key made marking
+        thousands of rows at once quadratic."""
+        if self._positions_cache is None:
+            self._positions_cache = {self.rows[i].key: pos for pos, i in enumerate(self.visible)}
+        return self._positions_cache
 
     # --- sorting: done on our index list, so no QSortFilterProxyModel overhead on 70k rows
 
@@ -226,6 +242,7 @@ class PackageTableModel(QAbstractTableModel):
         self.layoutAboutToBeChanged.emit()
         old = {pos: i for pos, i in enumerate(self.visible)}
         self.visible = self._sorted(self.visible)
+        self._positions_cache = None
         new_pos = {i: pos for pos, i in enumerate(self.visible)}
         for idx in self.persistentIndexList():
             if idx.isValid():

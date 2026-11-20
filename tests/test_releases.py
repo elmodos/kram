@@ -1,5 +1,4 @@
 """What's New reads the release notes from the AppStream metainfo."""
-from pathlib import Path
 
 import kram
 from kram.core import releases

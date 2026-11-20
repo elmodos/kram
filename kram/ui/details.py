@@ -4,7 +4,7 @@ from datetime import datetime
 from urllib.parse import quote, unquote
 
 from PySide6.QtCore import Signal
-from PySide6.QtGui import QDesktopServices, QIcon, QPalette
+from PySide6.QtGui import QIcon, QPalette
 from PySide6.QtWidgets import QTabWidget, QTextBrowser, QTreeWidget, QTreeWidgetItem
 
 from ..core.model import PkgDetails, PkgRow
@@ -12,6 +12,7 @@ from ..core.origin import display_repo
 from ..i18n import _, ngettext, pgettext
 from .file_list import FileList
 from .icons import ADVISORY_COLOR, ORIGIN_LABEL, advisory_icon, blocked_icon, held_advisory_icon
+from .links import open_web_link
 from .package_model import ADVISORY_LABEL, blocked_tip, held_tip, human_size, shown_advisories
 
 # items of one section of the Dependencies tab: its rich text takes ~0.02 s for 1000 lines, but grows faster than
@@ -259,5 +260,5 @@ class DetailsTabs(QTabWidget):
         if kind in ("dep", "pkg"):
             self.linkActivated.emit(kind, unquote(value))
         elif kind in ("http", "https"):
-            QDesktopServices.openUrl(url)
+            open_web_link(url)
 

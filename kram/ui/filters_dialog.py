@@ -129,7 +129,8 @@ class FiltersDialog(QDialog):
 
     def __init__(self, filters: list[CustomFilter], snap: CatalogSnapshot | None, parent=None,
                  select: str | None = None, new: CustomFilter | None = None, resolve_provides=None):
-        """`resolve_provides(queries, done)` adds the answers to `snap.provides` in the background, then calls done."""
+        """`resolve_provides(queries, done, failed)` adds the answers to `snap.provides` in the background, then calls
+        done, or failed when they cannot be had."""
         super().__init__(parent)
         self.setWindowTitle(_("Custom Filters"))
         self.resize(980, 560)
@@ -315,11 +316,16 @@ class FiltersDialog(QDialog):
             self.count.setText(_("Counting…"))
             if self._resolve_provides is not None and (new := missing - self._asked):
                 self._asked |= new
-                self._resolve_provides(new, self._update_count)
+                self._resolve_provides(new, self._update_count, lambda: self._count_failed(new))
             return
         pred = current.compile(self._snap)
         n = sum(1 for r in self._snap.rows if pred(r))
         self.count.setText(ngettext("{n} package matches", "{n} packages match", n).format(n=n))
+
+    def _count_failed(self, queries: set) -> None:
+        """libdnf5 could not count them: say so, and ask again the next time the filter is shown."""
+        self._asked -= queries
+        self.count.setText(_("Could not count"))
 
     def _accept(self) -> None:
         self._store()

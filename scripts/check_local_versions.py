@@ -9,9 +9,9 @@ import subprocess
 import sys
 from pathlib import Path
 
+import libdnf5
 from check_local_install import expect, helper, sha256
 
-import libdnf5
 from kram.core.catalog import Catalog
 
 WORK = Path("/tmp/kramtest")

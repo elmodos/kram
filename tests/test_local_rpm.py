@@ -40,3 +40,13 @@ missing   l /usr/share/licenses/hello/COPYING (Permission denied)
     assert v.unreadable == ["/usr/share/licenses/hello/COPYING", "/usr/lib/secret"]
     assert v.problems == 3
     assert parse_verify("").problems == 0
+
+
+def test_a_check_that_timed_out_is_unknown_not_unsigned(monkeypatch):
+    import subprocess
+
+    def timed_out(*args, **kwargs):
+        raise subprocess.TimeoutExpired(args[0], kwargs["timeout"])
+    monkeypatch.setattr(local_rpm.subprocess, "run", timed_out)
+    assert local_rpm._run(["rpmkeys", "-Kv"], 0) is None
+    assert local_rpm._signature(None).state == "unknown"

@@ -1,10 +1,13 @@
 #!/bin/bash
-# Run real transactions through the helper as root inside a throwaway Fedora container (rootless podman).
+# Run real transactions through the helper as root inside a throwaway Fedora container (rootless podman, or docker
+# with CONTAINER=docker).
 # The host system is never touched. Usage: scripts/container_check.sh [fedora release, default 44]
 set -euo pipefail
 release=${1:-44}
 src=$(cd "$(dirname "$0")/.." && pwd)
-exec podman run --rm -v "$src:/src:ro,Z" "registry.fedoraproject.org/fedora:$release" bash -euo pipefail -c '
+engine=${CONTAINER:-podman}
+opt=":ro,Z"; [ "$engine" = docker ] && opt=":ro"
+exec "$engine" run --rm -v "$src:/src$opt" "registry.fedoraproject.org/fedora:$release" bash -euo pipefail -c '
     dnf5 -q -y install python3-libdnf5 python3-rpm dnf5-plugins util-linux shadow-utils >/dev/null
     # forget the imported Fedora keys so the helper has to ask for them
     rpm -e $(rpm -q gpg-pubkey) >/dev/null
@@ -85,8 +88,8 @@ assert not os.path.exists(cache_dir())"
     echo "### version lock: a package installed from the release repository while updates has a newer one"
     lockpkg=""
     for n in tmux jq nano htop strace wget2 less vim-minimal; do
-        old=$(dnf5 -q repoquery --repo fedora --latest-limit 1 --qf "%{evr}" "$n.x86_64" 2>/dev/null)
-        new=$(dnf5 -q repoquery --repo updates --latest-limit 1 --qf "%{evr}" "$n.x86_64" 2>/dev/null)
+        old=$(dnf5 -q repoquery --repo fedora --latest-limit 1 --qf "%{evr}" "$n.$(uname -m)" 2>/dev/null)
+        new=$(dnf5 -q repoquery --repo updates --latest-limit 1 --qf "%{evr}" "$n.$(uname -m)" 2>/dev/null)
         if [ -n "$old" ] && [ -n "$new" ] && [ "$old" != "$new" ]; then lockpkg=$n; break; fi
     done
     test -n "$lockpkg"
@@ -110,7 +113,7 @@ assert not r.advisories
 v = c.details(r.key).versions
 print([(x.evr, x.installed, x.candidate, x.locked_out) for x in v])
 assert any(x.evr == \"$new\" and x.locked_out for x in v)
-p = c.resolve({\"upgrade\": [\"$lockpkg-$new.x86_64\"]})
+p = c.resolve({\"upgrade\": [\"$lockpkg-$new.$(uname -m)\"]})
 print(p.problems, p.versionlock)
 assert not p.ok and p.versionlock"
     echo "### unlock: the upgrade is back"
@@ -168,5 +171,26 @@ print(g.id, *sorted(g.optional - installed))")
     $d "{\"op\":\"transaction\",\"group_install_optional\":[\"$gid\"]}"
     dnf5 -q group list --installed | grep -q "$gid"
     rpm -q "$@"
+    echo "### the GUI goes away while rpm installs: the helper finishes the transaction and exits cleanly"
+    cat > /tmp/epipe.py <<"EOF"
+import json, subprocess, sys
+p = subprocess.Popen([sys.executable, "-I", "/src/kram/helper/kram_helper.py"], stdin=subprocess.PIPE,
+                     stdout=subprocess.PIPE, text=True, bufsize=1)
+p.stdin.write(json.dumps({"op": "transaction", "install": [sys.argv[1]]}) + "\n"); p.stdin.flush()
+for line in p.stdout:
+    ev = json.loads(line)
+    if ev["event"] == "question":
+        p.stdin.write(json.dumps({"op": "answer", "id": ev["id"], "yes": True}) + "\n"); p.stdin.flush()
+    if ev["event"] == "rpm" and ev.get("step") == "install":
+        break
+    if ev["event"] == "done":
+        sys.exit("the transaction ended before rpm started: " + json.dumps(ev))
+p.stdout.close(); p.stdin.close()
+code = p.wait()
+sys.exit(0 if code == 0 else f"helper exit code {code}")
+EOF
+    python3 /tmp/epipe.py tree
+    rpm -q tree
+    test -z "$(rpm -V tree)"
     echo "ALL CHECKS PASSED"
 '

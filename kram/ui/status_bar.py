@@ -60,10 +60,13 @@ class MainStatusBar(QStatusBar):
                     ms: float | None = None) -> None:
         """The packages listed and marked; `ms`, the time the filter and search took, goes into the tooltip."""
         upgrades = ngettext("{n} upgrade", "{n} upgrades", snap.n_upgradable).format(n=snap.n_upgradable)
-        self.set_text(
-            _("{shown} listed, {installed} installed, {upgrades}.").format(
-                shown=shown, installed=snap.n_installed, upgrades=upgrades) + " "
-            + _("{install} to install/upgrade, {remove} to remove.").format(install=to_install, remove=to_remove))
+        listed = ngettext("{shown} listed, {installed} installed, {upgrades}.",
+                          "{shown} listed, {installed} installed, {upgrades}.", shown).format(
+            shown=shown, installed=snap.n_installed, upgrades=upgrades)
+        marked = ngettext("{install} to install/upgrade, {remove} to remove.",
+                          "{install} to install/upgrade, {remove} to remove.", to_install).format(
+            install=to_install, remove=to_remove)
+        self.set_text(listed + " " + marked)
         if ms is not None:
             self._text.setToolTip(_("Catalog: {load:.2f} s, filter and search: {ms:.0f} ms").format(
                 load=snap.load_seconds, ms=ms))

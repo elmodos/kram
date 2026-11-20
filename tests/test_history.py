@@ -155,4 +155,60 @@ def test_reading_comps_from_the_history_database(tmp_path):
         ("environment", "sway-desktop-environment", "Sway", "install"), ("group", "fonts", "Шрифти", "install")]
     assert [(i.arch, i.action) for i in found[9]] == [("sway-desktop-environment", "remove")]
     missing = SimpleNamespace(get_config=lambda: SimpleNamespace(transaction_history_dir=str(tmp_path / "none")))
-    assert read_comps(missing, [7]) == {}
+    assert read_comps(missing, [7]) is None  # unknown, not "no groups"
+    not_a_db = tmp_path / "not-a-db"
+    not_a_db.mkdir()
+    (not_a_db / "transaction_history.sqlite").write_text("this is not a database")
+    broken = SimpleNamespace(get_config=lambda: SimpleNamespace(transaction_history_dir=str(not_a_db)))
+    assert read_comps(broken, [7]) is None
+
+
+def test_undo_remove_of_an_installonly_package_installs_that_version_back():
+    """A kernel removed by the rotation: the old version comes back when it is still in the repositories, even though
+    a newer one is installed."""
+    steps, problems = undo([hrow(Change.REMOVE, "kernel", "6.1-1")],
+                           kernel=PackageState(("6.2-1",), frozenset({"6.1-1", "6.2-1"}), "6.2-1", installonly=True))
+    assert steps == [UndoStep(("kernel", "x86_64"), Action.INSTALL, "6.1-1")] and not problems
+    steps, problems = undo([hrow(Change.REMOVE, "kernel", "6.1-1")],
+                           kernel=PackageState(("6.1-1", "6.2-1"), frozenset(), "", installonly=True))
+    assert not steps and problems == [("kernel.x86_64", "installed again since")]
+
+
+def test_undo_remove_of_a_package_installed_another_way_since_is_left_alone():
+    steps, problems = undo([hrow(Change.REMOVE, "fish", "4-1")],
+                           fish=PackageState(("5-1",), frozenset({"4-1"}), "5-1"))
+    assert not steps and problems == [("fish.x86_64", "changed since: 5-1 is installed now")]
+
+
+def test_undo_reason_a_group_reason_cannot_set_back():
+    steps, problems = undo([hrow(Change.REASON, "a", "1", reason=Reason.GROUP)],
+                           a=PackageState(("1",), reason=Reason.GROUP))
+    assert not steps and problems == [("a.x86_64", "its install reason cannot be set back")]
+
+
+def test_unreadable_groups_are_a_problem_not_a_change():
+    from kram.core.history import history_rows
+
+    rows = history_rows((HistoryItem("", "", "", "unreadable", None, "", comps="unreadable"),))
+    assert [r.change for r in rows] == [Change.UNREADABLE]
+    steps, problems = undo(rows)
+    assert not steps and [why for _pkg, why in problems] == ["the groups it changed could not be read"]
+
+
+def test_raw_sql_numbers_are_libdnf5s():
+    """The history's raw SQL uses libdnf5's enum numbers: fail loudly if upstream renumbers them."""
+    import pytest
+
+    libdnf5 = pytest.importorskip("libdnf5")
+    from kram.core.history import ITEM_ACTIONS, ITEM_REASONS, STATE_OK
+
+    t = libdnf5.transaction
+    actions = {"install": "INSTALL", "upgrade": "UPGRADE", "downgrade": "DOWNGRADE", "reinstall": "REINSTALL",
+               "remove": "REMOVE", "replaced": "REPLACED", "reason": "REASON_CHANGE"}
+    for number, name in ITEM_ACTIONS.items():
+        assert getattr(t, f"TransactionItemAction_{actions[name]}") == number, name
+    reasons = {Reason.DEPENDENCY: "DEPENDENCY", Reason.USER: "USER", Reason.WEAK: "WEAK_DEPENDENCY",
+               Reason.GROUP: "GROUP", Reason.EXTERNAL: "EXTERNAL_USER"}
+    for number, reason in ITEM_REASONS.items():
+        assert getattr(t, f"TransactionItemReason_{reasons[reason]}") == number, reason
+    assert t.TransactionState_OK == STATE_OK

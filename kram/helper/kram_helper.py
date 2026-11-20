@@ -40,6 +40,7 @@ the GUI can show Kram's messages translated. What libdnf5 and dnf5 say comes as 
 where dnf has a translation (pkexec keeps LANG/LC_*, and main() turns LC_MESSAGES on).
 """
 import configparser
+import errno
 import fcntl
 import glob
 import hashlib
@@ -50,6 +51,7 @@ import os
 import pwd
 import re
 import shutil
+import signal
 import stat
 import struct
 import subprocess
@@ -84,9 +86,10 @@ MAX_LOCAL_RPM = 16 << 30  # bytes; games and IDEs ship rpms of several GB
 FREE_SPACE_MARGIN = 256 << 20
 SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 LOCAL_ACTIONS = ("install", "reinstall", "downgrade")
+# ioctl: copy-on-write clone (btrfs, XFS)
 FICLONE = 0x40049409
 # held (fcntl write lock) while libdnf5 / rpm run a transaction
-TRANSACTION_LOCKS = ("/run/dnf/rpmtransaction.lock", "/usr/lib/sysimage/rpm/.rpm.lock", "/var/lib/rpm/.rpm.lock")  # ioctl: copy-on-write clone (btrfs, XFS)
+TRANSACTION_LOCKS = ("/run/dnf/rpmtransaction.lock", "/usr/lib/sysimage/rpm/.rpm.lock", "/var/lib/rpm/.rpm.lock")
 COPY_CHUNK = 1 << 20
 
 # repo_remove: the only directory Kram deletes a .repo file from; /usr/share/dnf5/repos.d and /etc/distro.repos.d
@@ -112,10 +115,39 @@ BUS_TIMEOUT = 5  # s
 PROGRESS_INTERVAL = 0.1  # s; progress callbacks fire hundreds of times per file, the GUI needs ~10/s
 
 _proto = None  # private copy of the original stdout, see main()
+# set when the GUI closed its end of the pipes (it crashed, was killed, or the session ended). A write to a closed pipe
+# raises from inside rpm's callbacks, which aborts the process in the middle of a transaction, so from then on the
+# helper discards its output and finishes the work it has started.
+_gui_gone = False
+
+
+def _drop_gui() -> None:
+    """Route fds 1 and 2 to /dev/null: rpm scriptlets write to them directly, and a write to a closed pipe there
+    would raise SIGPIPE in C code."""
+    global _proto, _gui_gone
+    _gui_gone = True
+    null = open(os.devnull, "w")
+    for fd in (1, 2):
+        try:
+            os.dup2(null.fileno(), fd)
+        except OSError:
+            pass
+    # close the broken pipe here: left to the garbage collector, its flush fails again and prints a traceback
+    old, _proto = _proto, null
+    try:
+        old.close()
+    except (OSError, ValueError):
+        pass
 
 
 def emit(event: str, **fields) -> None:
-    _proto.write(json.dumps({"event": event, **fields}, ensure_ascii=False) + "\n")
+    if _gui_gone:
+        return
+    try:
+        _proto.write(json.dumps({"event": event, **fields}, ensure_ascii=False) + "\n")
+        _proto.flush()
+    except (OSError, ValueError):  # BrokenPipeError, or a closed file
+        _drop_gui()
 
 
 def log(key: str, template: str, **params) -> None:
@@ -224,7 +256,15 @@ def revert_ids(req: dict) -> list[int]:
     return value
 
 
+def check_bools(req: dict, *keys: str) -> None:
+    """A flag that is not a real boolean is refused: "upgrade_all": "false" would otherwise upgrade everything."""
+    for key in keys:
+        if key in req and not isinstance(req[key], bool):
+            raise ProtocolError(f"{key}: expected true or false")
+
+
 def validate(req: dict) -> dict[str, list]:
+    check_bools(req, "upgrade_all", "test", "download_only")
     fields: dict[str, list] = {f: specs(req, f) for f in SPEC_FIELDS}
     fields |= {f: group_ids(req, f) for f in GROUP_FIELDS}
     fields["revert"] = revert_ids(req)
@@ -312,6 +352,7 @@ def build_goal(base, req: dict):
 
 def validate_local(req: dict) -> tuple[str, str, str, list[str]]:
     path, digest, action = req.get("path"), req.get("sha256"), req.get("action", "install")
+    check_bools(req, "test")
     if not isinstance(path, str) or not path.startswith("/") or not path.endswith(".rpm") \
             or len(path) > 4096 or "\0" in path:
         raise ProtocolError("path: expected an absolute path to a .rpm file")
@@ -392,6 +433,19 @@ def open_as_caller(path: str) -> tuple[int, int]:
     return fd, st.st_size
 
 
+def _write_all(fd: int, data: bytes) -> None:
+    """os.write may write less than it was given (it does on a full disk): write until all of it is written."""
+    view = memoryview(data)
+    while view:
+        try:
+            n = os.write(fd, view)
+        except OSError as e:
+            if e.errno == errno.ENOSPC:
+                raise LocalFileError(f"not enough free space in {LOCAL_DIR} for a copy of the package") from None
+            raise
+        view = view[n:]
+
+
 def clone_file(src: int, size: int, workdir: str) -> tuple[str, str]:
     """Private copy of the open file in `workdir`: (path, sha256 of the copy).
 
@@ -413,7 +467,7 @@ def clone_file(src: int, size: int, workdir: str) -> tuple[str, str]:
                 if copied > MAX_LOCAL_RPM:
                     raise LocalFileError("file too large") from None
                 digest.update(chunk)
-                os.write(out, chunk)
+                _write_all(out, chunk)
             return dst, digest.hexdigest()
     finally:
         os.close(out)
@@ -448,7 +502,11 @@ def make_base(download_cb=None, load=True):
 
 def ask(question_id: int, **fields) -> bool:
     """Send a question and block until the GUI answers it. Anything else, or EOF, means no."""
+    if _gui_gone:
+        return False
     emit("question", id=question_id, **fields)
+    if _gui_gone:  # the question could not be sent: nobody is there to answer it
+        return False
     line = sys.stdin.readline()
     try:
         reply = json.loads(line)
@@ -634,7 +692,7 @@ def remove_repos(req: dict) -> None:
         try:
             os.unlink(path)
         except OSError as e:
-            emit("done", ok=False, stage="remove", error=f"{path}: {e.strerror}")
+            fail("remove", "file_not_removed", "{path}: {error}", path=path, error=e.strerror)
             return
         log("file_removed", "Removed {path}", path=path)
     emit("done", ok=True)
@@ -699,6 +757,23 @@ def find_leftovers() -> None:
     emit("done", ok=True, files=files, unreadable=unreadable)
 
 
+def _unlink_leftover(path: str) -> None:
+    """Delete a checked leftover through its directory fds. Each component is opened with O_NOFOLLOW from the root,
+    so a directory swapped for a symlink after check_leftover() is refused rather than followed."""
+    names = os.path.normpath(path).split(os.sep)[1:]
+    fds = [os.open("/", os.O_PATH | os.O_DIRECTORY | os.O_NOFOLLOW)]
+    try:
+        for name in names[:-1]:
+            fds.append(os.open(name, os.O_PATH | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=fds[-1]))
+        parent, basename = fds[-1], names[-1]
+        if not stat.S_ISREG(os.lstat(basename, dir_fd=parent).st_mode):  # recheck: the name may have changed
+            raise OSError(errno.EISDIR, "not a regular file", path)
+        os.unlink(basename, dir_fd=parent)
+    finally:
+        for fd in fds:
+            os.close(fd)
+
+
 def remove_leftovers(req: dict) -> None:
     paths = req.get("paths")
     if not isinstance(paths, list) or not 0 < len(paths) <= MAX_LEFTOVERS:
@@ -707,7 +782,7 @@ def remove_leftovers(req: dict) -> None:
     removed, failed = 0, []
     for path in checked:
         try:
-            os.unlink(path)
+            _unlink_leftover(path)
         except OSError as e:
             failed.append(f"{path}: {e.strerror}")
             continue
@@ -902,13 +977,26 @@ def run_goal(make_goal, test: bool, download_only: bool) -> None:
         return
     tr.set_callbacks(libdnf5.rpm.TransactionCallbacksUniquePtr(rpm_cb))
     tr.set_description("kram")
-    result = tr.test() if test else tr.run()
+    result = _run_uninterrupted(tr, test)
     if result != libdnf5.base.Transaction.TransactionRunResult_SUCCESS:
         problems = list(tr.get_transaction_problems()) + list(tr.get_gpg_signature_problems())
         emit("done", ok=False, stage="run", error=libdnf5.base.Transaction.transaction_result_to_string(result),
              details=problems)
         return
     emit("done", ok=True, test=test)
+
+
+def _run_uninterrupted(tr, test: bool):
+    """Run the transaction with SIGHUP, SIGINT and SIGTERM ignored. Stopping rpm in the middle leaves the rpmdb and
+    the files half-changed, which is worse than a delayed exit; the handlers come back afterwards. SIGKILL cannot be
+    helped."""
+    stop_signals = (signal.SIGHUP, signal.SIGINT, signal.SIGTERM)
+    previous = {sig: signal.signal(sig, signal.SIG_IGN) for sig in stop_signals}
+    try:
+        return tr.test() if test else tr.run()
+    finally:
+        for sig, handler in previous.items():
+            signal.signal(sig, handler)
 
 
 class _Throttle:
@@ -933,7 +1021,11 @@ def _guarded(default):
             try:
                 result = fn(*args)
             except Exception as e:  # noqa: BLE001
-                emit("log", text=f"callback {fn.__name__} failed: {type(e).__name__}: {e}")
+                # this runs inside a libdnf5 callback: an exception here must not escape, and the log must not fail
+                try:
+                    emit("log", text=f"callback {fn.__name__} failed: {type(e).__name__}: {e}")
+                except BaseException:  # noqa: BLE001
+                    pass
                 return default
             return default if result is None else result
         guarded.__name__ = fn.__name__
@@ -1091,6 +1183,8 @@ def main() -> int:
                  "versionlock": versionlock,
                  "repo_remove": remove_repos, "find_leftovers": lambda _r: find_leftovers(),
                  "remove_leftovers": remove_leftovers}[op](req)
+                if _gui_gone:  # the transaction is finished and no one is listening: exit cleanly
+                    return 0
             elif op == "quit":
                 return 0
             else:

@@ -49,6 +49,7 @@ HELPER_MESSAGES = {
     "lock_not_installed": N_("Only installed packages can be locked: {names}"),
     "files_not_removed": N_("Files not removed: {count}"),
     "file_changed": N_("{path}: the file changed after it was checked"),
+    "file_not_removed": N_("{path}: {error}"),
     "not_root": N_("The helper must run as root"),
 }
 STAGE_KEYS = ("loading_repos", "refreshing")  # helper messages that also replace the line above the progress bars
@@ -108,19 +109,28 @@ class ProgressDialog(QDialog):
         self.buttons.setEnabled(False)
         lay.addWidget(self.buttons)
 
-        client.event.connect(self._on_event)
-        client.failed.connect(self._on_failed)
+        self._connected = False  # the helper's signals reach this dialog only while it is running the request
 
     def exec(self) -> int:
-        self.client.request(self.request)
+        # connect only for a request that was sent: a dialog left connected to the helper would answer its questions
+        # for the rest of the session
+        if not self.client.request(self.request):
+            QMessageBox.warning(self.parentWidget(), self.windowTitle(),
+                                _("Another operation is still running. Try again when it has finished."))
+            return QDialog.DialogCode.Rejected
+        self.client.event.connect(self._on_event)
+        self.client.failed.connect(self._on_failed)
+        self._connected = True
         return super().exec()
 
     def done(self, result: int) -> None:
         if self.running:  # no closing mid-transaction (Esc, window close)
             return
         QSettings().setValue("progress/auto_close", self.auto_close.isChecked())
-        self.client.event.disconnect(self._on_event)
-        self.client.failed.disconnect(self._on_failed)
+        if self._connected:
+            self._connected = False
+            self.client.event.disconnect(self._on_event)
+            self.client.failed.disconnect(self._on_failed)
         super().done(result)
 
     def _append(self, text: str) -> None:

@@ -29,6 +29,7 @@ class Change(Enum):
     REMOVE = "remove"
     OBSOLETED = "obsoleted"   # replaced by another package that obsoletes it
     REASON = "reason"         # only its install reason changed
+    UNREADABLE = "unreadable" # the groups of the transaction could not be read: nothing can be undone safely
 
 
 @dataclass(frozen=True, slots=True)
@@ -113,14 +114,23 @@ def read_items(base, ids: list[int]) -> dict[int, tuple[HistoryItem, ...]]:
                 HistoryItem(p.get_name(), p.get_arch(), _evr(p), ITEM_ACTIONS.get(p.get_action(), "other"),
                             ITEM_REASONS.get(p.get_reason()), p.get_repoid())
                 for p in t.get_packages())
-    for tid, comps in read_comps(base, ids).items():
-        found[tid] = found.get(tid, ()) + comps
+    comps = read_comps(base, ids)
+    for tid in ids:
+        if comps is None:  # a row of its own, so that the history and undo can say so
+            marker = HistoryItem("", "", "", UNREADABLE_ACTION, None, "", comps="unreadable")
+            found[tid] = found.get(tid, ()) + (marker,)
+        else:
+            found[tid] = found.get(tid, ()) + comps.get(tid, ())
     return found
 
 
-def read_comps(base, ids: list[int]) -> dict[int, tuple[HistoryItem, ...]]:
+UNREADABLE_ACTION = "unreadable"
+
+
+def read_comps(base, ids: list[int]) -> dict[int, tuple[HistoryItem, ...]] | None:
     """The comps groups and environments of these transactions, from dnf's history database: libdnf5's Python
-    bindings return them as an unusable SWIG pointer. Read-only; nothing when the database cannot be read."""
+    bindings return them as an unusable SWIG pointer. Read-only. None when the database cannot be read: an empty
+    result would look like a transaction without groups."""
     path = os.path.join(base.get_config().transaction_history_dir, "transaction_history.sqlite")
     marks = ",".join("?" * len(ids))
     query = f"""
@@ -137,7 +147,7 @@ def read_comps(base, ids: list[int]) -> dict[int, tuple[HistoryItem, ...]]:
         finally:
             db.close()
     except sqlite3.Error:
-        return found
+        return None
     for tid, action, reason, kind, cid, name, translated in rows:
         item = HistoryItem(translated or name, cid, "", ITEM_ACTIONS.get(action, "other"), ITEM_REASONS.get(reason),
                            "", comps=kind)
@@ -188,7 +198,9 @@ def history_rows(items: tuple[HistoryItem, ...]) -> list[HistoryRow]:
     rows = []
     comps = {"install": Change.INSTALL, "upgrade": Change.UPGRADE, "remove": Change.REMOVE, "reason": Change.REASON}
     for i in items:
-        if i.comps:
+        if i.comps == "unreadable":
+            rows.append(HistoryRow(Change.UNREADABLE, "", "", "", "", "", None))
+        elif i.comps:
             if i.action in comps:
                 rows.append(HistoryRow(comps[i.action], i.name, i.arch, "", "", "", i.reason, comps=i.comps))
         elif i.action in ("upgrade", "downgrade", "reinstall"):
@@ -213,7 +225,7 @@ def change_counts(rows: list[HistoryRow]) -> dict[Change, int]:
     """Per change, the packages (comps rows are not counted)."""
     counts: dict[Change, int] = {}
     for r in rows:
-        if not r.comps:
+        if not r.comps and r.change is not Change.UNREADABLE:
             counts[r.change] = counts.get(r.change, 0) + 1
     return counts
 
@@ -251,6 +263,7 @@ class PackageState:
     available: frozenset[str] = frozenset()
     candidate: str = ""
     reason: Reason | None = None
+    installonly: bool = False  # kernels and the like: several versions are kept side by side
 
 
 def plan_undo(rows: list[HistoryRow], state: dict[tuple[str, str], PackageState]) -> tuple[list[UndoStep],
@@ -303,14 +316,18 @@ def plan_undo(rows: list[HistoryRow], state: dict[tuple[str, str], PackageState]
                 problem(row, _("version {version} is not the newest one in the repositories").format(
                     version=row.old_evr))
         elif row.change is Change.REMOVE:
-            if now.installed:
+            if row.evr in now.installed:
                 problem(row, _("installed again since"))
+            elif now.installed and not now.installonly:
+                changed_since(row, now)  # another version of a package that keeps only one
             elif row.evr in now.available:
                 steps.append(UndoStep(row.key, Action.INSTALL, row.evr))
             elif now.candidate:
                 steps.append(UndoStep(row.key, Action.INSTALL, now.candidate, instead_of=row.evr))
             else:
                 problem(row, _("no longer in the repositories"))
+        elif row.change is Change.UNREADABLE:
+            problem(row, _("the groups it changed could not be read"))
         elif row.change is Change.OBSOLETED:
             problem(row, _("replaced by another package that obsoletes it"))
         elif row.change is Change.REASON:
@@ -322,4 +339,6 @@ def plan_undo(rows: list[HistoryRow], state: dict[tuple[str, str], PackageState]
                 steps.append(UndoStep(row.key, Action.MARK_DEP))
             elif row.reason in (Reason.DEPENDENCY, Reason.WEAK):
                 steps.append(UndoStep(row.key, Action.MARK_USER))
+            else:  # a group or external reason: Kram has no mark that sets it back
+                problem(row, _("its install reason cannot be set back"))
     return steps, problems

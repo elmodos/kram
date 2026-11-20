@@ -35,7 +35,7 @@ class FakeClient(QObject):
     failed = Signal(str)
 
     def request(self, _request):
-        pass
+        return True
 
 
 def test_catalog_actions_are_disabled_until_it_is_loaded(window):
@@ -59,6 +59,9 @@ def test_progress_belongs_to_the_dialog_that_started_it(window, monkeypatch):
 
         def exec(self):
             return 0
+
+        def deleteLater(self):
+            pass
 
     monkeypatch.setattr(main_window, "ProgressDialog", Progress)
     window._run_helper({"op": "refresh"}, "t")
@@ -672,3 +675,153 @@ def test_sidebar_refreshes_only_an_enabled_repo(window, monkeypatch):
     monkeypatch.setattr(window, "reload", lambda: reloads.append(1))
     window.refresh_repo_metadata("copr:a")
     assert sent == [{"op": "refresh", "repos": ["copr:a"]}] and reloads == [1]
+
+
+# ---------------------------------------------------------------- the apply flow (audit items 2, 3 and 10)
+
+class FakeMarks(dict):
+    def counts(self):
+        return len(self), 0
+
+    def request(self, _rows):
+        return {"install": sorted(k[0] for k in self)}
+
+
+def _marked_window(window, monkeypatch):
+    """A window with one mark and a dnf worker that keeps the jobs instead of running them."""
+    jobs = []
+    monkeypatch.setattr(window.dnf, "submit", lambda fn, done, failed=None: jobs.append((fn, done, failed)))
+    window.snapshot = SimpleNamespace(rows=[], n_upgradable=0, n_installed=0, load_seconds=0.0, basearch="x86_64",
+                                      repos=[])
+    window.model.marks = FakeMarks({("fish", "x86_64"): "install"})
+    return jobs
+
+
+def test_apply_twice_before_the_preview_resolves_once(window, monkeypatch):
+    jobs = _marked_window(window, monkeypatch)
+    window.apply()
+    window.apply()
+    assert len(jobs) == 1 and window._busy()
+    assert not window.acts.apply.isEnabled()
+
+
+def test_no_refresh_while_the_marks_are_resolved(window, monkeypatch):
+    _marked_window(window, monkeypatch)
+    started = []
+    monkeypatch.setattr(window, "_run_helper", lambda request, title: started.append(request) or True)
+    window.apply()
+    window.refresh_metadata()
+    assert started == []
+
+
+def test_a_failed_resolve_clears_the_status_and_allows_a_retry(window, monkeypatch):
+    jobs = _marked_window(window, monkeypatch)
+    monkeypatch.setattr(main_window.QMessageBox, "critical", lambda *a: None)
+    window.apply()
+    jobs[0][2](RuntimeError("boom"))
+    assert not window._busy() and "Resolving" not in window.status.text()
+    window.apply()
+    assert len(jobs) == 2
+
+
+def _preview_flow(window, monkeypatch, helper_ok):
+    """apply(), then a mark added before the preview arrives, then the user accepts and the helper runs."""
+    jobs = _marked_window(window, monkeypatch)
+    rows = [SimpleNamespace(key=("fish", "x86_64")), SimpleNamespace(key=("vim", "x86_64"))]
+    window.snapshot.rows = rows
+    reloads, unmarked = [], []
+    monkeypatch.setattr(window, "reload", lambda: reloads.append(1))
+    monkeypatch.setattr(window.marker, "unmark", lambda rs: unmarked.extend(r.key for r in rs))
+    monkeypatch.setattr(window, "_run_helper", lambda request, title: helper_ok)
+
+    class Accepting:
+        Accepted = 1
+
+        def __init__(self, _preview, request, *_args, **_kwargs):
+            self.request = request
+            self.download_only = SimpleNamespace(isChecked=lambda: False)
+
+        def exec(self):
+            return 1
+
+        def deleteLater(self):
+            pass
+    monkeypatch.setattr(main_window, "ApplyDialog", Accepting)
+    window.apply()
+    window.model.marks[("vim", "x86_64")] = "install"  # marked while the first request resolved
+    jobs[0][1](SimpleNamespace(ok=True))
+    return reloads, unmarked
+
+
+def test_a_failed_apply_reloads_and_keeps_the_marks(window, monkeypatch):
+    reloads, unmarked = _preview_flow(window, monkeypatch, helper_ok=False)
+    assert reloads == [1] and unmarked == []
+
+
+def test_a_successful_apply_unmarks_only_what_it_applied(window, monkeypatch):
+    reloads, unmarked = _preview_flow(window, monkeypatch, helper_ok=True)
+    assert reloads == [1] and unmarked == [("fish", "x86_64")]
+
+
+def test_a_progress_dialog_for_a_refused_request_stays_disconnected(app, monkeypatch):
+    from kram.ui.progress_dialog import ProgressDialog
+
+    class Busy(FakeClient):
+        def request(self, _request):
+            return False
+    warned = []
+    monkeypatch.setattr(main_window.QMessageBox, "warning", lambda *a: warned.append(a))
+    import kram.ui.progress_dialog as progress_dialog
+    monkeypatch.setattr(progress_dialog.QMessageBox, "warning", lambda *a: warned.append(a))
+    client = Busy()
+    dlg = ProgressDialog(client, {"op": "refresh"}, "t")
+    assert dlg.exec() == QDialog.DialogCode.Rejected and warned
+    seen = []
+    monkeypatch.setattr(dlg, "_on_event", seen.append)
+    client.event.emit({"event": "question", "id": 1})
+    assert seen == []
+
+
+def test_dialogs_are_deleted_after_use(window, monkeypatch):
+    from PySide6.QtCore import QCoreApplication, QEvent
+
+    from kram.ui.progress_dialog import ProgressDialog
+
+    monkeypatch.setattr(ProgressDialog, "exec", lambda self: 0)
+    QCoreApplication.sendPostedEvents(None, QEvent.Type.DeferredDelete)
+    before = len(window.findChildren(QDialog))
+    for _ in range(20):
+        window._run_helper({"op": "refresh"}, "t")
+        QCoreApplication.sendPostedEvents(None, QEvent.Type.DeferredDelete)
+    assert len(window.findChildren(QDialog)) == before
+
+
+def test_a_late_result_for_a_closed_apply_dialog_is_dropped(app):
+    from kram.core.model import TransactionPreview
+    from kram.ui.apply_dialog import ApplyDialog
+
+    waiting = []
+    preview = TransactionPreview(items=[], problems=[], download_size=0, size_change=0)
+    dlg = ApplyDialog(preview, {"op": "transaction"}, resolve=lambda req, done, failed: waiting.append((done, failed)))
+    dlg._rec_toggled()
+    dlg.done(0)
+    done, failed = waiting[0]
+    done(preview)  # nothing raises, nothing is shown
+    failed(RuntimeError("late"))
+
+
+def test_marking_recounts_only_the_marked_entry(window, monkeypatch):
+    from kram.core.model import CatalogSnapshot, Origin, PkgRow, Status
+    from kram.ui import sidebar as sidebar_module
+
+    rows = [PkgRow(n, "x86_64", "", "", "1-1", "fedora", 1, Origin.FEDORA, Status.NOT_INSTALLED)
+            for n in ("fish", "vim")]
+    window._on_loaded(CatalogSnapshot(rows, 0, 0, 0.0))
+    window.sidebar.set_view("status")
+    calls = []
+    real = sidebar_module.status_filters
+    monkeypatch.setattr(sidebar_module, "status_filters", lambda *a: calls.append(1) or real(*a))
+    window.marker.mark([rows[0]], main_window.Action.INSTALL)
+    assert calls == []  # the status predicates did not run again over the catalog
+    marked = window.sidebar.item_of("status:marked")
+    assert marked.text(0).endswith("(1)")

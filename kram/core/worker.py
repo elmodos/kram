@@ -9,6 +9,7 @@ What the worker posts holds only the worker and the job id.
 """
 import functools
 import itertools
+import threading
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any
@@ -23,6 +24,8 @@ class DnfWorker:
         self._pool = ThreadPoolExecutor(max_workers=1, thread_name_prefix=name)
         self._jobs: dict[int, list] = {}  # id -> [fn, on_done, on_error, result, error]
         self._ids = itertools.count()
+        # set by shutdown(): jobs that wait (for a lock, say) check it and give up, so that the process can exit
+        self.cancelled = threading.Event()
 
     def submit(self, fn: Callable[[], Any], on_done: Callable[[Any], None],
                on_error: Callable[[BaseException], None] | None = None) -> None:
@@ -51,4 +54,5 @@ class DnfWorker:
             raise error
 
     def shutdown(self) -> None:
+        self.cancelled.set()
         self._pool.shutdown(wait=False, cancel_futures=True)

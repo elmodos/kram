@@ -199,6 +199,9 @@ def test_install_dialog(app, monkeypatch):
 
         def exec(self):
             return 0
+
+        def deleteLater(self):
+            pass
     monkeypatch.setattr(install_dialog, "ProgressDialog", Progress)
 
     dlg = install_dialog.InstallDialog(rpm.path, Catalog(), Dnf(), Helper(), marks=3)
@@ -232,6 +235,8 @@ def test_progress_counts_packages_not_rpm_steps(app):
 
     client = SimpleNamespace(event=Signal(), failed=Signal())
     dlg = ProgressDialog(client, {"op": "local_install"}, "Installing tool")
+    dlg._connected = True  # as exec() connects them, for a request that was sent
+    client.event.connect(dlg._on_event)
     nevra = "tool-1.0-1.x86_64"
     for ev in [{"event": "resolved", "items": [{"action": "Reinstall", "nevra": nevra},
                                                {"action": "Replaced", "nevra": nevra}]},

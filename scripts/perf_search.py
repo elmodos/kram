@@ -78,14 +78,14 @@ def main() -> int:
             continue
         answer = []
         window.dnf.submit(lambda key=key: window.catalog.details(key), answer.append, answer.append)
-        took, frozen = pump(lambda: bool(answer))
+        took, frozen = pump(lambda answer=answer: bool(answer))
         print(f"  {key[0]:24} {took:6.2f} s   frozen {frozen:5.2f} s")
 
     print("\nProvides (the first search by part of a name or with * also builds the index)")
     for text in PROVIDES:
         answer = []
         window.dnf.submit(lambda text=text: window.catalog.search_provides(text), answer.append, answer.append)
-        took, frozen = pump(lambda: bool(answer))
+        took, frozen = pump(lambda answer=answer: bool(answer))
         hits = len(answer[0]) if isinstance(answer[0], list) else answer[0]
         print(f"  {text:24} {took:6.2f} s   frozen {frozen:5.2f} s   {hits} packages")
 

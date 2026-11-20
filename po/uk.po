@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kram\n"
 "Report-Msgid-Bugs-To: https://github.com/elmodos/kram/issues\n"
-"POT-Creation-Date: 2026-11-19 22:45+0200\n"
+"POT-Creation-Date: 2026-11-20 10:19+0200\n"
 "PO-Revision-Date: 2026-11-03 21:09+0200\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -41,24 +41,24 @@ msgctxt "filter field"
 msgid "Description"
 msgstr "Опис"
 
-#: kram/core/custom_filters.py:52 kram/core/search.py:35 kram/ui/details.py:227
-#: kram/ui/install_dialog.py:527
+#: kram/core/custom_filters.py:52 kram/core/search.py:35 kram/ui/details.py:228
+#: kram/ui/install_dialog.py:534
 msgid "Provides"
 msgstr "Provides"
 
-#: kram/core/custom_filters.py:53 kram/ui/package_model.py:271
+#: kram/core/custom_filters.py:53 kram/ui/package_model.py:288
 #: kram/ui/sidebar.py:37
 msgid "Status"
 msgstr "Статус"
 
-#: kram/core/custom_filters.py:54 kram/ui/details.py:190
-#: kram/ui/package_model.py:271 kram/ui/repos_dialog.py:73
+#: kram/core/custom_filters.py:54 kram/ui/details.py:191
+#: kram/ui/package_model.py:288 kram/ui/repos_dialog.py:73
 #: kram/ui/sidebar.py:38
 msgid "Origin"
 msgstr "Походження"
 
 #: kram/core/custom_filters.py:55 kram/ui/apply_dialog.py:93
-#: kram/ui/details.py:88 kram/ui/history_dialog.py:134
+#: kram/ui/details.py:89 kram/ui/history_dialog.py:135
 #: kram/ui/package_model.py:29
 msgid "Repository"
 msgstr "Репозиторій"
@@ -67,7 +67,7 @@ msgstr "Репозиторій"
 msgid "Group"
 msgstr "Група"
 
-#: kram/core/custom_filters.py:57 kram/ui/details.py:199
+#: kram/core/custom_filters.py:57 kram/ui/details.py:200
 msgid "Install reason"
 msgstr "Причина встановлення"
 
@@ -253,44 +253,52 @@ msgstr ""
 "Необов'язкова: встановлюється разом із середовищем, лише якщо вибрано "
 "необов'язкові групи"
 
-#: kram/core/history.py:271
+#: kram/core/history.py:284
 #, python-brace-format
 msgid "changed since: {version} is installed now"
 msgstr "відтоді змінено: зараз встановлено {version}"
 
-#: kram/core/history.py:273 kram/core/history.py:318
+#: kram/core/history.py:286 kram/core/history.py:335
 msgid "removed since"
 msgstr "відтоді видалено"
 
-#: kram/core/history.py:287
+#: kram/core/history.py:300
 msgid "several versions are installed; remove this one with dnf5 remove"
 msgstr "встановлено кілька версій; видаліть цю через dnf5 remove"
 
-#: kram/core/history.py:294
+#: kram/core/history.py:307
 msgid "the version it replaced is not recorded"
 msgstr "версію, яку замінено, не записано"
 
-#: kram/core/history.py:296
+#: kram/core/history.py:309
 #, python-brace-format
 msgid "version {version} is no longer in the repositories"
 msgstr "версії {version} у репозиторіях уже немає"
 
-#: kram/core/history.py:303
+#: kram/core/history.py:316
 #, python-brace-format
 msgid "version {version} is not the newest one in the repositories"
 msgstr "версія {version} не найновіша в репозиторіях"
 
-#: kram/core/history.py:307
+#: kram/core/history.py:320
 msgid "installed again since"
 msgstr "відтоді встановлено знову"
 
-#: kram/core/history.py:313
+#: kram/core/history.py:328
 msgid "no longer in the repositories"
 msgstr "у репозиторіях уже немає"
 
-#: kram/core/history.py:315
+#: kram/core/history.py:330
+msgid "the groups it changed could not be read"
+msgstr "не вдалося прочитати групи, які вона змінила"
+
+#: kram/core/history.py:332
 msgid "replaced by another package that obsoletes it"
 msgstr "замінено іншим пакунком (obsoletes)"
+
+#: kram/core/history.py:343
+msgid "its install reason cannot be set back"
+msgstr "причину встановлення неможливо відновити"
 
 #: kram/core/marks.py:22 kram/ui/progress_dialog.py:28
 msgid "install"
@@ -329,20 +337,20 @@ msgctxt "search mode"
 msgid "Description"
 msgstr "Повний опис"
 
-#: kram/core/search.py:36 kram/ui/install_dialog.py:474
+#: kram/core/search.py:36 kram/ui/install_dialog.py:478
 #: kram/ui/repos_dialog.py:74
 msgid "File"
 msgstr "Файл"
 
-#: kram/ipc/client.py:65
+#: kram/ipc/client.py:67
 msgid "Could not start pkexec. Is polkit installed?"
 msgstr "Не вдалося запустити pkexec. Чи встановлено polkit?"
 
-#: kram/ipc/client.py:127
+#: kram/ipc/client.py:136
 msgid "Authentication was cancelled or not authorized."
 msgstr "Автентифікацію скасовано або доступ заборонено."
 
-#: kram/ipc/client.py:129
+#: kram/ipc/client.py:138
 #, python-brace-format
 msgid "The privileged helper exited unexpectedly (code {code})."
 msgstr "Привілейований процес несподівано завершився (код {code})."
@@ -584,7 +592,7 @@ msgstr ""
 msgid "Quit"
 msgstr "Вихід"
 
-#: kram/ui/actions.py:90 kram/ui/main_window.py:592
+#: kram/ui/actions.py:90 kram/ui/main_window.py:610
 msgid "About Kram"
 msgstr "Про Kram"
 
@@ -745,8 +753,8 @@ msgstr "Зміниться причина встановлення"
 msgid "dependency"
 msgstr "залежність"
 
-#: kram/ui/apply_dialog.py:52 kram/ui/history_dialog.py:275
-#: kram/ui/install_dialog.py:53 kram/ui/package_model.py:70
+#: kram/ui/apply_dialog.py:52 kram/ui/history_dialog.py:281
+#: kram/ui/install_dialog.py:54 kram/ui/package_model.py:70
 msgid "group"
 msgstr "група"
 
@@ -774,8 +782,8 @@ msgstr "Групи, які буде оновлено"
 msgid "Groups to be removed"
 msgstr "Групи, які буде видалено"
 
-#: kram/ui/apply_dialog.py:93 kram/ui/details.py:189
-#: kram/ui/history_dialog.py:134 kram/ui/install_dialog.py:473
+#: kram/ui/apply_dialog.py:93 kram/ui/details.py:190
+#: kram/ui/history_dialog.py:135 kram/ui/install_dialog.py:477
 #: kram/ui/package_model.py:29
 msgid "Package"
 msgstr "Пакунок"
@@ -784,8 +792,8 @@ msgstr "Пакунок"
 msgid "Size"
 msgstr "Розмір"
 
-#: kram/ui/apply_dialog.py:93 kram/ui/details.py:88
-#: kram/ui/history_dialog.py:134
+#: kram/ui/apply_dialog.py:93 kram/ui/details.py:89
+#: kram/ui/history_dialog.py:135
 msgid "Version"
 msgstr "Версія"
 
@@ -939,7 +947,7 @@ msgstr "Перевірте список перед застосуванням."
 msgid "The following changes will be made."
 msgstr "Буде виконано такі зміни."
 
-#: kram/ui/apply_dialog.py:337 kram/ui/install_dialog.py:169
+#: kram/ui/apply_dialog.py:337 kram/ui/install_dialog.py:170
 msgid "Equivalent command"
 msgstr "Еквівалентна команда"
 
@@ -947,12 +955,12 @@ msgstr "Еквівалентна команда"
 msgid "Download packages only"
 msgstr "Лише завантажити пакунки"
 
-#: kram/ui/apply_dialog.py:363 kram/ui/install_dialog.py:384
+#: kram/ui/apply_dialog.py:363 kram/ui/install_dialog.py:385
 #, python-brace-format
 msgid "To download: {size}."
 msgstr "Буде завантажено: {size}."
 
-#: kram/ui/apply_dialog.py:364 kram/ui/install_dialog.py:385
+#: kram/ui/apply_dialog.py:364 kram/ui/install_dialog.py:386
 #, python-brace-format
 msgid "Disk space change: {size}."
 msgstr "Зміна зайнятого місця на диску: {size}."
@@ -985,18 +993,18 @@ msgstr ""
 msgid "Nothing to do: the marked changes are already in place."
 msgstr "Нічого робити: позначені зміни вже виконано."
 
-#: kram/ui/apply_dialog.py:422 kram/ui/install_dialog.py:192
-#: kram/ui/install_dialog.py:208 kram/ui/install_dialog.py:265
-#: kram/ui/main_window.py:752
+#: kram/ui/apply_dialog.py:422 kram/ui/install_dialog.py:193
+#: kram/ui/install_dialog.py:209 kram/ui/install_dialog.py:266
+#: kram/ui/main_window.py:780
 msgid "Resolving dependencies…"
 msgstr "Розрахунок залежностей…"
 
-#: kram/ui/apply_dialog.py:431 kram/ui/install_dialog.py:282
+#: kram/ui/apply_dialog.py:431 kram/ui/install_dialog.py:283
 msgid "These choices cannot be carried out:"
 msgstr "Такий вибір неможливо виконати:"
 
-#: kram/ui/apply_dialog.py:436 kram/ui/install_dialog.py:259
-#: kram/ui/install_dialog.py:289 kram/ui/main_window.py:754
+#: kram/ui/apply_dialog.py:436 kram/ui/install_dialog.py:260
+#: kram/ui/install_dialog.py:290 kram/ui/main_window.py:789
 #, python-brace-format
 msgid ""
 "Could not resolve the changes:\n"
@@ -1007,61 +1015,61 @@ msgstr ""
 "\n"
 "{error}"
 
-#: kram/ui/cache_dialog.py:37
+#: kram/ui/cache_dialog.py:38
 msgid "DNF: downloaded packages"
 msgstr "DNF: завантажені пакунки"
 
-#: kram/ui/cache_dialog.py:38 kram/ui/cache_dialog.py:42
-#: kram/ui/cache_dialog.py:44
+#: kram/ui/cache_dialog.py:39 kram/ui/cache_dialog.py:43
+#: kram/ui/cache_dialog.py:45
 msgid "Clean"
 msgstr "Очистити"
 
-#: kram/ui/cache_dialog.py:38
+#: kram/ui/cache_dialog.py:39
 msgid "Left by interrupted transactions and “download only”."
 msgstr "Залишилися від перерваних транзакцій і дії «лише завантажити»."
 
-#: kram/ui/cache_dialog.py:39
+#: kram/ui/cache_dialog.py:40
 msgid "DNF: repository metadata"
 msgstr "DNF: метадані репозиторіїв"
 
-#: kram/ui/cache_dialog.py:40
+#: kram/ui/cache_dialog.py:41
 msgid "Download Again…"
 msgstr "Завантажити знову…"
 
-#: kram/ui/cache_dialog.py:40
+#: kram/ui/cache_dialog.py:41
 msgid "What Kram and dnf know about the available packages."
 msgstr "Те, що Kram і dnf знають про доступні пакунки."
 
-#: kram/ui/cache_dialog.py:41
+#: kram/ui/cache_dialog.py:42
 msgid "DNF: cache of your user"
 msgstr "DNF: кеш вашого користувача"
 
-#: kram/ui/cache_dialog.py:42
+#: kram/ui/cache_dialog.py:43
 msgid "Written by dnf when it runs without root. Kram does not use it."
 msgstr "Створює dnf, коли працює без root. Kram його не використовує."
 
-#: kram/ui/cache_dialog.py:43
+#: kram/ui/cache_dialog.py:44
 msgid "Discover / GNOME Software"
 msgstr "Discover / GNOME Software"
 
-#: kram/ui/cache_dialog.py:44
+#: kram/ui/cache_dialog.py:45
 msgid "Packages downloaded for offline updates and never removed."
 msgstr "Пакунки, завантажені для офлайн-оновлень і ніколи не видалені."
 
-#: kram/ui/cache_dialog.py:95 kram/ui/cache_dialog.py:242
+#: kram/ui/cache_dialog.py:96 kram/ui/cache_dialog.py:243
 msgid "Cleanup"
 msgstr "Прибирання"
 
-#: kram/ui/cache_dialog.py:168
+#: kram/ui/cache_dialog.py:169
 msgid "Open in the file manager"
 msgstr "Відкрити у файловому менеджері"
 
-#: kram/ui/cache_dialog.py:197
+#: kram/ui/cache_dialog.py:198
 #, python-brace-format
 msgid "Could not count the caches: {error}"
 msgstr "Не вдалося порахувати кеші: {error}"
 
-#: kram/ui/cache_dialog.py:211 kram/ui/file_list.py:303
+#: kram/ui/cache_dialog.py:212 kram/ui/file_list.py:303
 #, python-brace-format
 msgid "{n} file"
 msgid_plural "{n} files"
@@ -1069,11 +1077,11 @@ msgstr[0] "{n} файл"
 msgstr[1] "{n} файли"
 msgstr[2] "{n} файлів"
 
-#: kram/ui/cache_dialog.py:232
+#: kram/ui/cache_dialog.py:233
 msgid "Download metadata again"
 msgstr "Завантажити метадані знову"
 
-#: kram/ui/cache_dialog.py:233
+#: kram/ui/cache_dialog.py:234
 msgid ""
 "Delete the repository metadata and download it again?\n"
 "\n"
@@ -1085,16 +1093,16 @@ msgstr ""
 "Потрібен інтернет, це може тривати кілька хвилин. Якщо завантаження не "
 "вдасться, доступні пакунки зникнуть із Kram, доки не спрацює «Перечитати»."
 
-#: kram/ui/cache_dialog.py:242
+#: kram/ui/cache_dialog.py:243
 #, python-brace-format
 msgid "Could not clean the cache: {error}"
 msgstr "Не вдалося очистити кеш: {error}"
 
-#: kram/ui/cache_dialog.py:267
+#: kram/ui/cache_dialog.py:268
 msgid "Leftover configuration files"
 msgstr "Залишки конфігураційних файлів"
 
-#: kram/ui/cache_dialog.py:269
+#: kram/ui/cache_dialog.py:270
 msgid ""
 "Copies rpm keeps when you had changed a package's configuration file: your "
 "earlier version (.rpmsave) or the package's new default it did not apply "
@@ -1104,32 +1112,32 @@ msgstr ""
 "попередня версія (.rpmsave) або нова типова версія пакунка, яку він не "
 "застосував (.rpmnew)."
 
-#: kram/ui/cache_dialog.py:279
+#: kram/ui/cache_dialog.py:280
 msgid "Search All Folders…"
 msgstr "Шукати в усіх каталогах…"
 
-#: kram/ui/cache_dialog.py:280
+#: kram/ui/cache_dialog.py:281
 msgid "Also search the folders only root can read"
 msgstr "Шукати також у каталогах, які може читати лише root"
 
-#: kram/ui/cache_dialog.py:282
+#: kram/ui/cache_dialog.py:283
 msgid "Delete Unused…"
 msgstr "Видалити непотрібні…"
 
-#: kram/ui/cache_dialog.py:283
+#: kram/ui/cache_dialog.py:284
 msgid "Delete the copies of files that no longer exist"
 msgstr "Видалити копії файлів, яких уже немає"
 
-#: kram/ui/cache_dialog.py:292
+#: kram/ui/cache_dialog.py:293
 msgid "Searching…"
 msgstr "Пошук…"
 
-#: kram/ui/cache_dialog.py:296
+#: kram/ui/cache_dialog.py:297
 #, python-brace-format
 msgid "Could not search: {error}"
 msgstr "Не вдалося виконати пошук: {error}"
 
-#: kram/ui/cache_dialog.py:306
+#: kram/ui/cache_dialog.py:307
 #, python-brace-format
 msgid "{n} file found."
 msgid_plural "{n} files found."
@@ -1137,11 +1145,11 @@ msgstr[0] "Знайдено {n} файл."
 msgstr[1] "Знайдено {n} файли."
 msgstr[2] "Знайдено {n} файлів."
 
-#: kram/ui/cache_dialog.py:307
+#: kram/ui/cache_dialog.py:308
 msgid "Nothing found."
 msgstr "Нічого не знайдено."
 
-#: kram/ui/cache_dialog.py:309
+#: kram/ui/cache_dialog.py:310
 #, python-brace-format
 msgid "{n} folder only root can read was not searched."
 msgid_plural "{n} folders only root can read were not searched."
@@ -1149,76 +1157,76 @@ msgstr[0] "{n} каталог, який може читати лише root, н�
 msgstr[1] "{n} каталоги, які може читати лише root, не переглянуто."
 msgstr[2] "{n} каталогів, які може читати лише root, не переглянуто."
 
-#: kram/ui/cache_dialog.py:321
+#: kram/ui/cache_dialog.py:322
 msgid "A copy of a file that no longer exists. Nothing uses it."
 msgstr "Копія файлу, якого вже немає. Ніщо її не використовує."
 
-#: kram/ui/cache_dialog.py:323
+#: kram/ui/cache_dialog.py:324
 #, python-brace-format
 msgid ""
 "The new default of {package}, not applied because the file had been changed."
 msgstr ""
 "Нова типова версія від {package}, не застосована, бо файл було змінено."
 
-#: kram/ui/cache_dialog.py:324
+#: kram/ui/cache_dialog.py:325
 msgid "A package's new default, not applied because the file had been changed."
 msgstr "Нова типова версія від пакунка, не застосована, бо файл було змінено."
 
-#: kram/ui/cache_dialog.py:325
+#: kram/ui/cache_dialog.py:326
 msgid "Compare and take over what you need, then delete it."
 msgstr "Порівняйте, перенесіть потрібне, а тоді видаліть її."
 
-#: kram/ui/cache_dialog.py:326
+#: kram/ui/cache_dialog.py:327
 #, python-brace-format
 msgid "Your earlier version, put aside by {package}."
 msgstr "Ваша попередня версія, яку відклав {package}."
 
-#: kram/ui/cache_dialog.py:327
+#: kram/ui/cache_dialog.py:328
 msgid "Your earlier version, put aside by a package."
 msgstr "Ваша попередня версія, яку відклав пакунок."
 
-#: kram/ui/cache_dialog.py:328
+#: kram/ui/cache_dialog.py:329
 msgid "Compare and take over your changes, then delete it."
 msgstr "Порівняйте, перенесіть свої зміни, а тоді видаліть її."
 
-#: kram/ui/cache_dialog.py:344 kram/ui/file_list.py:325
+#: kram/ui/cache_dialog.py:345 kram/ui/file_list.py:325
 #: kram/ui/notifier_dialog.py:110 kram/ui/repos_dialog.py:187
 msgid "Show in File Manager"
 msgstr "Показати у файловому менеджері"
 
-#: kram/ui/cache_dialog.py:354 kram/ui/cache_dialog.py:375
-#: kram/ui/cache_dialog.py:437
+#: kram/ui/cache_dialog.py:355 kram/ui/cache_dialog.py:376
+#: kram/ui/cache_dialog.py:438
 msgid "Compare"
 msgstr "Порівняти"
 
-#: kram/ui/cache_dialog.py:357
+#: kram/ui/cache_dialog.py:358
 msgid "There is no current file to compare it with."
 msgstr "Немає поточного файлу, з яким її можна порівняти."
 
-#: kram/ui/cache_dialog.py:360
+#: kram/ui/cache_dialog.py:361
 #, python-brace-format
 msgid "Only root can read it. In a terminal: {command}"
 msgstr "Її може читати лише root. У терміналі: {command}"
 
-#: kram/ui/cache_dialog.py:363
+#: kram/ui/cache_dialog.py:364
 msgid "Delete…"
 msgstr "Видалити…"
 
-#: kram/ui/cache_dialog.py:375
+#: kram/ui/cache_dialog.py:376
 #, python-brace-format
 msgid "Could not read the files: {error}"
 msgstr "Не вдалося прочитати файли: {error}"
 
-#: kram/ui/cache_dialog.py:377
+#: kram/ui/cache_dialog.py:378
 msgid "The files are the same."
 msgstr "Файли однакові."
 
-#: kram/ui/cache_dialog.py:386
+#: kram/ui/cache_dialog.py:387
 #, python-brace-format
 msgid "Delete {path}?"
 msgstr "Видалити {path}?"
 
-#: kram/ui/cache_dialog.py:388
+#: kram/ui/cache_dialog.py:389
 #, python-brace-format
 msgid "Delete {n} file?"
 msgid_plural "Delete {n} files?"
@@ -1226,11 +1234,11 @@ msgstr[0] "Видалити {n} файл?"
 msgstr[1] "Видалити {n} файли?"
 msgstr[2] "Видалити {n} файлів?"
 
-#: kram/ui/cache_dialog.py:389
+#: kram/ui/cache_dialog.py:390
 msgid "Delete leftover files"
 msgstr "Видалення залишків"
 
-#: kram/ui/cache_dialog.py:392
+#: kram/ui/cache_dialog.py:393
 msgid ""
 "The new default settings in it are lost: compare first to take over what you "
 "need."
@@ -1238,15 +1246,15 @@ msgstr ""
 "Нові типові налаштування в ній буде втрачено: спершу порівняйте й перенесіть "
 "потрібне."
 
-#: kram/ui/cache_dialog.py:394
+#: kram/ui/cache_dialog.py:395
 msgid "Your changes in it are lost, unless the current file has them too."
 msgstr "Ваші зміни в ній буде втрачено, якщо їх немає й у поточному файлі."
 
-#: kram/ui/cache_dialog.py:396 kram/ui/filters_dialog.py:154
+#: kram/ui/cache_dialog.py:397 kram/ui/filters_dialog.py:155
 msgid "Delete"
 msgstr "Видалити"
 
-#: kram/ui/cache_dialog.py:401
+#: kram/ui/cache_dialog.py:402
 #, python-brace-format
 msgid "Deleting {n} file"
 msgid_plural "Deleting {n} files"
@@ -1254,11 +1262,11 @@ msgstr[0] "Видалення {n} файлу"
 msgstr[1] "Видалення {n} файлів"
 msgstr[2] "Видалення {n} файлів"
 
-#: kram/ui/cache_dialog.py:410
+#: kram/ui/cache_dialog.py:411
 msgid "Searching for leftover files"
 msgstr "Пошук залишків"
 
-#: kram/ui/cache_dialog.py:440
+#: kram/ui/cache_dialog.py:441
 #, python-brace-format
 msgid ""
 "Lines with “-” are in the current file {current}; lines with “+” only in "
@@ -1323,8 +1331,8 @@ msgstr "Знайти в Copr"
 msgid "Builds for this system"
 msgstr "Збірки для цієї системи"
 
-#: kram/ui/copr_dialog.py:99 kram/ui/details.py:97
-#: kram/ui/install_dialog.py:143
+#: kram/ui/copr_dialog.py:99 kram/ui/details.py:98
+#: kram/ui/install_dialog.py:144
 msgid "Description"
 msgstr "Опис"
 
@@ -1387,10 +1395,10 @@ msgstr "Видалення {project}"
 msgid "Searching… Copr can take up to a minute to answer."
 msgstr "Пошук… Copr може відповідати до хвилини."
 
-#: kram/ui/copr_dialog.py:229
+#: kram/ui/copr_dialog.py:229 kram/ui/main_window.py:431
 #, python-brace-format
 msgid "Search failed: {error}"
-msgstr "Помилка пошуку: {error}"
+msgstr "Пошук не вдався: {error}"
 
 #: kram/ui/copr_dialog.py:234
 msgid "Search failed: unexpected answer from Copr"
@@ -1424,40 +1432,40 @@ msgid ""
 msgstr ""
 "{project} не має збірок для Fedora {release} ({arch}). Все одно підключити?"
 
-#: kram/ui/custom_filters.py:102 kram/ui/filters_dialog.py:153
+#: kram/ui/custom_filters.py:106 kram/ui/filters_dialog.py:154
 msgid "New filter"
 msgstr "Новий фільтр"
 
-#: kram/ui/custom_filters.py:105 kram/ui/filters_dialog.py:134
-#: kram/ui/filters_dialog.py:333
+#: kram/ui/custom_filters.py:109 kram/ui/filters_dialog.py:135
+#: kram/ui/filters_dialog.py:339
 msgid "Custom Filters"
 msgstr "Власні фільтри"
 
-#: kram/ui/custom_filters.py:105
+#: kram/ui/custom_filters.py:109
 #, python-brace-format
 msgid "Delete the filter “{name}”?"
 msgstr "Видалити фільтр «{name}»?"
 
-#: kram/ui/custom_filters.py:117
+#: kram/ui/custom_filters.py:121
 msgid "Edit Filter…"
 msgstr "Редагувати фільтр…"
 
-#: kram/ui/custom_filters.py:118
+#: kram/ui/custom_filters.py:122
 msgid "Delete Filter"
 msgstr "Видалити фільтр"
 
-#: kram/ui/details.py:45
+#: kram/ui/details.py:46
 msgid ""
 "These fixes stay out until the lock is removed (Package → Unlock Version)."
 msgstr ""
 "Ці виправлення не встановлюються, доки блокування не знято (Пакунок → "
 "Розблокувати версію)."
 
-#: kram/ui/details.py:56
+#: kram/ui/details.py:57
 msgid "References:"
 msgstr "Посилання:"
 
-#: kram/ui/details.py:68
+#: kram/ui/details.py:69
 msgid ""
 "The repository has to fix it. Until then Mark All Upgrades leaves this "
 "package out."
@@ -1465,89 +1473,89 @@ msgstr ""
 "Це має виправити репозиторій. Доти «Позначити всі оновлення» пропускає цей "
 "пакунок."
 
-#: kram/ui/details.py:88
+#: kram/ui/details.py:89
 msgid "State"
 msgstr "Стан"
 
-#: kram/ui/details.py:97
+#: kram/ui/details.py:98
 msgid "General"
 msgstr "Загальне"
 
-#: kram/ui/details.py:98
+#: kram/ui/details.py:99
 msgid "Advisories"
 msgstr "Бюлетені"
 
-#: kram/ui/details.py:98 kram/ui/install_dialog.py:144
+#: kram/ui/details.py:99 kram/ui/install_dialog.py:145
 msgid "Dependencies"
 msgstr "Залежності"
 
-#: kram/ui/details.py:99 kram/ui/install_dialog.py:144
+#: kram/ui/details.py:100 kram/ui/install_dialog.py:145
 msgid "Files"
 msgstr "Файли"
 
-#: kram/ui/details.py:99
+#: kram/ui/details.py:100
 msgid "Versions"
 msgstr "Версії"
 
-#: kram/ui/details.py:100 kram/ui/install_dialog.py:145
+#: kram/ui/details.py:101 kram/ui/install_dialog.py:146
 msgid "Changelog"
 msgstr "Changelog"
 
-#: kram/ui/details.py:187
+#: kram/ui/details.py:188
 msgid "as a dependency"
 msgstr "як залежність"
 
-#: kram/ui/details.py:187
+#: kram/ui/details.py:188
 msgid "by the user"
 msgstr "вручну (користувачем)"
 
-#: kram/ui/details.py:191
+#: kram/ui/details.py:192
 msgid "Candidate repository"
 msgstr "Репозиторій кандидата"
 
-#: kram/ui/details.py:192 kram/ui/install_dialog.py:477
+#: kram/ui/details.py:193 kram/ui/install_dialog.py:481
 msgid "License"
 msgstr "Ліцензія"
 
-#: kram/ui/details.py:193 kram/ui/install_dialog.py:478
+#: kram/ui/details.py:194 kram/ui/install_dialog.py:482
 msgid "Website"
 msgstr "Сайт"
 
-#: kram/ui/details.py:194 kram/ui/install_dialog.py:479
+#: kram/ui/details.py:195 kram/ui/install_dialog.py:483
 msgid "Vendor"
 msgstr "Постачальник"
 
-#: kram/ui/details.py:195 kram/ui/install_dialog.py:480
+#: kram/ui/details.py:196 kram/ui/install_dialog.py:484
 msgid "Packager"
 msgstr "Пакувальник"
 
-#: kram/ui/details.py:196
+#: kram/ui/details.py:197
 msgid "Source package"
 msgstr "Вихідний пакунок"
 
-#: kram/ui/details.py:197 kram/ui/install_dialog.py:481
+#: kram/ui/details.py:198 kram/ui/install_dialog.py:485
 msgid "Built"
 msgstr "Зібрано"
 
-#: kram/ui/details.py:198
+#: kram/ui/details.py:199
 msgctxt "install date"
 msgid "Installed"
 msgstr "Встановлено"
 
-#: kram/ui/details.py:200
+#: kram/ui/details.py:201
 msgid "Version lock"
 msgstr "Блокування версії"
 
-#: kram/ui/details.py:203 kram/ui/install_dialog.py:482
+#: kram/ui/details.py:204 kram/ui/install_dialog.py:486
 #: kram/ui/package_model.py:30
 msgid "Installed size"
 msgstr "Розмір встановлення"
 
-#: kram/ui/details.py:204 kram/ui/package_model.py:30
+#: kram/ui/details.py:205 kram/ui/package_model.py:30
 msgid "Download size"
 msgstr "Розмір завантаження"
 
-#: kram/ui/details.py:217
+#: kram/ui/details.py:218
 #, python-brace-format
 msgid "…and {n} more"
 msgid_plural "…and {n} more"
@@ -1555,48 +1563,48 @@ msgstr[0] "…і ще {n}"
 msgstr[1] "…і ще {n}"
 msgstr[2] "…і ще {n}"
 
-#: kram/ui/details.py:221 kram/ui/install_dialog.py:521
+#: kram/ui/details.py:222 kram/ui/install_dialog.py:528
 msgid "Requires"
 msgstr "Залежить від (Requires)"
 
-#: kram/ui/details.py:222 kram/ui/install_dialog.py:522
+#: kram/ui/details.py:223 kram/ui/install_dialog.py:529
 msgid "Recommends"
 msgstr "Рекомендує (Recommends)"
 
-#: kram/ui/details.py:223 kram/ui/install_dialog.py:523
+#: kram/ui/details.py:224 kram/ui/install_dialog.py:530
 msgid "Suggests"
 msgstr "Пропонує (Suggests)"
 
-#: kram/ui/details.py:224
+#: kram/ui/details.py:225
 msgid "Required by installed packages"
 msgstr "Від нього залежать встановлені пакунки"
 
-#: kram/ui/details.py:225 kram/ui/install_dialog.py:525
+#: kram/ui/details.py:226 kram/ui/install_dialog.py:532
 msgid "Conflicts"
 msgstr "Конфліктує з (Conflicts)"
 
-#: kram/ui/details.py:226 kram/ui/install_dialog.py:526
+#: kram/ui/details.py:227 kram/ui/install_dialog.py:533
 msgid "Obsoletes"
 msgstr "Замінює (Obsoletes)"
 
-#: kram/ui/details.py:228 kram/ui/install_dialog.py:528
+#: kram/ui/details.py:229 kram/ui/install_dialog.py:535
 msgid "No dependencies"
 msgstr "Залежностей немає"
 
-#: kram/ui/details.py:235
+#: kram/ui/details.py:236
 msgid "candidate"
 msgstr "кандидат"
 
-#: kram/ui/details.py:235
+#: kram/ui/details.py:236
 msgctxt "version state"
 msgid "installed"
 msgstr "встановлено"
 
-#: kram/ui/details.py:236
+#: kram/ui/details.py:237
 msgid "excluded by the version lock"
 msgstr "виключено блокуванням версії"
 
-#: kram/ui/details.py:253
+#: kram/ui/details.py:254
 msgid ""
 "The changelog is available for installed packages only (dnf5 does not "
 "download it for repositories by default)."
@@ -1722,35 +1730,35 @@ msgstr "можливість, напр. application()"
 msgid "text"
 msgstr "текст"
 
-#: kram/ui/filters_dialog.py:152
+#: kram/ui/filters_dialog.py:153
 msgid "New"
 msgstr "Новий"
 
-#: kram/ui/filters_dialog.py:167
+#: kram/ui/filters_dialog.py:168
 msgid "Name:"
 msgstr "Назва:"
 
-#: kram/ui/filters_dialog.py:169
+#: kram/ui/filters_dialog.py:170
 msgid "all conditions"
 msgstr "усім умовам"
 
-#: kram/ui/filters_dialog.py:170
+#: kram/ui/filters_dialog.py:171
 msgid "any condition"
 msgstr "будь-якій умові"
 
-#: kram/ui/filters_dialog.py:172
+#: kram/ui/filters_dialog.py:173
 msgid "Show packages that match:"
 msgstr "Показувати пакунки, що відповідають:"
 
-#: kram/ui/filters_dialog.py:183
+#: kram/ui/filters_dialog.py:184
 msgid "Add condition"
 msgstr "Додати умову"
 
-#: kram/ui/filters_dialog.py:315
+#: kram/ui/filters_dialog.py:316
 msgid "Counting…"
 msgstr "Підрахунок…"
 
-#: kram/ui/filters_dialog.py:322
+#: kram/ui/filters_dialog.py:323
 #, python-brace-format
 msgid "{n} package matches"
 msgid_plural "{n} packages match"
@@ -1758,11 +1766,15 @@ msgstr[0] "Відповідає {n} пакунок"
 msgstr[1] "Відповідають {n} пакунки"
 msgstr[2] "Відповідає {n} пакунків"
 
-#: kram/ui/filters_dialog.py:329
+#: kram/ui/filters_dialog.py:328
+msgid "Could not count"
+msgstr "Не вдалося порахувати"
+
+#: kram/ui/filters_dialog.py:335
 msgid "Every filter needs a name."
 msgstr "Кожен фільтр має мати назву."
 
-#: kram/ui/filters_dialog.py:331
+#: kram/ui/filters_dialog.py:337
 msgid "Two filters have the same name."
 msgstr "Два фільтри мають однакову назву."
 
@@ -1809,42 +1821,63 @@ msgctxt "history"
 msgid "Reason change"
 msgstr "Зміна причини"
 
-#: kram/ui/history_dialog.py:62
-#, python-brace-format
-msgid "{n} installed"
-msgstr "встановлено: {n}"
-
 #: kram/ui/history_dialog.py:63
 #, python-brace-format
-msgid "{n} upgraded"
-msgstr "оновлено: {n}"
+msgid "{n} installed"
+msgid_plural "{n} installed"
+msgstr[0] "встановлено: {n}"
+msgstr[1] "встановлено: {n}"
+msgstr[2] "встановлено: {n}"
 
 #: kram/ui/history_dialog.py:64
 #, python-brace-format
-msgid "{n} downgraded"
-msgstr "понижено: {n}"
+msgid "{n} upgraded"
+msgid_plural "{n} upgraded"
+msgstr[0] "оновлено: {n}"
+msgstr[1] "оновлено: {n}"
+msgstr[2] "оновлено: {n}"
 
 #: kram/ui/history_dialog.py:65
 #, python-brace-format
-msgid "{n} reinstalled"
-msgstr "перевстановлено: {n}"
+msgid "{n} downgraded"
+msgid_plural "{n} downgraded"
+msgstr[0] "понижено: {n}"
+msgstr[1] "понижено: {n}"
+msgstr[2] "понижено: {n}"
 
 #: kram/ui/history_dialog.py:66
 #, python-brace-format
-msgid "{n} removed"
-msgstr "видалено: {n}"
+msgid "{n} reinstalled"
+msgid_plural "{n} reinstalled"
+msgstr[0] "перевстановлено: {n}"
+msgstr[1] "перевстановлено: {n}"
+msgstr[2] "перевстановлено: {n}"
 
 #: kram/ui/history_dialog.py:67
 #, python-brace-format
-msgid "{n} obsoleted"
-msgstr "замінено: {n}"
+msgid "{n} removed"
+msgid_plural "{n} removed"
+msgstr[0] "видалено: {n}"
+msgstr[1] "видалено: {n}"
+msgstr[2] "видалено: {n}"
 
 #: kram/ui/history_dialog.py:68
 #, python-brace-format
-msgid "{n} reasons changed"
-msgstr "змінено причин: {n}"
+msgid "{n} obsoleted"
+msgid_plural "{n} obsoleted"
+msgstr[0] "замінено: {n}"
+msgstr[1] "замінено: {n}"
+msgstr[2] "замінено: {n}"
 
-#: kram/ui/history_dialog.py:82
+#: kram/ui/history_dialog.py:69
+#, python-brace-format
+msgid "{n} reason changed"
+msgid_plural "{n} reasons changed"
+msgstr[0] "змінено причину: {n}"
+msgstr[1] "змінено причини: {n}"
+msgstr[2] "змінено причин: {n}"
+
+#: kram/ui/history_dialog.py:83
 #, python-brace-format
 msgid "{n} environment"
 msgid_plural "{n} environments"
@@ -1852,7 +1885,7 @@ msgstr[0] "{n} середовище"
 msgstr[1] "{n} середовища"
 msgstr[2] "{n} середовищ"
 
-#: kram/ui/history_dialog.py:83
+#: kram/ui/history_dialog.py:84
 #, python-brace-format
 msgid "{n} group"
 msgid_plural "{n} groups"
@@ -1860,79 +1893,82 @@ msgstr[0] "{n} група"
 msgstr[1] "{n} групи"
 msgstr[2] "{n} груп"
 
-#: kram/ui/history_dialog.py:86
+#: kram/ui/history_dialog.py:87
 msgid "no package changes"
 msgstr "пакунки не змінювались"
 
-#: kram/ui/history_dialog.py:110
+#: kram/ui/history_dialog.py:111
 msgid "Transaction History"
 msgstr "Історія транзакцій"
 
-#: kram/ui/history_dialog.py:124
+#: kram/ui/history_dialog.py:125
 msgid "Filter by package name"
 msgstr "Фільтр за назвою пакунка"
 
-#: kram/ui/history_dialog.py:132
+#: kram/ui/history_dialog.py:133
 msgid "Changes"
 msgstr "Зміни"
 
-#: kram/ui/history_dialog.py:132
+#: kram/ui/history_dialog.py:133
 msgid "Command"
 msgstr "Команда"
 
-#: kram/ui/history_dialog.py:132
+#: kram/ui/history_dialog.py:133
 msgid "Date"
 msgstr "Дата"
 
-#: kram/ui/history_dialog.py:132 kram/ui/repos_dialog.py:73
+#: kram/ui/history_dialog.py:133 kram/ui/repos_dialog.py:73
 msgid "ID"
 msgstr "ID"
 
-#: kram/ui/history_dialog.py:132
+#: kram/ui/history_dialog.py:133
 msgid "User"
 msgstr "Користувач"
 
-#: kram/ui/history_dialog.py:134
+#: kram/ui/history_dialog.py:135
 msgid "Action"
 msgstr "Дія"
 
-#: kram/ui/history_dialog.py:134 kram/ui/package_model.py:29
+#: kram/ui/history_dialog.py:135 kram/ui/package_model.py:29
 msgid "Reason"
 msgstr "Причина"
 
-#: kram/ui/history_dialog.py:136
+#: kram/ui/history_dialog.py:137
 msgid ""
 "Double-click a package to close the history and show the package in the list"
 msgstr ""
 "Двічі клацніть пакунок, щоб закрити історію й показати пакунок у списку"
 
-#: kram/ui/history_dialog.py:143 kram/ui/history_dialog.py:342
+#: kram/ui/history_dialog.py:144 kram/ui/history_dialog.py:351
 msgid "Mark Changes to Undo"
 msgstr "Позначити зміни для відкату"
 
-#: kram/ui/history_dialog.py:176
+#: kram/ui/history_dialog.py:177
 msgid "Loading…"
 msgstr "Завантаження…"
 
-#: kram/ui/history_dialog.py:180
+#: kram/ui/history_dialog.py:181
 #, python-brace-format
 msgid "Could not read the history: {error}"
 msgstr "Не вдалося прочитати історію: {error}"
 
-#: kram/ui/history_dialog.py:201
+#: kram/ui/history_dialog.py:202
 msgid "The transaction failed or did not finish"
 msgstr "Транзакція завершилася з помилкою або не завершилася"
 
-#: kram/ui/history_dialog.py:240
+#: kram/ui/history_dialog.py:242
 #, python-brace-format
-msgid "Reading packages: {done} of {total} transactions"
-msgstr "Читання пакунків: {done} з {total} транзакцій"
+msgid "Reading packages: {done} of {total} transaction"
+msgid_plural "Reading packages: {done} of {total} transactions"
+msgstr[0] "Читання пакунків: {done} з {total} транзакції"
+msgstr[1] "Читання пакунків: {done} з {total} транзакцій"
+msgstr[2] "Читання пакунків: {done} з {total} транзакцій"
 
-#: kram/ui/history_dialog.py:243
+#: kram/ui/history_dialog.py:246
 msgid "No transactions recorded"
 msgstr "Транзакцій не записано"
 
-#: kram/ui/history_dialog.py:246
+#: kram/ui/history_dialog.py:249
 #, python-brace-format
 msgid "{shown} of {n} transaction"
 msgid_plural "{shown} of {n} transactions"
@@ -1940,7 +1976,7 @@ msgstr[0] "{shown} з {n} транзакції"
 msgstr[1] "{shown} з {n} транзакцій"
 msgstr[2] "{shown} з {n} транзакцій"
 
-#: kram/ui/history_dialog.py:249
+#: kram/ui/history_dialog.py:252
 #, python-brace-format
 msgid "{n} transaction"
 msgid_plural "{n} transactions"
@@ -1948,15 +1984,19 @@ msgstr[0] "{n} транзакція"
 msgstr[1] "{n} транзакції"
 msgstr[2] "{n} транзакцій"
 
-#: kram/ui/history_dialog.py:275
+#: kram/ui/history_dialog.py:278
+msgid "The groups of this transaction could not be read"
+msgstr "Не вдалося прочитати групи цієї транзакції"
+
+#: kram/ui/history_dialog.py:281
 msgid "environment"
 msgstr "середовище"
 
-#: kram/ui/history_dialog.py:337
+#: kram/ui/history_dialog.py:346
 msgid "Undo Transaction…"
 msgstr "Скасувати транзакцію…"
 
-#: kram/ui/history_dialog.py:338
+#: kram/ui/history_dialog.py:347
 msgid ""
 "The transaction changed groups or environments: it is undone as “dnf5 "
 "history undo” does, packages and groups together. Kram shows what that does "
@@ -1977,80 +2017,80 @@ msgstr "Локальне"
 msgid "Unknown origin"
 msgstr "Невідоме"
 
-#: kram/ui/install_dialog.py:46 kram/ui/install_dialog.py:178
+#: kram/ui/install_dialog.py:47 kram/ui/install_dialog.py:179
 msgid "Install"
 msgstr "Встановити"
 
-#: kram/ui/install_dialog.py:47
+#: kram/ui/install_dialog.py:48
 msgid "Upgrade"
 msgstr "Оновити"
 
-#: kram/ui/install_dialog.py:48
+#: kram/ui/install_dialog.py:49
 msgid "Downgrade"
 msgstr "Понизити версію"
 
-#: kram/ui/install_dialog.py:48
+#: kram/ui/install_dialog.py:49
 msgid "Reinstall"
 msgstr "Перевстановити"
 
-#: kram/ui/install_dialog.py:52
+#: kram/ui/install_dialog.py:53
 msgid "contents"
 msgstr "вміст"
 
-#: kram/ui/install_dialog.py:52
+#: kram/ui/install_dialog.py:53
 msgid "device"
 msgstr "пристрій"
 
-#: kram/ui/install_dialog.py:52
+#: kram/ui/install_dialog.py:53
 msgid "permissions"
 msgstr "права доступу"
 
-#: kram/ui/install_dialog.py:52
+#: kram/ui/install_dialog.py:53
 msgid "size"
 msgstr "розмір"
 
-#: kram/ui/install_dialog.py:53
+#: kram/ui/install_dialog.py:54
 msgid "link target"
 msgstr "ціль посилання"
 
-#: kram/ui/install_dialog.py:53
+#: kram/ui/install_dialog.py:54
 msgid "modification time"
 msgstr "час зміни"
 
-#: kram/ui/install_dialog.py:53
+#: kram/ui/install_dialog.py:54
 msgid "owner"
 msgstr "власник"
 
-#: kram/ui/install_dialog.py:54
+#: kram/ui/install_dialog.py:55
 msgid "capabilities"
 msgstr "capabilities"
 
-#: kram/ui/install_dialog.py:80
+#: kram/ui/install_dialog.py:81
 msgid "Install Package File"
 msgstr "Встановлення файлу пакунка"
 
-#: kram/ui/install_dialog.py:134
+#: kram/ui/install_dialog.py:135
 msgid "What installing it changes"
 msgstr "Що зміниться після встановлення"
 
-#: kram/ui/install_dialog.py:143 kram/ui/progress_dialog.py:99
+#: kram/ui/install_dialog.py:144 kram/ui/progress_dialog.py:100
 msgid "Details"
 msgstr "Подробиці"
 
-#: kram/ui/install_dialog.py:145
+#: kram/ui/install_dialog.py:146
 msgid "Scripts"
 msgstr "Скрипти"
 
-#: kram/ui/install_dialog.py:186
+#: kram/ui/install_dialog.py:187
 #, python-brace-format
 msgid "Reading {file}…"
 msgstr "Читання {file}…"
 
-#: kram/ui/install_dialog.py:189 kram/ui/main_window.py:297
+#: kram/ui/install_dialog.py:190 kram/ui/main_window.py:301
 msgid "Loading metadata…"
 msgstr "Завантаження метаданих…"
 
-#: kram/ui/install_dialog.py:216 kram/ui/main_window.py:351
+#: kram/ui/install_dialog.py:217 kram/ui/main_window.py:361
 #, python-brace-format
 msgid ""
 "Could not load the package catalog:\n"
@@ -2061,35 +2101,35 @@ msgstr ""
 "\n"
 "{error}"
 
-#: kram/ui/install_dialog.py:225
+#: kram/ui/install_dialog.py:226
 msgid ""
 "This is a source package: it can be used to build the program, not installed."
 msgstr ""
 "Це пакунок із сирцями: з нього можна зібрати програму, але не встановити."
 
-#: kram/ui/install_dialog.py:227
+#: kram/ui/install_dialog.py:228
 msgid "The file is damaged: its checksums do not match."
 msgstr "Файл пошкоджено: контрольні суми не збігаються."
 
-#: kram/ui/install_dialog.py:236
+#: kram/ui/install_dialog.py:237
 #, python-brace-format
 msgid "Could not read the file: {error}"
 msgstr "Не вдалося прочитати файл: {error}"
 
-#: kram/ui/install_dialog.py:307
+#: kram/ui/install_dialog.py:308
 #, python-brace-format
 msgid "Checking the installed files of {name}…"
 msgstr "Перевірка встановлених файлів {name}…"
 
-#: kram/ui/install_dialog.py:330
+#: kram/ui/install_dialog.py:331
 msgid "Cannot be installed."
 msgstr "Неможливо встановити."
 
-#: kram/ui/install_dialog.py:333
+#: kram/ui/install_dialog.py:334
 msgid "(the full text is in the Dependencies tab)"
 msgstr "(повний текст на вкладці «Залежності»)"
 
-#: kram/ui/install_dialog.py:341
+#: kram/ui/install_dialog.py:342
 #, python-brace-format
 msgid ""
 "The {repo} repository has a newer version ({version}): the next system "
@@ -2098,16 +2138,16 @@ msgstr ""
 "У репозиторії {repo} є новіша версія ({version}): наступне оновлення системи "
 "встановить її замість цієї."
 
-#: kram/ui/install_dialog.py:345
+#: kram/ui/install_dialog.py:346
 #, python-brace-format
 msgid "Also available from the {repo} repository (version {version})."
 msgstr "Також є в репозиторії {repo} (версія {version})."
 
-#: kram/ui/install_dialog.py:348
+#: kram/ui/install_dialog.py:349
 msgid "Adds a repository of its own and gets updates from it."
 msgstr "Додає власний репозиторій і отримує оновлення з нього."
 
-#: kram/ui/install_dialog.py:350
+#: kram/ui/install_dialog.py:351
 msgid ""
 "No repository has this package: it gets no updates unless you install a "
 "newer file."
@@ -2115,14 +2155,14 @@ msgstr ""
 "Цього пакунка немає в жодному репозиторії: оновлень не буде, доки ви не "
 "встановите новіший файл."
 
-#: kram/ui/install_dialog.py:353
+#: kram/ui/install_dialog.py:354
 msgid ""
 "Runs scripts as root when it is installed or removed (see the Scripts tab)."
 msgstr ""
 "Виконує скрипти від root під час встановлення чи вилучення (див. вкладку "
 "«Скрипти»)."
 
-#: kram/ui/install_dialog.py:359
+#: kram/ui/install_dialog.py:360
 #, python-brace-format
 msgid "{n} installed file is missing or changed (see the Files tab)."
 msgid_plural "{n} installed files are missing or changed (see the Files tab)."
@@ -2132,11 +2172,11 @@ msgstr[1] "{n} встановлені файли відсутні або змі�
 msgstr[2] ""
 "{n} встановлених файлів відсутні або змінені (див. вкладку «Файли»)."
 
-#: kram/ui/install_dialog.py:362
+#: kram/ui/install_dialog.py:363
 msgid "The installed files are intact."
 msgstr "Встановлені файли неушкоджені."
 
-#: kram/ui/install_dialog.py:365
+#: kram/ui/install_dialog.py:366
 #, python-brace-format
 msgid "{n} file could not be checked: no permission to read it."
 msgid_plural "{n} files could not be checked: no permission to read them."
@@ -2144,7 +2184,7 @@ msgstr[0] "{n} файл не вдалося перевірити: немає п�
 msgstr[1] "{n} файли не вдалося перевірити: немає прав на читання."
 msgstr[2] "{n} файлів не вдалося перевірити: немає прав на читання."
 
-#: kram/ui/install_dialog.py:370
+#: kram/ui/install_dialog.py:371
 #, python-brace-format
 msgid ""
 "{n} change marked in the main window is not part of this and stays marked."
@@ -2160,7 +2200,7 @@ msgstr[2] ""
 "{n} змін, позначених у головному вікні, сюди не входять і лишаються "
 "позначеними."
 
-#: kram/ui/install_dialog.py:381
+#: kram/ui/install_dialog.py:382
 #, python-brace-format
 msgid "Also changes {n} more package, see the Dependencies tab."
 msgid_plural "Also changes {n} more packages, see the Dependencies tab."
@@ -2168,16 +2208,16 @@ msgstr[0] "Також змінює ще {n} пакунок, див. вкладк
 msgstr[1] "Також змінює ще {n} пакунки, див. вкладку «Залежності»."
 msgstr[2] "Також змінює ще {n} пакунків, див. вкладку «Залежності»."
 
-#: kram/ui/install_dialog.py:439
+#: kram/ui/install_dialog.py:440
 msgid "Not installed yet."
 msgstr "Ще не встановлено."
 
-#: kram/ui/install_dialog.py:441
+#: kram/ui/install_dialog.py:442
 #, python-brace-format
 msgid "Upgrades the installed version {old} to {new}."
 msgstr "Оновлює встановлену версію {old} до {new}."
 
-#: kram/ui/install_dialog.py:443
+#: kram/ui/install_dialog.py:444
 #, python-brace-format
 msgid ""
 "Installs next to the installed version {old}: several versions of this "
@@ -2186,7 +2226,7 @@ msgstr ""
 "Встановлюється поряд із встановленою версією {old}: кілька версій цього "
 "пакунка зберігаються одночасно, як ядра."
 
-#: kram/ui/install_dialog.py:447
+#: kram/ui/install_dialog.py:448
 #, python-brace-format
 msgid ""
 "A newer version is installed ({old}). Installing this file downgrades it to "
@@ -2195,7 +2235,7 @@ msgstr ""
 "Встановлено новішу версію ({old}). Встановлення цього файлу понизить її до "
 "{new}."
 
-#: kram/ui/install_dialog.py:449
+#: kram/ui/install_dialog.py:450
 msgid ""
 "This version is already installed. Reinstalling puts its files back as they "
 "were packaged."
@@ -2203,12 +2243,12 @@ msgstr ""
 "Ця версія вже встановлена. Перевстановлення поверне її файли такими, якими "
 "вони були в пакунку."
 
-#: kram/ui/install_dialog.py:456
+#: kram/ui/install_dialog.py:457
 #, python-brace-format
 msgid "Signed by {signer}."
 msgstr "Підписано: {signer}."
 
-#: kram/ui/install_dialog.py:458
+#: kram/ui/install_dialog.py:459
 #, python-brace-format
 msgid ""
 "Signed with a key this system does not know ({key}). Install it only if you "
@@ -2217,81 +2257,91 @@ msgstr ""
 "Підписано ключем, якого ця система не знає ({key}). Встановлюйте, лише якщо "
 "довіряєте джерелу файлу."
 
-#: kram/ui/install_dialog.py:460
+#: kram/ui/install_dialog.py:462
+msgid ""
+"The signature could not be checked. Install it only if you trust where the "
+"file came from."
+msgstr "Не вдалося перевірити підпис. Встановлюйте, лише якщо довіряєте джерелу файлу."
+
+#: kram/ui/install_dialog.py:464
 msgid "Not signed. Install it only if you trust where the file came from."
 msgstr "Не підписано. Встановлюйте, лише якщо довіряєте джерелу файлу."
 
-#: kram/ui/install_dialog.py:475
+#: kram/ui/install_dialog.py:479
 msgid "SHA-256"
 msgstr "SHA-256"
 
-#: kram/ui/install_dialog.py:476
+#: kram/ui/install_dialog.py:480
 msgid "Signing key"
 msgstr "Ключ підпису"
 
-#: kram/ui/install_dialog.py:483
+#: kram/ui/install_dialog.py:487
 msgid "File size"
 msgstr "Розмір файлу"
 
-#: kram/ui/install_dialog.py:493
+#: kram/ui/install_dialog.py:497
 msgid "No changelog"
 msgstr "Журнал змін відсутній"
 
-#: kram/ui/install_dialog.py:494
+#: kram/ui/install_dialog.py:499
+msgid "The scripts could not be read."
+msgstr "Не вдалося прочитати скрипти."
+
+#: kram/ui/install_dialog.py:501
 msgid "This package runs no scripts."
 msgstr "Цей пакунок не виконує скриптів."
 
-#: kram/ui/install_dialog.py:524
+#: kram/ui/install_dialog.py:531
 msgid "Supplements"
 msgstr "Доповнює (Supplements)"
 
-#: kram/ui/install_dialog.py:537
+#: kram/ui/install_dialog.py:544
 #, python-brace-format
 msgid "installed: {names}"
 msgstr "встановлено: {names}"
 
-#: kram/ui/install_dialog.py:539
+#: kram/ui/install_dialog.py:546
 msgid "provided by this package"
 msgstr "надає сам цей пакунок"
 
-#: kram/ui/install_dialog.py:541
+#: kram/ui/install_dialog.py:548
 #, python-brace-format
 msgid "will be installed: {names}"
 msgstr "буде встановлено: {names}"
 
-#: kram/ui/install_dialog.py:543
+#: kram/ui/install_dialog.py:550
 msgid "not installed"
 msgstr "не встановлено"
 
-#: kram/ui/install_dialog.py:545
+#: kram/ui/install_dialog.py:552
 msgid "unavailable: no package provides it"
 msgstr "недоступно: жоден пакунок цього не надає"
 
-#: kram/ui/install_dialog.py:556
+#: kram/ui/install_dialog.py:563
 #, python-brace-format
 msgid "Missing: {path}"
 msgstr "Відсутній: {path}"
 
-#: kram/ui/install_dialog.py:559
+#: kram/ui/install_dialog.py:566
 #, python-brace-format
 msgid "Changed ({what}): {path}"
 msgstr "Змінено ({what}): {path}"
 
-#: kram/ui/install_dialog.py:560
+#: kram/ui/install_dialog.py:567
 msgid "a configuration file"
 msgstr "файл налаштувань"
 
-#: kram/ui/install_dialog.py:561
+#: kram/ui/install_dialog.py:568
 #, python-brace-format
 msgid "Could not check: {path}"
 msgstr "Не вдалося перевірити: {path}"
 
-#: kram/ui/install_dialog.py:574
+#: kram/ui/install_dialog.py:581
 #, python-brace-format
 msgid "Installing {name}"
 msgstr "Встановлення {name}"
 
-#: kram/ui/main_window.py:68
+#: kram/ui/main_window.py:69
 msgid ""
 "To keep an installed package at its version, select it and choose Package → "
 "Lock Version: upgrades then leave it out until it is unlocked."
@@ -2300,11 +2350,11 @@ msgstr ""
 "Пакунок → Заблокувати версію: тоді оновлення оминатимуть його, доки його не "
 "розблоковано."
 
-#: kram/ui/main_window.py:78
+#: kram/ui/main_window.py:79
 msgid "Package Manager"
 msgstr "Менеджер пакунків"
 
-#: kram/ui/main_window.py:283
+#: kram/ui/main_window.py:287
 #, python-brace-format
 msgid "{n} marked change has not been applied. Quit anyway?"
 msgid_plural "{n} marked changes have not been applied. Quit anyway?"
@@ -2312,11 +2362,11 @@ msgstr[0] "{n} позначену зміну не застосовано. Все
 msgstr[1] "{n} позначені зміни не застосовано. Все одно вийти?"
 msgstr[2] "{n} позначених змін не застосовано. Все одно вийти?"
 
-#: kram/ui/main_window.py:318
+#: kram/ui/main_window.py:324
 msgid "Waiting for another package manager to finish…"
 msgstr "Очікування завершення роботи іншого менеджера пакунків…"
 
-#: kram/ui/main_window.py:401
+#: kram/ui/main_window.py:411
 #, python-brace-format
 msgid ""
 "Searching “{text}” ({mode}); the first search also indexes what packages "
@@ -2324,46 +2374,51 @@ msgid ""
 msgstr ""
 "Пошук «{text}» ({mode}); перший пошук також індексує, що надають пакунки…"
 
-#: kram/ui/main_window.py:404
+#: kram/ui/main_window.py:414
 #, python-brace-format
 msgid "Searching “{text}” ({mode})…"
 msgstr "Пошук «{text}» ({mode})…"
 
-#: kram/ui/main_window.py:520
+#: kram/ui/main_window.py:534
 #, python-brace-format
 msgid "Nothing provides “{what}”"
 msgstr "Нічого не надає «{what}»"
 
-#: kram/ui/main_window.py:531
+#: kram/ui/main_window.py:536
+#, python-brace-format
+msgid "Could not look up “{what}”: {error}"
+msgstr "Не вдалося знайти “{what}”: {error}"
+
+#: kram/ui/main_window.py:549
 #, python-brace-format
 msgid "Package {name} not found in the catalog"
 msgstr "Пакунок {name} не знайдено в каталозі"
 
-#: kram/ui/main_window.py:570
+#: kram/ui/main_window.py:588
 msgid "Refresh Metadata"
 msgstr "Оновити метадані"
 
-#: kram/ui/main_window.py:578
+#: kram/ui/main_window.py:596
 msgid "Remove from History"
 msgstr "Вилучити з історії"
 
-#: kram/ui/main_window.py:580
+#: kram/ui/main_window.py:598
 msgid "Clear Search History"
 msgstr "Очистити історію пошуку"
 
-#: kram/ui/main_window.py:593
+#: kram/ui/main_window.py:611
 msgid "A Synaptic-style package manager for Fedora."
 msgstr "Менеджер пакунків для Fedora в дусі Synaptic."
 
-#: kram/ui/main_window.py:595
+#: kram/ui/main_window.py:613
 msgid "Released under the MIT License."
 msgstr "Поширюється за ліцензією MIT."
 
-#: kram/ui/main_window.py:598
+#: kram/ui/main_window.py:616
 msgid "What's New"
 msgstr "Що нового"
 
-#: kram/ui/main_window.py:666
+#: kram/ui/main_window.py:690
 #, python-brace-format
 msgid ""
 "{n} upgrade or downgrade unmarked: the version lock keeps the installed "
@@ -2381,7 +2436,7 @@ msgstr[2] ""
 "Знято {n} позначок оновлення або пониження: блокування зберігає встановлені "
 "версії"
 
-#: kram/ui/main_window.py:669
+#: kram/ui/main_window.py:693
 #, python-brace-format
 msgid "Locking the version of {n} package"
 msgid_plural "Locking the versions of {n} packages"
@@ -2389,7 +2444,7 @@ msgstr[0] "Блокування версії {n} пакунка"
 msgstr[1] "Блокування версій {n} пакунків"
 msgstr[2] "Блокування версій {n} пакунків"
 
-#: kram/ui/main_window.py:671
+#: kram/ui/main_window.py:695
 #, python-brace-format
 msgid "Unlocking the version of {n} package"
 msgid_plural "Unlocking the versions of {n} packages"
@@ -2397,7 +2452,7 @@ msgstr[0] "Розблокування версії {n} пакунка"
 msgstr[1] "Розблокування версій {n} пакунків"
 msgstr[2] "Розблокування версій {n} пакунків"
 
-#: kram/ui/main_window.py:679
+#: kram/ui/main_window.py:703
 #, python-brace-format
 msgid "{n} marking saved to {path}"
 msgid_plural "{n} markings saved to {path}"
@@ -2405,15 +2460,15 @@ msgstr[0] "{n} позначку збережено в {path}"
 msgstr[1] "{n} позначки збережено в {path}"
 msgstr[2] "{n} позначок збережено в {path}"
 
-#: kram/ui/main_window.py:683
+#: kram/ui/main_window.py:707
 msgid "Export List as CSV"
 msgstr "Експортувати список у CSV"
 
-#: kram/ui/main_window.py:686
+#: kram/ui/main_window.py:710
 msgid "CSV files (*.csv);;All files (*)"
 msgstr "Файли CSV (*.csv);;Усі файли (*)"
 
-#: kram/ui/main_window.py:694 kram/ui/markings_file.py:34
+#: kram/ui/main_window.py:718 kram/ui/markings_file.py:34
 #, python-brace-format
 msgid ""
 "Could not save {path}:\n"
@@ -2424,7 +2479,7 @@ msgstr ""
 "\n"
 "{error}"
 
-#: kram/ui/main_window.py:698
+#: kram/ui/main_window.py:722
 #, python-brace-format
 msgid "{n} package exported to {path}"
 msgid_plural "{n} packages exported to {path}"
@@ -2432,27 +2487,27 @@ msgstr[0] "{n} пакунок експортовано в {path}"
 msgstr[1] "{n} пакунки експортовано в {path}"
 msgstr[2] "{n} пакунків експортовано в {path}"
 
-#: kram/ui/main_window.py:710
+#: kram/ui/main_window.py:734
 msgid "(loading…)"
 msgstr "(завантаження…)"
 
-#: kram/ui/main_window.py:717
+#: kram/ui/main_window.py:741
 msgid "No older versions in the repositories"
 msgstr "Старіших версій у репозиторіях немає"
 
-#: kram/ui/main_window.py:770
+#: kram/ui/main_window.py:809
 msgid "Cannot apply changes"
 msgstr "Неможливо застосувати зміни"
 
-#: kram/ui/main_window.py:771
+#: kram/ui/main_window.py:810
 msgid "The marked changes cannot be carried out. Unmark or change them."
 msgstr "Позначені зміни неможливо виконати. Зніміть або змініть позначки."
 
-#: kram/ui/main_window.py:772
+#: kram/ui/main_window.py:811
 msgid "This change cannot be carried out."
 msgstr "Цю зміну неможливо виконати."
 
-#: kram/ui/main_window.py:776
+#: kram/ui/main_window.py:815
 msgid ""
 "Undoing the whole transaction needs versions the repositories no longer "
 "have. What is still possible can be undone without them."
@@ -2460,11 +2515,11 @@ msgstr ""
 "Для повного скасування транзакції потрібні версії, яких у репозиторіях уже "
 "немає. Те, що ще можливо, можна скасувати без них."
 
-#: kram/ui/main_window.py:778
+#: kram/ui/main_window.py:817
 msgid "Undo What Is Possible…"
 msgstr "Скасувати те, що можливо…"
 
-#: kram/ui/main_window.py:780
+#: kram/ui/main_window.py:819
 msgid ""
 "They need a version the version lock excludes. Unlock the package (Package → "
 "Unlock Version) or unmark the change."
@@ -2472,19 +2527,30 @@ msgstr ""
 "Їм потрібна версія, яку виключає блокування версій. Розблокуйте пакунок "
 "(Пакунок → Розблокувати версію) або зніміть позначку зі зміни."
 
-#: kram/ui/main_window.py:782
+#: kram/ui/main_window.py:821
 msgid "Show Locked Packages"
 msgstr "Показати заблоковані пакунки"
 
-#: kram/ui/main_window.py:803
+#: kram/ui/main_window.py:842
 msgid "Applying changes"
 msgstr "Застосування змін"
 
-#: kram/ui/main_window.py:811 kram/ui/main_window.py:818
+#: kram/ui/main_window.py:856 kram/ui/main_window.py:863
 msgid "Refreshing metadata"
 msgstr "Оновлення метаданих"
 
-#: kram/ui/main_window.py:850
+#: kram/ui/main_window.py:883
+#, python-brace-format
+msgid ""
+"Could not read the repositories:\n"
+"\n"
+"{error}"
+msgstr ""
+"Не вдалося прочитати репозиторії:\n"
+"\n"
+"{error}"
+
+#: kram/ui/main_window.py:897
 #, python-brace-format
 msgid "Removing {n} repository"
 msgid_plural "Removing {n} repositories"
@@ -2492,20 +2558,39 @@ msgstr[0] "Видалення {n} репозиторію"
 msgstr[1] "Видалення {n} репозиторіїв"
 msgstr[2] "Видалення {n} репозиторіїв"
 
-#: kram/ui/main_window.py:854
+#: kram/ui/main_window.py:901
 msgid "Changing repositories"
 msgstr "Зміна репозиторіїв"
 
-#: kram/ui/main_window.py:935
-msgid "cannot be marked"
-msgstr "не вдалося позначити"
-
-#: kram/ui/main_window.py:946
+#: kram/ui/main_window.py:973 kram/ui/main_window.py:1003
 #, python-brace-format
 msgid "Undo Transaction {id}"
 msgstr "Відкат транзакції {id}"
 
-#: kram/ui/main_window.py:947
+#: kram/ui/main_window.py:974
+msgid "The groups this transaction changed could not be read."
+msgstr "Не вдалося прочитати групи, які змінила ця транзакція."
+
+#: kram/ui/main_window.py:988
+msgid "cannot be marked"
+msgstr "не вдалося позначити"
+
+#: kram/ui/main_window.py:999
+msgid "Undo Transaction"
+msgstr "Скасувати транзакцію"
+
+#: kram/ui/main_window.py:1000
+#, python-brace-format
+msgid ""
+"Could not read what the transaction changed:\n"
+"\n"
+"{error}"
+msgstr ""
+"Не вдалося прочитати, що змінила транзакція:\n"
+"\n"
+"{error}"
+
+#: kram/ui/main_window.py:1004
 #, python-brace-format
 msgid "{n} change marked to undo transaction {id}."
 msgid_plural "{n} changes marked to undo transaction {id}."
@@ -2513,22 +2598,22 @@ msgstr[0] "Позначено {n} зміну для відкату транза�
 msgstr[1] "Позначено {n} зміни для відкату транзакції {id}."
 msgstr[2] "Позначено {n} змін для відкату транзакції {id}."
 
-#: kram/ui/main_window.py:949
+#: kram/ui/main_window.py:1006
 #, python-brace-format
 msgid "{package}: installs {version}, {old} is no longer in the repositories"
 msgstr ""
 "{package}: буде встановлено {version}, бо {old} у репозиторіях уже немає"
 
-#: kram/ui/main_window.py:954
+#: kram/ui/main_window.py:1011
 msgid "Review them, then apply."
 msgstr "Перегляньте їх і застосуйте."
 
-#: kram/ui/main_window.py:957
+#: kram/ui/main_window.py:1014
 #, python-brace-format
 msgid "Nothing of transaction {id} can be undone."
 msgstr "З транзакції {id} нічого не вдається відкотити."
 
-#: kram/ui/main_window.py:961
+#: kram/ui/main_window.py:1018
 #, python-brace-format
 msgid "{n} package cannot be undone:"
 msgid_plural "{n} packages cannot be undone:"
@@ -2536,7 +2621,7 @@ msgstr[0] "{n} пакунок не вдається відкотити:"
 msgstr[1] "{n} пакунки не вдається відкотити:"
 msgstr[2] "{n} пакунків не вдається відкотити:"
 
-#: kram/ui/main_window.py:965
+#: kram/ui/main_window.py:1022
 #, python-brace-format
 msgid "{n} package comes back in another version:"
 msgid_plural "{n} packages come back in another version:"
@@ -2544,19 +2629,19 @@ msgstr[0] "{n} пакунок повернеться в іншій версії:
 msgstr[1] "{n} пакунки повернуться в іншій версії:"
 msgstr[2] "{n} пакунків повернуться в іншій версії:"
 
-#: kram/ui/main_window.py:980
+#: kram/ui/main_window.py:1037
 msgid "Downloading metadata again"
 msgstr "Повторне завантаження метаданих"
 
-#: kram/ui/main_window.py:982
+#: kram/ui/main_window.py:1039
 msgid "Cleaning the package cache"
 msgstr "Очищення кешу пакунків"
 
-#: kram/ui/main_window.py:1024
+#: kram/ui/main_window.py:1081
 msgid "Open Package File"
 msgstr "Відкрити файл пакунка"
 
-#: kram/ui/main_window.py:1025
+#: kram/ui/main_window.py:1082
 msgid "RPM packages (*.rpm)"
 msgstr "Пакунки RPM (*.rpm)"
 
@@ -2915,11 +3000,11 @@ msgstr ""
 "Встановлено як слабку залежність (рекомендований іншим пакунком):\n"
 "autoremove вилучить його, коли він більше нікому не потрібен"
 
-#: kram/ui/package_model.py:109 kram/ui/package_model.py:329
+#: kram/ui/package_model.py:109 kram/ui/package_model.py:346
 msgid "The upgrade cannot be installed now"
 msgstr "Оновлення зараз неможливо встановити"
 
-#: kram/ui/package_model.py:315
+#: kram/ui/package_model.py:332
 msgid ""
 "Optional in this group: installing the group brings it only with optional "
 "packages"
@@ -2927,43 +3012,43 @@ msgstr ""
 "Необов'язковий у цій групі: встановлення групи додає його лише разом із "
 "необов'язковими пакунками"
 
-#: kram/ui/package_model.py:319
+#: kram/ui/package_model.py:336
 #, python-brace-format
 msgid "Installed from {installed}; the latest version comes from {latest}"
 msgstr "Встановлено з {installed}; найновіша версія — з {latest}"
 
-#: kram/ui/package_model.py:332
+#: kram/ui/package_model.py:349
 #, python-brace-format
 msgid "Marked: {action}"
 msgstr "Позначено: {action}"
 
-#: kram/ui/package_model.py:333
+#: kram/ui/package_model.py:350
 msgid "Click for actions"
 msgstr "Клік — меню дій"
 
-#: kram/ui/package_model.py:363
+#: kram/ui/package_model.py:380
 msgctxt "package status"
 msgid "Not installed"
 msgstr "Не встановлено"
 
-#: kram/ui/package_model.py:364
+#: kram/ui/package_model.py:381
 msgctxt "package status"
 msgid "Installed"
 msgstr "Встановлено"
 
-#: kram/ui/package_model.py:365
+#: kram/ui/package_model.py:382
 msgid "Installed, upgrade available"
 msgstr "Встановлено, є оновлення"
 
-#: kram/ui/package_model.py:366
+#: kram/ui/package_model.py:383
 msgid "Installed version is newer than the repository"
 msgstr "Встановлена версія новіша за репозиторій"
 
-#: kram/ui/package_model.py:367
+#: kram/ui/package_model.py:384
 msgid "Installed, no repository provides it"
 msgstr "Встановлено, жоден репозиторій його не надає"
 
-#: kram/ui/package_model.py:368
+#: kram/ui/package_model.py:385
 msgid "Installed as a dependency, no longer needed"
 msgstr "Встановлено як залежність, більше не потрібен"
 
@@ -3069,26 +3154,35 @@ msgid "{path}: the file changed after it was checked"
 msgstr "{path}: файл змінився після перевірки"
 
 #: kram/ui/progress_dialog.py:52
+#, python-brace-format
+msgid "{path}: {error}"
+msgstr "{path}: {error}"
+
+#: kram/ui/progress_dialog.py:53
 msgid "The helper must run as root"
 msgstr "Помічник має працювати від root"
 
-#: kram/ui/progress_dialog.py:79
+#: kram/ui/progress_dialog.py:80
 msgid "Waiting for authentication…"
 msgstr "Очікування автентифікації…"
 
-#: kram/ui/progress_dialog.py:82
+#: kram/ui/progress_dialog.py:83
 msgid "Download"
 msgstr "Завантаження"
 
-#: kram/ui/progress_dialog.py:84
+#: kram/ui/progress_dialog.py:85
 msgid "Installation"
 msgstr "Встановлення"
 
-#: kram/ui/progress_dialog.py:103
+#: kram/ui/progress_dialog.py:104
 msgid "Close when finished successfully"
 msgstr "Закрити після успішного завершення"
 
-#: kram/ui/progress_dialog.py:137
+#: kram/ui/progress_dialog.py:119
+msgid "Another operation is still running. Try again when it has finished."
+msgstr "Ще виконується інша операція. Спробуйте, коли вона завершиться."
+
+#: kram/ui/progress_dialog.py:147
 #, python-brace-format
 msgid "The transaction has {n} package. Downloading…"
 msgid_plural "The transaction has {n} packages. Downloading…"
@@ -3096,31 +3190,31 @@ msgstr[0] "Транзакція містить {n} пакунок. Завант�
 msgstr[1] "Транзакція містить {n} пакунки. Завантаження…"
 msgstr[2] "Транзакція містить {n} пакунків. Завантаження…"
 
-#: kram/ui/progress_dialog.py:167 kram/ui/upgrade_dialog.py:38
+#: kram/ui/progress_dialog.py:177 kram/ui/upgrade_dialog.py:38
 #, python-brace-format
 msgid "Downloading {name}"
 msgstr "Завантаження {name}"
 
-#: kram/ui/progress_dialog.py:172 kram/ui/upgrade_dialog.py:40
+#: kram/ui/progress_dialog.py:182 kram/ui/upgrade_dialog.py:40
 #, python-brace-format
 msgid "Download failed: {error}"
 msgstr "Помилка завантаження: {error}"
 
-#: kram/ui/progress_dialog.py:182
+#: kram/ui/progress_dialog.py:192
 #, python-brace-format
 msgid "Downloaded {done} of {total}"
 msgstr "Завантажено {done} з {total}"
 
-#: kram/ui/progress_dialog.py:190
+#: kram/ui/progress_dialog.py:200
 msgid "Preparing the rpm transaction…"
 msgstr "Підготовка транзакції rpm…"
 
-#: kram/ui/progress_dialog.py:218
+#: kram/ui/progress_dialog.py:228
 #, python-brace-format
 msgid "Package {index} of {count}"
 msgstr "Пакунок {index} з {count}"
 
-#: kram/ui/progress_dialog.py:226
+#: kram/ui/progress_dialog.py:236
 #, python-brace-format
 msgid ""
 "Import the OpenPGP key used to verify packages?\n"
@@ -3137,34 +3231,34 @@ msgstr ""
 "Створено: {created}\n"
 "Звідки: {url}"
 
-#: kram/ui/progress_dialog.py:229
+#: kram/ui/progress_dialog.py:239
 msgid "Import key"
 msgstr "Імпорт ключа"
 
-#: kram/ui/progress_dialog.py:230
+#: kram/ui/progress_dialog.py:240
 #, python-brace-format
 msgid "Key {key_id}: importing"
 msgstr "Ключ {key_id}: імпортується"
 
-#: kram/ui/progress_dialog.py:230
+#: kram/ui/progress_dialog.py:240
 #, python-brace-format
 msgid "Key {key_id}: rejected"
 msgstr "Ключ {key_id}: відхилено"
 
-#: kram/ui/progress_dialog.py:246 kram/ui/progress_dialog.py:247
+#: kram/ui/progress_dialog.py:256 kram/ui/progress_dialog.py:257
 #: kram/ui/upgrade_dialog.py:301
 msgid "Done."
 msgstr "Готово."
 
-#: kram/ui/progress_dialog.py:246
+#: kram/ui/progress_dialog.py:256
 msgid "Packages downloaded."
 msgstr "Пакунки завантажено."
 
-#: kram/ui/progress_dialog.py:251 kram/ui/progress_dialog.py:267
+#: kram/ui/progress_dialog.py:261 kram/ui/progress_dialog.py:277
 msgid "unknown error"
 msgstr "невідома помилка"
 
-#: kram/ui/progress_dialog.py:253
+#: kram/ui/progress_dialog.py:263
 #, python-brace-format
 msgid ""
 "Another package operation is running: {process}. Try again when it has "
@@ -3173,11 +3267,11 @@ msgstr ""
 "Виконується інша операція з пакунками: {process}. Спробуйте знову, коли вона "
 "завершиться."
 
-#: kram/ui/progress_dialog.py:268
+#: kram/ui/progress_dialog.py:278
 msgid "Error:"
 msgstr "Помилка:"
 
-#: kram/ui/progress_dialog.py:270
+#: kram/ui/progress_dialog.py:280
 #, python-brace-format
 msgid "ERROR: {message}"
 msgstr "ПОМИЛКА: {message}"
@@ -3411,17 +3505,23 @@ msgstr[0] "{n} оновлення"
 msgstr[1] "{n} оновлення"
 msgstr[2] "{n} оновлень"
 
-#: kram/ui/status_bar.py:64
+#: kram/ui/status_bar.py:63
 #, python-brace-format
 msgid "{shown} listed, {installed} installed, {upgrades}."
-msgstr "{shown} показано, {installed} встановлено, {upgrades}."
+msgid_plural "{shown} listed, {installed} installed, {upgrades}."
+msgstr[0] "{shown} показано, {installed} встановлено, {upgrades}."
+msgstr[1] "{shown} показано, {installed} встановлено, {upgrades}."
+msgstr[2] "{shown} показано, {installed} встановлено, {upgrades}."
 
 #: kram/ui/status_bar.py:66
 #, python-brace-format
 msgid "{install} to install/upgrade, {remove} to remove."
-msgstr "{install} до встановлення/оновлення, {remove} до видалення."
+msgid_plural "{install} to install/upgrade, {remove} to remove."
+msgstr[0] "{install} до встановлення/оновлення, {remove} до видалення."
+msgstr[1] "{install} до встановлення/оновлення, {remove} до видалення."
+msgstr[2] "{install} до встановлення/оновлення, {remove} до видалення."
 
-#: kram/ui/status_bar.py:68
+#: kram/ui/status_bar.py:71
 #, python-brace-format
 msgid "Catalog: {load:.2f} s, filter and search: {ms:.0f} ms"
 msgstr "Каталог: {load:.2f} с, фільтр і пошук: {ms:.0f} мс"

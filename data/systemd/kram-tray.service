@@ -6,6 +6,6 @@ PartOf=graphical-session.target
 After=graphical-session.target
 
 [Service]
-ExecStart=/usr/bin/python3 -s -m kram.notifier.tray
+ExecStart=/usr/bin/python3 -I -m kram.notifier.tray
 Restart=on-failure
 RestartSec=30s

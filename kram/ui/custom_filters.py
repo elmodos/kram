@@ -49,22 +49,26 @@ class CustomFilters(QObject):
         """What the filters ask about provides: for the catalog to answer while it loads."""
         return provides_queries(self._sidebar.custom)
 
-    def resolve_missing(self, done: Callable[[], None]) -> bool:
+    def resolve_missing(self, done: Callable[[], None], failed: Callable[[], None] | None = None) -> bool:
         """Ask for the provides answers the snapshot does not have (a filter edited while it loaded, or closed
         before its count came back), then call `done`. False, and `done` is not called, when nothing is missing."""
         missing = self.queries() - self._snapshot().provides.keys()
         if missing:
-            self._resolve(missing, done)
+            self._resolve(missing, done, failed)
         return bool(missing)
 
-    def _resolve(self, queries: set[tuple[str, bool]], done: Callable[[], None]) -> None:
+    def _resolve(self, queries: set[tuple[str, bool]], done: Callable[[], None],
+                 failed: Callable[[], None] | None = None) -> None:
         """Ask libdnf5 on its own thread; the filters themselves run on this one, from the snapshot's answers."""
         snap = self._snapshot()
 
         def store(found):
             snap.provides.update(found)
             done()
-        self._dnf.submit(lambda: {q: self._catalog.provides_keys(*q) for q in queries}, store)
+        def store_failed(_error):  # the caller shows that the count is not there
+            if failed is not None:
+                failed()
+        self._dnf.submit(lambda: {q: self._catalog.provides_keys(*q) for q in queries}, store, store_failed)
 
     def edit(self, select: str | None = None, new: CustomFilter | None = None) -> None:
         """Settings → Custom Filters…, at the filter `select` or with the filter `new` added."""

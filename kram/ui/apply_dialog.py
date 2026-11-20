@@ -284,6 +284,7 @@ class ApplyDialog(QDialog):
         self._resolve = resolve
         self._preview = preview
         self._generation = 0
+        self._closed = False
 
         lay = QVBoxLayout(self)
         lay.addWidget(QLabel("<b>{}</b> {}".format(_("The following changes will be made."), _("Review the list before applying."))))
@@ -355,6 +356,10 @@ class ApplyDialog(QDialog):
         self._show(preview)
         self.recs_box.setVisible(bool(preview.recommendations))
 
+    def done(self, result: int) -> None:
+        self._closed = True  # results that arrive later are for a dialog that is gone (it is deleted after use)
+        super().done(result)
+
     def _show(self, preview: TransactionPreview) -> None:
         self._preview = preview
         self.tree.fill(preview)
@@ -422,7 +427,7 @@ class ApplyDialog(QDialog):
         self.sizes.setText(_("Resolving dependencies…"))
 
         def done(preview: TransactionPreview) -> None:
-            if generation != self._generation:
+            if self._closed or generation != self._generation:
                 return
             self.recs.setEnabled(True)
             if preview.ok:
@@ -431,7 +436,7 @@ class ApplyDialog(QDialog):
                 self.sizes.setText(_("These choices cannot be carried out:") + " " + preview.problems[0][:300])
 
         def failed(error: BaseException) -> None:
-            if generation == self._generation:
+            if not self._closed and generation == self._generation:
                 self.recs.setEnabled(True)
                 self.sizes.setText(_("Could not resolve the changes:\n\n{error}").format(error=error))
 

@@ -55,16 +55,19 @@ class HelperClient:
         threading.Thread(target=self._read_stderr, args=(proc,), name="kram-helper-stderr", daemon=True).start()
         return True
 
-    def request(self, req: dict) -> None:
-        """Send one request; events arrive via `event` until one with event == "done" (or `failed` fires)."""
+    def request(self, req: dict) -> bool:
+        """Send one request; events arrive via `event` until one with event == "done" (or `failed` fires).
+
+        Returns False, and sends nothing, while another request is running: the caller decides what to show."""
         if self.busy:
-            raise RuntimeError("helper is busy")
+            return False
         self.busy = True
         if not self._running() and not self._start():
             # reported from the main loop, like every other outcome: never from inside request()
             self._post(functools.partial(self._fail, _("Could not start pkexec. Is polkit installed?")))
-            return
+            return True
         self._write(req)
+        return True
 
     def answer(self, question_id: int, yes: bool) -> None:
         self._write({"op": "answer", "id": question_id, "yes": yes})
@@ -81,7 +84,11 @@ class HelperClient:
         try:
             proc.wait(STOP_TIMEOUT)
         except subprocess.TimeoutExpired:
-            proc.kill()
+            # after authentication the helper runs as root, and this process cannot signal it
+            try:
+                proc.kill()
+            except (PermissionError, ProcessLookupError):
+                pass
 
     def _write(self, obj: dict) -> None:
         try:
@@ -99,6 +106,8 @@ class HelperClient:
             try:
                 ev = json.loads(line)
             except json.JSONDecodeError:
+                ev = None
+            if not isinstance(ev, dict):  # not JSON, or JSON that is not an object: show it as a log line
                 ev = {"event": "log", "text": line.decode(errors="replace").rstrip("\n")}
             self._post(functools.partial(self._on_event, proc, ev))
         code = proc.wait()

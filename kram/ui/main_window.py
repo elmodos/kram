@@ -25,11 +25,12 @@ from ..core.catalog import Catalog
 from ..core.csv_export import write_csv
 from ..core.evr import evr_cmp
 from ..core.filters import FilterEntry
-from ..core.history import UndoProblem, UndoStep, changes_comps, plan_undo
+from ..core.history import Change, UndoProblem, UndoStep, changes_comps, plan_undo
 from ..core.marks import Action, allowed_actions, group_request
 from ..core.model import CatalogSnapshot, GroupInfo, PkgRow, Status, TransactionPreview
 from ..core.repo_files import file_owners
 from ..core.search import MODE_LABELS, Mode, NarrowingSearch, SearchIndex
+from ..core.updates import Cancelled
 from ..core.worker import DnfWorker
 from ..i18n import _, ngettext
 from ..ipc.client import HelperClient
@@ -92,6 +93,9 @@ class MainWindow(QMainWindow):
         self._last_count = 0
         self._wider_searches: tuple[SearchIndex, NarrowingSearch, NarrowingSearch] | None = None  # see _why_empty
         self.helper = HelperClient(post)
+        # True from the start of a resolve until its preview arrives: the helper is idle then, but the apply flow
+        # is not done, and a second apply or refresh started meanwhile would run the same request twice
+        self._reviewing = False
         self.releases = ReleaseWatcher(self)
         self.releases.act_upgrade.triggered.connect(self.open_upgrade)
         self._upgrade_dialog: UpgradeDialog | None = None
@@ -276,7 +280,7 @@ class MainWindow(QMainWindow):
             s.setValue("sidebar/entry", entry)
 
     def closeEvent(self, event):
-        if self.helper.busy:
+        if self._busy():
             event.ignore()
             return
         if len(self.model.marks) and QMessageBox.question(
@@ -296,10 +300,12 @@ class MainWindow(QMainWindow):
     def reload(self):
         self.status.set_text(_("Loading metadata…"))
         self.acts.reload.setEnabled(False)
+        self.acts.reload_cache.setEnabled(False)  # a second load at once would read the same catalog twice
         if self.snapshot is None:
             self.table.set_empty_text(empty_list.loading())
         queries = self.custom_filters.queries()
-        self.dnf.submit(lambda: self.catalog.load(queries, self._waiting_for_lock), self._on_loaded, self._on_error)
+        self.dnf.submit(lambda: self.catalog.load(queries, self._waiting_for_lock, self.dnf.cancelled),
+                        self._on_loaded, self._on_error)
 
     def _blocked_reason(self, key: tuple[str, str]) -> str | None:
         return self.model.blocked.get(key)
@@ -321,6 +327,7 @@ class MainWindow(QMainWindow):
         keep = self._current_key()
         self.snapshot = snap
         self.acts.reload.setEnabled(True)
+        self.acts.reload_cache.setEnabled(True)
         self.model.set_rows(snap.rows, snap.basearch)
         if any(r.status is Status.UPGRADABLE for r in snap.rows):
             # after the list is up: the full upgrade resolve takes a few tenths of a second
@@ -344,7 +351,10 @@ class MainWindow(QMainWindow):
         self.custom_filters.resolve_missing(lambda: self.sidebar.set_view(self.sidebar.current_view))
 
     def _on_error(self, e: BaseException):
+        if isinstance(e, Cancelled):  # the window is closing: nothing to report
+            return
         self.acts.reload.setEnabled(True)
+        self.acts.reload_cache.setEnabled(True)
         self.status.show_error(e)
         if self.snapshot is None:
             self.table.set_empty_text(empty_list.failed())
@@ -414,7 +424,11 @@ class MainWindow(QMainWindow):
                            found_in_all=len(everywhere))
                 self.search.start_history()
             # the dnf thread takes jobs one after the other: a search typed over by then is skipped, not run for nothing
-            self.dnf.submit(lambda: lookup(text) if gen == self._search_gen else None, done, self._on_error)
+            self.dnf.submit(lambda: lookup(text) if gen == self._search_gen else None, done, self._on_search_failed)
+
+    def _on_search_failed(self, e: BaseException) -> None:
+        """A Provides or file search that failed: the catalog itself is fine, so only the search says so."""
+        self.statusBar().showMessage(_("Search failed: {error}").format(error=e), 8000)
 
     def _show(self, visible: list[int], ranked: bool, ms: float, found_in_all: int | None = None):
         # switch the header between "ranked" (no indicator) and the user's column sort without
@@ -517,9 +531,13 @@ class MainWindow(QMainWindow):
         else:
             self.dnf.submit(lambda: self.catalog.find_provider(value),
                             lambda key: self.navigate(key) if key else self.statusBar().showMessage(
-                                _("Nothing provides “{what}”").format(what=value), 5000))
+                                _("Nothing provides “{what}”").format(what=value), 5000),
+                            lambda e: self.statusBar().showMessage(
+                                _("Could not look up “{what}”: {error}").format(what=value, error=e), 8000))
 
-    def navigate(self, key: tuple[str, str], remember=True):
+    def navigate(self, key: tuple[str, str] | None, remember=True):
+        if not key:
+            return
         if remember and (cur := self._current_key()) and cur != key:
             self.history.append(cur)
         if self._select_key(key):
@@ -561,7 +579,7 @@ class MainWindow(QMainWindow):
     def _sidebar_menu(self, pos, entry: FilterEntry | None) -> None:
         m = QMenu(self)
         if entry is not None and entry.group and (group := self.marker.group(entry.group)) is not None:
-            self.marker.fill_group_menu(m, group, busy=self.helper.busy, run=self.change_group)
+            self.marker.fill_group_menu(m, group, busy=self._busy(), run=self.change_group)
             m.addSeparator()
         if entry is not None and entry.id == "status:unneeded":
             m.addAction(self.acts.mark_unneeded)
@@ -569,7 +587,7 @@ class MainWindow(QMainWindow):
         if entry is not None and (repo_id := self._enabled_repo(entry)) is not None:
             act = m.addAction(QIcon.fromTheme("view-refresh"), _("Refresh Metadata"),
                               lambda: self.refresh_repo_metadata(repo_id))
-            act.setEnabled(not self.helper.busy)
+            act.setEnabled(not self._busy())
             m.addSeparator()
         self.custom_filters.fill_menu(m, entry)
         if self.sidebar.current_view == "search":
@@ -602,20 +620,25 @@ class MainWindow(QMainWindow):
 
     # ---------------------------------------------------------------- marking
 
+    def _busy(self) -> bool:
+        """A helper request runs, or the marks are being resolved for review: nothing else may start meanwhile."""
+        return self.helper.busy or self._reviewing
+
     def _update_actions(self, *_args):
         rows = self._selected_rows()
         allowed = set()
         for r in rows:
             allowed.update(allowed_actions(r))
+        # no marking while the marks are resolved: a removal would be checked against the list being reviewed
         for action, a in self.acts.mark.items():
-            a.setEnabled(action in allowed)
-        self.acts.downgrade_menu.setEnabled(len(rows) == 1 and rows[0].installed)
-        self.acts.unmark.setEnabled(any(r.key in self.model.marks for r in rows))
-        free = not self.helper.busy
+            a.setEnabled(action in allowed and not self._busy())
+        self.acts.downgrade_menu.setEnabled(len(rows) == 1 and rows[0].installed and not self._busy())
+        self.acts.unmark.setEnabled(any(r.key in self.model.marks for r in rows) and not self._busy())
+        free = not self._busy()
         self.acts.lock.setEnabled(free and any(r.installed and not r.locked for r in rows))
         self.acts.unlock.setEnabled(free and any(r.locked for r in rows))
         n = len(self.model.marks)
-        self.acts.apply.setEnabled(n > 0 and not self.helper.busy)
+        self.acts.apply.setEnabled(n > 0 and not self._busy())
         self.acts.unmark_all.setEnabled(n > 0)
         self.acts.save_marks.setEnabled(n > 0)
         self.acts.read_marks.setEnabled(self.snapshot is not None)
@@ -624,7 +647,7 @@ class MainWindow(QMainWindow):
         self.acts.show_in_history.setEnabled(self.snapshot is not None and len(rows) == 1)
         self.acts.why_blocked.setVisible(len(rows) == 1 and rows[0].key in self.model.blocked)
         if self._history_dialog is not None:
-            self._history_dialog.set_marking(self.snapshot is not None, self.helper.busy)
+            self._history_dialog.set_marking(self.snapshot is not None, self._busy())
         for needs_catalog in (self.acts.repos, self.acts.copr, self.acts.cache, self.acts.filters, self.acts.new_filter,
                               self.releases.act_upgrade):
             needs_catalog.setEnabled(self.snapshot is not None)
@@ -639,7 +662,7 @@ class MainWindow(QMainWindow):
         self._update_actions()
         self._update_status()
         if self.sidebar.current_view == "status":
-            self.sidebar.refresh_counts()
+            self.sidebar.refresh_marked_count()
 
     def mark_selected(self, action: Action, evr: str = ""):
         self.marker.mark(self._selected_rows(), action, evr)
@@ -650,7 +673,7 @@ class MainWindow(QMainWindow):
     def set_version_lock(self, lock: bool) -> None:
         """Lock the selected installed packages to their installed versions (`dnf5 versionlock add`), or remove
         their locks. A configuration change, not a transaction: it runs at once, and the catalog reloads after it."""
-        if self.helper.busy:
+        if self._busy():
             return
         rows = self._selected_rows()
         names = sorted({r.name for r in rows if (r.installed and not r.locked if lock else r.locked)})
@@ -658,7 +681,8 @@ class MainWindow(QMainWindow):
             return
         if lock:
             # the lock leaves no other version to go to: drop the marks that would need one, and say so
-            moving = [r for r in self.snapshot.rows if r.name in names and (m := self.model.marks.get(r.key))
+            wanted = set(names)
+            moving = [r for r in self.snapshot.rows if r.name in wanted and (m := self.model.marks.get(r.key))
                       and m.action in (Action.UPGRADE, Action.DOWNGRADE)]
             if moving:
                 self.marker.unmark(moving)
@@ -735,36 +759,51 @@ class MainWindow(QMainWindow):
     # ---------------------------------------------------------------- applying
 
     def apply(self):
-        if not len(self.model.marks) or self.helper.busy:
+        if not len(self.model.marks) or self._busy():
             return
         rows = {r.key: r for r in self.snapshot.rows}
-        self._review({"op": "transaction", **self.model.marks.request(rows)}, marked=True)
+        self._review({"op": "transaction", **self.model.marks.request(rows)}, marked=True,
+                     keys=frozenset(self.model.marks.keys()))
 
     def change_group(self, group: GroupInfo, action: Action, optional: bool = False) -> None:
         """Install, upgrade or remove a comps group or environment at once, after the review. Only that: the marks
         stay for a later Apply (a reload drops the ones it has carried out)."""
-        if self.helper.busy:
+        if self._busy():
             return
         self._review({"op": "transaction", **group_request(group, action, optional)}, marked=False)
 
-    def _review(self, request: dict, marked: bool) -> None:
-        """Resolve `request`, show what it does, run it if the user agrees. `marked`: it is the marked changes."""
+    def _review(self, request: dict, marked: bool, keys: frozenset = frozenset()) -> None:
+        """Resolve `request`, show what it does, run it if the user agrees. `marked`: it is the marked changes, which
+        are the ones with `keys` (the marks when the request was built): only those are unmarked afterwards."""
+        self._reviewing = True
+        self._update_actions()
         self.status.set_text(_("Resolving dependencies…"))
-        self.dnf.submit(lambda: self.catalog.resolve(request), lambda p: self._on_preview(p, request, marked),
-                        lambda e: QMessageBox.critical(self, "Kram", _("Could not resolve the changes:\n\n{error}").format(error=e)))
+        self.dnf.submit(lambda: self.catalog.resolve(request),
+                        lambda p: self._on_preview(p, request, marked, keys=keys),
+                        self._on_review_failed)
+
+    def _on_review_failed(self, e: BaseException) -> None:
+        self._reviewing = False
+        self._update_status()
+        self._update_actions()
+        QMessageBox.critical(self, "Kram", _("Could not resolve the changes:\n\n{error}").format(error=e))
 
     def _on_preview(self, preview: TransactionPreview, request: dict, marked: bool = True,
-                    can_skip: bool | None = None):
+                    can_skip: bool | None = None, keys: frozenset = frozenset()):
         """`can_skip` (an undo that cannot be done whole): whether leaving out what is unavailable would work; None
         until that has been tried."""
+        self._reviewing = False
         self._update_status()
+        self._update_actions()
         if not preview.ok and request.get("revert") and not request.get("skip_unavailable") and can_skip is None:
             # offer the partial undo only when it resolves: when the transaction cannot be reverted for another
             # reason (its environment was removed since), it would fail the same way
             partial = {**request, "skip_unavailable": True}
+            self._reviewing = True
+            self._update_actions()
             self.dnf.submit(lambda: self.catalog.resolve(partial, sizes=False).ok,
-                            lambda ok: self._on_preview(preview, request, marked, ok),
-                            lambda _e: self._on_preview(preview, request, marked, False))
+                            lambda ok: self._on_preview(preview, request, marked, ok, keys),
+                            lambda _e: self._on_preview(preview, request, marked, False, keys))
             return
         if not preview.ok:
             box = QMessageBox(QMessageBox.Icon.Warning, _("Cannot apply changes"),
@@ -794,26 +833,34 @@ class MainWindow(QMainWindow):
             self.dnf.submit(lambda: self.catalog.resolve(req, sizes=False), done, failed)
 
         dlg = ApplyDialog(preview, request, self.snapshot.basearch, self, resolve=resolve)
-        if dlg.exec() != ApplyDialog.Accepted:
-            return
+        accepted = dlg.exec() == ApplyDialog.Accepted
         request = dlg.request  # with the recommendations the user unchecked
         download_only = dlg.download_only.isChecked()
+        dlg.deleteLater()  # every dialog is deleted after use: as a child of the window it would live until exit
+        if not accepted:
+            return
         if download_only:
             request = {**request, "download_only": True}
-        if self._run_helper(request, _("Applying changes")) and not download_only:
-            if marked:
-                self.marker.unmark_all()
-            self.reload()
+        ok = self._run_helper(request, _("Applying changes"))
+        if download_only:
+            return
+        if ok and marked:
+            # the marks added since the request was built stay; a failed run keeps all of them, and the reload
+            # drops those that no longer apply
+            done_rows = [r for r in self.snapshot.rows if r.key in keys]
+            self.marker.unmark(done_rows)
+        # even after a failure: part of the change may have happened
+        self.reload()
 
     def refresh_metadata(self):
-        if self.helper.busy:
+        if self._busy():
             return
         self._run_helper({"op": "refresh"}, _("Refreshing metadata"))
         self.releases.check()
         self.reload()
 
     def refresh_repo_metadata(self, repo_id: str) -> None:
-        if self.helper.busy:
+        if self._busy():
             return
         self._run_helper({"op": "refresh", "repos": [repo_id]}, _("Refreshing metadata"))
         self.reload()
@@ -831,10 +878,12 @@ class MainWindow(QMainWindow):
         return ok
 
     def open_repos(self):
-        if not self.snapshot or self.helper.busy:
+        if not self.snapshot or self._busy():
             return
         paths = [r.file_path for r in self.snapshot.repos]
-        self.dnf.submit(lambda: (self.catalog.repo_package_counts(), file_owners(paths)), self._show_repos)
+        self.dnf.submit(lambda: (self.catalog.repo_package_counts(), file_owners(paths)), self._show_repos,
+                        lambda e: QMessageBox.warning(self, "Kram", _("Could not read the repositories:\n\n{error}")
+                                                      .format(error=e)))
 
     def _show_repos(self, result):
         counts, owners = result
@@ -842,15 +891,17 @@ class MainWindow(QMainWindow):
         dlg = ReposDialog(snap.repos, counts, self, owners=owners, listed=Counter(r.origin_repo for r in snap.rows),
                           installed=Counter(r.from_repo_id for r in snap.rows if r.installed))
         accepted = dlg.exec() == ReposDialog.Accepted
-        if dlg.show_repo:
-            self.show_repo_packages(dlg.show_repo)
-        elif dlg.remove_repos:
+        show_repo, remove_repos, changes = dlg.show_repo, dlg.remove_repos, dlg.changes() if accepted else None
+        dlg.deleteLater()
+        if show_repo:
+            self.show_repo_packages(show_repo)
+        elif remove_repos:
             # back to the list once it is reloaded without them
             self.catalogLoaded.connect(lambda _snap: self.open_repos(), Qt.ConnectionType.SingleShotConnection)
-            title = ngettext("Removing {n} repository", "Removing {n} repositories", len(dlg.remove_repos))
-            self.run_helper_and_reload({"op": "repo_remove", "repos": dlg.remove_repos},
-                                       title.format(n=len(dlg.remove_repos)))
-        elif accepted and (changes := dlg.changes()):
+            title = ngettext("Removing {n} repository", "Removing {n} repositories", len(remove_repos))
+            self.run_helper_and_reload({"op": "repo_remove", "repos": remove_repos},
+                                       title.format(n=len(remove_repos)))
+        elif changes:
             self.run_helper_and_reload({"op": "repo_set_enabled", "repos": changes}, _("Changing repositories"))
 
     def show_repo_packages(self, repo_id: str) -> None:
@@ -859,12 +910,13 @@ class MainWindow(QMainWindow):
         self.sidebar.select("origin", f"repo:{repo_id}")
 
     def open_copr(self):
-        if not self.snapshot or self.helper.busy:
+        if not self.snapshot or self._busy():
             return
         dlg = CoprDialog(self.run_helper_and_reload, self)
 
         def refresh(snap):
-            self.dnf.submit(self.catalog.repo_package_counts, lambda counts: dlg.set_catalog(snap, counts))
+            self.dnf.submit(self.catalog.repo_package_counts, lambda counts: dlg.set_catalog(snap, counts),
+                            lambda _e: None)  # the dialog keeps the counts it has
 
         def show_packages(repo_id):
             dlg.accept()
@@ -874,11 +926,14 @@ class MainWindow(QMainWindow):
         dlg.showPackages.connect(show_packages)
         dlg.exec()
         self.catalogLoaded.disconnect(refresh)
+        dlg.deleteLater()
 
     def open_cache(self):
-        if not self.snapshot or self.helper.busy:
+        if not self.snapshot or self._busy():
             return
-        CacheDialog(self.dnf, self._clean_cache, self, helper=self._helper_result).exec()
+        dlg = CacheDialog(self.dnf, self._clean_cache, self, helper=self._helper_result)
+        dlg.exec()
+        dlg.deleteLater()
 
     def open_history(self, name: str | None = None) -> None:
         """File → Transaction History; with a package name, filtered by it (Package → Show in History)."""
@@ -895,7 +950,7 @@ class MainWindow(QMainWindow):
             dlg.reload()
         if name is not None:
             dlg.show_package_name(name)
-        dlg.set_marking(self.snapshot is not None, self.helper.busy)
+        dlg.set_marking(self.snapshot is not None, self._busy())
         dlg.show()
         dlg.raise_()
         dlg.activateWindow()
@@ -918,7 +973,12 @@ class MainWindow(QMainWindow):
         """Mark the changes that undo transaction `tid`, show them in the Marked list and say what cannot be undone."""
         dlg = self._history_dialog
         rows = dlg.rows_of(tid) if dlg is not None else None
-        if not rows or self.snapshot is None or self.helper.busy:
+        if not rows or self.snapshot is None or self._busy():
+            return
+        if any(r.change is Change.UNREADABLE for r in rows):
+            # which groups changed is not known: an undo could leave some of them recorded as installed
+            QMessageBox.warning(self, _("Undo Transaction {id}").format(id=tid),
+                                _("The groups this transaction changed could not be read."))
             return
         if changes_comps(rows):
             # groups are not marked, and package marks alone would leave the groups recorded as installed:
@@ -940,7 +1000,11 @@ class MainWindow(QMainWindow):
                 self.sidebar.select("status", "status:marked")
                 self.apply_filter()  # already on Marked: the list shows the new marks too
             self._report_undo(tid, marked, problems)
-        self.dnf.submit(lambda: self.catalog.package_states({r.key for r in rows}), done, self._on_error)
+        self.dnf.submit(lambda: self.catalog.package_states({r.key for r in rows}), done, self._on_undo_failed)
+
+    def _on_undo_failed(self, e: BaseException) -> None:
+        QMessageBox.warning(self, _("Undo Transaction"),
+                            _("Could not read what the transaction changed:\n\n{error}").format(error=e))
 
     def _report_undo(self, tid: int, marked: list[UndoStep], problems: list[UndoProblem]) -> None:
         title = _("Undo Transaction {id}").format(id=tid)
@@ -972,7 +1036,9 @@ class MainWindow(QMainWindow):
         box.exec()
 
     def open_notifications(self):
-        NotifierDialog(self).exec()
+        dlg = NotifierDialog(self)
+        dlg.exec()
+        dlg.deleteLater()
 
     def _clean_cache(self, target: str) -> None:
         request = {"op": "clean_cache", "target": target}
@@ -995,7 +1061,7 @@ class MainWindow(QMainWindow):
     def _can_open_file(self) -> bool:
         """Not while another dialog or a transaction is running: a dropped file or a stray shortcut then does
         nothing, whatever Qt's modality lets through."""
-        return self.snapshot is not None and not self.helper.busy and QApplication.activeModalWidget() is None
+        return self.snapshot is not None and not self._busy() and QApplication.activeModalWidget() is None
 
     @staticmethod
     def _dropped_rpm(mime) -> str | None:
@@ -1031,7 +1097,9 @@ class MainWindow(QMainWindow):
         dlg = InstallDialog(path, self.catalog, self.dnf, self.helper, self.snapshot.basearch,
                             marks=len(self.model.marks), parent=self)
         dlg.exec()
-        if dlg.changed_system:
+        changed = dlg.changed_system
+        dlg.deleteLater()
+        if changed:
             self.reload()
         self._update_actions()
 
@@ -1045,7 +1113,10 @@ class MainWindow(QMainWindow):
         # a child of the dialog that started it (COPR, Package Cache): as a sibling, that one could be raised over it
         dlg = ProgressDialog(self.helper, request, title, QApplication.activeModalWidget() or self)
         dlg.exec()
+        result = dlg.result if dlg.ok else None
+        dlg.deleteLater()  # with its whole log
         self.acts.reload.setEnabled(True)
+        self.acts.reload_cache.setEnabled(True)
         self._update_actions()
         notifier_control.recheck()  # even after a failure: the metadata may have been refreshed
-        return dlg.result if dlg.ok else None
+        return result

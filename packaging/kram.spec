@@ -61,6 +61,8 @@ done
 
 %install
 %pyproject_install
+# the helper's work directory: root only, see LOCAL_DIR in kram/helper/kram_helper.py
+install -d -m 0700 %{buildroot}%{_localstatedir}/cache/kram
 %pyproject_save_files -l kram
 # the root helper: started by pkexec at the path the polkit policy names
 install -Dpm 0755 kram/helper/kram_helper.py %{buildroot}%{_libexecdir}/kram-helper
@@ -101,6 +103,7 @@ QT_QPA_PLATFORM=offscreen %pytest
 
 %files -f %{pyproject_files} -f %{name}.lang
 %doc README.md
+%dir %attr(0700,root,root) %{_localstatedir}/cache/kram
 %{_bindir}/kram
 %{_libexecdir}/kram-helper
 %{_datadir}/polkit-1/actions/%{appid}.policy

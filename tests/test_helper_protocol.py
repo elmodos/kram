@@ -43,6 +43,9 @@ def test_rejects_bad_input():
         '{"op": "repo_set_enabled", "repos": {"-fedora": true}}',
         '{"op": "transaction", "install": ["fish"], "exclude_weak": ["../etc/passwd"]}',
         '{"op": "transaction", "exclude_weak": ["qemu-kvm-core"]}',
+        '{"op": "transaction", "install": ["fish"], "upgrade_all": "false"}',
+        '{"op": "transaction", "install": ["fish"], "test": 1}',
+        '{"op": "transaction", "install": ["fish"], "download_only": "yes"}',
         '{"op": "local_install", "path": "fish.rpm", "sha256": "' + "0" * 64 + '"}',
         '{"op": "local_install", "path": "/etc/shadow", "sha256": "' + "0" * 64 + '"}',
         '{"op": "local_install", "path": "/tmp/fish.rpm", "sha256": "' + "A" * 64 + '"}',
@@ -81,7 +84,7 @@ def test_rejects_bad_input():
         '{"op": "refresh", "repos": ["fedora; rm -rf /"]}',
         '{"op": "refresh", "repos": [7]}',
     )
-    assert len(events) == 58
+    assert len(events) == 61
     assert all(ev["event"] == "done" and ev["ok"] is False and ev["stage"] == "protocol" for ev in events)
 
 
@@ -120,3 +123,57 @@ def test_own_failures_carry_a_key_for_the_gui_to_translate():
     [ev] = [json.loads(line) for line in out.stdout.splitlines()]
     assert ev == {"event": "done", "ok": False, "stage": "startup", "key": "not_root", "params": {},
                   "error": "The helper must run as root"}
+
+
+def _load_helper():
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("kram_helper_under_test", HELPER)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+class _ClosedPipe:
+    def write(self, _text):
+        raise BrokenPipeError(32, "Broken pipe")
+
+    def flush(self):
+        pass
+
+    def close(self):  # closing flushes what is buffered: that fails too
+        raise BrokenPipeError(32, "Broken pipe")
+
+
+def test_emit_survives_a_closed_gui(monkeypatch):
+    """rpm's callbacks call emit(): a write to a pipe the GUI closed must not raise into libdnf5, or the helper
+    aborts in the middle of a transaction."""
+    helper = _load_helper()
+    monkeypatch.setattr(helper, "_proto", _ClosedPipe())
+    monkeypatch.setattr(helper.os, "dup2", lambda *_args: None)  # the test runner's own fds stay as they are
+    helper.emit("rpm", step="install")  # no exception
+    assert helper._gui_gone
+    helper.emit("done", ok=True)  # later events are dropped quietly
+
+
+def test_guarded_callback_returns_its_default_with_a_closed_gui(monkeypatch):
+    helper = _load_helper()
+    monkeypatch.setattr(helper, "_proto", _ClosedPipe())
+    monkeypatch.setattr(helper.os, "dup2", lambda *_args: None)
+
+    @helper._guarded(7)
+    def callback(*_args):
+        raise ValueError("boom")
+
+    assert callback(1) == 7
+
+
+def test_helper_exits_cleanly_when_the_gui_closes_its_end():
+    proc = subprocess.Popen([sys.executable, "-I", str(HELPER), "--allow-non-root"], stdin=subprocess.PIPE,
+                            stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    proc.stdin.write('{"op": "ping"}\n')
+    proc.stdin.flush()
+    assert json.loads(proc.stdout.readline())["ok"] is True
+    proc.stdout.close()  # the GUI is gone; the next reply has nowhere to go
+    proc.stdin.write('{"op": "ping"}\n')
+    proc.stdin.close()
+    assert proc.wait(30) == 0

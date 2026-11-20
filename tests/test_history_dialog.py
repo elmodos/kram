@@ -119,3 +119,25 @@ def test_a_transaction_with_groups_is_undone_whole(app, monkeypatch):
     assert dlg.undo.text() == "Undo Transaction…" and dlg.undo.isEnabled()
     dlg.list.setCurrentItem(dlg._items[3])
     assert dlg.undo.text() == "Mark Changes to Undo"
+
+
+def test_double_clicking_a_group_row_shows_no_package(app, monkeypatch):
+    monkeypatch.setattr(history_dialog, "CHUNK", 2)
+
+    class GroupsCatalog(FakeCatalog):
+        def history(self):
+            return [HistoryTransaction(5, 1796000000, 0, "kram", "", True)]
+
+        def history_items(self, ids):
+            return {5: (HistoryItem("kde-apps", "kde-apps", "", "install", Reason.USER, "", comps="group"),)}
+
+    dlg = HistoryDialog(SyncWorker(), GroupsCatalog(), None)
+    shown = []
+    dlg.showPackage.connect(shown.append)
+    dlg.reload()
+    for _ in range(5):
+        app.processEvents()
+    dlg.list.setCurrentItem(dlg._items[5])
+    dlg._on_package_double_click(dlg.packages.topLevelItem(0), 0)
+    assert shown == []
+    dlg.deleteLater()

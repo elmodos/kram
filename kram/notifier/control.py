@@ -15,7 +15,12 @@ SYSTEM_AUTOSTART = Path("/etc/xdg/autostart")
 
 
 def _systemctl(*args: str, timeout: float = 15) -> subprocess.CompletedProcess:
-    return subprocess.run(["systemctl", *args], capture_output=True, text=True, timeout=timeout, check=False)
+    """A user's systemd that does not answer (or is not running) is a failed command, not an exception in the
+    settings dialog."""
+    try:
+        return subprocess.run(["systemctl", *args], capture_output=True, text=True, timeout=timeout, check=False)
+    except (subprocess.TimeoutExpired, OSError):
+        return subprocess.CompletedProcess(["systemctl", *args], 1, "", "timeout")
 
 
 def checker_enabled() -> bool:

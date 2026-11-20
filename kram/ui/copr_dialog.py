@@ -46,6 +46,7 @@ class CoprDialog(QDialog):
         self.setWindowTitle(_("COPR repositories"))
         self.resize(940, 680)
         self._run_helper = run_helper
+        self._closed = False
         self._snap: CatalogSnapshot | None = None
         self._projects: list[tuple[str, str, str]] = []  # (repo id, hub, project) for the top table
         self._results: list[CoprProject] = []
@@ -125,7 +126,13 @@ class CoprDialog(QDialog):
 
     # ---------------------------------------------------------------- enabled projects
 
+    def done(self, result: int) -> None:
+        self._closed = True  # results that arrive later are for a dialog that is gone (it is deleted after use)
+        super().done(result)
+
     def set_catalog(self, snap: CatalogSnapshot, counts: Counter) -> None:
+        if self._closed:  # the catalog's counts arrived after the dialog was closed
+            return
         self._snap = snap
         installed = Counter(r.origin_repo for r in snap.rows if r.installed)
         coprs = []

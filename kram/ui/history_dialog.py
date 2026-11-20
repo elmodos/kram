@@ -57,15 +57,16 @@ CHANGE_LABEL = {
     Change.OBSOLETED: pgettext("history", "Obsoleted"),
     Change.REASON: pgettext("history", "Reason change"),
 }
-# "3 installed, 12 upgraded": the counts of the Changes column
+# "3 installed, 12 upgraded": the counts of the Changes column. Each is a function of the count, so that its plural
+# form is the language's (ngettext), which is not the same as the English one in every language
 CHANGE_COUNT = {
-    Change.INSTALL: _("{n} installed"),
-    Change.UPGRADE: _("{n} upgraded"),
-    Change.DOWNGRADE: _("{n} downgraded"),
-    Change.REINSTALL: _("{n} reinstalled"),
-    Change.REMOVE: _("{n} removed"),
-    Change.OBSOLETED: _("{n} obsoleted"),
-    Change.REASON: _("{n} reasons changed"),
+    Change.INSTALL: lambda n: ngettext("{n} installed", "{n} installed", n),
+    Change.UPGRADE: lambda n: ngettext("{n} upgraded", "{n} upgraded", n),
+    Change.DOWNGRADE: lambda n: ngettext("{n} downgraded", "{n} downgraded", n),
+    Change.REINSTALL: lambda n: ngettext("{n} reinstalled", "{n} reinstalled", n),
+    Change.REMOVE: lambda n: ngettext("{n} removed", "{n} removed", n),
+    Change.OBSOLETED: lambda n: ngettext("{n} obsoleted", "{n} obsoleted", n),
+    Change.REASON: lambda n: ngettext("{n} reason changed", "{n} reasons changed", n),
 }
 CHANGE_ICON_ACTION = {
     Change.INSTALL: Action.INSTALL, Change.UPGRADE: Action.UPGRADE, Change.DOWNGRADE: Action.DOWNGRADE,
@@ -81,7 +82,7 @@ def counts_text(rows: list[HistoryRow]) -> str:
     comps = ", ".join(filter(None, (
         ngettext("{n} environment", "{n} environments", envs).format(n=envs) if envs else "",
         ngettext("{n} group", "{n} groups", groups).format(n=groups) if groups else "")))
-    packages = ", ".join(CHANGE_COUNT[c].format(n=counts[c]) for c in Change if c in counts)
+    packages = ", ".join(CHANGE_COUNT[c](counts[c]).format(n=counts[c]) for c in Change if c in counts)
     if not packages:
         return comps or _("no package changes")
     return f"{comps}; {packages}" if comps else packages
@@ -237,8 +238,10 @@ class HistoryDialog(QDialog):
     def _update_state(self) -> None:
         left = len([i for i in self._pending if i not in self._rows])
         if left:
-            self.state.setText(_("Reading packages: {done} of {total} transactions").format(
-                done=len(self._transactions) - left, total=len(self._transactions)))
+            total = len(self._transactions)
+            self.state.setText(ngettext("Reading packages: {done} of {total} transaction",
+                                        "Reading packages: {done} of {total} transactions", total).format(
+                done=total - left, total=total))
         elif not self._transactions:
             self.state.setText(_("No transactions recorded"))
         elif self.filter.text().strip():
@@ -271,6 +274,9 @@ class HistoryDialog(QDialog):
         bold.setBold(True)
         items = []
         for r in sorted(rows, key=lambda r: (not r.comps, r.comps != "environment")):  # comps first
+            if r.change is Change.UNREADABLE:
+                items.append(QTreeWidgetItem(["", _("The groups of this transaction could not be read"), "", "", ""]))
+                continue
             if r.comps:
                 kind = _("environment") if r.comps == "environment" else _("group")
                 item = QTreeWidgetItem([CHANGE_LABEL[r.change], f"{r.name} ({kind})", "", "",
@@ -319,7 +325,10 @@ class HistoryDialog(QDialog):
         self.filter.setText(name)
 
     def _on_package_double_click(self, item: QTreeWidgetItem, _col: int) -> None:
-        self.showPackage.emit(item.data(COL_ACTION, ROLE_ID))
+        key = item.data(COL_ACTION, ROLE_ID)
+        if key is None:  # a group or environment: it is not a package the list can show
+            return
+        self.showPackage.emit(key)
 
     # ---------------------------------------------------------------- undo
 

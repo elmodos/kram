@@ -162,7 +162,7 @@ def test_editor_counts_after_the_answer_arrives():
     snap = replace(SNAP, provides={})
     asked = []
     f = CustomFilter("Apps", [Condition(Field.PROVIDES, Op.IS, "application()")])
-    dlg = FiltersDialog([f], snap, resolve_provides=lambda q, done: asked.append((q, done)))
+    dlg = FiltersDialog([f], snap, resolve_provides=lambda q, done, failed: asked.append((q, done)))
     assert dlg.count.text() == "Counting…"
     assert [q for q, _done in asked] == [{("application()", False)}]
     dlg._update_count()
@@ -170,3 +170,21 @@ def test_editor_counts_after_the_answer_arrives():
     snap.provides[("application()", False)] = frozenset({("kitty", "x86_64")})
     asked[0][1]()
     assert dlg.count.text() == "1 package matches"
+
+
+def test_a_failed_count_says_so_and_is_asked_again(monkeypatch):
+    from dataclasses import replace
+
+    from PySide6.QtWidgets import QApplication
+
+    from kram.ui.filters_dialog import FiltersDialog
+
+    QApplication.instance() or QApplication([])
+    snap = replace(SNAP, provides={})
+    asked = []
+    f = CustomFilter("Apps", [Condition(Field.PROVIDES, Op.IS, "application()")])
+    dlg = FiltersDialog([f], snap, resolve_provides=lambda q, done, failed: asked.append((q, failed)))
+    asked[0][1]()  # libdnf5 could not count
+    assert dlg.count.text() == "Could not count"
+    dlg._update_count()
+    assert len(asked) == 2  # the question is put again: the failure was not kept as an answer

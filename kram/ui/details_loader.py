@@ -64,7 +64,7 @@ class DetailsLoader(QObject):
             return
         # skipped on the dnf thread when the cursor moved on while it waited its turn
         self._dnf.submit(lambda: self._catalog.details(row.key) if self._is_current(row) else None,
-                         lambda d: self._show(row, d))
+                         lambda d: self._show(row, d), lambda _e: None)  # the panel stays empty
         self._fetch_reason(row)
 
     def _fetch_reason(self, row: PkgRow) -> None:
@@ -72,7 +72,8 @@ class DetailsLoader(QObject):
         if self._blocked(row.key) == "" and row.key not in self._asked:
             self._asked.add(row.key)
             self._dnf.submit(lambda: self._catalog.blocked_reason(row.key) if self._is_current(row) else None,
-                             lambda reason: self._show_reason(row, reason))
+                             lambda reason: self._show_reason(row, reason),
+                             lambda _e: self._asked.discard(row.key))  # asked again when the cursor comes back
 
     def _show_reason(self, row: PkgRow, reason: str | None) -> None:
         if reason is None:  # skipped on the dnf thread, the cursor had moved on: to be asked again

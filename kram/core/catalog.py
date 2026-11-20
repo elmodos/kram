@@ -3,6 +3,7 @@
 Not thread-safe: every method must be called from the same single worker thread.
 """
 import functools
+import threading
 import time
 from collections import Counter
 from collections.abc import Callable, Iterable
@@ -43,6 +44,7 @@ from .model import (
     mark_rotated,
 )
 from .origin import classify
+from .session import current_session
 from .updates import (
     advisories_up_to,
     installable_upgrades,
@@ -111,11 +113,12 @@ class Catalog:
         self._local: dict[str, object] = {}  # package file path -> its Package in @commandline
 
     def load(self, provides: Iterable[tuple[str, bool]] = (),
-             on_wait: Callable[[], None] | None = None) -> CatalogSnapshot:
+             on_wait: Callable[[], None] | None = None, cancel: threading.Event | None = None) -> CatalogSnapshot:
         """`provides`: the (capability, is a glob) questions of the custom filters, answered in the snapshot.
-        `on_wait`: called (on this thread) when another package manager holds the system repo lock."""
+        `on_wait`: called (on this thread) when another package manager holds the system repo lock. `cancel`: set
+        when the application closes, which ends such a wait (Cancelled)."""
         t0 = time.monotonic()
-        base = open_system_base(on_wait)
+        base = open_system_base(on_wait, cancel)
         self._base = base
         self._system_base = None  # built on first use, see removal_dependents
         self._local = {}
@@ -216,6 +219,9 @@ class Catalog:
         # ~0.1 s for 70k packages; cheap enough to make full-description search instant
         descriptions = [(pkgs[r.key][0] or pkgs[r.key][1]).get_description() for r in rows]
         groups, environments = self._groups()
+        # read the rpmdb for the session's packages here, on this thread: librpm is not documented as thread-safe,
+        # and the review dialog would otherwise make this first (cached) call on the GUI thread
+        current_session()
         return CatalogSnapshot(rows, n_installed, n_upgradable, time.monotonic() - t0,
                                basearch=basearch, releasever=base.get_vars().get_value("releasever"),
                                repos=self._repos(), descriptions=descriptions, groups=groups, environments=environments,
@@ -248,7 +254,7 @@ class Catalog:
         upgrades.filter_name(sorted({name for name, _arch in stuck}))
         upgrades.filter_latest_evr()
         changes = {}
-        for key, p in stuck.items():
+        for key in stuck:
             other = [u for u in upgrades if u.get_name() == key[0] and u.get_arch() != key[1]
                      and u.get_arch() in arches and (u.get_name(), u.get_arch()) not in installed_keys]
             if other:
@@ -823,6 +829,9 @@ class Catalog:
         available: dict[tuple[str, str], set[str]] = {}
         q = libdnf5.rpm.PackageQuery(self._base)
         q.filter_name(names)
+        only = libdnf5.rpm.PackageQuery(self._base)
+        only.filter_installonly()
+        installonly_names = {p.get_name() for p in only}
         for p in q:
             key = p.get_name(), p.get_arch()
             if key not in keys:
@@ -837,5 +846,6 @@ class Catalog:
             cand = self._pkgs.get(key, (None, None))[1]
             states[key] = PackageState(tuple(p.get_evr() for p in have), frozenset(available.get(key, ())),
                                        cand.get_evr() if cand is not None and not cand.is_installed() else "",
-                                       ITEM_REASONS.get(have[-1].get_reason()) if have else None)
+                                       ITEM_REASONS.get(have[-1].get_reason()) if have else None,
+                                       installonly=key[0] in installonly_names)
         return states

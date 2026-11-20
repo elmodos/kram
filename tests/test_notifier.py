@@ -36,7 +36,7 @@ def test_stale_days_from_kram_settings(home):
 
 
 def test_tray_text(home):
-    pytest.importorskip("gi")
+    pytest.importorskip("gi.repository")
     from kram.notifier.tray import Tray
 
     tray = Tray.__new__(Tray)  # no D-Bus: only the text
@@ -64,7 +64,7 @@ def test_kram_from_the_tray_gets_the_session_display():
 
 
 def test_tray_does_not_load_libdnf5_or_qt():
-    pytest.importorskip("gi")
+    pytest.importorskip("gi.repository")
     code = ("import sys; import kram.notifier.tray; "
             "print(sorted(m for m in sys.modules if m.split('.')[0] in ('libdnf5', 'PySide6', 'rpm')))")
     out = subprocess.run([sys.executable, "-c", code], cwd=ROOT, capture_output=True, text=True, check=True)
@@ -72,7 +72,7 @@ def test_tray_does_not_load_libdnf5_or_qt():
 
 
 def test_tray_icons_are_shipped():
-    pytest.importorskip("gi")
+    pytest.importorskip("gi.repository")
     from kram.notifier.tray import ICONS
 
     for name in ICONS.values():
@@ -81,7 +81,7 @@ def test_tray_icons_are_shipped():
 
 def test_tray_icon_path_holds_the_icons(monkeypatch):
     """The panel looks for the icons in IconThemePath too: a folder ending in "icons" with all three in it."""
-    pytest.importorskip("gi")
+    pytest.importorskip("gi.repository")
     from kram.notifier import tray
 
     assert tray.INSTALLED_ICON_DIR == "/usr/share/kram/icons"
@@ -228,3 +228,38 @@ def test_update_check_counts_again_after_a_kram_upgrade(home, monkeypatch):
     assert counts == [1] and notifier.read_state()["version"] == __version__
     check.main()  # nothing changed since
     assert counts == [1]
+
+
+def test_a_systemctl_timeout_is_a_failed_command(monkeypatch):
+    from kram.notifier import control
+
+    def hangs(*args, **kwargs):
+        raise subprocess.TimeoutExpired(args[0], kwargs["timeout"])
+    monkeypatch.setattr(control.subprocess, "run", hangs)
+    assert control.checker_enabled() is False
+    assert control.set_checker_enabled(True) == "timeout"
+
+
+def test_repository_changes_outside_yum_repos_d_are_noticed(tmp_path, monkeypatch):
+    from kram.notifier import check
+
+    roots = {"override": tmp_path / "override.d", "distro": tmp_path / "distro.d",
+             "distro2": tmp_path / "distro2.d", "libdnf": tmp_path / "libdnf.d"}
+    for root in roots.values():
+        root.mkdir()
+    monkeypatch.setattr(check, "WATCHED", [str(roots["override"] / "*.repo"), str(roots["distro"] / "*.repo"),
+                                           str(roots["distro2"] / "*.repo"), str(roots["libdnf"] / "*")])
+    before = check.fingerprint()
+    for root, name in ((roots["override"], "99-config_manager.repo"), (roots["distro"], "fedora.repo"),
+                       (roots["distro2"], "fedora-updates.repo"), (roots["libdnf"], "10-proxy.conf")):
+        (root / name).write_text("x")
+        assert check.fingerprint() != before, root
+        before = check.fingerprint()
+
+
+def test_the_checker_watches_the_repository_locations():
+    from kram.notifier import check
+
+    for pattern in ("/etc/dnf/repos.override.d/*.repo", "/usr/share/dnf5/repos.d/*.repo",
+                    "/etc/distro.repos.d/*.repo", "/etc/dnf/libdnf5.conf.d/*"):
+        assert pattern in check.WATCHED
