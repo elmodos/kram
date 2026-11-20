@@ -1,5 +1,5 @@
 %global appid io.github.elmodos.Kram
-%global base_version 0.11.0
+%global base_version 0.11.1
 
 Name:           kram
 # A tagged release (v%%{base_version}) is plain %%{base_version}. Any other commit gets a snapshot from
@@ -119,6 +119,18 @@ QT_QPA_PLATFORM=offscreen %pytest
 %{_datadir}/kram/
 
 %changelog
+* Fri Nov 20 2026 Modo Ltunzher <offnormal@gmail.com> - 0.11.1-1
+- If Kram is closed or crashes during a transaction, the helper now finishes it instead of aborting rpm halfway
+- Apply and Refresh can no longer start twice while dependencies are being resolved
+- A failed transaction reloads the package list; marks added during a review are kept
+- The password is asked for every helper start (polkit auth_admin, no longer kept for 5 minutes)
+- The installer opens only http and https links from a package file
+- A package whose signature could not be checked is no longer shown as unsigned
+- History: double-clicking a group row no longer resets the package list; undo explains kernels and group reasons correctly
+- Marking thousands of packages at once is fast
+- Plural forms in the history and status bar follow the language
+- The update checker notices repositories enabled or disabled in Kram
+
 * Fri Nov 20 2026 Modo Ltunzher <offnormal@gmail.com> - 0.11.0-1
 - History: File → Transaction History shows what dnf installed, upgraded and removed, and when
 - History: Mark Changes to Undo marks the changes that take a transaction back, for review before Apply

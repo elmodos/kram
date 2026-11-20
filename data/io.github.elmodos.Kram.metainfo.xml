@@ -76,6 +76,17 @@
   <content_rating type="oars-1.1"/>
   <translation type="gettext">kram</translation>
   <releases>
+    <release version="0.11.1" date="2026-11-20">
+      <description>
+        <ul>
+          <li>If Kram is closed or crashes during a transaction, the transaction now finishes instead of stopping halfway.</li>
+          <li>Apply and Refresh can no longer start twice while dependencies are being resolved.</li>
+          <li>The administrator password is asked for each time Kram makes changes.</li>
+          <li>A package whose signature could not be checked is no longer shown as unsigned.</li>
+          <li>History and undo fixes, faster marking of many packages, and correct plural forms in translations.</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.11.0" date="2026-11-20">
       <description>
         <ul>
