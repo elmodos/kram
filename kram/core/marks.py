@@ -100,6 +100,9 @@ class MarkSet:
     def items(self):
         return self._marks.items()
 
+    def keys(self):
+        return self._marks.keys()
+
     def set(self, row: PkgRow, action: Action, evr: str = "") -> bool:
         """Mark a row; returns False (and changes nothing) if the action does not apply to it."""
         if action is Action.DOWNGRADE:

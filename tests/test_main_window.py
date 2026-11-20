@@ -12,6 +12,7 @@ from PySide6.QtCore import QObject, Signal
 from PySide6.QtNetwork import QNetworkRequest
 from PySide6.QtWidgets import QApplication, QDialog
 
+from kram.core.marks import Action, Mark, MarkSet
 from kram.ui import actions, main_window, release_watch
 from kram.ui.icons import blocked_icon
 from kram.ui.progress_dialog import ProgressDialog
@@ -679,12 +680,18 @@ def test_sidebar_refreshes_only_an_enabled_repo(window, monkeypatch):
 
 # ---------------------------------------------------------------- the apply flow (audit items 2, 3 and 10)
 
-class FakeMarks(dict):
-    def counts(self):
-        return len(self), 0
+class FakeMarks(MarkSet):
+    """The real MarkSet (so a method it lacks fails here too), with a request that needs no PkgRows."""
+    def __init__(self, keys):
+        super().__init__()
+        for key in keys:
+            self.add(key)
+
+    def add(self, key):
+        self.restore(key, Mark(Action.INSTALL))
 
     def request(self, _rows):
-        return {"install": sorted(k[0] for k in self)}
+        return {"install": sorted(k[0] for k, _ in self.items())}
 
 
 def _marked_window(window, monkeypatch):
@@ -693,7 +700,7 @@ def _marked_window(window, monkeypatch):
     monkeypatch.setattr(window.dnf, "submit", lambda fn, done, failed=None: jobs.append((fn, done, failed)))
     window.snapshot = SimpleNamespace(rows=[], n_upgradable=0, n_installed=0, load_seconds=0.0, basearch="x86_64",
                                       repos=[])
-    window.model.marks = FakeMarks({("fish", "x86_64"): "install"})
+    window.model.marks = FakeMarks([("fish", "x86_64")])
     return jobs
 
 
@@ -748,7 +755,7 @@ def _preview_flow(window, monkeypatch, helper_ok):
             pass
     monkeypatch.setattr(main_window, "ApplyDialog", Accepting)
     window.apply()
-    window.model.marks[("vim", "x86_64")] = "install"  # marked while the first request resolved
+    window.model.marks.add(("vim", "x86_64"))  # marked while the first request resolved
     jobs[0][1](SimpleNamespace(ok=True))
     return reloads, unmarked
 
