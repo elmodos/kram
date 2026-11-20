@@ -9,10 +9,14 @@ from PySide6.QtWidgets import QTabWidget, QTextBrowser, QTreeWidget, QTreeWidget
 
 from ..core.model import PkgDetails, PkgRow
 from ..core.origin import display_repo
-from ..i18n import _, pgettext
+from ..i18n import _, ngettext, pgettext
 from .file_list import FileList
 from .icons import ADVISORY_COLOR, ORIGIN_LABEL, advisory_icon, blocked_icon, held_advisory_icon
 from .package_model import ADVISORY_LABEL, blocked_tip, held_tip, human_size, shown_advisories
+
+# items of one section of the Dependencies tab: its rich text takes ~0.02 s for 1000 lines, but grows faster than
+# the list, and kernel-core provides some 16000 (8 s, with the window frozen)
+MAX_DEP_ITEMS = 1000
 
 e = html.escape
 
@@ -56,10 +60,13 @@ def _advisories_html(row: PkgRow) -> str:
 def _blocked_html(reason: str) -> str:
     """Above the dependencies of an upgrade that cannot be installed: the root cause, then the resolver's message."""
     title, _nl, cause = blocked_tip(reason).partition("\n")
+    message = e(reason.strip())
+    # no message while it is looked up, or none from the resolver: the title still says it cannot be installed
+    shown = f"<p style='font-family:monospace; font-size:small; white-space:pre-wrap'>{message}</p>" if message else ""
     return (f"<p style='color:{ADVISORY_COLOR['important']}'><b>{e(title)}</b></p>"
             f"{f'<p><b>{e(cause)}</b></p>' if cause else ''}"
             f"<p>{e(_('The repository has to fix it. Until then Mark All Upgrades leaves this package out.'))}</p>"
-            f"<p style='font-family:monospace; font-size:small; white-space:pre-wrap'>{e(reason.strip())}</p><hr>")
+            f"{shown}<hr>")
 
 
 class DetailsTabs(QTabWidget):
@@ -145,11 +152,13 @@ class DetailsTabs(QTabWidget):
             self._switching = False
 
     def show_blocked(self, reason: str | None) -> None:
-        """Mark the dependencies tab when the selected upgrade cannot be installed now; at once, like the advisories."""
+        """Mark the dependencies tab when the selected upgrade cannot be installed now; at once, like the advisories.
+        `reason` is None for an upgrade that can be installed; "" for a blocked one whose reason is not known (yet)."""
         index = self.indexOf(self.deps)
-        self.setTabIcon(index, blocked_icon() if reason else QIcon())
-        self.setTabToolTip(index, blocked_tip(reason) if reason else "")
-        self._blocked = _blocked_html(reason) if reason else ""
+        blocked = reason is not None
+        self.setTabIcon(index, blocked_icon() if blocked else QIcon())
+        self.setTabToolTip(index, blocked_tip(reason) if blocked else "")
+        self._blocked = _blocked_html(reason) if blocked else ""
         self._set_deps()
 
     def _set_deps(self) -> None:
@@ -199,10 +208,13 @@ class DetailsTabs(QTabWidget):
         def section(title, items, kind="dep"):
             if not items:
                 return ""
+            shown = items[:MAX_DEP_ITEMS]
             if kind == "pkg":
-                lis = "".join(f"<li><a href='pkg:{quote(f'{n}.{a}')}'>{e(n)}.{e(a)}</a></li>" for n, a in items)
+                lis = "".join(f"<li><a href='pkg:{quote(f'{n}.{a}')}'>{e(n)}.{e(a)}</a></li>" for n, a in shown)
             else:
-                lis = "".join(f"<li><a href='dep:{quote(i)}'>{e(i)}</a></li>" for i in items)
+                lis = "".join(f"<li><a href='dep:{quote(i)}'>{e(i)}</a></li>" for i in shown)
+            if (rest := len(items) - len(shown)) > 0:
+                lis += f"<li><i>{e(ngettext('…and {n} more', '…and {n} more', rest).format(n=rest))}</i></li>"
             return f"<b>{title} ({len(items)})</b><ul style='margin-top:2px'>{lis}</ul>"
 
         self._deps_body = "".join([

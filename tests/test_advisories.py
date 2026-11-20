@@ -229,14 +229,17 @@ def test_installable_upgrades_leave_out_what_the_resolver_skips(monkeypatch):
 
     from kram.core.updates import installable_upgrades
     T = libdnf5.transaction
-    upgradable = {("gjs", "x86_64"), ("ffmpeg", "x86_64"), ("old-tool", "noarch")}
+    upgradable = {("gjs", "x86_64"), ("ffmpeg", "x86_64"), ("old-tool", "noarch"), ("kernel-core", "x86_64")}
     # ffmpeg's new build needs a missing library: best=False drops it without a problem
     _resolver(monkeypatch, [
         _Item(T.TransactionItemAction_UPGRADE, _Pkg("gjs")),
         _Item(T.TransactionItemAction_REPLACED, _Pkg("gjs")),
         _Item(T.TransactionItemAction_INSTALL, _Pkg("new-tool", "noarch"), [_Pkg("old-tool", "noarch")]),  # obsoletes
+        _Item(T.TransactionItemAction_INSTALL, _Pkg("kernel-core")),  # installonly: next to the installed one
+        _Item(T.TransactionItemAction_INSTALL, _Pkg("liboapv")),  # a new dependency, not installed before
     ])
-    assert installable_upgrades(None, upgradable) == {("gjs", "x86_64"), ("old-tool", "noarch")}
+    assert installable_upgrades(None, upgradable) == {("gjs", "x86_64"), ("old-tool", "noarch"),
+                                                      ("kernel-core", "x86_64")}
     assert installable_upgrades(None, set()) == set()
 
 

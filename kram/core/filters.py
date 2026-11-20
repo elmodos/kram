@@ -70,7 +70,10 @@ def upgrades_by_kind(rows: list[PkgRow]) -> dict[str, list[PkgRow]]:
     return kinds
 
 
-def status_filters(snap: CatalogSnapshot, marked: Container[tuple[str, str]] | None = None) -> list[FilterEntry]:
+def status_filters(snap: CatalogSnapshot, marked: Container[tuple[str, str]] | None = None,
+                   blocked: Container[tuple[str, str]] | None = None) -> list[FilterEntry]:
+    """`marked`: the marked keys, for "Marked". `blocked`: the upgrades that cannot be installed now
+    (Catalog.blocked_upgrades), for "Cannot be upgraded now"; both left out when None."""
     def status_is(*statuses: Status) -> Predicate:
         return lambda r: r.status in statuses
 
@@ -84,6 +87,10 @@ def status_filters(snap: CatalogSnapshot, marked: Container[tuple[str, str]] | N
                     tip=_("Upgrades that fix a security issue, by their advisories"), hide_empty=True),
         FilterEntry("status:bugfix", _("Bug fix updates"), has_update_type("bugfix"), indent=1,
                     tip=_("Upgrades that fix bugs, by their advisories"), hide_empty=True),
+        *([FilterEntry("status:blocked", _("Cannot be upgraded now"), lambda r: r.key in blocked, indent=1,
+                       tip=_("Upgrades dnf leaves out because the new version cannot be installed, such as one "
+                             "that needs a library no repository has yet. The Dependencies tab says why."),
+                       hide_empty=True)] if blocked is not None else []),
         FilterEntry("status:user", _("Installed by user"), lambda r: r.installed and r.user_installed),
         # what dnf autoremove removes, orphaned and upgradable ones included
         FilterEntry("status:unneeded", _("Unneeded dependencies"), lambda r: r.unneeded),

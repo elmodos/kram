@@ -329,6 +329,7 @@ _STATUS_FILTER_ICONS: dict[str, Callable[[], QIcon]] = {
     "status:upgradable": lambda: status_icon(Status.UPGRADABLE),
     "status:security": lambda: advisory_icon("important"),
     "status:bugfix": lambda: advisory_icon("bugfix"),
+    "status:blocked": blocked_icon,
     "status:user": lambda: _glyph_box("#4e8f3a", "#2f5a22", _hammer),
     "status:unneeded": lambda: status_icon(Status.UNNEEDED),
     "status:orphan": lambda: status_icon(Status.ORPHAN),

@@ -9,6 +9,7 @@ from PySide6.QtWidgets import QMenu, QMenuBar, QWidget
 from ..core.filters import UPGRADES_FIXES, UPGRADES_SECURITY, UPGRADES_SECURITY_HIGH
 from ..core.marks import Action
 from ..i18n import _
+from .icons import blocked_icon
 
 
 class WindowActions:
@@ -112,6 +113,11 @@ class WindowActions:
                         tip=_("Remove the version lock: the package gets upgrades again (needs a password)"))
         self.show_in_history = a(_("Show in History"), "view-history", enabled=False, table=True,
                                  tip=_("The transactions that changed this package"))
+        # only there for an upgrade that cannot be installed now, with the cross the list shows for it
+        self.why_blocked = a(_("Why It Cannot Be Upgraded"), table=True,
+                             tip=_("Show on the Dependencies tab why the new version cannot be installed now"))
+        self.why_blocked.setIcon(blocked_icon())
+        self.why_blocked.setVisible(False)
         self.unmark = a(_("Unmark"), "edit-undo", "Ctrl+Z", tip=_("Unmark the selected packages"), table=True)
         self.set_upgrades_available(False)
 
@@ -147,7 +153,7 @@ class WindowActions:
         menu.addSeparator()
         menu.addAction(self.unmark)
         menu.addSeparator()
-        menu.addAction(self.show_in_history)
+        menu.addActions([self.show_in_history, self.why_blocked])
 
     def fill_menu_bar(self, mb: QMenuBar, settings: list[QAction], toolbar_styles: list[QAction]) -> None:
         """`settings`: checkable settings of other parts, at the end of the Settings menu."""

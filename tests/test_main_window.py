@@ -519,6 +519,121 @@ def test_upgrades_that_cannot_be_installed_are_dimmed_and_not_marked_by_mark_all
     assert window.model.blocked == {}
 
 
+def test_blocked_without_reason_is_still_marked_until_it_is_looked_up(window):
+    """Past MAX_BLOCKED_REASONS the resolve gives no reason: the cross and the title stay, and the reason is kept
+    once the selected row asks for it."""
+    from PySide6.QtCore import Qt
+
+    from kram.core.model import CatalogSnapshot, Origin, PkgRow, Status
+    from kram.ui.icons import blocked_icon
+    from kram.ui.package_model import COL_CANDIDATE
+
+    rows = [PkgRow("kernel", "x86_64", "", "7.2.11-300.fc45", "7.3.4-300.fc45", "updates", 1, Origin.FEDORA,
+                   Status.UPGRADABLE)]
+    window.snapshot = CatalogSnapshot(rows, 1, 1, 0.0)
+    window.marker.set_snapshot(window.snapshot)
+    window.model.set_rows(rows, "x86_64")
+    cell = window.model.index(0, COL_CANDIDATE)
+
+    window._on_blocked({rows[0].key: ""})
+    assert cell.data(Qt.ItemDataRole.DecorationRole).cacheKey() == blocked_icon().cacheKey()
+    assert cell.data(Qt.ItemDataRole.ToolTipRole) == "The upgrade cannot be installed now"
+    tabs = window.details
+    deps = tabs.indexOf(tabs.deps)
+    window.details_loader.follow(rows[0])
+    assert tabs.tabIcon(deps).cacheKey() == blocked_icon().cacheKey()
+
+    why = "Problem: nothing provides liboapv.so.11()(64bit)"
+    window.model.set_blocked_reason(rows[0].key, why)
+    assert window.model.blocked == {rows[0].key: why}
+    assert "nothing provides" in cell.data(Qt.ItemDataRole.ToolTipRole)
+    window.details_loader._show_reason(rows[0], why)
+    assert "nothing provides" in tabs.deps.toPlainText()
+
+
+def test_status_entry_and_menu_for_upgrades_that_cannot_be_installed(window):
+    """Status → Cannot be upgraded now fills in when the resolve arrives, also when it was selected before (a
+    reload restores it); the package menu then offers the reason on the Dependencies tab."""
+    from kram.core.model import CatalogSnapshot, Origin, PkgRow, Status
+
+    rows = [PkgRow("ffmpeg", "x86_64", "", "9.0.2-3", "9.0.2-4", "rpmfusion-free-updates", 1, Origin.THIRD_PARTY,
+                   Status.UPGRADABLE),
+            PkgRow("gjs", "x86_64", "", "1.90.1-1", "1.90.1-2", "updates", 1, Origin.FEDORA, Status.UPGRADABLE)]
+    snap = CatalogSnapshot(rows, 2, 2, 0.0)
+    window.snapshot = snap
+    window.marker.set_snapshot(snap)
+    window.model.set_rows(rows, "x86_64")
+    window.key_index = {r.key: i for i, r in enumerate(rows)}
+    window.sidebar.set_snapshot(snap)
+    assert window.sidebar.item_of("status:blocked") is None  # nothing blocked: no entry
+    window.sidebar.select("status", "status:blocked")  # kept while selected, and empty until the resolve
+    assert window.filter.id == "status:blocked" and window.model.rowCount() == 0
+
+    window._on_blocked({rows[0].key: "nothing provides liboapv.so.11()(64bit)"})
+    assert window.model.rowCount() == 1 and window.model.row_at(window.model.index(0, 0)) is rows[0]
+    assert window.sidebar.item_of("status:blocked").text(0).endswith("(1)")
+
+    window._select_key(rows[0].key)
+    window._update_actions()
+    assert window.acts.why_blocked.isVisible()
+    window.acts.why_blocked.trigger()
+    assert window.details.currentWidget() is window.details.deps
+
+    window.sidebar.select("status", "status:upgradable")
+    window._select_key(rows[1].key)
+    window._update_actions()
+    assert not window.acts.why_blocked.isVisible()
+
+
+def test_reason_of_a_blocked_upgrade_is_asked_for_once(app):
+    """Past MAX_BLOCKED_REASONS the selected row asks for its reason: once, also when the resolver gives none."""
+    from kram.core.model import Origin, PkgRow, Status
+    from kram.ui.details import DetailsTabs
+    from kram.ui.details_loader import DetailsLoader
+
+    row = PkgRow("kernel", "x86_64", "", "7.2.11-300.fc45", "7.3.4-300.fc45", "updates", 1, Origin.FEDORA,
+                 Status.UPGRADABLE)
+    asked = []
+
+    class Catalog:
+        def details(self, _key):
+            return None
+
+        def blocked_reason(self, key):
+            asked.append(key)
+            return ""
+
+    class Dnf:  # runs each job at once
+        def submit(self, fn, done, _error=None):
+            done(fn())
+
+    blocked = {row.key: ""}
+    tabs = DetailsTabs()
+    loader = DetailsLoader(tabs, Catalog(), Dnf(), blocked.get, blocked.__setitem__, None)
+    for _ in range(2):
+        loader.follow(row)
+        loader.load()
+    assert asked == [row.key]
+    assert tabs.tabIcon(tabs.indexOf(tabs.deps)).cacheKey() == blocked_icon().cacheKey()
+    loader.refresh_blocked()  # a new resolve of the blocked upgrades: asked again
+    assert asked == [row.key, row.key]
+
+def test_long_dependency_lists_are_cut(app):
+    """kernel-core provides some 16000 capabilities: the whole list froze the window for seconds."""
+    from kram.core.model import Origin, PkgDetails, PkgRow, Status
+    from kram.ui.details import MAX_DEP_ITEMS, DetailsTabs
+
+    row = PkgRow("kernel-core", "x86_64", "", "7.3.4-300.fc45", "7.3.4-300.fc45", "updates", 1, Origin.FEDORA,
+                 Status.INSTALLED)
+    provides = [f"kmod(m{i}.ko)" for i in range(MAX_DEP_ITEMS + 250)]
+    d = PkgDetails("kernel-core-7.3.4-300.fc45.x86_64", "", "", "", "", "", "", "", 0, None, "updates", "", 0, None,
+                   None, ["bash"], [], [], provides, [], [], [], [], True, [], [])
+    tabs = DetailsTabs()
+    tabs.show_package(row, d)
+    text = tabs.deps.toPlainText()
+    assert f"Provides ({MAX_DEP_ITEMS + 250})" in text and "…and 250 more" in text
+    assert f"kmod(m{MAX_DEP_ITEMS - 1}.ko)" in text and f"kmod(m{MAX_DEP_ITEMS}.ko)" not in text
+
 def test_mark_unneeded_marks_what_autoremove_would_remove(window):
     from kram.core.marks import Action
     from kram.core.model import Origin, PkgRow, Status

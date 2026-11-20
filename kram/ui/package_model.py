@@ -151,7 +151,8 @@ class PackageTableModel(QAbstractTableModel):
         self._evr_rank: dict[str, int] | None = None
         self.marks = MarkSet()
         # upgradable packages whose upgrade cannot be installed now -> the resolver's reason; see
-        # Catalog.blocked_upgrades. Filled after each load, so it may lag the rows by a moment
+        # Catalog.blocked_upgrades. Filled after each load, so it may lag the rows by a moment. Always this one dict,
+        # changed in place: the sidebar's "Cannot be upgraded now" entry reads it
         self.blocked: dict[tuple[str, str], str] = {}
         # the selected comps group's optional package names: in italics, as installing the group leaves them out
         self.optional: frozenset[str] = frozenset()
@@ -160,15 +161,25 @@ class PackageTableModel(QAbstractTableModel):
         self.beginResetModel()
         self.rows = rows
         self.basearch = basearch
-        self.blocked = {}
+        self.blocked.clear()
         self.visible = list(range(len(rows)))
         self._evr_rank = None
         self.endResetModel()
 
     def set_blocked(self, blocked: dict[tuple[str, str], str]) -> None:
-        self.blocked = blocked
+        self.blocked.clear()
+        self.blocked.update(blocked)
         if self.visible:
             self.dataChanged.emit(self.index(0, 0), self.index(len(self.visible) - 1, self.columnCount() - 1))
+
+    def set_blocked_reason(self, key: tuple[str, str], reason: str) -> None:
+        """The reason of one blocked row, looked up for the selected row after the list was filled."""
+        if key not in self.blocked:
+            return
+        self.blocked[key] = reason
+        index = self.index_of_key(key)
+        if index.isValid():
+            self.dataChanged.emit(self.index(index.row(), 0), self.index(index.row(), self.columnCount() - 1))
 
     def set_visible(self, visible: list[int], ranked: bool = False) -> None:
         """`ranked`: keep the given order (search relevance) instead of the column sort."""

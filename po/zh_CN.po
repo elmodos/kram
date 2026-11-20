@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kram\n"
 "Report-Msgid-Bugs-To: https://github.com/elmodos/kram/issues\n"
-"POT-Creation-Date: 2026-11-19 20:07+0000\n"
+"POT-Creation-Date: 2026-11-19 22:45+0200\n"
 "PO-Revision-Date: 2026-11-04 14:07+0200\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -41,24 +41,24 @@ msgctxt "filter field"
 msgid "Description"
 msgstr "描述"
 
-#: kram/core/custom_filters.py:52 kram/core/search.py:35 kram/ui/details.py:215
+#: kram/core/custom_filters.py:52 kram/core/search.py:35 kram/ui/details.py:227
 #: kram/ui/install_dialog.py:527
 msgid "Provides"
 msgstr "提供"
 
-#: kram/core/custom_filters.py:53 kram/ui/package_model.py:260
+#: kram/core/custom_filters.py:53 kram/ui/package_model.py:271
 #: kram/ui/sidebar.py:37
 msgid "Status"
 msgstr "状态"
 
-#: kram/core/custom_filters.py:54 kram/ui/details.py:181
-#: kram/ui/package_model.py:260 kram/ui/repos_dialog.py:73
+#: kram/core/custom_filters.py:54 kram/ui/details.py:190
+#: kram/ui/package_model.py:271 kram/ui/repos_dialog.py:73
 #: kram/ui/sidebar.py:38
 msgid "Origin"
 msgstr "来源"
 
 #: kram/core/custom_filters.py:55 kram/ui/apply_dialog.py:93
-#: kram/ui/details.py:81 kram/ui/history_dialog.py:134
+#: kram/ui/details.py:88 kram/ui/history_dialog.py:134
 #: kram/ui/package_model.py:29
 msgid "Repository"
 msgstr "软件源"
@@ -67,7 +67,7 @@ msgstr "软件源"
 msgid "Group"
 msgstr "组"
 
-#: kram/core/custom_filters.py:57 kram/ui/details.py:190
+#: kram/core/custom_filters.py:57 kram/ui/details.py:199
 msgid "Install reason"
 msgstr "安装原因"
 
@@ -115,7 +115,7 @@ msgstr "小于"
 msgid "Installed (any)"
 msgstr "已安装（任意状态）"
 
-#: kram/core/custom_filters.py:78 kram/core/filters.py:81
+#: kram/core/custom_filters.py:78 kram/core/filters.py:84
 msgid "Not installed"
 msgstr "未安装"
 
@@ -123,15 +123,15 @@ msgstr "未安装"
 msgid "Installed, up to date"
 msgstr "已安装，最新"
 
-#: kram/core/custom_filters.py:80 kram/core/filters.py:82
+#: kram/core/custom_filters.py:80 kram/core/filters.py:85
 msgid "Upgradable"
 msgstr "可升级"
 
-#: kram/core/custom_filters.py:81 kram/core/filters.py:91
+#: kram/core/custom_filters.py:81 kram/core/filters.py:98
 msgid "Newer than repository"
 msgstr "比软件源中的更新"
 
-#: kram/core/custom_filters.py:82 kram/core/filters.py:90
+#: kram/core/custom_filters.py:82 kram/core/filters.py:97
 msgid "Orphaned (no repository)"
 msgstr "孤立（无软件源）"
 
@@ -163,75 +163,88 @@ msgstr "功能增强"
 msgid "Installed as a dependency"
 msgstr "作为依赖安装"
 
-#: kram/core/custom_filters.py:94 kram/core/filters.py:87
+#: kram/core/custom_filters.py:94 kram/core/filters.py:94
 msgid "Installed by user"
 msgstr "由用户安装"
 
-#: kram/core/custom_filters.py:96 kram/core/filters.py:115
+#: kram/core/custom_filters.py:96 kram/core/filters.py:122
 msgid "Fedora (official)"
 msgstr "Fedora（官方）"
 
-#: kram/core/custom_filters.py:97 kram/core/filters.py:118
+#: kram/core/custom_filters.py:97 kram/core/filters.py:125
 msgid "Local (@commandline)"
 msgstr "本地（@commandline）"
 
-#: kram/core/custom_filters.py:97 kram/core/filters.py:117
+#: kram/core/custom_filters.py:97 kram/core/filters.py:124
 msgid "Third-party"
 msgstr "第三方"
 
-#: kram/core/custom_filters.py:98 kram/core/filters.py:119
+#: kram/core/custom_filters.py:98 kram/core/filters.py:126
 msgid "Unknown (not recorded)"
 msgstr "未知（未记录）"
 
-#: kram/core/filters.py:79 kram/ui/empty_list.py:43
+#: kram/core/filters.py:82 kram/ui/empty_list.py:43
 msgid "All"
 msgstr "全部"
 
-#: kram/core/filters.py:80 kram/ui/copr_dialog.py:58
+#: kram/core/filters.py:83 kram/ui/copr_dialog.py:58
 msgid "Installed"
 msgstr "已安装"
 
-#: kram/core/filters.py:83
+#: kram/core/filters.py:86
 msgid "Security updates"
 msgstr "安全更新"
 
-#: kram/core/filters.py:84
+#: kram/core/filters.py:87
 msgid "Upgrades that fix a security issue, by their advisories"
 msgstr "根据公告修复安全问题的升级"
 
-#: kram/core/filters.py:85
+#: kram/core/filters.py:88
 msgid "Bug fix updates"
 msgstr "错误修复更新"
 
-#: kram/core/filters.py:86
+#: kram/core/filters.py:89
 msgid "Upgrades that fix bugs, by their advisories"
 msgstr "根据公告修复错误的升级"
 
-#: kram/core/filters.py:89
+#: kram/core/filters.py:90
+msgid "Cannot be upgraded now"
+msgstr "暂时无法升级"
+
+#: kram/core/filters.py:91
+msgid ""
+"Upgrades dnf leaves out because the new version cannot be installed, such as "
+"one that needs a library no repository has yet. The Dependencies tab says "
+"why."
+msgstr ""
+"dnf 跳过的升级：新版本无法安装，例如它需要的库尚无任何软件仓库提供。“依赖关"
+"系”标签页会说明原因。"
+
+#: kram/core/filters.py:96
 msgid "Unneeded dependencies"
 msgstr "不再需要的依赖"
 
-#: kram/core/filters.py:93
+#: kram/core/filters.py:100
 msgid "Locked versions"
 msgstr "已锁定的版本"
 
-#: kram/core/filters.py:94
+#: kram/core/filters.py:101
 msgid "Packages dnf's version lock keeps at their version"
 msgstr "被 dnf 版本锁定保持在当前版本的软件包"
 
-#: kram/core/filters.py:95
+#: kram/core/filters.py:102
 msgid "Marked"
 msgstr "已标记"
 
-#: kram/core/filters.py:113
+#: kram/core/filters.py:120
 msgid "All origins"
 msgstr "所有来源"
 
-#: kram/core/filters.py:149
+#: kram/core/filters.py:156
 msgid "All groups"
 msgstr "所有组"
 
-#: kram/core/filters.py:166
+#: kram/core/filters.py:173
 msgid ""
 "Optional: installed with the environment only when optional groups are asked "
 "for"
@@ -353,142 +366,142 @@ msgid "The package information is {days} day old"
 msgid_plural "The package information is {days} days old"
 msgstr[0] "软件包信息已有 {days} 天"
 
-#: kram/ui/actions.py:18 kram/ui/empty_list.py:56
+#: kram/ui/actions.py:19 kram/ui/empty_list.py:56
 msgid "Reload"
 msgstr "重新加载"
 
-#: kram/ui/actions.py:19
+#: kram/ui/actions.py:20
 msgid "Refresh repository metadata and reload the catalog (needs a password)"
 msgstr "刷新软件源元数据并重新加载目录（需要密码）"
 
-#: kram/ui/actions.py:21
+#: kram/ui/actions.py:22
 msgid "Reload from cache"
 msgstr "从缓存重新加载"
 
-#: kram/ui/actions.py:22
+#: kram/ui/actions.py:23
 msgid "Reload the catalog from the local cache, without network or password"
 msgstr "从本地缓存重新加载目录，无需网络和密码"
 
-#: kram/ui/actions.py:23
+#: kram/ui/actions.py:24
 msgid "Mark All Upgrades"
 msgstr "标记所有升级"
 
-#: kram/ui/actions.py:24
+#: kram/ui/actions.py:25
 msgid "Mark every package that has a newer version for upgrade"
 msgstr "将每个有新版本的软件包标记为升级"
 
-#: kram/ui/actions.py:30
+#: kram/ui/actions.py:31
 msgid "Mark Security Upgrades"
 msgstr "标记安全升级"
 
-#: kram/ui/actions.py:31
+#: kram/ui/actions.py:32
 msgid "Mark the upgrades that fix a security issue, as dnf upgrade --security"
 msgstr "标记修复安全问题的升级，同 dnf upgrade --security"
 
-#: kram/ui/actions.py:32
+#: kram/ui/actions.py:33
 msgid "Mark Critical and Important Security Upgrades"
 msgstr "标记严重和重要的安全升级"
 
-#: kram/ui/actions.py:33
+#: kram/ui/actions.py:34
 msgid "Mark the upgrades that fix a security issue rated critical or important"
 msgstr "标记修复严重或重要安全问题的升级"
 
-#: kram/ui/actions.py:34
+#: kram/ui/actions.py:35
 msgid "Mark Security and Bug Fix Upgrades"
 msgstr "标记安全和错误修复升级"
 
-#: kram/ui/actions.py:35
+#: kram/ui/actions.py:36
 msgid ""
 "Mark the upgrades that fix a security issue or bugs, leaving out enhancements"
 msgstr "标记修复安全问题或错误的升级，不含功能增强"
 
-#: kram/ui/actions.py:37
+#: kram/ui/actions.py:38
 msgid "Mark Upgrades"
 msgstr "标记升级"
 
-#: kram/ui/actions.py:48
+#: kram/ui/actions.py:49
 msgid "Mark Unneeded Dependencies for Removal"
 msgstr "将不再需要的依赖标记为删除"
 
-#: kram/ui/actions.py:49
+#: kram/ui/actions.py:50
 msgid ""
 "Mark for removal the dependencies nothing needs any more, as dnf autoremove "
 "does"
 msgstr "像 dnf autoremove 一样，将不再被任何软件包需要的依赖标记为删除"
 
-#: kram/ui/actions.py:51 kram/ui/apply_dialog.py:347
+#: kram/ui/actions.py:52 kram/ui/apply_dialog.py:347
 msgid "Apply"
 msgstr "应用"
 
-#: kram/ui/actions.py:52
+#: kram/ui/actions.py:53
 msgid "Review and apply the marked changes"
 msgstr "检查并应用已标记的更改"
 
-#: kram/ui/actions.py:53
+#: kram/ui/actions.py:54
 msgid "Unmark All"
 msgstr "取消所有标记"
 
-#: kram/ui/actions.py:54
+#: kram/ui/actions.py:55
 msgid "Discard all marked changes"
 msgstr "放弃所有已标记的更改"
 
-#: kram/ui/actions.py:55
+#: kram/ui/actions.py:56
 msgid "Properties"
 msgstr "属性"
 
-#: kram/ui/actions.py:56 kram/ui/empty_list.py:56 kram/ui/repos_dialog.py:50
+#: kram/ui/actions.py:57 kram/ui/empty_list.py:56 kram/ui/repos_dialog.py:50
 msgid "Repositories"
 msgstr "软件源"
 
-#: kram/ui/actions.py:57
+#: kram/ui/actions.py:58
 msgid "Enable or disable software repositories"
 msgstr "启用或禁用软件源"
 
-#: kram/ui/actions.py:58
+#: kram/ui/actions.py:59
 msgid "Custom Filters…"
 msgstr "自定义过滤器…"
 
-#: kram/ui/actions.py:59
+#: kram/ui/actions.py:60
 msgid "Create and edit your own filters for the sidebar"
 msgstr "为侧边栏创建和编辑自己的过滤器"
 
-#: kram/ui/actions.py:60
+#: kram/ui/actions.py:61
 msgid "New Filter from Current View…"
 msgstr "从当前视图新建过滤器…"
 
-#: kram/ui/actions.py:61
+#: kram/ui/actions.py:62
 msgid "A custom filter with the current sidebar selection and search"
 msgstr "根据侧边栏的当前选择和搜索创建自定义过滤器"
 
-#: kram/ui/actions.py:62
+#: kram/ui/actions.py:63
 msgid "COPR"
 msgstr "COPR"
 
-#: kram/ui/actions.py:62
+#: kram/ui/actions.py:63
 msgid "Manage COPR projects: community repositories"
 msgstr "管理 COPR 项目：社区软件源"
 
-#: kram/ui/actions.py:63
+#: kram/ui/actions.py:64
 msgid "Cleanup…"
 msgstr "清理…"
 
-#: kram/ui/actions.py:64
+#: kram/ui/actions.py:65
 msgid "Clean the package caches and remove leftover configuration files"
 msgstr "清理软件包缓存并删除遗留的配置文件"
 
-#: kram/ui/actions.py:65
+#: kram/ui/actions.py:66
 msgid "Update Notifications…"
 msgstr "更新通知…"
 
-#: kram/ui/actions.py:66
+#: kram/ui/actions.py:67
 msgid "An icon in the system tray when updates are available"
 msgstr "有更新时在系统托盘中显示图标"
 
-#: kram/ui/actions.py:68
+#: kram/ui/actions.py:69
 msgid "Clicking the status icon marks the likely action"
 msgstr "单击状态图标标记最可能的操作"
 
-#: kram/ui/actions.py:69
+#: kram/ui/actions.py:70
 msgid ""
 "A click on the status icon unmarks a marked package, marks one that is not "
 "installed for installation and one with an upgrade for upgrade. Otherwise it "
@@ -497,158 +510,167 @@ msgstr ""
 "单击状态图标会取消已标记软件包的标记，将未安装的软件包标记为安装，将有更新的"
 "软件包标记为升级。否则会打开操作菜单，与右键单击相同。"
 
-#: kram/ui/actions.py:75
+#: kram/ui/actions.py:76
 msgid "Find"
 msgstr "查找"
 
-#: kram/ui/actions.py:76
+#: kram/ui/actions.py:77
 msgid "Back"
 msgstr "后退"
 
-#: kram/ui/actions.py:77
+#: kram/ui/actions.py:78
 msgid "Go back to the previous package (after following a dependency)"
 msgstr "返回上一个软件包（在跳转到依赖之后）"
 
-#: kram/ui/actions.py:78
+#: kram/ui/actions.py:79
 msgid "Save Markings As…"
 msgstr "标记另存为…"
 
-#: kram/ui/actions.py:79
+#: kram/ui/actions.py:80
 msgid "Save the marked changes to a text file"
 msgstr "将已标记的更改保存到文本文件"
 
-#: kram/ui/actions.py:80
+#: kram/ui/actions.py:81
 msgid "Read Markings…"
 msgstr "读取标记…"
 
-#: kram/ui/actions.py:81
+#: kram/ui/actions.py:82
 msgid "Mark the changes listed in a saved markings file"
 msgstr "标记已保存的标记文件中列出的更改"
 
-#: kram/ui/actions.py:82
+#: kram/ui/actions.py:83
 msgid "Export List as CSV…"
 msgstr "将列表导出为 CSV…"
 
-#: kram/ui/actions.py:83
+#: kram/ui/actions.py:84
 msgid "Save the packages listed now, in their order, to a CSV file"
 msgstr "将当前列出的软件包按其顺序保存到 CSV 文件"
 
-#: kram/ui/actions.py:84
+#: kram/ui/actions.py:85
 msgid "Transaction History…"
 msgstr "事务历史…"
 
-#: kram/ui/actions.py:85
+#: kram/ui/actions.py:86
 msgid "What dnf installed, upgraded and removed, and when; undo a transaction"
 msgstr "dnf 何时安装、升级和删除了什么；撤销事务"
 
-#: kram/ui/actions.py:86
+#: kram/ui/actions.py:87
 msgid "Open Package File…"
 msgstr "打开软件包文件…"
 
-#: kram/ui/actions.py:87
+#: kram/ui/actions.py:88
 msgid "Install a downloaded .rpm file (you can also drop it on the window)"
 msgstr "安装已下载的 .rpm 文件（也可以把它拖放到窗口上）"
 
-#: kram/ui/actions.py:88
+#: kram/ui/actions.py:89
 msgid "Quit"
 msgstr "退出"
 
-#: kram/ui/actions.py:89 kram/ui/main_window.py:581
+#: kram/ui/actions.py:90 kram/ui/main_window.py:592
 msgid "About Kram"
 msgstr "关于 Kram"
 
-#: kram/ui/actions.py:93
+#: kram/ui/actions.py:94
 msgid "Copy Name"
 msgstr "复制名称"
 
-#: kram/ui/actions.py:94
+#: kram/ui/actions.py:95
 msgid "Copy name-version-release.arch"
 msgstr "复制 名称-版本-发布.架构"
 
-#: kram/ui/actions.py:98
+#: kram/ui/actions.py:99
 msgid "Mark for Installation"
 msgstr "标记为安装"
 
-#: kram/ui/actions.py:99
+#: kram/ui/actions.py:100
 msgid "Mark for Upgrade"
 msgstr "标记为升级"
 
-#: kram/ui/actions.py:100
+#: kram/ui/actions.py:101
 msgid "Mark for Reinstallation"
 msgstr "标记为重新安装"
 
-#: kram/ui/actions.py:101
+#: kram/ui/actions.py:102
 msgid "Mark for Removal"
 msgstr "标记为删除"
 
-#: kram/ui/actions.py:102
+#: kram/ui/actions.py:103
 msgid "Mark as Installed by User"
 msgstr "标记为由用户安装"
 
-#: kram/ui/actions.py:103
+#: kram/ui/actions.py:104
 msgid "Mark as Dependency"
 msgstr "标记为依赖"
 
-#: kram/ui/actions.py:105
+#: kram/ui/actions.py:106
 msgid "Downgrade to Version"
 msgstr "降级到版本"
 
-#: kram/ui/actions.py:108
+#: kram/ui/actions.py:109
 msgid "Lock Version"
 msgstr "锁定版本"
 
-#: kram/ui/actions.py:109
+#: kram/ui/actions.py:110
 msgid ""
 "Keep the installed version: upgrades leave it out until it is unlocked "
 "(needs a password)"
 msgstr "保留已安装的版本：在解锁之前，升级会跳过它（需要密码）"
 
-#: kram/ui/actions.py:111
+#: kram/ui/actions.py:112
 msgid "Unlock Version"
 msgstr "解锁版本"
 
-#: kram/ui/actions.py:112
+#: kram/ui/actions.py:113
 msgid ""
 "Remove the version lock: the package gets upgrades again (needs a password)"
 msgstr "移除版本锁定：软件包将重新获得升级（需要密码）"
 
-#: kram/ui/actions.py:113
+#: kram/ui/actions.py:114
 msgid "Show in History"
 msgstr "在历史中显示"
 
-#: kram/ui/actions.py:114
+#: kram/ui/actions.py:115
 msgid "The transactions that changed this package"
 msgstr "更改过此软件包的事务"
 
-#: kram/ui/actions.py:115
+#: kram/ui/actions.py:117
+msgid "Why It Cannot Be Upgraded"
+msgstr "为何无法升级"
+
+#: kram/ui/actions.py:118
+msgid ""
+"Show on the Dependencies tab why the new version cannot be installed now"
+msgstr "在“依赖关系”标签页中显示新版本暂时无法安装的原因"
+
+#: kram/ui/actions.py:121
 msgid "Unmark"
 msgstr "取消标记"
 
-#: kram/ui/actions.py:115
+#: kram/ui/actions.py:121
 msgid "Unmark the selected packages"
 msgstr "取消所选软件包的标记"
 
-#: kram/ui/actions.py:154
+#: kram/ui/actions.py:160
 msgid "&File"
 msgstr "文件(&F)"
 
-#: kram/ui/actions.py:165
+#: kram/ui/actions.py:171
 msgid "&Edit"
 msgstr "编辑(&E)"
 
-#: kram/ui/actions.py:174
+#: kram/ui/actions.py:180
 msgid "&Package"
 msgstr "软件包(&P)"
 
-#: kram/ui/actions.py:178
+#: kram/ui/actions.py:184
 msgid "&Settings"
 msgstr "设置(&S)"
 
-#: kram/ui/actions.py:185
+#: kram/ui/actions.py:191
 msgid "Toolbar"
 msgstr "工具栏"
 
-#: kram/ui/actions.py:186
+#: kram/ui/actions.py:192
 msgid "&Help"
 msgstr "帮助(&H)"
 
@@ -729,7 +751,7 @@ msgstr "将升级的组"
 msgid "Groups to be removed"
 msgstr "将删除的组"
 
-#: kram/ui/apply_dialog.py:93 kram/ui/details.py:180
+#: kram/ui/apply_dialog.py:93 kram/ui/details.py:189
 #: kram/ui/history_dialog.py:134 kram/ui/install_dialog.py:473
 #: kram/ui/package_model.py:29
 msgid "Package"
@@ -739,7 +761,7 @@ msgstr "软件包"
 msgid "Size"
 msgstr "大小"
 
-#: kram/ui/apply_dialog.py:93 kram/ui/details.py:81
+#: kram/ui/apply_dialog.py:93 kram/ui/details.py:88
 #: kram/ui/history_dialog.py:134
 msgid "Version"
 msgstr "版本"
@@ -910,7 +932,7 @@ msgstr "无需操作：标记的更改已经生效。"
 
 #: kram/ui/apply_dialog.py:422 kram/ui/install_dialog.py:192
 #: kram/ui/install_dialog.py:208 kram/ui/install_dialog.py:265
-#: kram/ui/main_window.py:740
+#: kram/ui/main_window.py:752
 msgid "Resolving dependencies…"
 msgstr "正在解析依赖关系…"
 
@@ -919,7 +941,7 @@ msgid "These choices cannot be carried out:"
 msgstr "无法执行这些选择："
 
 #: kram/ui/apply_dialog.py:436 kram/ui/install_dialog.py:259
-#: kram/ui/install_dialog.py:289 kram/ui/main_window.py:742
+#: kram/ui/install_dialog.py:289 kram/ui/main_window.py:754
 #, python-brace-format
 msgid ""
 "Could not resolve the changes:\n"
@@ -1231,7 +1253,7 @@ msgstr "搜索 Copr"
 msgid "Builds for this system"
 msgstr "适用于本系统的构建"
 
-#: kram/ui/copr_dialog.py:99 kram/ui/details.py:90
+#: kram/ui/copr_dialog.py:99 kram/ui/details.py:97
 #: kram/ui/install_dialog.py:143
 msgid "Description"
 msgstr "描述"
@@ -1345,145 +1367,151 @@ msgstr "编辑过滤器…"
 msgid "Delete Filter"
 msgstr "删除过滤器"
 
-#: kram/ui/details.py:41
+#: kram/ui/details.py:45
 msgid ""
 "These fixes stay out until the lock is removed (Package → Unlock Version)."
 msgstr "在移除锁定之前，这些修复不会安装（软件包 → 解锁版本）。"
 
-#: kram/ui/details.py:52
+#: kram/ui/details.py:56
 msgid "References:"
 msgstr "参考："
 
-#: kram/ui/details.py:61
+#: kram/ui/details.py:68
 msgid ""
 "The repository has to fix it. Until then Mark All Upgrades leaves this "
 "package out."
 msgstr "需要由软件仓库修复。在此之前，“标记所有升级”会跳过此软件包。"
 
-#: kram/ui/details.py:81
+#: kram/ui/details.py:88
 msgid "State"
 msgstr "状态"
 
-#: kram/ui/details.py:90
+#: kram/ui/details.py:97
 msgid "General"
 msgstr "常规"
 
-#: kram/ui/details.py:91
+#: kram/ui/details.py:98
 msgid "Advisories"
 msgstr "公告"
 
-#: kram/ui/details.py:91 kram/ui/install_dialog.py:144
+#: kram/ui/details.py:98 kram/ui/install_dialog.py:144
 msgid "Dependencies"
 msgstr "依赖关系"
 
-#: kram/ui/details.py:92 kram/ui/install_dialog.py:144
+#: kram/ui/details.py:99 kram/ui/install_dialog.py:144
 msgid "Files"
 msgstr "文件"
 
-#: kram/ui/details.py:92
+#: kram/ui/details.py:99
 msgid "Versions"
 msgstr "版本"
 
-#: kram/ui/details.py:93 kram/ui/install_dialog.py:145
+#: kram/ui/details.py:100 kram/ui/install_dialog.py:145
 msgid "Changelog"
 msgstr "变更日志"
 
-#: kram/ui/details.py:178
+#: kram/ui/details.py:187
 msgid "as a dependency"
 msgstr "作为依赖"
 
-#: kram/ui/details.py:178
+#: kram/ui/details.py:187
 msgid "by the user"
 msgstr "由用户"
 
-#: kram/ui/details.py:182
+#: kram/ui/details.py:191
 msgid "Candidate repository"
 msgstr "候选软件源"
 
-#: kram/ui/details.py:183 kram/ui/install_dialog.py:477
+#: kram/ui/details.py:192 kram/ui/install_dialog.py:477
 msgid "License"
 msgstr "许可证"
 
-#: kram/ui/details.py:184 kram/ui/install_dialog.py:478
+#: kram/ui/details.py:193 kram/ui/install_dialog.py:478
 msgid "Website"
 msgstr "网站"
 
-#: kram/ui/details.py:185 kram/ui/install_dialog.py:479
+#: kram/ui/details.py:194 kram/ui/install_dialog.py:479
 msgid "Vendor"
 msgstr "供应商"
 
-#: kram/ui/details.py:186 kram/ui/install_dialog.py:480
+#: kram/ui/details.py:195 kram/ui/install_dialog.py:480
 msgid "Packager"
 msgstr "打包者"
 
-#: kram/ui/details.py:187
+#: kram/ui/details.py:196
 msgid "Source package"
 msgstr "源码包"
 
-#: kram/ui/details.py:188 kram/ui/install_dialog.py:481
+#: kram/ui/details.py:197 kram/ui/install_dialog.py:481
 msgid "Built"
 msgstr "构建时间"
 
-#: kram/ui/details.py:189
+#: kram/ui/details.py:198
 msgctxt "install date"
 msgid "Installed"
 msgstr "安装时间"
 
-#: kram/ui/details.py:191
+#: kram/ui/details.py:200
 msgid "Version lock"
 msgstr "版本锁定"
 
-#: kram/ui/details.py:194 kram/ui/install_dialog.py:482
+#: kram/ui/details.py:203 kram/ui/install_dialog.py:482
 #: kram/ui/package_model.py:30
 msgid "Installed size"
 msgstr "安装大小"
 
-#: kram/ui/details.py:195 kram/ui/package_model.py:30
+#: kram/ui/details.py:204 kram/ui/package_model.py:30
 msgid "Download size"
 msgstr "下载大小"
 
-#: kram/ui/details.py:209 kram/ui/install_dialog.py:521
+#: kram/ui/details.py:217
+#, python-brace-format
+msgid "…and {n} more"
+msgid_plural "…and {n} more"
+msgstr[0] "…还有 {n} 项"
+
+#: kram/ui/details.py:221 kram/ui/install_dialog.py:521
 msgid "Requires"
 msgstr "需要"
 
-#: kram/ui/details.py:210 kram/ui/install_dialog.py:522
+#: kram/ui/details.py:222 kram/ui/install_dialog.py:522
 msgid "Recommends"
 msgstr "推荐"
 
-#: kram/ui/details.py:211 kram/ui/install_dialog.py:523
+#: kram/ui/details.py:223 kram/ui/install_dialog.py:523
 msgid "Suggests"
 msgstr "建议"
 
-#: kram/ui/details.py:212
+#: kram/ui/details.py:224
 msgid "Required by installed packages"
 msgstr "被已安装的软件包需要"
 
-#: kram/ui/details.py:213 kram/ui/install_dialog.py:525
+#: kram/ui/details.py:225 kram/ui/install_dialog.py:525
 msgid "Conflicts"
 msgstr "冲突"
 
-#: kram/ui/details.py:214 kram/ui/install_dialog.py:526
+#: kram/ui/details.py:226 kram/ui/install_dialog.py:526
 msgid "Obsoletes"
 msgstr "废弃"
 
-#: kram/ui/details.py:216 kram/ui/install_dialog.py:528
+#: kram/ui/details.py:228 kram/ui/install_dialog.py:528
 msgid "No dependencies"
 msgstr "没有依赖"
 
-#: kram/ui/details.py:223
+#: kram/ui/details.py:235
 msgid "candidate"
 msgstr "候选"
 
-#: kram/ui/details.py:223
+#: kram/ui/details.py:235
 msgctxt "version state"
 msgid "installed"
 msgstr "已安装"
 
-#: kram/ui/details.py:224
+#: kram/ui/details.py:236
 msgid "excluded by the version lock"
 msgstr "被版本锁定排除"
 
-#: kram/ui/details.py:241
+#: kram/ui/details.py:253
 msgid ""
 "The changelog is available for installed packages only (dnf5 does not "
 "download it for repositories by default)."
@@ -1907,11 +1935,11 @@ msgstr "脚本"
 msgid "Reading {file}…"
 msgstr "正在读取 {file}…"
 
-#: kram/ui/install_dialog.py:189 kram/ui/main_window.py:293
+#: kram/ui/install_dialog.py:189 kram/ui/main_window.py:297
 msgid "Loading metadata…"
 msgstr "正在加载元数据…"
 
-#: kram/ui/install_dialog.py:216 kram/ui/main_window.py:342
+#: kram/ui/install_dialog.py:216 kram/ui/main_window.py:351
 #, python-brace-format
 msgid ""
 "Could not load the package catalog:\n"
@@ -2122,7 +2150,7 @@ msgstr "无法检查：{path}"
 msgid "Installing {name}"
 msgstr "正在安装 {name}"
 
-#: kram/ui/main_window.py:67
+#: kram/ui/main_window.py:68
 msgid ""
 "To keep an installed package at its version, select it and choose Package → "
 "Lock Version: upgrades then leave it out until it is unlocked."
@@ -2130,67 +2158,67 @@ msgstr ""
 "要让已安装的软件包保持当前版本，请选中它并选择 软件包 → 锁定版本：在解锁之"
 "前，升级会跳过它。"
 
-#: kram/ui/main_window.py:77
+#: kram/ui/main_window.py:78
 msgid "Package Manager"
 msgstr "软件包管理器"
 
-#: kram/ui/main_window.py:279
+#: kram/ui/main_window.py:283
 #, python-brace-format
 msgid "{n} marked change has not been applied. Quit anyway?"
 msgid_plural "{n} marked changes have not been applied. Quit anyway?"
 msgstr[0] "有 {n} 项已标记的更改尚未应用。仍要退出吗？"
 
-#: kram/ui/main_window.py:309
+#: kram/ui/main_window.py:318
 msgid "Waiting for another package manager to finish…"
 msgstr "正在等待另一个软件包管理器完成…"
 
-#: kram/ui/main_window.py:390
+#: kram/ui/main_window.py:401
 #, python-brace-format
 msgid ""
 "Searching “{text}” ({mode}); the first search also indexes what packages "
 "provide…"
 msgstr "正在搜索“{text}”（{mode}）；首次搜索还会为软件包提供的内容建立索引…"
 
-#: kram/ui/main_window.py:393
+#: kram/ui/main_window.py:404
 #, python-brace-format
 msgid "Searching “{text}” ({mode})…"
 msgstr "正在搜索“{text}”（{mode}）…"
 
-#: kram/ui/main_window.py:509
+#: kram/ui/main_window.py:520
 #, python-brace-format
 msgid "Nothing provides “{what}”"
 msgstr "没有软件包提供“{what}”"
 
-#: kram/ui/main_window.py:520
+#: kram/ui/main_window.py:531
 #, python-brace-format
 msgid "Package {name} not found in the catalog"
 msgstr "在目录中未找到软件包 {name}"
 
-#: kram/ui/main_window.py:559
+#: kram/ui/main_window.py:570
 msgid "Refresh Metadata"
 msgstr "刷新元数据"
 
-#: kram/ui/main_window.py:567
+#: kram/ui/main_window.py:578
 msgid "Remove from History"
 msgstr "从历史记录中删除"
 
-#: kram/ui/main_window.py:569
+#: kram/ui/main_window.py:580
 msgid "Clear Search History"
 msgstr "清除搜索历史"
 
-#: kram/ui/main_window.py:582
+#: kram/ui/main_window.py:593
 msgid "A Synaptic-style package manager for Fedora."
 msgstr "一个 Synaptic 风格的 Fedora 软件包管理器。"
 
-#: kram/ui/main_window.py:584
+#: kram/ui/main_window.py:595
 msgid "Released under the MIT License."
 msgstr "以 MIT 许可证发布。"
 
-#: kram/ui/main_window.py:587
+#: kram/ui/main_window.py:598
 msgid "What's New"
 msgstr "新功能"
 
-#: kram/ui/main_window.py:654
+#: kram/ui/main_window.py:666
 #, python-brace-format
 msgid ""
 "{n} upgrade or downgrade unmarked: the version lock keeps the installed "
@@ -2200,33 +2228,33 @@ msgid_plural ""
 "versions"
 msgstr[0] "已取消 {n} 个升级或降级标记：版本锁定保留已安装的版本"
 
-#: kram/ui/main_window.py:657
+#: kram/ui/main_window.py:669
 #, python-brace-format
 msgid "Locking the version of {n} package"
 msgid_plural "Locking the versions of {n} packages"
 msgstr[0] "正在锁定 {n} 个软件包的版本"
 
-#: kram/ui/main_window.py:659
+#: kram/ui/main_window.py:671
 #, python-brace-format
 msgid "Unlocking the version of {n} package"
 msgid_plural "Unlocking the versions of {n} packages"
 msgstr[0] "正在解锁 {n} 个软件包的版本"
 
-#: kram/ui/main_window.py:667
+#: kram/ui/main_window.py:679
 #, python-brace-format
 msgid "{n} marking saved to {path}"
 msgid_plural "{n} markings saved to {path}"
 msgstr[0] "已将 {n} 项标记保存到 {path}"
 
-#: kram/ui/main_window.py:671
+#: kram/ui/main_window.py:683
 msgid "Export List as CSV"
 msgstr "将列表导出为 CSV"
 
-#: kram/ui/main_window.py:674
+#: kram/ui/main_window.py:686
 msgid "CSV files (*.csv);;All files (*)"
 msgstr "CSV 文件 (*.csv);;所有文件 (*)"
 
-#: kram/ui/main_window.py:682 kram/ui/markings_file.py:34
+#: kram/ui/main_window.py:694 kram/ui/markings_file.py:34
 #, python-brace-format
 msgid ""
 "Could not save {path}:\n"
@@ -2237,33 +2265,33 @@ msgstr ""
 "\n"
 "{error}"
 
-#: kram/ui/main_window.py:686
+#: kram/ui/main_window.py:698
 #, python-brace-format
 msgid "{n} package exported to {path}"
 msgid_plural "{n} packages exported to {path}"
 msgstr[0] "已将 {n} 个软件包导出到 {path}"
 
-#: kram/ui/main_window.py:698
+#: kram/ui/main_window.py:710
 msgid "(loading…)"
 msgstr "（正在加载…）"
 
-#: kram/ui/main_window.py:705
+#: kram/ui/main_window.py:717
 msgid "No older versions in the repositories"
 msgstr "软件源中没有更旧的版本"
 
-#: kram/ui/main_window.py:758
+#: kram/ui/main_window.py:770
 msgid "Cannot apply changes"
 msgstr "无法应用更改"
 
-#: kram/ui/main_window.py:759
+#: kram/ui/main_window.py:771
 msgid "The marked changes cannot be carried out. Unmark or change them."
 msgstr "无法执行已标记的更改。请取消标记或修改它们。"
 
-#: kram/ui/main_window.py:760
+#: kram/ui/main_window.py:772
 msgid "This change cannot be carried out."
 msgstr "无法执行此更改。"
 
-#: kram/ui/main_window.py:764
+#: kram/ui/main_window.py:776
 msgid ""
 "Undoing the whole transaction needs versions the repositories no longer "
 "have. What is still possible can be undone without them."
@@ -2271,11 +2299,11 @@ msgstr ""
 "撤销整个事务需要仓库中已不存在的版本。仍可撤销的部分可以在没有这些版本的情况"
 "下撤销。"
 
-#: kram/ui/main_window.py:766
+#: kram/ui/main_window.py:778
 msgid "Undo What Is Possible…"
 msgstr "撤销可撤销的部分…"
 
-#: kram/ui/main_window.py:768
+#: kram/ui/main_window.py:780
 msgid ""
 "They need a version the version lock excludes. Unlock the package (Package → "
 "Unlock Version) or unmark the change."
@@ -2283,82 +2311,82 @@ msgstr ""
 "它们需要一个被版本锁定排除的版本。请解锁该软件包（软件包 → 解锁版本）或取消该"
 "更改的标记。"
 
-#: kram/ui/main_window.py:770
+#: kram/ui/main_window.py:782
 msgid "Show Locked Packages"
 msgstr "显示已锁定的软件包"
 
-#: kram/ui/main_window.py:791
+#: kram/ui/main_window.py:803
 msgid "Applying changes"
 msgstr "正在应用更改"
 
-#: kram/ui/main_window.py:799 kram/ui/main_window.py:806
+#: kram/ui/main_window.py:811 kram/ui/main_window.py:818
 msgid "Refreshing metadata"
 msgstr "正在刷新元数据"
 
-#: kram/ui/main_window.py:838
+#: kram/ui/main_window.py:850
 #, python-brace-format
 msgid "Removing {n} repository"
 msgid_plural "Removing {n} repositories"
 msgstr[0] "正在删除 {n} 个软件源"
 
-#: kram/ui/main_window.py:842
+#: kram/ui/main_window.py:854
 msgid "Changing repositories"
 msgstr "正在更改软件源"
 
-#: kram/ui/main_window.py:923
+#: kram/ui/main_window.py:935
 msgid "cannot be marked"
 msgstr "无法标记"
 
-#: kram/ui/main_window.py:934
+#: kram/ui/main_window.py:946
 #, python-brace-format
 msgid "Undo Transaction {id}"
 msgstr "撤销事务 {id}"
 
-#: kram/ui/main_window.py:935
+#: kram/ui/main_window.py:947
 #, python-brace-format
 msgid "{n} change marked to undo transaction {id}."
 msgid_plural "{n} changes marked to undo transaction {id}."
 msgstr[0] "已标记 {n} 项变更以撤销事务 {id}。"
 
-#: kram/ui/main_window.py:937
+#: kram/ui/main_window.py:949
 #, python-brace-format
 msgid "{package}: installs {version}, {old} is no longer in the repositories"
 msgstr "{package}：将安装 {version}，{old} 已不在软件源中"
 
-#: kram/ui/main_window.py:942
+#: kram/ui/main_window.py:954
 msgid "Review them, then apply."
 msgstr "请检查后再应用。"
 
-#: kram/ui/main_window.py:945
+#: kram/ui/main_window.py:957
 #, python-brace-format
 msgid "Nothing of transaction {id} can be undone."
 msgstr "事务 {id} 中没有可撤销的内容。"
 
-#: kram/ui/main_window.py:949
+#: kram/ui/main_window.py:961
 #, python-brace-format
 msgid "{n} package cannot be undone:"
 msgid_plural "{n} packages cannot be undone:"
 msgstr[0] "{n} 个软件包无法撤销："
 
-#: kram/ui/main_window.py:953
+#: kram/ui/main_window.py:965
 #, python-brace-format
 msgid "{n} package comes back in another version:"
 msgid_plural "{n} packages come back in another version:"
 msgstr[0] "{n} 个软件包将以另一个版本恢复："
 
-#: kram/ui/main_window.py:968
+#: kram/ui/main_window.py:980
 msgid "Downloading metadata again"
 msgstr "正在重新下载元数据"
 
-#: kram/ui/main_window.py:970
+#: kram/ui/main_window.py:982
 msgid "Cleaning the package cache"
 msgstr "正在清理软件包缓存"
 
-#: kram/ui/main_window.py:1012
+#: kram/ui/main_window.py:1024
 msgid "Open Package File"
 msgstr "打开软件包文件"
 
-#: kram/ui/main_window.py:1013
+#: kram/ui/main_window.py:1025
 msgid "RPM packages (*.rpm)"
 msgstr "RPM 软件包 (*.rpm)"
 
@@ -2420,27 +2448,31 @@ msgid "{n} upgrade left out: it cannot be installed now"
 msgid_plural "{n} upgrades left out: they cannot be installed now"
 msgstr[0] "已跳过 {n} 个更新：目前无法安装"
 
-#: kram/ui/marking.py:196
+#: kram/ui/marking.py:189
+msgid "Status → Cannot be upgraded now lists them with the reason."
+msgstr "状态 → 暂时无法升级 会列出它们及原因。"
+
+#: kram/ui/marking.py:197
 #, python-brace-format
 msgid "{n} unneeded dependency marked for removal"
 msgid_plural "{n} unneeded dependencies marked for removal"
 msgstr[0] "已将 {n} 个不再需要的依赖标记为删除"
 
-#: kram/ui/marking.py:204
+#: kram/ui/marking.py:205
 #, python-brace-format
 msgid "{n} package marked"
 msgid_plural "{n} packages marked"
 msgstr[0] "已标记 {n} 个软件包"
 
-#: kram/ui/marking.py:245
+#: kram/ui/marking.py:246
 msgid "Checking for upgrades…"
 msgstr "正在检查升级…"
 
-#: kram/ui/marking.py:246
+#: kram/ui/marking.py:247
 msgid "Nothing to upgrade: its packages are up to date and match the group"
 msgstr "无可升级：组内软件包均为最新且与组定义一致"
 
-#: kram/ui/marking.py:248
+#: kram/ui/marking.py:249
 msgid "It has no optional packages"
 msgstr "没有可选软件包"
 
@@ -2677,53 +2709,53 @@ msgstr ""
 "作为弱依赖安装（由其他软件包推荐）：\n"
 "不再被需要时 autoremove 会删除它"
 
-#: kram/ui/package_model.py:109 kram/ui/package_model.py:318
+#: kram/ui/package_model.py:109 kram/ui/package_model.py:329
 msgid "The upgrade cannot be installed now"
 msgstr "此更新目前无法安装"
 
-#: kram/ui/package_model.py:304
+#: kram/ui/package_model.py:315
 msgid ""
 "Optional in this group: installing the group brings it only with optional "
 "packages"
 msgstr "此组中的可选项：安装该组时仅在包含可选软件包时才会安装"
 
-#: kram/ui/package_model.py:308
+#: kram/ui/package_model.py:319
 #, python-brace-format
 msgid "Installed from {installed}; the latest version comes from {latest}"
 msgstr "从 {installed} 安装；最新版本来自 {latest}"
 
-#: kram/ui/package_model.py:321
+#: kram/ui/package_model.py:332
 #, python-brace-format
 msgid "Marked: {action}"
 msgstr "已标记：{action}"
 
-#: kram/ui/package_model.py:322
+#: kram/ui/package_model.py:333
 msgid "Click for actions"
 msgstr "点击查看操作"
 
-#: kram/ui/package_model.py:352
+#: kram/ui/package_model.py:363
 msgctxt "package status"
 msgid "Not installed"
 msgstr "未安装"
 
-#: kram/ui/package_model.py:353
+#: kram/ui/package_model.py:364
 msgctxt "package status"
 msgid "Installed"
 msgstr "已安装"
 
-#: kram/ui/package_model.py:354
+#: kram/ui/package_model.py:365
 msgid "Installed, upgrade available"
 msgstr "已安装，有可用升级"
 
-#: kram/ui/package_model.py:355
+#: kram/ui/package_model.py:366
 msgid "Installed version is newer than the repository"
 msgstr "已安装的版本比软件源中的更新"
 
-#: kram/ui/package_model.py:356
+#: kram/ui/package_model.py:367
 msgid "Installed, no repository provides it"
 msgstr "已安装，没有软件源提供"
 
-#: kram/ui/package_model.py:357
+#: kram/ui/package_model.py:368
 msgid "Installed as a dependency, no longer needed"
 msgstr "作为依赖安装，已不再需要"
 
@@ -3080,16 +3112,16 @@ msgstr "搜索结果"
 msgid "Custom filters"
 msgstr "自定义过滤器"
 
-#: kram/ui/sidebar.py:127
+#: kram/ui/sidebar.py:128
 #, python-brace-format
 msgid "“{text}” — {mode}"
 msgstr "“{text}”— {mode}"
 
-#: kram/ui/sidebar.py:196
+#: kram/ui/sidebar.py:197
 msgid "Search history is empty"
 msgstr "搜索历史为空"
 
-#: kram/ui/sidebar.py:197
+#: kram/ui/sidebar.py:198
 msgid ""
 "No custom filters yet.\n"
 "Right-click to create one."

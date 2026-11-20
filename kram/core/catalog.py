@@ -60,7 +60,8 @@ MIN_SUBSTRING_QUERY = 3
 HIDDEN_SUFFIXES = ("-debuginfo", "-debugsource")
 # what a recommendation adds with everything it pulls in costs one more resolve (~0.4 s) each
 MAX_SIZED_RECOMMENDATIONS = 10
-# blocked upgrades whose reason is resolved one by one (0.1-0.3 s each); the others only say that they are blocked
+# blocked upgrades whose reason is resolved one by one (0.1-0.3 s each) with the list; the others get theirs when
+# the row is selected (Catalog.blocked_reason)
 MAX_BLOCKED_REASONS = 20
 
 
@@ -483,10 +484,19 @@ class Catalog:
             if n >= MAX_BLOCKED_REASONS:
                 reasons[key] = ""
                 continue
-            goal = libdnf5.base.Goal(self._base)
-            goal.add_upgrade(f"{key[0]}.{key[1]}")
-            reasons[key] = "\n".join(skipped_changes(goal.resolve()))
+            reasons[key] = self.blocked_reason(key)
         return reasons
+
+    def blocked_reason(self, key: tuple[str, str]) -> str:
+        """Why the upgrade of one package cannot be installed now, as the resolver's messages ("" when it gives
+        none). blocked_upgrades explains the first MAX_BLOCKED_REASONS with it, the selected row the others."""
+        goal = libdnf5.base.Goal(self._base)
+        goal.add_upgrade(f"{key[0]}.{key[1]}")
+        tr = goal.resolve()
+        skipped = skipped_changes(tr)
+        if not skipped and tr.get_problems() != libdnf5.base.GoalProblem_NO_PROBLEM:
+            skipped = list(tr.get_resolve_logs_as_strings())  # it fails outright instead of leaving it out
+        return "\n".join(skipped)
 
     def removal_dependents(self, remove: list[str]) -> list[tuple[str, str]]:
         """Installed packages that depend on `remove` (specs), at any depth, and would have to be removed with

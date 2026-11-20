@@ -33,3 +33,20 @@ def test_the_column_is_never_narrower_than_the_view(app):
     tree.addTopLevelItem(QTreeWidgetItem(["x" * 200]))
     app.processEvents()
     assert tree.header().sectionSize(0) > tree.viewport().width() and tree.horizontalScrollBar().maximum() > 0
+
+
+def test_an_empty_entry_goes_once_the_selection_leaves_it(app):
+    """Kept while selected, as a restored selection; hidden again when another entry is picked."""
+    from kram.core.model import CatalogSnapshot
+    from kram.ui.sidebar import Sidebar
+
+    bar = Sidebar()
+    bar.marked, bar.blocked = set(), {}
+    bar.set_snapshot(CatalogSnapshot([], 0, 0, 0.0))
+    assert bar.item_of("status:blocked") is None
+    bar.select("status", "status:blocked")
+    assert bar.item_of("status:blocked") is not None
+    bar.list.setCurrentItem(bar.item_of("status:upgradable"))
+    app.processEvents()
+    assert bar.item_of("status:blocked") is None
+    assert bar.current_entry_id == "status:upgradable"

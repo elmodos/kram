@@ -62,6 +62,7 @@ from .whats_new import WhatsNewDialog
 
 DETAILS_TAB_KEY = "details/tab-name"  # "details/tab" held its position before the advisories tab came
 FILES_VIEW_KEY = "details/files-view"  # "tree" or "list"
+BLOCKED_ENTRY = "status:blocked"  # Status → Cannot be upgraded now
 # the empty list of a sidebar entry that stays empty until the user does something: how to fill it
 EMPTY_HINTS = {
     "status:locked": _("To keep an installed package at its version, select it and choose Package → Lock Version: "
@@ -125,6 +126,7 @@ class MainWindow(QMainWindow):
             (acts.repos, self.open_repos), (acts.copr, self.open_copr), (acts.cache, self.open_cache),
             (acts.notifications, self.open_notifications), (acts.history, lambda: self.open_history()),
             (acts.show_in_history, self.show_in_history),
+            (acts.why_blocked, lambda: self.details.select_name("dependencies")),
             (acts.filters, lambda: self.custom_filters.edit()), (acts.new_filter, self.new_filter_from_view),
             (acts.find, self.search.focus), (acts.back, self.go_back),
             (acts.save_marks, self.save_marks), (acts.read_marks, self.read_marks), (acts.export_csv, self.export_csv),
@@ -169,6 +171,7 @@ class MainWindow(QMainWindow):
 
         self.model = PackageTableModel(self)
         self.sidebar.marked = self.model.marks
+        self.sidebar.blocked = self.model.blocked  # the same dict for good: the model changes it in place
         self.marker = Marker(self.model, self.catalog, self.dnf, self)
         self.marker.changed.connect(self._marks_changed)
         self.marker.groupsChanged.connect(self._group_marks_changed)
@@ -189,7 +192,8 @@ class MainWindow(QMainWindow):
 
         self.details = DetailsTabs()
         self.details.linkActivated.connect(self._on_link)
-        self.details_loader = DetailsLoader(self.details, self.catalog, self.dnf, self._blocked_reason, self)
+        self.details_loader = DetailsLoader(self.details, self.catalog, self.dnf, self._blocked_reason,
+                                              self.model.set_blocked_reason, self)
 
         self.vsplit = QSplitter(Qt.Orientation.Vertical)
         self.vsplit.addWidget(self.table)
@@ -303,6 +307,11 @@ class MainWindow(QMainWindow):
     def _on_blocked(self, blocked: dict[tuple[str, str], str]) -> None:
         self.model.set_blocked(blocked)
         self.details_loader.refresh_blocked()
+        self._update_actions()
+        if self.sidebar.current_view == "status":
+            self.sidebar.refresh_counts()
+        if self.filter is not None and self.filter.id == BLOCKED_ENTRY:  # restored before they were known
+            self.apply_filter()
 
     def _waiting_for_lock(self):
         """On the worker thread: another package manager holds the system repo lock, the load waits for it."""
@@ -354,10 +363,12 @@ class MainWindow(QMainWindow):
     def _candidates(self) -> list[int]:
         """Rows the sidebar filter lets in. Worked out again only for another filter entry or catalog: a keystroke
         used to run the predicate over every row (36 ms of a 45 ms keystroke here). Entries are rebuilt whenever
-        what they count changes, except "Marked", which follows the marks as they are: never cached."""
+        what they count changes, except "Marked", which follows the marks as they are, and "Cannot be upgraded
+        now", which fills in after the list: never cached."""
         entry, snap = self.filter, self.snapshot
         cached = self._candidates_cache
-        if cached is not None and cached[0] is entry and cached[1] is snap and entry.id != "status:marked":
+        if (cached is not None and cached[0] is entry and cached[1] is snap
+                and entry.id not in ("status:marked", BLOCKED_ENTRY)):
             return cached[2]
         pred = entry.predicate
         found = [i for i, r in enumerate(snap.rows) if pred(r)]
@@ -611,6 +622,7 @@ class MainWindow(QMainWindow):
         self.acts.export_csv.setEnabled(self.snapshot is not None)
         self.acts.history.setEnabled(self.snapshot is not None)
         self.acts.show_in_history.setEnabled(self.snapshot is not None and len(rows) == 1)
+        self.acts.why_blocked.setVisible(len(rows) == 1 and rows[0].key in self.model.blocked)
         if self._history_dialog is not None:
             self._history_dialog.set_marking(self.snapshot is not None, self.helper.busy)
         for needs_catalog in (self.acts.repos, self.acts.copr, self.acts.cache, self.acts.filters, self.acts.new_filter,

@@ -93,7 +93,8 @@ def installable_upgrades(base, upgradable: set[tuple[str, str]]) -> set[tuple[st
 
     With best=False (Fedora's default) the resolver leaves out an upgrade whose newer versions cannot be installed,
     such as a build that needs a library no repository has yet; such an upgrade is not one the user can do. The
-    upgraded packages, and those an obsoleting package replaces, count. If the resolve fails as a whole, all of
+    upgraded packages, and those an obsoleting package replaces, count; so do installonly packages (kernel), whose
+    new version is installed next to the old one, not as its upgrade. If the resolve fails as a whole, all of
     `upgradable` is kept: the upgrade dialog shows that problem."""
     if not upgradable:
         return set()
@@ -105,7 +106,8 @@ def installable_upgrades(base, upgradable: set[tuple[str, str]]) -> set[tuple[st
     T = libdnf5.transaction
     done = set()
     for tp in tr.get_transaction_packages():
-        if tp.get_action() == T.TransactionItemAction_UPGRADE:
+        # an installed name.arch that gets an install is installonly: the old versions stay, or the oldest goes
+        if tp.get_action() in (T.TransactionItemAction_UPGRADE, T.TransactionItemAction_INSTALL):
             done.add((tp.get_package().get_name(), tp.get_package().get_arch()))
         for old in tp.get_replaces():
             done.add((old.get_name(), old.get_arch()))

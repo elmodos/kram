@@ -1,4 +1,11 @@
-from kram.core.filters import environment_filters, environment_id, group_filters, origin_filters, status_filters
+from kram.core.filters import (
+    environment_filters,
+    environment_id,
+    group_filters,
+    origin_filters,
+    status_filters,
+    visible_entries,
+)
 from kram.core.model import CatalogSnapshot, GroupInfo, Origin, PkgRow, Status
 
 
@@ -30,6 +37,15 @@ def test_unneeded_is_what_autoremove_removes_whatever_the_status():
     c = counts(status_filters(CatalogSnapshot(rows, 3, 0, 0.0)))
     assert c["status:unneeded"] == 2 and c["status:orphan"] == 1
 
+
+def test_upgrades_that_cannot_be_installed_have_an_entry_while_there_are_any():
+    blocked = {ROWS[2].key: "nothing provides liboapv.so.11"}
+    assert counts(status_filters(SNAP, blocked=blocked))["status:blocked"] == 1
+    assert "status:blocked" not in counts(status_filters(SNAP))  # without the resolve, no entry at all
+    blocked.clear()
+    ids = [e.id for e in visible_entries(status_filters(SNAP, blocked=blocked))]
+    assert "status:blocked" not in ids and "status:upgradable" in ids
+    assert "status:blocked" in [e.id for e in visible_entries(status_filters(SNAP, blocked=blocked), "status:blocked")]
 
 def test_status_counts():
     c = counts(status_filters(SNAP))

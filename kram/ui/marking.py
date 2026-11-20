@@ -186,6 +186,7 @@ class Marker(QObject):
         if left_out:
             text += "; " + ngettext("{n} upgrade left out: it cannot be installed now",
                                     "{n} upgrades left out: they cannot be installed now", left_out).format(n=left_out)
+            text += ". " + _("Status → Cannot be upgraded now lists them with the reason.")
         self.message.emit(text, MESSAGE_MS)
 
     def mark_unneeded(self) -> None:

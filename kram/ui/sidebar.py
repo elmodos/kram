@@ -1,6 +1,6 @@
 """Left panel: one filter list whose content is chosen by the buttons below it, as in Synaptic. A tree: nested
 entries (an origin's repositories, an environment's groups) are children of the entry above them."""
-from PySide6.QtCore import QPoint, Qt, Signal
+from PySide6.QtCore import QPoint, Qt, QTimer, Signal
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
     QButtonGroup,
@@ -58,6 +58,7 @@ class Sidebar(QWidget):
         self._expanded: set[str] = set()  # ids of the unfolded entries of the collapsible views
         self.history: list[tuple[str, int, int]] = []  # (text, mode, result count), newest first
         self.marked = None  # the MarkSet: marked keys for the "Marked" status entry
+        self.blocked = None  # the upgrades that cannot be installed now, for "Cannot be upgraded now"
         self.custom: list = []  # kram.core.custom_filters.CustomFilter, in sidebar order
 
         lay = QVBoxLayout(self)
@@ -153,7 +154,7 @@ class Sidebar(QWidget):
         elif builder == "custom":
             self._entries = custom_filter_entries(self._snap, self.custom)
         elif builder is status_filters:
-            self._entries = visible_entries(status_filters(self._snap, self.marked), self._selected.get(self._view))
+            self._entries = visible_entries(status_filters(self._snap, self.marked, self.blocked), self._selected.get(self._view))
         else:
             self._entries = builder(self._snap)
         collapsible = self._view in COLLAPSIBLE
@@ -225,8 +226,13 @@ class Sidebar(QWidget):
 
     def _on_item(self, item: QTreeWidgetItem | None) -> None:
         if (e := self._entry_of(item)) is not None:
+            left = self._selected.get(self._view)
             self._selected[self._view] = e.id
             self.filterChanged.emit(e)
+            # an empty entry that stayed only because it was selected (a restored "Cannot be upgraded now"): gone once
+            # the selection leaves it. After this signal, not in the middle of the tree's own selection change
+            if left != e.id and any(x.id == left and x.hide_empty and x.count == 0 for x in self._entries):
+                QTimer.singleShot(0, lambda: self._rebuild(emit=False))
         elif not self._entries:
             self.filterChanged.emit(FilterEntry("empty", "", lambda _r: True))
 
