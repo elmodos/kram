@@ -1,5 +1,5 @@
 %global appid io.github.elmodos.Kram
-%global base_version 0.10.0
+%global base_version 0.11.0
 
 Name:           kram
 # A tagged release (v%%{base_version}) is plain %%{base_version}. Any other commit gets a snapshot from
@@ -116,6 +116,31 @@ QT_QPA_PLATFORM=offscreen %pytest
 %{_datadir}/kram/
 
 %changelog
+* Fri Nov 20 2026 Modo Ltunzher <offnormal@gmail.com> - 0.11.0-1
+- History: File → Transaction History shows what dnf installed, upgraded and removed, and when
+- History: Mark Changes to Undo marks the changes that take a transaction back, for review before Apply
+- History: double-clicking a package closes the history and selects the package in the list
+- History: groups and environments a transaction changed are listed with its packages
+- History: a transaction that changed groups or environments is undone whole, as dnf5 history undo does
+- History: when a transaction cannot be undone whole, what is still possible can be undone (--skip-unavailable)
+- Package: Show in History lists the transactions that changed the selected package
+- Sidebar: an Environments view (KDE Plasma Workspaces, Fedora Workstation, …), each environment unfolds into its groups
+- Groups: install, upgrade or remove a group or environment at once from its menu, after the review, instead of marking it
+- Groups: optional packages are in italics in the list, and a group can be installed with them
+- Groups: no removal for the hidden groups the system is built on (core, standard)
+- Groups: the review explains when a group change touches no package and dnf only records the group
+- Applying changes: the review checks free disk space and says how much is missing
+- Applying changes: the review warns before removing the desktop you are using
+- Sidebar: right-click a repository in the Origin view to refresh only its metadata
+- Package list: kernel upgrades no longer show as upgrades that cannot be installed, and Mark All Upgrades marks them again
+- Tray: the update count includes kernel upgrades
+- Package list: an upgrade that cannot be installed says why when the row is selected
+- Sidebar: Status → Cannot be upgraded now lists the upgrades dnf leaves out, with the reason on the Dependencies tab
+- Package: Why It Cannot Be Upgraded opens the reason for an upgrade that cannot be installed now
+- Edit: Mark All Upgrades says where to see the upgrades it left out
+- Details: the Dependencies tab of kernel-core no longer freezes the window; long lists show the first 1000 items
+- Sidebar: an empty Status entry disappears once another entry is selected
+
 * Thu Nov 19 2026 Modo Ltunzher <offnormal@gmail.com> - 0.10.0-1
 - Package list: lock a package at its installed version (Package → Lock Version) and unlock it again
 - Package list: a padlock marks locked packages, and the upgrade a lock holds back is shown greyed

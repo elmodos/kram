@@ -76,6 +76,21 @@
   <content_rating type="oars-1.1"/>
   <translation type="gettext">kram</translation>
   <releases>
+    <release version="0.11.0" date="2026-11-20">
+      <description>
+        <ul>
+          <li>File → Transaction History shows what dnf installed, upgraded and removed, and when; Mark Changes to Undo takes a transaction back, for review before Apply.</li>
+          <li>Package → Show in History lists the transactions that changed a package.</li>
+          <li>An Environments view in the sidebar (KDE Plasma Workspaces, Fedora Workstation, …), each unfolding into its groups.</li>
+          <li>Groups and environments are installed, upgraded or removed at once from their menu, after the review; optional packages are shown and can be installed.</li>
+          <li>The review checks free disk space and warns before removing the desktop you are using.</li>
+          <li>Refresh the metadata of a single repository from the Origin view.</li>
+          <li>Kernel upgrades are no longer shown as upgrades that cannot be installed, and Mark All Upgrades marks them again.</li>
+          <li>Status → Cannot be upgraded now lists the upgrades dnf leaves out, and the Dependencies tab says why.</li>
+          <li>The Dependencies tab of kernel-core no longer freezes the window.</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.10.0" date="2026-11-19">
       <description>
         <ul>
