@@ -5,8 +5,8 @@ Usage:
   scripts/release_notes.py v0.11.2          print the notes for one tag
   scripts/release_notes.py --all DIR        write DIR/<tag>.md for every v* tag
 
-The notes are the changelog items of that version (all package releases of it, oldest first), the tag
-date and the COPR install commands. Publish one with:
+The notes are the changelog items of that version (all package releases of it, oldest first) and the
+COPR install commands. GitHub shows the release date itself. Publish one with:
   gh release create v0.11.2 --title "Kram 0.11.2" --notes-file DIR/v0.11.2.md
 """
 
@@ -53,10 +53,9 @@ def git(*args: str) -> str:
     return subprocess.run(["git", *args], cwd=ROOT, check=True, capture_output=True, text=True).stdout.strip()
 
 
-def notes(tag: str, items: list[str]) -> str:
-    date = git("log", "-1", "--format=%ad", "--date=short", tag)
+def notes(items: list[str]) -> str:
     body = "\n".join(f"- {item}" for item in items)
-    return f"Released {date}.\n\n## What's new\n\n{body}\n\n{INSTALL}"
+    return f"## What's new\n\n{body}\n\n{INSTALL}"
 
 
 def main() -> int:
@@ -68,7 +67,7 @@ def main() -> int:
         missing = [t for t in tags if t[1:] not in log]
         for tag in tags:
             if tag[1:] in log:
-                (out / f"{tag}.md").write_text(notes(tag, log[tag[1:]]), encoding="utf-8")
+                (out / f"{tag}.md").write_text(notes(log[tag[1:]]), encoding="utf-8")
         print(f"{len(tags) - len(missing)} notes written to {out}")
         if missing:
             print("no changelog entry for: " + " ".join(missing), file=sys.stderr)
@@ -79,7 +78,7 @@ def main() -> int:
         if tag[1:] not in log:
             print(f"no changelog entry for {tag}", file=sys.stderr)
             return 1
-        print(notes(tag, log[tag[1:]]), end="")
+        print(notes(log[tag[1:]]), end="")
         return 0
     print(__doc__, file=sys.stderr)
     return 2
