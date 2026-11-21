@@ -7,7 +7,7 @@ from PySide6.QtWidgets import QApplication
 
 from . import APP_ID, HOMEPAGE, __version__, instance
 from .i18n import language
-from .ui import single_instance
+from .ui import single_instance, theme
 
 
 def main() -> int:
@@ -22,6 +22,7 @@ def main() -> int:
     # installed: the hicolor theme icon; source checkout: the SVG next to the package
     source_icon = Path(__file__).resolve().parent.parent / "data" / f"{APP_ID}.svg"
     app.setWindowIcon(QIcon.fromTheme(APP_ID, QIcon(str(source_icon))))
+    theme.install(app)
     # Qt's own strings (standard buttons like Yes/No/Close/Cancel) in the same language as ours
     qt_translator = QTranslator(app)
     translations = QLibraryInfo.path(QLibraryInfo.LibraryPath.TranslationsPath)
