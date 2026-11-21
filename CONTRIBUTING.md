@@ -14,13 +14,23 @@ python3 -m kram.qt
 python3 -m kram.qt ~/Downloads/some-package.rpm   # only the installer for that file
 ```
 
+The GTK 4 + libadwaita front end (in progress on the `feature/gtk` branch, see
+[docs/GTK_FRONTEND.md](docs/GTK_FRONTEND.md)) needs libadwaita 1.7 or newer (Fedora 43 and later) instead of
+PySide6:
+
+```sh
+sudo dnf install python3-libdnf5 python3-rpm python3-gobject gtk4 libadwaita polkit gettext
+python3 -m kram.gtk
+```
+
 Browsing and searching need no privileges. Applying changes or refreshing metadata asks for the
 administrator password once per session (through `pkexec`).
 
 ## Tests and checks
 
 ```sh
-python3 -m pytest          # unit tests (needs pytest; gettext for the translation tests)
+python3 -m pytest          # unit tests (needs pytest; gettext for the translation tests; PySide6 for the Qt
+                           # tests, gtk4 and libadwaita for the GTK ones, which start their own broadway display)
 ruff check .
 scripts/container_check.sh # real root transactions in a throwaway Fedora container (podman)
 scripts/rpm_check.sh       # build the RPM like COPR does, install it and check it, in a container
