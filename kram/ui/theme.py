@@ -51,9 +51,17 @@ def wanted(environ: Mapping[str, str] = os.environ) -> bool:
     return "gnome" in desktops and not environ.get("QT_STYLE_OVERRIDE") and not environ.get("QT_QPA_PLATFORMTHEME")
 
 
-def install(app: QApplication) -> None:
+def prepare() -> bool:
+    """Before the QApplication exists: without a platform theme Qt does not ask the desktop for light or dark (it
+    reports Unknown), so under GNOME the portal one is switched on. True when the rest of this module should run."""
     if not wanted():
-        return
+        return False
+    os.environ["QT_QPA_PLATFORMTHEME"] = "xdgdesktopportal"
+    return True
+
+
+def install(app: QApplication) -> None:
+    """After prepare() said yes."""
     from PySide6.QtCore import Qt
 
     app.setStyle("Fusion")

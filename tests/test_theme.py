@@ -32,3 +32,16 @@ def test_the_two_palettes_differ_in_the_background():
     assert light.color(QPalette.ColorRole.Base).lightness() > 200
     assert dark.color(QPalette.ColorRole.Base).lightness() < 60
     assert light.color(QPalette.ColorGroup.Disabled, QPalette.ColorRole.Text) != light.color(QPalette.ColorRole.Text)
+
+
+def test_prepare_turns_on_the_portal_theme_only_for_gnome(monkeypatch):
+    monkeypatch.setenv("XDG_CURRENT_DESKTOP", "GNOME")
+    monkeypatch.delenv("QT_STYLE_OVERRIDE", raising=False)
+    monkeypatch.delenv("QT_QPA_PLATFORMTHEME", raising=False)
+    assert theme.prepare()
+    assert os.environ["QT_QPA_PLATFORMTHEME"] == "xdgdesktopportal"
+    assert not theme.prepare()  # now a platform theme is set: not ours to touch again
+    monkeypatch.setenv("XDG_CURRENT_DESKTOP", "KDE")
+    monkeypatch.delenv("QT_QPA_PLATFORMTHEME")
+    assert not theme.prepare()
+    assert "QT_QPA_PLATFORMTHEME" not in os.environ
