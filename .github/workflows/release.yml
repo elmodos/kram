@@ -1,0 +1,35 @@
+# A GitHub release for every v* tag, with the notes scripts/release_notes.py writes from packaging/kram.spec.
+# The COPR build is separate: its webhook fires on the same tag push.
+# By hand (Actions → Release → Run workflow, with a tag) it publishes a release for a tag that has none.
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to publish, e.g. v0.11.3"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      TAG: ${{ inputs.tag || github.ref_name }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+      - name: Publish the release
+        run: |
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "$TAG already has a release"
+            exit 0
+          fi
+          python3 scripts/release_notes.py "$TAG" > notes.md
+          gh release create "$TAG" --verify-tag --title "Kram ${TAG#v}" --notes-file notes.md
