@@ -307,3 +307,60 @@ def test_the_progress_dialog_closes_itself_after_a_success_if_asked():
     spin(lambda: bool(finished), 2)
     assert finished == [False]
     win.destroy()
+
+
+def test_the_notifier_dialog_turns_things_on_and_off(monkeypatch, tmp_path):
+    from kram.app.ports import FakeBus
+    from kram.gtk.dialogs import notifier as notifier_dialog
+    from kram.notifier import control
+    system = tmp_path / "xdg-autostart"
+    system.mkdir()
+    (system / "org.kde.discover.notifier.desktop").write_text("[Desktop Entry]\nExec=DiscoverNotifier\n")
+    monkeypatch.setattr(control, "SYSTEM_AUTOSTART", system)
+    calls = []
+    monkeypatch.setattr(control, "checker_enabled", lambda: bool(calls) and calls[-1])
+    monkeypatch.setattr(control, "set_checker_enabled", lambda on: calls.append(on) or "")
+    monkeypatch.setattr(control, "fedora_timer_state", lambda: "disabled")
+    monkeypatch.setattr(notifier_dialog, "bus", FakeBus())
+    dialog = notifier_dialog.NotifierDialog()
+    assert dialog.fedora_button.get_visible() and not dialog.stale_days.get_sensitive()
+    dialog.enabled.set_active(True)
+    assert calls == [True] and dialog.stale_days.get_sensitive()
+    [row] = dialog.rows  # Discover only: GNOME Software is not "installed"
+    row.toggle.emit("clicked")
+    assert row.notifier.turned_off() and row.toggle.get_child().get_label() == "Turn Back On"
+    row.toggle.emit("clicked")
+    assert not row.notifier.turned_off()
+
+
+def test_the_cleanup_dialog_shows_the_caches_and_the_leftovers():
+    from kram.app.cache import CacheLine, LeftoverLine
+    from kram.gtk.dialogs.cache import CacheDialog
+    dnf = SimpleNamespace(submit=lambda fn, done, failed=None: None)  # nothing comes back: the view is fed below
+    cleaned = []
+    dlg = CacheDialog(dnf, lambda target, done: cleaned.append(target), helper=lambda *a: None)
+    assert dlg.rows["dnf_packages"].size.get_text() == "…" and not dlg.rows["dnf_packages"].button.get_sensitive()
+    dlg.show_caches([CacheLine("dnf_packages", True, "/var/cache/libdnf5", "/var/cache/libdnf5", "12 MB", "3 files",
+                               True), CacheLine("packagekit", False)])
+    row = dlg.rows["dnf_packages"]
+    assert row.size.get_text() == "12 MB" and row.button.get_sensitive() and not dlg.rows["packagekit"].get_visible()
+    row.button.emit("clicked")
+    assert cleaned == ["dnf_packages"]
+    leftover = SimpleNamespace(path="/etc/foo.conf.rpmsave", current="/etc/foo.conf")
+    dlg.show_leftovers([LeftoverLine(leftover, ("text-x-generic",), "Your earlier version", "1.1.2026\n1 KB", True,
+                                     "", True)], "1 file found.", True, False)
+    assert [r.get_title() for r in dlg.leftover_rows] == ["/etc/foo.conf.rpmsave"]
+    assert dlg.search_root_btn.get_visible() and not dlg.delete_unused_btn.get_sensitive()
+    dlg.show_leftovers([], "Nothing found.", False, False)
+    assert dlg.leftover_rows == [] and dlg.leftovers_status.get_title() == "Nothing found."
+
+
+def test_the_release_notes_go_to_the_about_dialog():
+    from kram.core.releases import Release, load
+    from kram.gtk.doc_view import release_notes
+    notes = release_notes([Release("1.0", "2026-01-01", ["Fixes <things> & more."], ["One", "Two"])])
+    assert notes == ("<p><em>1.0 — 2026-01-01</em></p><p>Fixes &lt;things&gt; &amp; more.</p>"
+                     "<ul><li>One</li><li>Two</li></ul>")
+    about = Adw.AboutDialog()
+    about.set_release_notes(release_notes(load()))  # the shipped metainfo parses
+    assert about.get_release_notes()

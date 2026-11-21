@@ -138,3 +138,14 @@ class DocView(Gtk.Box):
         if isinstance(b, Rule):
             return [Gtk.Separator()]
         raise TypeError(b)
+
+
+def release_notes(releases) -> str:
+    """kram.core.releases' notes, newest first, in the AppStream markup Adw.AboutDialog's What's New page takes."""
+    out = []
+    for r in releases:
+        out.append(f"<p><em>{GLib.markup_escape_text(f'{r.version} — {r.date}')}</em></p>")
+        out += [f"<p>{GLib.markup_escape_text(p)}</p>" for p in r.paragraphs]
+        if r.items:
+            out.append("<ul>" + "".join(f"<li>{GLib.markup_escape_text(i)}</li>" for i in r.items) + "</ul>")
+    return "".join(out)
