@@ -1,5 +1,4 @@
 """Which Fedora runs here, what Bodhi says, and the dialog about it. No network."""
-import json
 import os
 
 import pytest
@@ -7,6 +6,7 @@ import pytest
 from kram.core import distro
 from kram.core.copr import parse_chroots
 from kram.core.distro import FedoraRelease, UpgradeProgram
+from kram.core.net import NetError
 
 
 def bodhi(*items):
@@ -76,24 +76,6 @@ def test_parse_chroots():
         parse_chroots({"error": "no such project"})
 
 
-class FakeReply:
-    def __init__(self, payload=None, failed=False):
-        self.body, self.failed = json.dumps(payload).encode(), failed
-
-    def deleteLater(self):
-        pass
-
-    def errorString(self):
-        return "failed"
-
-    def error(self):
-        from PySide6.QtNetwork import QNetworkReply
-        return QNetworkReply.NetworkError.TimeoutError if self.failed else QNetworkReply.NetworkError.NoError
-
-    def readAll(self):
-        return self.body
-
-
 @pytest.fixture
 def dialog():
     pytest.importorskip("libdnf5")
@@ -102,7 +84,7 @@ def dialog():
     from PySide6.QtWidgets import QApplication
 
     from kram.core.model import CatalogSnapshot
-    from kram.ui.upgrade_dialog import UpgradeDialog
+    from kram.qt.upgrade_dialog import UpgradeDialog
 
     QApplication.instance() or QApplication([])
 
@@ -128,43 +110,43 @@ def test_dialog_without_copr_projects(dialog):
 
 
 def test_dialog_lists_copr_projects_without_a_build(dialog):
-    dialog._waiting, dialog._copr_total = 3, 3
-    dialog._on_copr(FakeReply({"chroot_repos": {"fedora-45-x86_64": "u"}}), "fedora-45-x86_64", "a/ok")
-    dialog._on_copr(FakeReply({"chroot_repos": {"fedora-44-x86_64": "u"}}), "fedora-45-x86_64", "a/old")
-    dialog._on_copr(FakeReply(failed=True), "fedora-45-x86_64", "a/down")
+    dialog.upgrade._waiting, dialog.upgrade._copr_total = 3, 3
+    dialog.upgrade.on_copr("fedora-45-x86_64", "a/ok", {"chroot_repos": {"fedora-45-x86_64": "u"}})
+    dialog.upgrade.on_copr("fedora-45-x86_64", "a/old", {"chroot_repos": {"fedora-44-x86_64": "u"}})
+    dialog.upgrade.on_copr("fedora-45-x86_64", "a/down", NetError("Operation timed out"))
     assert titles(dialog) == ["COPR projects without a build for Fedora 45: 1",
                               "COPR projects that could not be checked: 1"]
     assert dialog.copr_item.child(0).text(0) == "a/old"
 
 
 def test_dialog_shows_the_simulation(dialog, monkeypatch):
+    from kram.core import upgrade_audit
     from kram.core.upgrade_audit import AuditResult
-    from kram.ui import upgrade_dialog
 
     asked = []
     result = AuditResult("45", True, blockers=["needs libvpx"], upgrades=10, installs=2, removed=["vbox"],
                          downgrades=["a 2 → 1"], orphaned=["b"], replaced=["c → d"], empty_repos=["gone"],
                          download=2048,
                          needed=4096, free=1)
-    monkeypatch.setattr(upgrade_dialog.upgrade_audit, "simulate", lambda v, _cancel, _report: asked.append(v) or result)
-    dialog.start_check()
-    assert asked == ["45"] and not dialog.running_check and not dialog.check.isHidden()
+    monkeypatch.setattr(upgrade_audit, "simulate", lambda v, _cancel, _report: asked.append(v) or result)
+    dialog.upgrade.start()
+    assert asked == ["45"] and not dialog.upgrade.running and not dialog.check.isHidden()
     wanted = ["Problems that stop the upgrade: 1", "Would be removed: 1",
               "Stay as they are, with no updates from Fedora 45: 1", "Replaced by other packages: 1",
               "Would be downgraded: 1", "Repositories with nothing for Fedora 45: 1"]
     assert titles(dialog) == ["No COPR projects are enabled.", *wanted]
     assert "only if packages are removed" in dialog.status.text() and "Not enough free" in dialog.status.text()
-    dialog.start_check()  # a second check replaces the first one's lines
+    dialog.upgrade.start()  # a second check replaces the first one's lines
     assert titles(dialog) == ["No COPR projects are enabled.", *wanted]
 
 
 def test_dialog_reports_a_failed_simulation(dialog, monkeypatch):
-    from kram.ui import upgrade_dialog
+    from kram.core import upgrade_audit
 
     def fail(_version, _cancel, _report):
         raise RuntimeError("no network")
-    monkeypatch.setattr(upgrade_dialog.upgrade_audit, "simulate", fail)
-    dialog.start_check()
+    monkeypatch.setattr(upgrade_audit, "simulate", fail)
+    dialog.upgrade.start()
     assert dialog.status.text() == "Could not check: no network" and dialog.busy.isHidden()
 
 
@@ -186,7 +168,7 @@ def queued():
     from PySide6.QtWidgets import QApplication
 
     from kram.core.model import CatalogSnapshot
-    from kram.ui.upgrade_dialog import UpgradeDialog
+    from kram.qt.upgrade_dialog import UpgradeDialog
 
     QApplication.instance() or QApplication([])
     dnf = Queue()
@@ -199,15 +181,15 @@ def test_the_dialog_stays_open_during_a_check(queued):
     from kram.core.upgrade_audit import AuditResult
 
     dlg, dnf = queued
-    dlg.start_check()
-    dlg.start_check()
+    dlg.upgrade.start()
+    dlg.upgrade.start()
     assert len(dnf.jobs) == 1  # not started twice
     assert not dlg.close_button.isEnabled() and dlg.check.isHidden()
     assert dlg.cancel_button.isVisible() and dlg.cancel_button.isEnabled() and dlg.busy.isVisible()
     dlg.reject()  # Esc, and the window's own close button
-    assert dlg.isVisible() and dlg.running_check
+    assert dlg.isVisible() and dlg.upgrade.running
     dnf.jobs[0][1](AuditResult("45", True))
-    assert not dlg.running_check and dlg.close_button.isEnabled() and dlg.cancel_button.isHidden()
+    assert not dlg.upgrade.running and dlg.close_button.isEnabled() and dlg.cancel_button.isHidden()
     assert dlg.busy.isHidden()
     dlg.reject()
     assert not dlg.isVisible()
@@ -220,7 +202,7 @@ def test_cancel_takes_the_place_of_check(queued):
     QApplication.processEvents()
     assert dlg.check.isVisible() and dlg.cancel_button.isHidden()
     place = dlg.check.geometry()
-    dlg.start_check()
+    dlg.upgrade.start()
     QApplication.processEvents()
     assert dlg.check.isHidden() and dlg.cancel_button.isVisible()
     # same spot and size; the height of the panel follows the text beside it
@@ -232,15 +214,15 @@ def test_cancel_stops_the_check_and_returns_to_the_start(queued):
 
     dlg, dnf = queued
     intro = dlg.status.text()
-    dlg.start_check()
-    dlg.cancel_check()
-    assert dlg._cancel.is_set() and not dlg.cancel_button.isEnabled() and dlg.status.text() == "Cancelling…"
-    assert dlg.running_check  # until the transfers have really stopped
+    dlg.upgrade.start()
+    dlg.upgrade.cancel()
+    assert dlg.upgrade._cancel.is_set() and not dlg.cancel_button.isEnabled() and dlg.status.text() == "Cancelling…"
+    assert dlg.upgrade.running  # until the transfers have really stopped
     dnf.jobs[0][2](Cancelled())
-    assert dlg.status.text() == intro and not dlg.running_check and dlg.check.isVisible()
+    assert dlg.status.text() == intro and not dlg.upgrade.running and dlg.check.isVisible()
     assert dlg.close_button.isEnabled()
-    dlg.start_check()  # and it can be started again, not cancelled from the start
-    assert not dlg._cancel.is_set()
+    dlg.upgrade.start()  # and it can be started again, not cancelled from the start
+    assert not dlg.upgrade._cancel.is_set()
 
 
 def test_simulate_raises_cancelled_and_leaves_no_cache(monkeypatch, tmp_path):
@@ -277,17 +259,17 @@ def test_the_log_follows_the_check(queued):
 
     dlg, dnf = queued
     assert dlg.log.isHidden()  # nothing to show before the first check
-    dlg.start_check()
+    dlg.upgrade.start()
     assert dlg.log.isVisible() and dlg.log.toPlainText() == ""
-    dlg._on_report("downloading", {"name": "Fedora 45"})
-    dlg._on_report("downloaded", {"name": "Fedora 45", "size": 2048})
-    dlg._on_report("mirror_failure", {"url": "http://m", "error": "timeout"})
-    dlg._on_report("resolving", {})
+    dlg.upgrade._on_report("downloading", {"name": "Fedora 45"})
+    dlg.upgrade._on_report("downloaded", {"name": "Fedora 45", "size": 2048})
+    dlg.upgrade._on_report("mirror_failure", {"url": "http://m", "error": "timeout"})
+    dlg.upgrade._on_report("resolving", {})
     dnf.jobs[0][1](AuditResult("45", True))
     lines = [line.split("  ", 1)[1] for line in dlg.log.toPlainText().splitlines()]
     assert lines == ["Downloading Fedora 45", "Downloaded Fedora 45 (2.0 kB)", "Mirror unavailable: http://m: timeout",
                      "Working out the upgrade…", "Done."]
-    dlg.start_check()  # a new check starts a new log
+    dlg.upgrade.start()  # a new check starts a new log
     assert dlg.log.toPlainText() == ""
 
 
@@ -297,7 +279,7 @@ def test_every_report_has_a_message():
     import re
     from pathlib import Path
 
-    from kram.ui.upgrade_dialog import AUDIT_MESSAGES
+    from kram.app.upgrade import AUDIT_MESSAGES
 
     source = (Path(__file__).parent.parent / "kram/core/upgrade_audit.py").read_text()
     keys = set(re.findall(r'report\("(\w+)"', source)) | set(re.findall(r'_say\("(\w+)"', source))
@@ -318,33 +300,30 @@ def test_a_failing_report_cannot_escape_into_libdnf5():
 
 
 def test_rows_carry_the_state_marks(dialog, monkeypatch):
-    from PySide6.QtGui import QIcon
-
+    from kram.app.icons import ERROR, INFO, OK, STATE_ICONS, WARN
+    from kram.core import upgrade_audit
     from kram.core.upgrade_audit import AuditResult
-    from kram.ui import upgrade_dialog as ui
 
     kinds = []
-    monkeypatch.setattr(ui, "_state_icon", lambda kind: kinds.append(kind) or QIcon())
-    monkeypatch.setattr(ui.upgrade_audit, "simulate", lambda *_a: AuditResult(
+    monkeypatch.setattr(dialog, "show_findings", lambda findings: kinds.extend(f.kind for f in findings))
+    monkeypatch.setattr(upgrade_audit, "simulate", lambda *_a: AuditResult(
         "45", True, blockers=["b"], removed=["r"], orphaned=["o"], replaced=["p"], downgrades=["d"],
         empty_repos=["e"]))
-    dialog.start_check()
-    assert kinds == [ui.ERROR, ui.WARN, ui.WARN, ui.INFO, ui.INFO, ui.WARN]
-    assert set(ui.ICONS) >= {ui.OK, ui.WARN, ui.ERROR, ui.INFO}
+    dialog.upgrade.start()
+    assert kinds == [ERROR, WARN, WARN, INFO, INFO, WARN]
+    assert set(STATE_ICONS) >= {OK, WARN, ERROR, INFO}
 
 
 def test_copr_row_mark_follows_the_answer(dialog, monkeypatch):
-    from PySide6.QtGui import QIcon
-
-    from kram.ui import upgrade_dialog as ui
+    from kram.app.icons import OK, WARN
 
     kinds = []
-    monkeypatch.setattr(ui, "_state_icon", lambda kind: kinds.append(kind) or QIcon())
-    dialog._copr_total = 1
-    dialog._show_copr()
-    dialog._copr_missing = ["a/b"]
-    dialog._show_copr()
-    assert kinds == [ui.OK, ui.WARN]
+    monkeypatch.setattr(dialog, "show_copr", lambda finding, _failed: kinds.append(finding.kind))
+    dialog.upgrade._copr_total = 1
+    dialog.upgrade._show_copr()
+    dialog.upgrade._copr_missing = ["a/b"]
+    dialog.upgrade._show_copr()
+    assert kinds == [OK, WARN]
 
 
 def test_sort_out_tells_replaced_from_staying():
@@ -391,7 +370,7 @@ def test_the_three_links_sit_at_the_bottom_left(monkeypatch):
     from PySide6.QtWidgets import QApplication
 
     from kram.core.model import CatalogSnapshot
-    from kram.ui import upgrade_dialog as ui
+    from kram.qt import upgrade_dialog as ui
 
     QApplication.instance() or QApplication([])
     monkeypatch.setattr(ui.distro, "upgrade_program", lambda _desktop: DISCOVER)
@@ -478,13 +457,13 @@ def test_progress_sums_every_transfer_and_is_throttled(downloads):
 
 def test_dialog_shows_progress_and_still_downloading(queued):
     dlg, _dnf = queued
-    dlg.start_check()
+    dlg.upgrade.start()
     assert dlg.busy.maximum() == 0
-    dlg._on_report("progress", {"done": 5, "total": 10})
+    dlg.upgrade._on_report("progress", {"done": 5, "total": 10})
     assert dlg.busy.maximum() == 1000 and dlg.busy.value() == 500
-    dlg._on_report("progress", {"done": 10, "total": 10})
+    dlg.upgrade._on_report("progress", {"done": 10, "total": 10})
     assert dlg.busy.maximum() == 0  # all known bytes are in, the rest is still to come
-    dlg._on_report("still_downloading", {"items": [("Fedora 45", 1024, 2048), ("Slow", 0, 0)]})
+    dlg.upgrade._on_report("still_downloading", {"items": [("Fedora 45", 1024, 2048), ("Slow", 0, 0)]})
     assert dlg.log.toPlainText().split("  ", 1)[1] == "Still downloading: Fedora 45: 1.0 kB of 2.0 kB; Slow"
 
 
@@ -493,6 +472,7 @@ def test_removed_packages_say_what_they_need(dialog):
 
     needs = {"simpleaudio": ["python(abi) = 3.14"], "vbox": ["a", "b", "c", "d"]}
     result = AuditResult("45", True, removed=["simpleaudio", "vbox", "plain"], removal_needs=needs)
-    assert dialog._removal_line("simpleaudio", result) == "simpleaudio — needs python(abi) = 3.14"
-    assert dialog._removal_line("vbox", result) == "vbox — needs a, b, c, …"
-    assert dialog._removal_line("plain", result) == "plain"  # removed for another reason: nothing to claim
+    from kram.app.upgrade import removal_line
+    assert removal_line("simpleaudio", result) == "simpleaudio — needs python(abi) = 3.14"
+    assert removal_line("vbox", result) == "vbox — needs a, b, c, …"
+    assert removal_line("plain", result) == "plain"  # removed for another reason: nothing to claim

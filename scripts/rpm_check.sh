@@ -36,6 +36,8 @@ exec podman run --rm "${out[@]}" -v "$src:/src:ro,Z" -v "kram-dnf-cache-$release
     dnf5 -q -y install "$rpm" >/dev/null 2>&1
     rpm -ql kram | grep -v "site-packages/kram/.*\.py$\|__pycache__"
     head -1 /usr/libexec/kram-helper
+    grep -m1 "^from kram" /usr/bin/kram  # the entry point: kram.qt.__main__
+    python3 -c "import kram.qt.__main__"
     echo "### installed helper (as root)"
     printf "%s\n" "{\"op\":\"ping\"}" "{\"op\":\"quit\"}" | /usr/libexec/kram-helper | head -1
     echo "### local_install (as root, files of a normal user)"

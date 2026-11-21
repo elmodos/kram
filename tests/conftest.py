@@ -7,6 +7,12 @@ import pytest
 os.environ["LANGUAGE"] = "en"
 
 
+@pytest.fixture(autouse=True)
+def _settings_file(tmp_path_factory, monkeypatch):
+    """kram.core.settings writes to a kram.conf of the test's own, never the user's."""
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path_factory.mktemp("config")))
+
+
 @pytest.fixture(scope="module", autouse=True)
 def _collect_garbage():
     """Let the garbage collector free the Qt windows and dialogs a module's tests left behind, at the module's end.

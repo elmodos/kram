@@ -4,7 +4,6 @@ A separate libdnf5 Base with another `releasever` and its own cache: the system 
 are. Call it on the dnf thread. The metadata is deleted as soon as the answer is known.
 """
 import os
-import re
 import shutil
 import threading
 import time
@@ -20,7 +19,6 @@ QUIET_INTERVAL = 5  # s of silence in the log before it says what is still being
 MAX_NAMED_DOWNLOADS = 3
 INBOUND = ("Install", "Upgrade", "Downgrade", "Reinstall")
 OUTBOUND = ("Remove", "Replaced")
-HASHED_REPO_ID = re.compile(r"^[0-9a-f]{32}$")  # dnf5 records some packages under an id nobody can read
 
 
 @dataclass(slots=True)

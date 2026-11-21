@@ -10,8 +10,8 @@ Tested on Fedora 44 with KDE Plasma; any Qt-friendly desktop should work:
 
 ```sh
 sudo dnf install python3-libdnf5 python3-rpm python3-pyside6 polkit gettext
-python3 -m kram
-python3 -m kram ~/Downloads/some-package.rpm   # only the installer for that file
+python3 -m kram.qt
+python3 -m kram.qt ~/Downloads/some-package.rpm   # only the installer for that file
 ```
 
 Browsing and searching need no privileges. Applying changes or refreshing metadata asks for the
@@ -30,7 +30,7 @@ scripts/rpm_check.sh       # build the RPM like COPR does, install it and check 
 
 - `kram/core/`, `kram/ipc/`, `kram/helper/` and `kram/notifier/` import no Qt; `kram/core/` is where most
   logic and tests live. The backend reaches the GUI only through `kram.core.mainloop` (a `post` function that
-  runs a callable on the GUI thread, and a plain `Signal`); `kram/ui/qt_loop.py` is Qt's `post`.
+  runs a callable on the GUI thread, and a plain `Signal`); `kram/qt/qt_loop.py` is Qt's `post`.
 - `kram/helper/kram_helper.py` is the only code that runs as root. Keep it small; it is the security
   boundary.
 - All libdnf5 calls in the GUI process happen on one worker thread (`kram/core/worker.py`).

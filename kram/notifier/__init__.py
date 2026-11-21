@@ -3,13 +3,15 @@
 Both run as systemd user services (data/systemd/); neither imports Qt. The check writes its result to STATE_FILE,
 the tray watches that file.
 """
-import configparser
 import json
 import os
 from pathlib import Path
 
+from ..core.settings import store
+
 TRAY_UNIT = "kram-tray.service"
 STALE_DAYS_DEFAULT = 7
+STALE_DAYS_KEY = "update_checker/stale_days"
 
 
 def state_file() -> Path:
@@ -33,11 +35,5 @@ def write_state(state: dict) -> None:
 
 
 def stale_days() -> int:
-    """Kram's setting (QSettings INI, ~/.config/kram/kram.conf), read without Qt."""
-    config = Path(os.environ.get("XDG_CONFIG_HOME") or Path.home() / ".config") / "kram" / "kram.conf"
-    parser = configparser.ConfigParser(interpolation=None)
-    try:
-        parser.read(config, encoding="utf-8")
-        return max(1, parser.getint("update_checker", "stale_days", fallback=STALE_DAYS_DEFAULT))
-    except (configparser.Error, ValueError):
-        return STALE_DAYS_DEFAULT
+    """Kram's setting, from ~/.config/kram/kram.conf."""
+    return max(1, store.get(STALE_DAYS_KEY, STALE_DAYS_DEFAULT))

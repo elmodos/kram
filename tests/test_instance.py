@@ -8,7 +8,8 @@ pytest.importorskip("PySide6.QtDBus")
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from kram import instance  # noqa: E402
-from kram.ui import (
+from kram.app.browser import Browser  # noqa: E402
+from kram.qt import (
     main_window,  # noqa: E402
     single_instance,  # noqa: E402
 )
@@ -28,25 +29,26 @@ def test_service_passes_the_view_and_keeps_the_token(monkeypatch):
 def _window(loaded: bool):
     """A stand-in for the main window: the real one loads the whole catalog."""
     calls = []
-    window = SimpleNamespace(
+    browser = SimpleNamespace(
         filter=object() if loaded else None, _restore_filter=("status", "status:all"),
-        sidebar=SimpleNamespace(select=lambda view, entry: calls.append(("select", view, entry))),
-        isMinimized=lambda: False, show=lambda: calls.append("show"), raise_=lambda: calls.append("raise"),
-        activateWindow=lambda: calls.append("activate"))
-    window.show_view = lambda view: main_window.MainWindow.show_view(window, view)
+        sidebar=SimpleNamespace(select=lambda view, entry: calls.append(("select", view, entry))))
+    window = SimpleNamespace(
+        browser=browser, isMinimized=lambda: False, show=lambda: calls.append("show"),
+        raise_=lambda: calls.append("raise"), activateWindow=lambda: calls.append("activate"))
+    window.show_view = lambda view: Browser.show_view(browser, view)
     return calls, window
 
 
 def test_upgradable_while_loading_is_selected_after_the_load():
     calls, window = _window(loaded=False)
-    main_window.MainWindow.show_view(window, instance.UPGRADABLE)
-    assert window._restore_filter == ("status", "status:upgradable") and calls == []
+    window.show_view(instance.UPGRADABLE)
+    assert window.browser._restore_filter == ("status", "status:upgradable") and calls == []
 
 
 def test_upgradable_when_loaded_selects_it_now():
     calls, window = _window(loaded=True)
-    main_window.MainWindow.show_view(window, instance.UPGRADABLE)
-    main_window.MainWindow.show_view(window, "")  # a plain `kram`: the filter stays
+    window.show_view(instance.UPGRADABLE)
+    window.show_view("")  # a plain `kram`: the filter stays
     assert calls == [("select", "status", "status:upgradable")]
 
 

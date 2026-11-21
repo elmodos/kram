@@ -43,7 +43,6 @@ class Op(Enum):
 
 
 TEXT_FIELDS = (Field.NAME, Field.NAME_SUMMARY, Field.DESCRIPTION)
-CHOICE_FIELDS = (Field.STATUS, Field.ORIGIN, Field.REPO, Field.GROUP, Field.REASON, Field.ARCH, Field.UPDATE)
 
 FIELD_LABELS = {
     Field.NAME: _("Name"),

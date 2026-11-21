@@ -8,6 +8,8 @@ import pytest
 
 pytest.importorskip("libdnf5")
 
+from kram.app import cache as app_cache
+from kram.app.ports import RecordingUi
 from kram.core import cache
 from kram.helper import kram_helper as helper
 
@@ -102,7 +104,7 @@ def test_dialog_shows_the_report(monkeypatch):
     os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
     from PySide6.QtWidgets import QApplication
 
-    from kram.ui import cache_dialog
+    from kram.qt import cache_dialog
 
     QApplication.instance() or QApplication([])
 
@@ -112,7 +114,7 @@ def test_dialog_shows_the_report(monkeypatch):
 
     report = cache.CacheReport(cache.Usage(), cache.Usage(5, 2), None, cache.Usage(2048, 2), "offline",
                                "/var/cache/libdnf5", "/home/u/.cache/libdnf5")
-    monkeypatch.setattr(cache_dialog, "measure", lambda: report)
+    monkeypatch.setattr(app_cache, "measure", lambda: report)
     dlg = cache_dialog.CacheDialog(Inline(), lambda _target: None)
     rows = dlg.rows
     assert not rows["dnf_packages"].button.isEnabled()  # empty
@@ -136,7 +138,7 @@ def test_dialog_shrinks_with_wrapped_text_and_scrolls(monkeypatch):
     from PySide6.QtCore import Qt
     from PySide6.QtWidgets import QApplication, QLabel
 
-    from kram.ui import cache_dialog
+    from kram.qt import cache_dialog
 
     app = QApplication.instance() or QApplication([])
 
@@ -152,7 +154,7 @@ def test_dialog_shrinks_with_wrapped_text_and_scrolls(monkeypatch):
 
     usage = cache.Usage(3 << 30, 467)
     report = cache.CacheReport(usage, usage, usage, usage, None, "/var/cache/libdnf5", "/home/someone/.cache/libdnf5")
-    monkeypatch.setattr(cache_dialog, "measure", lambda: report)
+    monkeypatch.setattr(app_cache, "measure", lambda: report)
     dnf = Later()
     dlg = cache_dialog.CacheDialog(dnf, lambda _target: None)
     dlg.show()
@@ -264,7 +266,7 @@ def leftover_dialog(monkeypatch, report, helper_fn):
     os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
     from PySide6.QtWidgets import QApplication
 
-    from kram.ui import cache_dialog
+    from kram.qt import cache_dialog
 
     QApplication.instance() or QApplication([])
 
@@ -272,9 +274,10 @@ def leftover_dialog(monkeypatch, report, helper_fn):
         def submit(self, fn, on_done, on_error=None):
             on_done(fn())
 
-    monkeypatch.setattr(cache_dialog, "measure", lambda: cache.CacheReport(None, None, None, None, None))
-    monkeypatch.setattr(cache_dialog, "scan_leftovers", lambda: report)
-    return cache_dialog, cache_dialog.CacheDialog(Inline(), lambda _target: None, helper=helper_fn)
+    monkeypatch.setattr(app_cache, "measure", lambda: cache.CacheReport(None, None, None, None, None))
+    monkeypatch.setattr(app_cache, "scan_leftovers", lambda: report)
+    return cache_dialog, cache_dialog.CacheDialog(Inline(), lambda _target, _done: None,
+                                                  helper=lambda r, t, done: done(helper_fn(r, t)))
 
 
 K = leftovers.Kind
@@ -301,27 +304,9 @@ def test_dialog_without_leftovers(monkeypatch):
 
 def test_delete_unused_asks_then_runs_the_helper(monkeypatch):
     requests = []
-    module, dlg = leftover_dialog(monkeypatch, REPORT, lambda r, _t: requests.append(r) or {"ok": True})
+    _module, dlg = leftover_dialog(monkeypatch, REPORT, lambda r, _t: requests.append(r) or {"ok": True})
 
-    class Box:
-        Icon, ButtonRole, StandardButton = module.QMessageBox.Icon, module.QMessageBox.ButtonRole, \
-            module.QMessageBox.StandardButton
-
-        def __init__(self, *_args, **_kwargs):
-            self.delete = object()
-
-        def setInformativeText(self, text):
-            Box.info = text
-
-        def addButton(self, text, _role=None):
-            return self.delete if text == "Delete" else object()
-
-        def exec(self):
-            pass
-
-        def clickedButton(self):
-            return self.delete
-    monkeypatch.setattr(module, "QMessageBox", Box)
+    dlg.cleanup._ui = RecordingUi(["delete"])
     dlg.delete_unused_btn.click()
     assert requests == [{"op": "remove_leftovers", "paths": ["/etc/yum.repos.d/fedora.repo.rpmsave",
                                                              "/etc/yum.repos.d/chrome.repo.rpmsave"]}]

@@ -4,7 +4,7 @@ icon) hands its request to it over D-Bus and exits. The tray icon calls Activate
     Activate(view: s, token: s)   view: "" or "upgradable"; token: an XDG activation token ("" if none), which
                                   lets a Wayland compositor give the window focus
 
-This module is only the contract, with no D-Bus library: the Qt side is kram.ui.single_instance, the tray calls it
+This module is only the contract, with no D-Bus library: the Qt side is kram.qt.single_instance, the tray calls it
 over Gio.
 """
 from . import APP_ID

@@ -156,7 +156,7 @@ def test_editor_counts_after_the_answer_arrives():
     os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
     from PySide6.QtWidgets import QApplication
 
-    from kram.ui.filters_dialog import FiltersDialog
+    from kram.qt.filters_dialog import FiltersDialog
 
     QApplication.instance() or QApplication([])
     snap = replace(SNAP, provides={})
@@ -177,7 +177,7 @@ def test_a_failed_count_says_so_and_is_asked_again(monkeypatch):
 
     from PySide6.QtWidgets import QApplication
 
-    from kram.ui.filters_dialog import FiltersDialog
+    from kram.qt.filters_dialog import FiltersDialog
 
     QApplication.instance() or QApplication([])
     snap = replace(SNAP, provides={})
@@ -188,3 +188,38 @@ def test_a_failed_count_says_so_and_is_asked_again(monkeypatch):
     assert dlg.count.text() == "Could not count"
     dlg._update_count()
     assert len(asked) == 2  # the question is put again: the failure was not kept as an answer
+
+
+def test_filters_edit_without_a_toolkit():
+    """kram.app.filters_edit: names stay unique, an empty or repeated name cannot be saved, the editor's contents
+    are written back before it moves to another filter."""
+    from kram.app.filters_edit import FiltersEdit, value_editor
+    from kram.app.scheduler import FakeScheduler
+
+    class View:
+        contents = ("Apps", True, [])
+        count = ""
+
+        def editor_contents(self):
+            return self.contents
+
+        def show_count(self, text):
+            self.count = text
+
+    view, scheduler = View(), FakeScheduler()
+    edit = FiltersEdit([CustomFilter("Apps")], SNAP, view, scheduler)
+    assert edit.unique("Apps") == "Apps 2" and edit.unique("New") == "New"
+    edit.select(0)
+    view.contents = ("  Tools ", False, [Condition(Field.NAME, Op.CONTAINS, "vim")])
+    edit.select(edit.add(CustomFilter("Tools")))
+    assert edit.filters[0].name == "Tools" and not edit.filters[0].match_all
+    view.contents = ("Tools", True, [])
+    assert edit.problem() == "Two filters have the same name."
+    view.contents = ("", True, [])
+    assert edit.problem() == "Every filter needs a name."
+    assert edit.delete() == 1 and edit.current == -1 and len(edit.filters) == 1
+    edit.select(0)
+    edit.changed()
+    scheduler.advance(200)
+    assert view.count.endswith("match") or view.count.endswith("matches")
+    assert value_editor(Field.SIZE, SNAP).numeric and value_editor(Field.REPO, SNAP).editable

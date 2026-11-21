@@ -107,7 +107,7 @@ def files():
     os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
     from PySide6.QtWidgets import QApplication
     QApplication.instance() or QApplication([])
-    from kram.ui.file_list import FileList
+    from kram.qt.file_list import FileList
     widget = FileList()
     widget.show()
     yield widget
@@ -116,7 +116,7 @@ def files():
 
 def rows(widget):
     """The visible rows as indented names: what the user sees."""
-    from kram.ui.file_list import PATH_ROLE
+    from kram.qt.file_list import PATH_ROLE
     model, out = widget.view.model(), []
 
     def walk(parent, depth):
@@ -150,8 +150,8 @@ def test_list_view_and_back(files):
 def test_filter_waits_for_the_typing_to_pause(files):
     files.set_files(PATHS, True)
     files.filter.setText("readme")
-    assert files._timer.isActive() and len(rows(files)) > 3  # not filtered yet
-    files._timer.timeout.emit()
+    assert files._timer.active and len(rows(files)) > 3  # not filtered yet
+    files._rebuild_now()
     assert rows(files) == ["usr", "  share", "    doc", "      kram", "        README.md"]
     assert files.count.text() == f"1 of {len(PATHS)} files"
     files.set_files(["/opt/readme.txt", "/opt/other"], True)  # the filter stays for the next package

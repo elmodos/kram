@@ -3,7 +3,14 @@ import os
 
 import pytest
 
-from kram.ui.empty_list import ALL, DESCRIPTIONS, RELOAD, REPOS, EmptyList, explain
+from kram.app import empty_list
+from kram.app.empty_list import ALL, DESCRIPTIONS, RELOAD, REPOS, EmptyList
+from kram.qt.doc_html import to_html
+
+
+def explain(e: EmptyList) -> str:
+    """The empty list's text as Qt shows it."""
+    return to_html(empty_list.explain(e), compact=True)
 
 
 def test_no_search_names_the_filter():
@@ -13,7 +20,7 @@ def test_no_search_names_the_filter():
 
 def test_an_empty_filter_says_how_to_fill_it():
     """Status → Locked versions stays in the sidebar while nothing is locked, and says how to lock a package."""
-    from kram.ui.main_window import EMPTY_HINTS
+    from kram.app.browser import EMPTY_HINTS
 
     text = explain(EmptyList("Locked versions", False, hint=EMPTY_HINTS["status:locked"]))
     assert text.startswith("No packages in “Locked versions”.<br><br>")
@@ -54,7 +61,7 @@ def window(monkeypatch):
     os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
     from PySide6.QtWidgets import QApplication
     QApplication.instance() or QApplication([])
-    from kram.ui import main_window
+    from kram.qt import main_window
     monkeypatch.setattr(main_window.MainWindow, "reload", lambda self: None)
     win = main_window.MainWindow()
     yield win
@@ -74,25 +81,25 @@ def test_the_empty_list_explains_and_its_link_shows_the_results(window, monkeypa
 
     rows = [PkgRow("vlc", "x86_64", "Media player", "", "3-1", "fedora", 1, Origin.FEDORA, Status.NOT_INSTALLED),
             PkgRow("mpv", "x86_64", "Video player", "1-1", "1-1", "fedora", 1, Origin.FEDORA, Status.INSTALLED)]
-    window.snapshot = CatalogSnapshot(rows, 1, 0, 0.0, descriptions=["", "plays vlc playlists"])
+    window.browser.snapshot = CatalogSnapshot(rows, 1, 0, 0.0, descriptions=["", "plays vlc playlists"])
     window.model.set_rows(rows, "x86_64")
-    window.index = SearchIndex(rows, window.snapshot.descriptions)
-    window.narrowing = NarrowingSearch(window.index)
-    window.key_index = {r.key: i for i, r in enumerate(rows)}
-    window.filter = FilterEntry("status:installed", "Installed", lambda r: r.installed)
+    window.browser.index = SearchIndex(rows, window.browser.snapshot.descriptions)
+    window.browser.narrowing = NarrowingSearch(window.browser.index)
+    window.browser.key_index = {r.key: i for i, r in enumerate(rows)}
+    window.browser.filter = FilterEntry("status:installed", "Installed", lambda r: r.installed)
     window.search.set_query("vlc", Mode.NAME)
-    window.apply_filter()
+    window.browser.apply_filter()
     assert window.model.rowCount() == 0
     shown = window.table.empty_text()
     assert "in “Installed”" in shown and "Show 1 result in “All”" in shown
     selected = []
-    monkeypatch.setattr(window.sidebar, "select", lambda view, entry: selected.append(entry))
+    monkeypatch.setattr(window.browser.sidebar, "select", lambda view, entry: selected.append(entry))
     window.table.emptyLinkActivated.emit(ALL)
     assert selected == ["status:all"]
 
-    window.filter = FilterEntry("status:all", "All", lambda _r: True)
+    window.browser.filter = FilterEntry("status:all", "All", lambda _r: True)
     window.search.set_query("playlists", Mode.NAME)
-    window.apply_filter()
+    window.browser.apply_filter()
     assert "Show 1 result found in descriptions" in window.table.empty_text()
     window.table.emptyLinkActivated.emit(DESCRIPTIONS)  # switches the mode, which searches again
     assert window.search.mode() is Mode.DESCRIPTION

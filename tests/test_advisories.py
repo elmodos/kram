@@ -118,7 +118,7 @@ def test_custom_filter_from_view():
 def model():
     from PySide6.QtWidgets import QApplication
 
-    from kram.ui.package_model import PackageTableModel
+    from kram.qt.package_model import PackageTableModel
     _app = QApplication.instance() or QApplication([])
     m = PackageTableModel()
     m.set_rows(ROWS, "x86_64")
@@ -132,7 +132,7 @@ def shown(model):
 def test_sort_by_update_type(model):
     from PySide6.QtCore import Qt
 
-    from kram.ui.package_model import COL_ADVISORY
+    from kram.qt.package_model import COL_ADVISORY
     model.sort(COL_ADVISORY, Qt.SortOrder.AscendingOrder)
     assert shown(model) == ["firefox", "openssl", "assimp", "kernel", "plasma", "ibus", "bash", "chrome"]
     model.sort(COL_ADVISORY, Qt.SortOrder.DescendingOrder)  # the rows without advisories stay at the end
@@ -143,7 +143,7 @@ def test_sort_by_update_type(model):
 def test_column_and_tooltip(model):
     from PySide6.QtCore import Qt
 
-    from kram.ui.package_model import COL_ADVISORY, COL_CANDIDATE
+    from kram.qt.package_model import COL_ADVISORY, COL_CANDIDATE
     model.set_visible(list(range(len(ROWS))), ranked=True)
     assert model.data(model.index(0, COL_ADVISORY)) == "Security: critical"
     assert model.data(model.index(6, COL_ADVISORY)) == ""
@@ -155,7 +155,7 @@ def test_column_and_tooltip(model):
 
 
 def test_details_tab_comes_and_goes(model):
-    from kram.ui.details import DetailsTabs
+    from kram.qt.details import DetailsTabs
     tabs = DetailsTabs()
     index = tabs.indexOf(tabs.advisories)
     assert not tabs.isTabVisible(index)

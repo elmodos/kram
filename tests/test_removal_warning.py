@@ -8,7 +8,7 @@ from kram.core.model import PreviewItem, TransactionPreview, mark_rotated
 pytest.importorskip("PySide6.QtWidgets")
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-from kram.ui.apply_dialog import GROUPS, removal_warning
+from kram.app.apply_review import GROUPS, removal_warning
 
 
 def item(action, name, arch="x86_64", evr="1-1", reason="user"):
@@ -63,7 +63,7 @@ def test_the_tree_groups_a_rotation_apart():
 def test_the_name_column_keeps_its_width_when_versions_are_long():
     from PySide6.QtWidgets import QApplication
 
-    from kram.ui.apply_dialog import ChangesTree
+    from kram.qt.apply_dialog import ChangesTree
 
     app = QApplication.instance() or QApplication([])
     long_old, long_new = "32:9.18.51^git20261003.d0a87358-2.fc44", "32:9.18.51^git20261102.973d8646-3.fc44"

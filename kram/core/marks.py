@@ -33,7 +33,6 @@ INSTALL_LIKE = (Action.INSTALL, Action.UPGRADE, Action.REINSTALL, Action.DOWNGRA
 # comps groups and environments are not marked: `dnf5 group install / remove / upgrade` runs at once (after the
 # review), with only that in the transaction. The helper's request fields are group_<action> and
 # environment_<action>, and *_install_optional for an install with optional packages
-GROUP_ACTIONS = (Action.INSTALL, Action.UPGRADE, Action.REMOVE)
 GROUP_ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.+-]{0,199}$")  # the helper accepts the same
 
 

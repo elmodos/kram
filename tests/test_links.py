@@ -2,7 +2,7 @@
 import pytest
 from PySide6.QtCore import QUrl
 
-from kram.ui import links
+from kram.qt import links
 
 
 @pytest.mark.parametrize("url", ["file:///home/user/evil.desktop", "smb://server/share", "x-custom:run",

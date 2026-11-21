@@ -1,7 +1,7 @@
 # Translating Kram
 
 Kram follows the desktop's language setting. To try a language without changing the desktop:
-`LANGUAGE=de python3 -m kram`.
+`LANGUAGE=de python3 -m kram.qt`.
 
 | Language | | Code | Status |
 |---|---|---|---|

@@ -9,11 +9,12 @@ pytest.importorskip("PySide6.QtWidgets")
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from PySide6.QtCore import QPoint, Qt, QUrl
-from PySide6.QtWidgets import QApplication, QDialog, QMessageBox
+from PySide6.QtWidgets import QApplication, QDialog
 
+from kram.app.ports import RecordingUi
 from kram.core.model import Origin, RepoInfo
-from kram.ui import files, repos_dialog
-from kram.ui.repos_dialog import COL_FILE, COL_ID, COL_NAME, ReposDialog
+from kram.qt import files, repos_dialog
+from kram.qt.repos_dialog import COL_FILE, COL_ID, COL_NAME, ReposDialog
 
 COPR_ID = "copr:copr.fedorainfracloud.org:wezfurlong:wezterm-nightly"
 COPR_FILE = f"/etc/yum.repos.d/_{COPR_ID}.repo"
@@ -206,54 +207,29 @@ def test_show_packages_closes_with_the_repository(app):
     assert dlg.show_repo == "code" and not dlg.remove_repos and dlg.result() == QDialog.DialogCode.Rejected
 
 
-class FakeBox:
-    Icon, ButtonRole, StandardButton = QMessageBox.Icon, QMessageBox.ButtonRole, QMessageBox.StandardButton
-    choice = "Remove"
-    last = None
-
-    def __init__(self, _icon, title, text, parent=None):
-        FakeBox.last = self
-        self.text, self.info, self.buttons, self.clicked = text, "", {}, None
-
-    def setInformativeText(self, info):
-        self.info = info
-
-    def addButton(self, button, _role=None):
-        self.buttons[button] = object()
-        return self.buttons[button]
-
-    def exec(self):
-        self.clicked = self.buttons.get(FakeBox.choice)
-
-    def clickedButton(self):
-        return self.clicked
-
-
-@pytest.mark.parametrize("choice", ["Remove", "Show packages", "Cancel"])
-def test_removal_names_every_repository_of_the_file(app, monkeypatch, choice):
-    monkeypatch.setattr(repos_dialog, "QMessageBox", FakeBox)
-    FakeBox.choice = choice
+@pytest.mark.parametrize("choice", ["remove", "show", "cancel"])
+def test_removal_names_every_repository_of_the_file(app, choice):
     dlg = actions_dialog(app)
+    ui = dlg.repos._ui = RecordingUi([choice])
     select(dlg, "insync")
     dlg.remove_btn.click()
-    box = FakeBox.last
+    box = ui.calls[0][1]
     assert SHARED_FILE in box.text and "2 repositories" in box.text
-    assert "• insync — insync repo" in box.info and "• insync-source — insync sources" in box.info
-    assert "2 installed packages come from them" in box.info
-    assert dlg.remove_repos == (["insync", "insync-source"] if choice == "Remove" else [])
-    assert dlg.show_repo == ("insync" if choice == "Show packages" else None)
+    assert "• insync — insync repo" in box.informative and "• insync-source — insync sources" in box.informative
+    assert "2 installed packages come from them" in box.informative
+    assert dlg.remove_repos == (["insync", "insync-source"] if choice == "remove" else [])
+    assert dlg.show_repo == ("insync" if choice == "show" else None)
 
 
-def test_removal_of_a_single_repository(app, monkeypatch):
-    monkeypatch.setattr(repos_dialog, "QMessageBox", FakeBox)
-    FakeBox.choice = "Remove"
+def test_removal_of_a_single_repository(app):
     dlg = actions_dialog(app)
+    ui = dlg.repos._ui = RecordingUi(["remove"])
     select(dlg, "code")
     dlg.remove_btn.click()
-    box = FakeBox.last
+    box = ui.calls[0][1]
     assert box.text == "Remove the repository code from the system?"
-    assert "/etc/yum.repos.d/vscode.repo" in box.info and "installed" not in box.info
-    assert "Show packages" not in box.buttons  # nothing installed from it
+    assert "/etc/yum.repos.d/vscode.repo" in box.informative and "installed" not in box.informative
+    assert "show" not in [b.id for b in box.buttons]  # nothing installed from it
     assert dlg.remove_repos == ["code"]
 
 
@@ -279,7 +255,7 @@ def test_a_cut_path_keeps_its_start_and_its_end(app):
 
 
 def test_the_origin_column_holds_its_icon_and_its_label(app):
-    from kram.ui.icons import ORIGIN_LABEL
+    from kram.app.icons import ORIGIN_LABEL
 
     dlg = shown(app, 1180)
     shown_origins = {r.origin for r in REPOS}

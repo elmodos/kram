@@ -8,10 +8,10 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from PySide6.QtWidgets import QApplication
 
+from kram.app import history
 from kram.core.history import HistoryItem, HistoryTransaction
 from kram.core.model import Reason
-from kram.ui import history_dialog
-from kram.ui.history_dialog import COL_CHANGES, HistoryDialog
+from kram.qt.history_dialog import COL_CHANGES, HistoryDialog
 
 TRANSACTIONS = [HistoryTransaction(3, 1795000000, 0, "dnf5 remove fish", "", True),
                 HistoryTransaction(2, 1794000000, 1000, "kram", "", False),
@@ -50,7 +50,7 @@ def app():
 
 @pytest.fixture
 def dialog(app, monkeypatch):
-    monkeypatch.setattr(history_dialog, "CHUNK", 2)
+    monkeypatch.setattr(history, "CHUNK", 2)
     catalog = FakeCatalog()
     dlg = HistoryDialog(SyncWorker(), catalog, None)
     dlg.reload()
@@ -122,7 +122,7 @@ def test_a_transaction_with_groups_is_undone_whole(app, monkeypatch):
 
 
 def test_double_clicking_a_group_row_shows_no_package(app, monkeypatch):
-    monkeypatch.setattr(history_dialog, "CHUNK", 2)
+    monkeypatch.setattr(history, "CHUNK", 2)
 
     class GroupsCatalog(FakeCatalog):
         def history(self):
@@ -141,3 +141,48 @@ def test_double_clicking_a_group_row_shows_no_package(app, monkeypatch):
     dlg._on_package_double_click(dlg.packages.topLevelItem(0), 0)
     assert shown == []
     dlg.deleteLater()
+
+
+def test_history_without_a_toolkit(monkeypatch):
+    """kram.app.history drives any view: the current one moves off a transaction the filter hides."""
+    from kram.app.scheduler import FakeScheduler
+
+    class View:
+        def __init__(self):
+            self.current, self.hidden, self.state, self.undo = None, set(), "", None
+
+        def show_transactions(self, lines):
+            self.lines = lines
+
+        def set_changes(self, tid, text):
+            pass
+
+        def set_current(self, tid):
+            self.current = tid
+            h.current_changed(tid)
+
+        def show_packages(self, lines):
+            self.packages = lines
+
+        def set_hidden(self, hidden):
+            self.hidden = hidden
+
+        def show_state(self, text):
+            self.state = text
+
+        def show_undo(self, button):
+            self.undo = button
+
+    monkeypatch.setattr(history, "CHUNK", 2)
+    view, scheduler = View(), FakeScheduler()
+    h = history.History(SyncWorker(), FakeCatalog(), scheduler, view, user_name=lambda uid: f"u{uid}")
+    h.reload()
+    scheduler.run_idle()
+    assert [line.user for line in view.lines] == ["u0", "u1000", "u1000"] and view.lines[1].failed
+    assert view.current == 3 and view.state == "3 transactions"
+    h.set_filter("vim")
+    assert view.hidden == {3} and view.current == 2 and view.state == "2 of 3 transactions"
+    h.set_marking(True, False)
+    assert not view.undo.enabled  # 2 failed
+    h.current_changed(1)
+    assert view.undo.enabled and [p.bold for p in view.packages] == [False, False, True]

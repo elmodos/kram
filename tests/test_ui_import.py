@@ -11,7 +11,7 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 from PySide6.QtCore import QSize
 from PySide6.QtWidgets import QApplication
 
-import kram.ui
+import kram.qt
 
 
 @pytest.fixture(scope="module")
@@ -20,14 +20,14 @@ def app():
 
 
 def test_ui_modules_import():
-    for mod in pkgutil.iter_modules(kram.ui.__path__):
-        importlib.import_module(f"kram.ui.{mod.name}")
+    for mod in pkgutil.iter_modules(kram.qt.__path__):
+        importlib.import_module(f"kram.qt.{mod.name}")
 
 
 def test_icons_render(app):
     from kram.core.marks import Action
     from kram.core.model import Origin, Status
-    from kram.ui.icons import mark_icon, origin_icon, status_icon
+    from kram.qt.icons import mark_icon, origin_icon, status_icon
 
     icons = [*map(status_icon, Status), *map(origin_icon, Origin), *map(mark_icon, Action)]
     for icon in icons:
@@ -39,7 +39,7 @@ def test_icons_render(app):
 
 def test_sidebar_history_removal(app):
     from kram.core.model import CatalogSnapshot
-    from kram.ui.sidebar import Sidebar
+    from kram.qt.sidebar import Sidebar
 
     sb = Sidebar()
     sb.set_snapshot(CatalogSnapshot(rows=[], n_installed=0, n_upgradable=0, load_seconds=0))
@@ -65,7 +65,7 @@ def test_apply_dialog_unchecks_a_recommendation(app):
     from PySide6.QtCore import Qt
 
     from kram.core.model import PreviewItem, Recommendation, TransactionPreview
-    from kram.ui.apply_dialog import ApplyDialog
+    from kram.qt.apply_dialog import ApplyDialog
 
     def preview(excluded):
         items = [PreviewItem("install", "virt-manager", "noarch", "5.1-1", "", "fedora", 700, 2000, "user")]
@@ -105,7 +105,7 @@ def test_apply_dialog_unchecks_a_recommendation(app):
 
 def test_apply_dialog_shows_the_skipped_changes(app):
     from kram.core.model import PreviewItem, TransactionPreview
-    from kram.ui.apply_dialog import ApplyDialog
+    from kram.qt.apply_dialog import ApplyDialog
 
     why = ("Problem: package ffmpeg-9.0.2-4.fc45.x86_64 from rpmfusion-free-updates requires ffmpeg-libs(x86-64) = "
            "9.0.2-4.fc45, but none of the providers can be installed\n"
@@ -132,7 +132,7 @@ def test_apply_dialog_explains_a_group_whose_packages_are_in_place(app):
     """Installing a group whose packages are all installed only records it: the review says so instead of showing
     just the group and "0 B"."""
     from kram.core.model import PreviewGroup, PreviewItem, TransactionPreview
-    from kram.ui.apply_dialog import ApplyDialog
+    from kram.qt.apply_dialog import ApplyDialog
 
     request = {"op": "transaction", "group_install": ["guest-agents"]}
     group = PreviewGroup("install", "guest-agents", "Guest Agents")
@@ -153,7 +153,7 @@ def test_install_dialog(app, monkeypatch):
     from kram.core import local_rpm
     from kram.core.local_rpm import LocalRpm, Signature
     from kram.core.model import LocalTarget, PreviewItem, Recommendation, Requirement, TransactionPreview
-    from kram.ui import install_dialog
+    from kram.qt import install_dialog
 
     rpm = LocalRpm("/tmp/tool-2.0-1.x86_64.rpm", "ab" * 32, 1000, "tool", None, "2.0", "1", "x86_64", "A tool",
                    "Does things.", "", "MIT", "", "", 0, 5000, False, ["bash"], ["helper"], [], [], ["tool"], [], [],
@@ -231,12 +231,12 @@ def test_progress_counts_packages_not_rpm_steps(app):
     from types import SimpleNamespace
 
     from kram.core.mainloop import Signal
-    from kram.ui.progress_dialog import ProgressDialog
+    from kram.qt.progress_dialog import ProgressDialog
 
     client = SimpleNamespace(event=Signal(), failed=Signal())
     dlg = ProgressDialog(client, {"op": "local_install"}, "Installing tool")
-    dlg._connected = True  # as exec() connects them, for a request that was sent
-    client.event.connect(dlg._on_event)
+    client.request = lambda _request: True
+    dlg.progress.start()
     nevra = "tool-1.0-1.x86_64"
     for ev in [{"event": "resolved", "items": [{"action": "Reinstall", "nevra": nevra},
                                                {"action": "Replaced", "nevra": nevra}]},
@@ -257,7 +257,7 @@ def test_progress_counts_packages_not_rpm_steps(app):
 def test_whats_new_dialog(app):
     import kram
     from kram.core.releases import Release
-    from kram.ui.whats_new import WhatsNewDialog
+    from kram.qt.whats_new import WhatsNewDialog
 
     dlg = WhatsNewDialog([Release(kram.__version__, "2026-11-10", ["Intro."], ["One", "Two"]),
                           Release("0.0.1", "2026-01-01", [], ["First"])])

@@ -165,7 +165,7 @@ class ProtocolError(Exception):
 
 
 def human_size(n: int) -> str:
-    """As the GUI writes sizes (kram.ui.package_model.human_size): for the messages sent from here."""
+    """As the GUI writes sizes (kram.app.columns.human_size): for the messages sent from here."""
     if n < 1024:
         return f"{n} B"
     size = float(n)

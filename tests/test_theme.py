@@ -8,7 +8,7 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 from PySide6.QtGui import QPalette  # noqa: E402
 from PySide6.QtWidgets import QApplication  # noqa: E402
 
-from kram.ui import theme  # noqa: E402
+from kram.qt import theme  # noqa: E402
 
 
 @pytest.mark.parametrize("desktop", ["GNOME", "ubuntu:GNOME", "GNOME-Classic:GNOME"])

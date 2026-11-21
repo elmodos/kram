@@ -49,7 +49,7 @@ def test_a_package_older_than_the_removed_group_is_flagged(monkeypatch):
 
 
 def test_the_review_warns_about_older_packages_and_the_running_desktop():
-    from kram.ui.apply_dialog import removal_warning
+    from kram.app.apply_review import removal_warning
 
     older = PreviewItem("remove", "bolt", "x86_64", "1-1", "", "@System", 0, 1, "group", before="Sway Desktop")
     plasma = PreviewItem("remove", "plasma-workspace", "x86_64", "6-1", "", "@System", 0, 1, "group")
@@ -74,21 +74,11 @@ def test_session_packages_from_the_session_file_and_the_desktop(tmp_path, monkey
     assert session.session_packages({}) == ("", set())
 
 
-def test_a_hidden_group_has_no_removal(monkeypatch):
-    pytest.importorskip("PySide6.QtWidgets")
-    import os
-    os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
-    from PySide6.QtWidgets import QApplication, QMenu
-    QApplication.instance() or QApplication([])
-
+def test_a_hidden_group_has_no_removal():
+    from kram.app.marking import group_menu
     from kram.core.model import GroupInfo
-    from kram.ui.marking import Marker
 
     core = GroupInfo("core", "Core", "", True, frozenset(), upgradable=True, visible=False)
     tools = GroupInfo("tools", "Tools", "", True, frozenset(), upgradable=True)
-    texts = []
-    for g in (core, tools):
-        menu = QMenu()
-        Marker.fill_group_menu(NS(), menu, g, busy=False, run=lambda *a: None)
-        texts.append([a.text() for a in menu.actions()])
+    texts = [[item.label for item in group_menu(g, busy=False, run=lambda *a: None)] for g in (core, tools)]
     assert texts == [["Upgrade Group…"], ["Upgrade Group…", "Remove Group…"]]

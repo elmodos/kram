@@ -9,7 +9,7 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from PySide6.QtWidgets import QApplication, QTreeWidgetItem, QVBoxLayout, QWidget
 
-from kram.ui.sidebar import _Tree
+from kram.qt.sidebar import _Tree
 
 
 @pytest.fixture(scope="module")
@@ -38,7 +38,7 @@ def test_the_column_is_never_narrower_than_the_view(app):
 def test_an_empty_entry_goes_once_the_selection_leaves_it(app):
     """Kept while selected, as a restored selection; hidden again when another entry is picked."""
     from kram.core.model import CatalogSnapshot
-    from kram.ui.sidebar import Sidebar
+    from kram.qt.sidebar import Sidebar
 
     bar = Sidebar()
     bar.marked, bar.blocked = set(), {}

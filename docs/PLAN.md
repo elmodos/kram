@@ -49,7 +49,7 @@ Alternatives and why not (for now):
 
 ```
 ┌──────────────── GUI process (user) ──────────────────────────────┐
-│  Qt MainWindow ── PackageTableModel ── filters / SearchIndex      │
+│  Qt MainWindow ── app.Browser ── PackageList ── filters / search  │
 │        │                    ▲                                     │
 │        ▼                    │ snapshot (list[PkgRow])             │
 │  MarkSet (marked actions) ─ │ ── Catalog (worker thread, libdnf5) │
@@ -82,7 +82,7 @@ kram/
   __main__.py      # QApplication setup, translators
   i18n.py          # gettext setup: _(), ngettext(), pgettext(), N_()
   instance.py      # the single-instance D-Bus contract (names only; Qt side: ui/single_instance.py)
-  core/            # no Qt; unit-tested
+  core/            # no toolkit; unit-tested
     mainloop.py    # Post (run on the GUI thread) and a plain Signal: all the backend needs from a toolkit
     worker.py      # DnfWorker: the one libdnf5 thread, results posted back to the GUI thread
     catalog.py     # libdnf5 → PkgRow snapshot, lazy details, resolve(), provides/file search
@@ -92,17 +92,30 @@ kram/
     search.py      # ranked in-memory search
     marks.py       # MarkSet, allowed actions, equivalent dnf5 command
     evr.py         # RPM version ordering
+    settings.py    # kram.conf, read and written in QSettings' INI format without Qt
+    net.py, proc.py  # HTTP requests and programs on threads of their own, answers through Post (stdlib only)
+    …              # history, local_rpm, copr, repo_files, releases, upgrade_audit, versionlock, …
+  app/             # no toolkit: what the window and the dialogs show and do (tests/test_toolkit_free.py)
+    ports.py       # what a front end provides: Ui (questions, file dialogs, links), Bus, view_ref
+    scheduler.py   # the Scheduler port (timers, idle calls); FakeScheduler for tests
+    browser.py     # Browser: the main window's state and flows (mark, apply, reload, undo, quit)
+    package_list.py, columns.py, sidebar.py, search.py, details.py, status.py, actions.py, preferences.py
+    doc.py         # the small document model of the detail tabs and texts (Qt renders it: ui/doc_html.py)
+    icons.py       # what the icons mean (IconRef), colours; the front ends draw them
+    apply_review.py, progress.py, history.py, install.py, upgrade.py, copr.py, repos.py, cache.py,
+    notifier.py, filters_edit.py, custom_filters.py, release_watch.py   # one logic module per dialog
   ipc/client.py    # pkexec'd helper process, event stream (subprocess + reader threads, no Qt)
   helper/kram_helper.py   # the root process (standalone: stdlib + libdnf5 only)
-  ui/              # the Qt front end: main_window, sidebar, package_model, details, dialogs, icons;
-                   # qt_loop.py (Post for Qt), single_instance.py (QtDBus)
+  notifier/        # the tray update checker: check.py, tray.py (Gio, no Qt), control.py
+  ui/              # the Qt front end: widgets that draw what kram/app decides and forward what the user does;
+                   # qt_loop.py (Post and Scheduler for Qt), qt_ui.py (the Ui port), doc_html.py, icons.py
 po/                # kram.pot + one <lang>.po per translation
-data/              # .desktop, AppStream metainfo, polkit policy, icon
+data/              # .desktop, AppStream metainfo, polkit policy, icon, systemd user units
 packaging/kram.spec
 .copr/Makefile     # SRPM for COPR's "make srpm" build method
 scripts/           # i18n.sh, container_check.sh, rpm_check.sh, helper_driver.py, check_local_*.py
 tests/
-docs/              # this plan, COPR notes, README screenshots
+docs/              # this plan, the GTK front end plan, COPR notes, README screenshots
 ```
 Packaging: `data/io.github.elmodos.Kram.{policy,desktop,metainfo.xml,svg}`, `packaging/kram.spec`,
 `.copr/Makefile` (M5).
@@ -197,8 +210,9 @@ The pain with dnfdragora is search through separate backend queries over fixed f
 
 **Speed** (2026-11-15, after the window felt slow on a ThinkPad X220 and froze on Provides searches). libdnf5's
 calls hold Python's GIL until they return, so one running on the dnf thread stops the window just the same: a
-background thread alone fixes nothing, only shorter libdnf5 calls do. `scripts/perf_search.py` measures load,
-typing, package details and Provides searches, with how long the window stops each time ("frozen").
+background thread alone fixes nothing, only shorter libdnf5 calls do. A script measured load, typing, package
+details and Provides searches, with how long the window stops each time ("frozen"); it was removed on 2026-11-21,
+its work done (in git history: `scripts/perf_search.py`).
 - *Package details*: "required by" asked libdnf5 for every capability of the package; kernel-core has 16k kernel
   symbols, 6.7 s with the window frozen whenever the cursor landed on it (typing `kernel-` did). Now only the
   capabilities some installed package requires are asked about (`Catalog._required_names`, rich dependencies taken
@@ -215,7 +229,7 @@ typing, package details and Provides searches, with how long the window stops ea
   them out again), except for "Marked", which follows the marks.
 - *The list itself* (2026-11-16, after measuring on the X220: first characters 330-560 ms, clearing a search
   319 ms): QTreeView rebuilt an item for every row on each model reset, 240 ms for 68k rows here; QTableView keeps
-  nothing per row, 40 ms whatever the count. `kram/ui/package_view.py` sets it up to look like the tree view (same
+  nothing per row, 40 ms whatever the count. `kram/qt/package_view.py` sets it up to look like the tree view (same
   row height, left-aligned movable columns, no grid) and takes its saved column layout. Here: worst keystroke
   240-410 ms -> 50-95 ms, clearing 200-245 ms -> 25-40 ms.
 - Not done: the catalog load stops the window for ~1 s here (2.6 s on the X220). It is one libdnf5 call,
@@ -508,7 +522,7 @@ would do. It never offers the upgrade itself: that is too much responsibility.
   20 downgrades, 5366 MB, and 18 installed packages have nothing in 45. So the COPR check alone would have said "fine".
 - **As built (2026-11-09)**: `kram/core/distro.py` (Bodhi, the target, the upgrade program), `kram/core/upgrade_audit.py`
   (the simulation; it deletes its metadata as soon as it has the answer, not when the dialog closes, so closing the dialog
-  during a check leaves nothing behind), `kram/ui/upgrade_dialog.py` (kept for the session, so a finished check stays).
+  during a check leaves nothing behind), `kram/qt/upgrade_dialog.py` (kept for the session, so a finished check stays).
   A check holds the dnf thread for as long as its download takes, so the dialog cannot be closed meanwhile (it is modal:
   the rest of Kram waits with it, and nothing looks broken for no visible reason). Cancel stops the transfers through
   libdnf5's download callbacks and deletes the metadata, in 3 s against a server that accepts and then says nothing; the
@@ -696,12 +710,12 @@ container.
 **A GTK front end for GNOME** (discussed 2026-11-21; the full plan is `docs/GTK_FRONTEND.md`). Kram on GNOME looks
 like the Qt app it is, and part of the GNOME audience stays away. Decided: no widget wrapper over Qt and GTK (nor
 wxWidgets, which is one and GTK 3 only on Linux), but two native front ends over one toolkit-free layer. Phase 1 moves
-everything that is not widgets out of `kram/ui` into `kram/app` (settings store, timers, user-interaction ports in
+everything that is not widgets out of the Qt code (`kram/ui`, now `kram/qt`) into `kram/app` (settings store, timers, user-interaction ports in
 continuation style, actions and menus as data, a document model instead of HTML, network and processes without Qt),
 with no visible change; phase 2 is a GTK 4 + libadwaita front end, after spikes. Its look, from a mockup: header bar
 with a hamburger menu, a classic menu bar as a setting hidden by default, the sidebar's views as a vertical
-`Adw.ToggleGroup`. Settings are declared once and picked up by both front ends. Phase 1 ships as one release (ending
-with `kram/ui` renamed to `kram/qt`); the GTK front end is built on a branch until full parity and released together
+`Adw.ToggleGroup`. Settings are declared once and picked up by both front ends. Phase 1 (ending with `kram/ui` renamed to
+`kram/qt`) is merged into `main` without a release of its own and ships with the next release; the GTK front end is built on a branch until full parity and released together
 with the package split: `kram-common` + `kram-qt` / `kram-gtk`, conflicting with each other, if a container test shows
 that `dnf upgrade` moves an installed `kram` to `kram-qt` and keeps the tray checker on; otherwise `kram` (Qt) +
 `kram-gtk`.

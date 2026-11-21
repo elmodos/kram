@@ -54,12 +54,10 @@ def test_the_window_exports_what_it_lists(monkeypatch, tmp_path):
     import pytest
     pytest.importorskip("libdnf5")
     os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
-    from PySide6.QtCore import QSettings
     from PySide6.QtWidgets import QApplication, QFileDialog
     QApplication.instance() or QApplication([])
-    from kram.ui import main_window
+    from kram.qt import main_window
     monkeypatch.setattr(main_window.MainWindow, "reload", lambda self: None)
-    monkeypatch.setattr(QSettings, "setValue", lambda *_a: None)  # not into the user's settings
     win = main_window.MainWindow()
     try:
         assert not win.acts.export_csv.isEnabled()  # no catalog yet
@@ -67,7 +65,7 @@ def test_the_window_exports_what_it_lists(monkeypatch, tmp_path):
         win.model.set_visible([1])  # what the filter and search left
         target = tmp_path / "list.csv"
         monkeypatch.setattr(QFileDialog, "getSaveFileName", lambda *_a: (str(target), ""))
-        win.export_csv()
+        win.browser.export_csv()
         lines = target.read_text(encoding="utf-8").splitlines()
         assert lines[0] == ",".join(COLUMNS) and lines[1].startswith("vlc,x86_64,none,")
         assert "1 package exported" in win.statusBar().currentMessage()

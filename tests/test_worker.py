@@ -87,7 +87,7 @@ def test_on_qt_main_loop():
     os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
     from PySide6.QtCore import QCoreApplication
 
-    from kram.ui.qt_loop import post
+    from kram.qt.qt_loop import post
 
     app = QCoreApplication.instance() or QCoreApplication([])
     Tracked.freed_on = []
@@ -109,7 +109,7 @@ def test_qt_post_is_queued_even_from_the_gui_thread():
     os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
     from PySide6.QtCore import QCoreApplication
 
-    from kram.ui.qt_loop import post
+    from kram.qt.qt_loop import post
 
     app = QCoreApplication.instance() or QCoreApplication([])
     seen = []

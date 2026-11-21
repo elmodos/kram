@@ -51,7 +51,7 @@ def test_mount_point_of_a_path_that_does_not_exist_yet(tmp_path):
 
 
 def test_sizes_read_as_in_the_gui():
-    from kram.ui.package_model import human_size as gui_size
+    from kram.qt.package_model import human_size as gui_size
     for n in (0, 900, 2048, 7378 << 20, 3 * GB + 123):
         assert human_size(n) == gui_size(n)
 
@@ -61,7 +61,7 @@ def test_review_keeps_apply_off_without_space_but_allows_a_download_that_fits(di
     os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
     from PySide6.QtWidgets import QApplication
     QApplication.instance() or QApplication([])
-    from kram.ui.apply_dialog import ApplyDialog
+    from kram.qt.apply_dialog import ApplyDialog
 
     item = PreviewItem("install", "fonts", "noarch", "1-1", "", "fedora", 3 * GB, 7 * GB, "group")
     preview = TransactionPreview([item], [], 3 * GB, 7 * GB, to_download=3 * GB, cache_dir="/var/cache/libdnf5")

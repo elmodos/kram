@@ -1,7 +1,8 @@
 # A GTK front end for Kram — implementation plan
 
-Status: **planned, nothing implemented** (written 2026-11-21). Phase 1 (logic extraction) is decided and ships as one
-release. Phase 2 (the GTK front end) is wanted, its look is settled from a mockup, and it starts after that release and
+Status: **phase 1 done** (2026-11-21): the logic extraction (P1.0–P1.15) and the rename to `kram/qt` (P1.16) are merged
+into `main` (P1.17), without a release of its own: they ship with the next release, see §15. Phase 2 (the GTK front
+end) is wanted, its look is settled from a mockup, and it starts after that merge and
 the spikes in §7.1, on a branch of its own until full parity. Short summary in `docs/PLAN.md` §10, "A GTK front end
 for GNOME". The author's answers to the open questions are in §13 and as decisions D8–D13 in §1.
 
@@ -29,7 +30,7 @@ Kram's UI is PySide6 (Qt 6). On GNOME it looks like a foreign app (Fusion with a
 | D10 | **Rename `kram/ui` to `kram/qt`** as a separate mechanical commit at the end of phase 1 (former Q3). | 2026-11-21 |
 | D11 | **Settings are defined once, for both front ends**: a registry in `kram/app` (§4.1a). A new setting added there shows up in both front ends' Settings menus with no front-end code. A setting meant for one toolkit only (Qt's toolbar style, GTK's menu bar) carries that toolkit, and the other front end ignores it. The GTK front end has, at least: "Clicking the status icon marks the likely action", "Watch Fedora Releases", "Show Menu Bar". | 2026-11-21 |
 | D12 | **The GTK hamburger button is hidden while the menu bar is shown** (former Q5). Turning the menu bar off in Settings brings it back. | 2026-11-21 |
-| D13 | **Releases** (former Q6): phase 1 (the whole extraction, incl. D10) ships as **one** normal release, with no visible change. Then all GTK work happens on a separate branch until **full parity** with the Qt front end; only then is `kram-gtk` released, together with the package split (D9). No preview release. | 2026-11-21 |
+| D13 | **Releases** (former Q6): phase 1 (the whole extraction, incl. D10) has no visible change, so it gets **no release of its own**: it is squash-merged into `main` and ships with the next release that has a user-visible change (changed by the author on 2026-11-21, from "one normal release"). Then all GTK work happens on a separate branch until **full parity** with the Qt front end; only then is `kram-gtk` released, together with the package split (D9). No preview release. | 2026-11-21 |
 
 Non-goals: a Flatpak, other package systems, a GNOME-Software-like store look, mobile/adaptive layouts (Kram is a
 dense desktop tool, `docs/PLAN.md` §1), dropping or freezing the Qt front end.
@@ -460,7 +461,7 @@ No user-visible change in phase 1, so no `Changelog:` trailers, except where a s
 | P1.14 | the dialogs' logic modules (table in §4.7), one commit per dialog | each dialog's tests pass; the dialog modules shrink to widgets |
 | P1.15 | cleanup: dead code, docstrings, `docs/PLAN.md` §3 repository layout updated, `docs/GTK_FRONTEND.md` marked "phase 1 done" with what changed from this plan | review with the author |
 | P1.16 | rename `kram/ui` → `kram/qt` (D10), one mechanical commit: `git mv`, imports, tests, `pyproject.toml` script target (`kram.qt.__main__:main`), `kram/__main__.py` → `kram/qt/__main__.py`, the spec's `%check`, `scripts/i18n.sh` source paths (the `.pot` references change, the msgids do not), docs | `ruff`, all tests, `scripts/rpm_check.sh` pass; `python3 -m kram.qt` runs |
-| P1.17 | release (D13): the whole of phase 1 as **one** release, following the usual release workflow (container check, tag, COPR). Still one `kram` package. The release notes say "internal restructuring, no visible change" (or list the fixes made on the way) | released, installed and checked on the author's machine |
+| P1.17 | merge (D13): squash-merge `gtk-prep` into `main`, no release of its own; phase 1 ships with the next release. Still one `kram` package | merged; the author has run the branch on their machine |
 
 Measure as you go: `kram/ui` should end at roughly half its size. If a step makes the code harder to read than it was,
 stop and discuss it. The goal is thinner widget code, not indirection for its own sake.
@@ -604,8 +605,8 @@ Every step ends with tests green in both front ends and a manual run on GNOME (a
 - `scripts/rpm_check.sh`: install each front-end package in the container and run its tests; check that the GTK
   package pulls in no Qt and the Qt package pulls in no GTK 4 (`rpm -q --requires`, `dnf repoquery --requires
   --resolve`).
-- `scripts/perf_search.py`: keep it working against `PackageList` (toolkit-free numbers) and add a GTK variant for
-  S1's numbers.
+- Speed: spike S1 measures the GTK list with a throwaway script (`scripts/perf_search.py` was removed on 2026-11-21;
+  git history has it).
 
 ---
 
@@ -707,7 +708,7 @@ Answered by the author on 2026-11-21; the answers are decisions D8–D13 in §1.
 - Q4 Which settings the GTK front end has → the preferences registry (D11, §4.1a): status-icon click and "Watch Fedora
   Releases" in both; toolbar style Qt-only; "Show Menu Bar" GTK-only; any new setting in both unless it says otherwise.
 - Q5 Hamburger while the menu bar is shown → hidden (D12).
-- Q6 Releases → phase 1 as one release; GTK on a branch until full parity, released with the package split (D13).
+- Q6 Releases → phase 1 as one release (later: merged into `main`, shipped with the next release); GTK on a branch until full parity, released with the package split (D13).
 
 New questions go here, with the date, until the author answers them.
 
@@ -716,3 +717,47 @@ New questions go here, with the date, until the author answers them.
 ## 14. Spike results
 
 (Empty. Fill in as S1–S9 are done: numbers, machine, versions of GTK / libadwaita / PyGObject, decisions taken.)
+
+---
+
+## 15. Phase 1 progress
+
+Done on `gtk-prep` (2026-11-21), each step with `ruff` and the whole suite green in the `kram-test:44` container, and
+a run of the real window (catalog load, search, marking, every sidebar view, settings saved on close) in a container
+with a real dnf cache:
+
+| Step | What exists now | Differences from the plan |
+|---|---|---|
+| P1.0 | `kram/app/__init__.py`, `tests/test_toolkit_free.py` | also blocks `shiboken6` |
+| P1.1 | `kram/core/settings.py` (`store`), `tests/test_settings.py`, fixture `tests/data/kram-0.11.3.conf` (a real file, values replaced) | keys the store does not change are written back byte for byte (raw value text), so `@ByteArray` keys survive by construction; the lock is Qt's own `kram.conf.lock` (QLockFile protocol, flock held), so it also excludes a QSettings writer in another process; `tests/conftest.py` points `XDG_CONFIG_HOME` at a temporary directory for every test |
+| P1.2 | `kram/app/scheduler.py` (`Scheduler`, `Timer`, `FakeScheduler`), `kram/ui/qt_loop.QtScheduler(parent)` | the Qt scheduler takes a parent: its timers die with the widget, so nothing fires into a deleted widget |
+| P1.3 | `kram/app/columns.py`, `kram/app/icons.py`; `kram/ui/icons.icon(ref)` draws any `IconRef` | cells are asked per aspect (`cell_text`, `cell_tooltip`, `cell_icon`, `cell_style`) because Qt asks per role; `cell()` combines them. IconRef kinds added: `("all",)`, `("user",)`, `("marked",)` |
+| P1.4 | `kram/app/package_list.py` (`PackageList`); `PackageTableModel` forwards its signals | signals `about_to_reset`/`reset`, `about_to_sort`/`sorted(moved)`, `rows_changed(positions)`. measured with `scripts/perf_search.py` (broken on `main`, fixed for this): no slowdown; the script was then removed at the author's request |
+| P1.5 | `kram/app/actions.py` (`ActionDef`s, menu structures, `action_state`, `downgrade_items`), `kram/app/preferences.py` | `tests/test_actions.py` compares the Qt menus with ones recorded from 0.11.3 (`tests/data/qt_menus_0.11.3.json`). Find and Quit keep Qt's platform standard keys. "Show Menu Bar" (gtk only) is translated in all 12 catalogs (first pass, uk to review). The Settings menu entries and the Toolbar submenu come from the registry; `ReleaseWatcher` reads the watch setting from it |
+| P1.6 | `kram/app/ports.py` (`Ui`, `Question`, `Button`, `RecordingUi`, `is_web_link`, `parse_filters`), `kram/ui/qt_ui.py` (`QtUi`) | file filters stay in Qt's syntax (keeps the msgids); `parse_filters` turns them into pairs for GTK |
+| P1.7 | `kram/app/marking.py` (`Marker`, `group_menu`), `kram/app/markings.py` | `kram/ui/marking.py` and `kram/ui/markings_file.py` are gone; dynamic menus are `DynamicItem` lists, Qt fills them with `kram.ui.actions.fill_dynamic` |
+| P1.8 | `kram/app/search.py` (`SearchController`); `SearchBar` is the two widgets | |
+| P1.9 | `kram/app/sidebar.py` (`SidebarModel`, `Listing`); `Sidebar` draws listings | |
+| P1.10 | `kram/app/doc.py`, `kram/ui/doc_html.py`, `kram/app/details.py` (builders), `kram/app/empty_list.py`, `kram/app/whats_new.py` | `tests/test_doc.py` compares the HTML byte for byte with that of 0.11.3 (`tests/data/html_0.11.3.json`, inputs `tests/doc_fixtures.py`). The install dialog's tabs are left for P1.14, with the rest of that dialog |
+| P1.11 | `DetailsLoader`, `DetailsSink`, `TabChoice` in `kram/app/details.py` | |
+| P1.12 | `kram/app/browser.py` (`Browser`, `BrowserView`, `ReposChoice`), `kram/app/status.py`; `MainWindow` is a view of `Browser` (~520 lines, from ~1120) | the window's dialogs are `BrowserView` methods (`review_changes`, `run_helper`, `show_repos`) rather than `Ui` methods: they are the window's. COPR, Cleanup, History, Upgrade, Notifications, Install and About are still opened by the window, calling `Browser` for the flows around them (undo, helper runs, reload); their own logic is P1.14. Quitting is `Browser.can_close(done)`. `tests/test_browser.py` covers the flows toolkit-free (each question of Apply, quit, undo, repositories); `tests/test_main_window.py` still drives the window, through `window.browser` for the state that moved |
+| P1.13 | `kram/core/net.py` (`fetch`, `fetch_json`, `Request`, `NetError`), `kram/core/proc.py` (`run`, `Process`, `spawn_detached`), the `Bus` port (`kram/app/ports.py`, `FakeBus`; Qt: `kram.ui.files.QtBus`); `tests/test_net_proc.py` (a local HTTP server, real child processes) | a daemon thread per request instead of a thread pool (a pool's threads are joined at exit, so a slow Copr search would hold up quitting); cancelling is a handle (`Request.cancel()`, `Process.kill()`) rather than a `threading.Event` argument, and a cancelled request's answer is dropped on the main thread even when it was already posted. The Copr search reads raw bytes (`fetch`) so a non-JSON answer keeps its translated message; it now sends Kram's User-Agent like the other requests. Closing the notifier dialog kills a waiting `systemctl`, as QProcess's destructor did. QtDBus stays in `files.py` (FileManager1, `QtBus`) and `single_instance.py`. Checked live in the container: Bodhi, Copr chroots, Copr search, `rpm -V` through Qt's `post`; by the author on their machine: enabling `dnf-makecache.timer` (polkit asks, the dialog follows). Not checked yet: opening Discover from the Fedora N dialog (needs an older release) |
+| P1.14 | `kram/app/release_watch.py`, `custom_filters.py`, `progress.py`, `apply_review.py`, `history.py`, `copr.py`, `upgrade.py`, `notifier.py`, `repos.py`, `cache.py`, `filters_edit.py`, `install.py`, one commit each; `ports.view_ref` | each dialog's logic object talks to its dialog through a small view protocol (`ProgressView`, `ApplyReviewView`, `HistoryView`, …) and holds it weakly (`ports.view_ref`), and `QtUi` holds its parent weakly: dialog ↔ logic was a reference cycle, and PySide6 crashed when the garbage collector freed one (reproduced in `tests/test_distro.py`). Questions go through the `Ui` port, so the tests that faked `QMessageBox` use `RecordingUi`. `doc.filled()` turns a translated template into spans (a bold size where the translation puts it). The state marks OK / WARN / ERROR / INFO moved to `kram/app/icons.py` with `STATE_ICONS`. `Browser.clean_cache` and the cleanup dialog's helper runs are continuation style (`Browser.run_helper`); `MainWindow._helper_result` is gone. The install dialog's logic is `app/install.py` (`Install`, `InstallView`): the header's lines are `Note`s (a state kind and spans), its tabs are docs (the doc model gained `Colored` and `Section.marked` for the requirement marks), and the transaction runs through `InstallView.run_transaction(request, title, done)`; `tests/test_install_flow.py` drives it toolkit-free. Checked in a container over a real 70k-package catalog: every moved dialog opens and fills (cleanup, history, repositories, COPR, notifications, filters, a real Apply review), and the install dialog shows the same text as before for an installable and a blocked file |
+| P1.15 | dead code removed (`ChangesTree.set_basearch`, `status_filter_icon`, the upgrade dialog's test wrappers, three constants already unused on `main`); module docstrings point to their logic module; `docs/PLAN.md` §3 shows `kram/app` | — |
+| P1.16 | `kram/qt` (was `kram/ui`), `kram/qt/__main__.py` (was `kram/__main__.py`), the `kram` command is `kram.qt.__main__:main`; `po/kram.pot` regenerated (references only, the msgids are the same set) | `python3 -m kram` is gone: a source checkout runs `python3 -m kram.qt` (CONTRIBUTING, TRANSLATING, the tray's fallback). The `.po` files keep the old references until the next `scripts/i18n.sh update`. `scripts/rpm_check.sh` also checks the installed command's entry point |
+| P1.17 | squash-merged into `main` (2026-11-21), no release of its own | the plan had a release; the author chose to ship phase 1 with the next release that has a user-visible change (D13) |
+
+**Phase 1 against this plan, in short** (for whoever starts phase 2):
+
+- Everything §4 planned to move is in `kram/app`, and `kram/ui` only draws and forwards. `kram/ui` ended at ~5.1k
+  lines (from ~8.1k), not at half: the widgets themselves (the package view's column fitting, the file tree, the
+  painted icons, the dialogs' layouts) are most of what is left, and GTK writes its own of each anyway. `kram/app`
+  is ~6.2k lines, `kram/core` ~4.7k.
+- Not in the plan, needed on the way: `core/net.py` and `core/proc.py` take cancel handles, not events (P1.13);
+  every dialog's logic holds its view weakly (`ports.view_ref`), because PySide6 crashes when the garbage collector
+  frees a dialog ↔ logic cycle (P1.14); the doc model gained `filled()`, `Colored` and `Section.marked` (P1.14).
+- Different from the plan: the window's own dialogs are `BrowserView` methods, not `Ui` methods (P1.12); questions
+  are continuation style everywhere, Qt answers them before `exec()` returns, GTK will answer them later.
+- The Qt behaviour is unchanged as far as the tests and the container runs can tell (the menus, the detail HTML and
+  the install dialog's text were compared with 0.11.3 or with the code before the move); the author's own run of
+  the branch was the last check before the merge.

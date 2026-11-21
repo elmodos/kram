@@ -132,7 +132,7 @@ def open_kram(token: str = "") -> None:
     except GLib.Error:  # no Kram running (or it did not answer): start one
         pass
     installed = Gio.DesktopAppInfo.new(f"{APP_ID}.desktop") is not None
-    command = ["kram"] if installed else [sys.executable, "-m", "kram"]  # a source checkout: no .desktop file
+    command = ["kram"] if installed else [sys.executable, "-m", "kram.qt"]  # a source checkout: no .desktop file
     command.append("--upgradable")
     scope = ["systemd-run", "--user", "--scope", "--collect", "--quiet", "--slice=app.slice",
              f"--unit=app-{APP_ID}-{os.getpid()}-{time.monotonic_ns()}", "--"]

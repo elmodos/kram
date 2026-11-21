@@ -11,8 +11,8 @@ from PySide6.QtGui import QStandardItemModel
 from PySide6.QtWidgets import QAbstractItemView, QApplication, QTreeView
 
 from kram.core.model import Origin, PkgRow, Status
-from kram.ui.package_model import PackageTableModel
-from kram.ui.package_view import PackageView
+from kram.qt.package_model import PackageTableModel
+from kram.qt.package_view import PackageView
 
 
 @pytest.fixture(scope="module")
@@ -117,7 +117,7 @@ def test_the_mouse_highlights_the_whole_row(app):
 
 
 def test_the_repository_column_names_where_an_installed_package_came_from(app):
-    from kram.ui.package_model import COL_REPO
+    from kram.qt.package_model import COL_REPO
 
     copr = "copr:copr.fedorainfracloud.org:elmodos:Kram"
     model = PackageTableModel()
@@ -137,8 +137,8 @@ def test_the_repository_column_names_where_an_installed_package_came_from(app):
 def test_a_locked_package_shows_the_padlock_and_the_upgrade_it_holds_back(app):
     from kram.core.marks import Action
     from kram.core.model import Advisory, VersionLock
-    from kram.ui.icons import locked_icon, mark_icon, status_icon
-    from kram.ui.package_model import COL_ADVISORY, COL_CANDIDATE, COL_STATUS
+    from kram.qt.icons import locked_icon, mark_icon, status_icon
+    from kram.qt.package_model import COL_ADVISORY, COL_CANDIDATE, COL_STATUS
 
     fix = Advisory("FEDORA-2026-1", "security", "important", "tmux fix", 0)
     lock = (VersionLock("evr = 3.6a-1.fc44"),)
@@ -163,7 +163,7 @@ def test_a_locked_package_shows_the_padlock_and_the_upgrade_it_holds_back(app):
 
 
 def test_the_download_size_column_is_hidden_after_the_installed_size(app):
-    from kram.ui.package_model import COL_DOWNLOAD, COL_SIZE, HEADERS
+    from kram.qt.package_model import COL_DOWNLOAD, COL_SIZE, HEADERS
 
     view, model = view_with(0)
     header = view.header()
@@ -183,8 +183,8 @@ def test_the_download_size_column_is_hidden_after_the_installed_size(app):
 def test_a_header_state_saved_before_the_download_size_keeps_it_hidden(app, tmp_path):
     from PySide6.QtCore import QSettings
 
-    from kram.ui.package_model import COL_DOWNLOAD, COL_SIZE
-    from kram.ui.package_view import ADVISORY_COLUMN_KEY, HEADER_STATE_KEY, SIZE_COLUMN_WIDTH
+    from kram.qt.package_model import COL_DOWNLOAD, COL_SIZE
+    from kram.qt.package_view import ADVISORY_COLUMN_KEY, HEADER_STATE_KEY, SIZE_COLUMN_WIDTH
 
     old = QTreeView()  # ten columns, as Kram 0.9.0 saved them
     old.setModel(QStandardItemModel(1, 10))

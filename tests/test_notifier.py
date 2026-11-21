@@ -3,10 +3,12 @@ import subprocess
 import sys
 import time
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
 from kram import notifier
+from kram.app.ports import FakeBus
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -165,7 +167,7 @@ def test_notifier_dialog(monkeypatch, autostart):
     from PySide6.QtWidgets import QApplication
 
     from kram.notifier import control
-    from kram.ui import notifier_dialog
+    from kram.qt import notifier_dialog
 
     QApplication.instance() or QApplication([])
     calls = []
@@ -178,7 +180,7 @@ def test_notifier_dialog(monkeypatch, autostart):
     dialog.enabled.setChecked(True)
     assert calls == [True] and dialog.stale_row.isEnabled()
     [row] = dialog.rows  # Discover only: GNOME Software is not "installed"
-    monkeypatch.setattr(notifier_dialog, "_bus_owner_pid", lambda name: None)
+    monkeypatch.setattr(notifier_dialog, "bus", FakeBus())
     row.toggle.click()
     assert row.notifier.turned_off() and row.toggle.text() == "Turn Back On"
     row.toggle.click()
@@ -194,14 +196,14 @@ def test_notifier_dialog_rereads_on_activation(monkeypatch, autostart):
     from PySide6.QtWidgets import QApplication
 
     from kram.notifier import control
-    from kram.ui import notifier_dialog
+    from kram.qt import notifier_dialog
 
     QApplication.instance() or QApplication([])
     enabled = [False]
     monkeypatch.setattr(control, "checker_enabled", lambda: enabled[0])
     monkeypatch.setattr(control, "set_checker_enabled", lambda on: pytest.fail("not the user's click"))
     monkeypatch.setattr(control, "fedora_timer_state", lambda: "enabled")
-    monkeypatch.setattr(notifier_dialog, "_bus_owner_pid", lambda name: None)
+    monkeypatch.setattr(notifier_dialog, "bus", FakeBus())
     dialog = notifier_dialog.NotifierDialog()
     [row] = dialog.rows
     row.toggle.click()
@@ -263,3 +265,25 @@ def test_the_checker_watches_the_repository_locations():
     for pattern in ("/etc/dnf/repos.override.d/*.repo", "/usr/share/dnf5/repos.d/*.repo",
                     "/etc/distro.repos.d/*.repo", "/etc/dnf/libdnf5.conf.d/*"):
         assert pattern in check.WATCHED
+
+
+def test_notifications_without_a_toolkit(monkeypatch, autostart):
+    """kram.app.notifier: turning a running notifier off stops it; a refused change is reported."""
+    from kram.app.notifier import Notifications
+    from kram.app.ports import RecordingUi
+    from kram.notifier import control
+
+    monkeypatch.setattr(control, "checker_enabled", lambda: False)
+    monkeypatch.setattr(control, "set_checker_enabled", lambda on: "not allowed")
+    monkeypatch.setattr(control, "fedora_timer_state", lambda: "disabled")
+    states, killed, ui = [], [], RecordingUi()
+    view = SimpleNamespace(show_state=states.append)
+    n = Notifications(view, ui, FakeBus({"org.kde.discover.notifier": 42}), post=lambda fn: fn(),
+                      kill=lambda pid, sig: killed.append(pid))
+    n.refresh()
+    [line] = states[-1].notifiers
+    assert "is running" in line.text and states[-1].timer == "disabled" and not states[-1].has_tray
+    n.toggle(line.notifier)
+    assert killed == [42] and states[-1].notifiers[0].toggle_text == "Turn Back On"
+    n.set_enabled(True)
+    assert ui.kinds() == ["warn"] and ui.calls[0][2] == "not allowed"
