@@ -1,22 +1,55 @@
 """The GTK front end: smoke tests of its widgets and the main window over a made-up catalog.
 
-Skipped without GTK 4, libadwaita ≥ 1.7 (Adw.ToggleGroup) and a display. Without a desktop they run under
-broadway (spike S8): `gtk4-broadwayd :5 & GDK_BACKEND=broadway BROADWAY_DISPLAY=:5 pytest tests/test_gtk.py`.
+Skipped without GTK 4 and libadwaita ≥ 1.7 (Adw.ToggleGroup). Without a desktop (the kram-test container, a
+build's %check) the module starts GTK's own broadway display server for itself (spike S8): no X server or
+compositor needed, gtk4 ships it.
 """
+import atexit
+import os
+import shutil
+import subprocess
 import time
+from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
 
 gi = pytest.importorskip("gi")
+from gi.repository import GLib  # noqa: E402  (GLib alone does not initialize GTK)
+
+
+def _start_broadway() -> None:
+    """No display: run gtk4-broadwayd on a display of our own, and point GDK at it (before GTK opens one)."""
+    daemon = shutil.which("gtk4-broadwayd")
+    if daemon is None or os.environ.get("WAYLAND_DISPLAY") or os.environ.get("DISPLAY"):
+        return
+    # where GDK will look for the daemon's socket: GLib has settled it already (~/.cache without XDG_RUNTIME_DIR)
+    runtime = Path(GLib.get_user_runtime_dir())
+    runtime.mkdir(parents=True, exist_ok=True)
+    display = f":{40 + os.getpid() % 50}"
+    before = set(runtime.iterdir())
+    proc = subprocess.Popen([daemon, display], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                            env={**os.environ, "XDG_RUNTIME_DIR": str(runtime)})
+    atexit.register(proc.terminate)
+    end = time.monotonic() + 5
+    while time.monotonic() < end and proc.poll() is None and set(runtime.iterdir()) == before:
+        time.sleep(0.05)  # its socket appears in the runtime directory once it listens
+    os.environ["GDK_BACKEND"] = "broadway"
+    os.environ["BROADWAY_DISPLAY"] = display
+
+
+# before GTK is imported: PyGObject's Gtk opens the display at import time
+_start_broadway()
 try:
     gi.require_version("Gtk", "4.0")
     gi.require_version("Adw", "1")
-    from gi.repository import Adw, Gdk, GLib, Gtk
+    from gi.repository import Adw, Gdk, Gtk
 except (ImportError, ValueError) as e:  # ValueError: the typelib of that version is not there
     pytest.skip(f"GTK 4 / libadwaita: {e}", allow_module_level=True)
 if (Adw.get_major_version(), Adw.get_minor_version()) < (1, 7):
     pytest.skip("libadwaita < 1.7 has no ToggleGroup", allow_module_level=True)
+
+
 if not Gtk.init_check() or Gdk.Display.get_default() is None:
     pytest.skip("no display for GTK", allow_module_level=True)
 

@@ -784,8 +784,9 @@ with a real dnf cache:
 ## 16. Phase 2 progress
 
 On `feature/gtk`. Run from a checkout with `python3 -m kram.gtk`. GTK tests: `tests/test_gtk.py`, skipped without
-GTK 4, libadwaita ≥ 1.7 and a display; the `kram-test` image has neither, so they ran in a throwaway container
-from it with `gtk4 libadwaita` added and `gtk4-broadwayd` (all 576 tests green, ruff clean).
+GTK 4 and libadwaita ≥ 1.7; without a display the module starts `gtk4-broadwayd` for itself (S8). The local
+`kram-test:44` image has `gtk4 libadwaita` since 2026-11-22 (a layer over the old one, kept as
+`kram-test:44-pre-gtk`), so a plain `python3 -m pytest -q` there runs them.
 
 **Skeleton (§7.4 step 2), 2026-11-22.** `kram/gtk`: `app.py` (Adw.Application, single instance and the tray's
 Activate, S9), `loop.py` (`post`, `GtkScheduler`), `ui_port.py` (`GtkUi`: Adw.AlertDialog, Gtk.FileDialog,
