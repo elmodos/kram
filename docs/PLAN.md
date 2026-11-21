@@ -693,6 +693,19 @@ offers `--skip-unavailable`, only when that resolves: a transaction whose enviro
 reverted at all ("Cannot perform Remove action for Environment … because it is not installed"), checked in a
 container.
 
+**A GTK front end for GNOME** (discussed 2026-11-21; the full plan is `docs/GTK_FRONTEND.md`). Kram on GNOME looks
+like the Qt app it is, and part of the GNOME audience stays away. Decided: no widget wrapper over Qt and GTK (nor
+wxWidgets, which is one and GTK 3 only on Linux), but two native front ends over one toolkit-free layer. Phase 1 moves
+everything that is not widgets out of `kram/ui` into `kram/app` (settings store, timers, user-interaction ports in
+continuation style, actions and menus as data, a document model instead of HTML, network and processes without Qt),
+with no visible change; phase 2 is a GTK 4 + libadwaita front end, after spikes. Its look, from a mockup: header bar
+with a hamburger menu, a classic menu bar as a setting hidden by default, the sidebar's views as a vertical
+`Adw.ToggleGroup`. Settings are declared once and picked up by both front ends. Phase 1 ships as one release (ending
+with `kram/ui` renamed to `kram/qt`); the GTK front end is built on a branch until full parity and released together
+with the package split: `kram-common` + `kram-qt` / `kram-gtk`, conflicting with each other, if a container test shows
+that `dnf upgrade` moves an installed `kram` to `kram-qt` and keeps the tray checker on; otherwise `kram` (Qt) +
+`kram-gtk`.
+
 **Reasonable, but not planned unless users ask for it** (2026-11-06): moving transactions from our helper to
 dnf5daemon, or supporting both. For: no root code of our own, standard dnf polkit actions, local .rpm and
 offline upgrades come almost for free. Against: dnf5daemon 5.4 has no `mark` (install reason) and cannot add
