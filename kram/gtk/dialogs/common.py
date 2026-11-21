@@ -39,7 +39,8 @@ def tree_model(nodes: list[Node], expanded: Callable[[Node], bool] = lambda _n: 
 
 
 def column(view: Gtk.ColumnView, title: str, setup: Callable[[], Gtk.Widget],
-           bind: Callable[[Gtk.Widget, Node], None], expand: bool = False, tree: bool = False) -> Gtk.ColumnViewColumn:
+           bind: Callable[[Gtk.Widget, Node], None], expand: bool = False, tree: bool = False,
+           width: int = 0) -> Gtk.ColumnViewColumn:
     """A column whose cells are `setup()` widgets, filled by `bind(widget, node)`. `tree`: the first column, with the
     expander arrow."""
     factory = Gtk.SignalListItemFactory()
@@ -49,15 +50,17 @@ def column(view: Gtk.ColumnView, title: str, setup: Callable[[], Gtk.Widget],
         item.set_child(Gtk.TreeExpander(child=child) if tree else child)
 
     def on_bind(_f, item: Gtk.ListItem) -> None:
-        row: Gtk.TreeListRow = item.get_item()
+        row = item.get_item()  # a Gtk.TreeListRow over a tree_model, else the Node itself
         widget = item.get_child()
         if tree:
             widget.set_list_row(row)
             widget = widget.get_child()
-        bind(widget, row.get_item())
+        bind(widget, row.get_item() if isinstance(row, Gtk.TreeListRow) else row)
     factory.connect("setup", on_setup)
     factory.connect("bind", on_bind)
     col = Gtk.ColumnViewColumn(title=title, factory=factory, expand=expand, resizable=True)
+    if width:
+        col.set_fixed_width(width)
     view.append_column(col)
     return col
 
@@ -101,3 +104,18 @@ def frame(dlg: Adw.Dialog) -> tuple[Adw.HeaderBar, Gtk.Box]:
     view.add_top_bar(header)
     dlg.set_child(view)
     return header, body
+
+
+def node_list(items) -> Gio.ListStore:
+    store = Gio.ListStore(item_type=Node)
+    for item in items:
+        store.append(Node(item))
+    return store
+
+
+def text_cell(get: Callable[[object], str], tip: Callable[[object], str] | None = None):
+    """A `bind` that shows `get(node.data)` in a label, with `tip(node.data)` as its tooltip."""
+    def bind(widget: Gtk.Label, node: Node) -> None:
+        widget.set_text(get(node.data))
+        widget.set_tooltip_text((tip(node.data) or None) if tip is not None else None)
+    return bind

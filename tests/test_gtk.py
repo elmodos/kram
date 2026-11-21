@@ -438,3 +438,40 @@ def test_the_repositories_dialog_applies():
     spin(lambda: bool(closed), 2)
     assert closed == [True] and dlg.changes() == {"fedora": False}
     win.destroy()
+
+
+def test_the_copr_dialog_lists_searches_and_enables(monkeypatch):
+    import json
+    from collections import Counter
+
+    from kram.core import net
+    from kram.core.model import Origin, RepoInfo
+    from kram.gtk.dialogs.copr import CoprDialog
+    repo = "copr:copr.fedorainfracloud.org:elmodos:Kram"
+    snap = SimpleNamespace(rows=[SimpleNamespace(installed=True, origin_repo=repo)],
+                           repos=[RepoInfo(repo, "Kram", True, Origin.COPR, 60)], releasever="45", basearch="x86_64")
+    payload = {"items": [{"full_name": "a/tool", "description": "d", "chroot_repos": {"fedora-45-x86_64": ""}}]}
+    monkeypatch.setattr(net, "fetch", lambda url, *, done, **kw: done(json.dumps(payload).encode()))
+    win = Gtk.Window()
+    win.present()
+    helper, shown = [], []
+    dlg = CoprDialog(lambda req, title: helper.append(req), shown.append)
+    dlg.present(win)
+    dlg.set_catalog(snap, Counter({repo: 7}))
+    assert dlg.enabled_selection.get_n_items() == 1 and not dlg.disable_btn.get_sensitive()
+    dlg.enabled_selection.set_selected(0)
+    assert dlg.disable_btn.get_sensitive() and not dlg.enable_btn.get_sensitive()
+    dlg.disable_btn.emit("clicked")
+    assert helper == [{"op": "copr", "action": "disable", "project": "elmodos/Kram"}]
+    dlg.set_catalog(snap, Counter({repo: 7}))  # the reload after it keeps the selection
+    assert dlg._selected_project().repo_id == repo
+    dlg.query.set_text("tool")
+    dlg.search_btn.emit("clicked")
+    spin(lambda: dlg.results_selection.get_n_items() == 1, 2)
+    assert dlg._selected_result().full_name == "a/tool" and dlg.add_btn.get_sensitive()
+    dlg.add_btn.emit("clicked")
+    assert helper[-1] == {"op": "copr", "action": "enable", "project": "a/tool"}
+    dlg.packages_btn.emit("clicked")
+    spin(seconds=0.2)
+    assert shown == [repo]
+    win.destroy()
