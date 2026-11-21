@@ -188,3 +188,122 @@ def test_the_main_window_shows_the_catalog(monkeypatch):
     assert win.menu_button.get_visible()
     win.close()
     spin(seconds=0.3)
+
+
+def _review_preview(with_kvm: bool = True):
+    from kram.core.model import PreviewItem, Recommendation, TransactionPreview
+    items = [PreviewItem("install", "virt-manager", "noarch", "5.1-1", "", "fedora", 700, 2000, "user")]
+    if with_kvm:
+        items.append(PreviewItem("install", "kvm", "x86_64", "1-1", "", "fedora", 50, 9000, "weak"))
+    recs = [Recommendation("kvm", ["virt-manager"], True, ["kvm"] if with_kvm else [], ["kvm"], size=9000, count=1,
+                           exact=True)]
+    return TransactionPreview(items, [], 100, 11000, recs)
+
+
+def _texts(widget: Gtk.Widget) -> list[str]:
+    """Every label's text under `widget`, in order."""
+    out = []
+    if isinstance(widget, Gtk.Label):
+        out.append(widget.get_text())
+    child = widget.get_first_child()
+    while child is not None:
+        out += _texts(child)
+        child = child.get_next_sibling()
+    return out
+
+
+def test_the_apply_dialog_reviews_and_resolves_again():
+    from kram.gtk.dialogs.apply import ApplyDialog
+    win = Gtk.Window(default_width=900, default_height=700)
+    win.present()
+    waiting, results = [], []
+    dlg = ApplyDialog(_review_preview(), {"op": "transaction", "install": ["virt-manager"]}, "x86_64",
+                      results.append, resolve=lambda req, done, failed: waiting.append((req, done)))
+    dlg.present(win)
+    spin(seconds=0.3)
+    shown = _texts(dlg.tree)
+    assert "To be installed (1)" in shown and "virt-manager" in shown and "kvm" in shown
+    assert dlg.ok.get_sensitive() and "virt-manager" in dlg.cmd.get_buffer().props.text
+    # unchecking the recommendation resolves again without it
+    check = next(w for w in _walk(dlg.recs) if isinstance(w, Gtk.CheckButton) and w.get_visible())
+    check.set_active(False)
+    assert waiting and waiting[-1][0]["exclude_weak"] == ["kvm"] and not dlg.ok.get_sensitive()
+    waiting[-1][1](_review_preview(with_kvm=False))
+    spin(seconds=0.2)
+    assert dlg.ok.get_sensitive() and "kvm" not in _texts(dlg.tree)
+    dlg.download_only.set_active(True)
+    dlg.ok.emit("clicked")
+    spin(lambda: bool(results), 2)
+    assert results == [{"op": "transaction", "install": ["virt-manager"], "exclude_weak": ["kvm"],
+                        "download_only": True}]
+    win.destroy()
+
+
+def test_the_apply_dialog_cancelled_runs_nothing():
+    from kram.gtk.dialogs.apply import ApplyDialog
+    win = Gtk.Window()
+    win.present()
+    results = []
+    dlg = ApplyDialog(_review_preview(), {"op": "transaction"}, "x86_64", results.append)
+    dlg.present(win)
+    spin(seconds=0.1)
+    dlg.close()
+    spin(lambda: bool(results), 2)
+    assert results == [None]
+    win.destroy()
+
+
+def _walk(widget: Gtk.Widget):
+    yield widget
+    child = widget.get_first_child()
+    while child is not None:
+        yield from _walk(child)
+        child = child.get_next_sibling()
+
+
+def test_the_progress_dialog_follows_the_helper_and_stays_until_it_is_done():
+    from kram.core.mainloop import Signal
+    from kram.gtk.dialogs.progress import ProgressDialog
+    win = Gtk.Window()
+    win.present()
+    client = SimpleNamespace(event=Signal(), failed=Signal(), request=lambda _r: True, answer=lambda *a: None)
+    finished = []
+    dlg = ProgressDialog(client, {"op": "transaction"}, "Applying changes", lambda ok, r: finished.append((ok, r)))
+    dlg.auto_close.set_active(False)
+    assert dlg.start()
+    dlg.present(win)
+    client.event.emit({"event": "resolved", "items": [{"action": "Install", "nevra": "a-1-1.noarch"}]})
+    client.event.emit({"event": "download", "id": 1, "name": "a", "done": 50, "total": 100})
+    assert 0.4 < dlg.download_bar.get_fraction() < 0.6
+    client.event.emit({"event": "rpm", "step": "install", "nevra": "a-1-1.noarch", "done": 0})
+    assert "a-1-1.noarch" in dlg.stage.get_text() and dlg.rpm_bar.get_fraction() == 1.0
+    dlg.close()  # mid-transaction: refused
+    spin(seconds=0.2)
+    assert not finished and not dlg.close_button.get_sensitive()
+    client.event.emit({"event": "done", "ok": True})
+    assert dlg.close_button.get_sensitive() and "a-1-1.noarch" in dlg.log.get_buffer().props.text
+    dlg.close_button.emit("clicked")
+    spin(lambda: bool(finished), 2)
+    assert finished == [(True, {"event": "done", "ok": True})] and not client.event._slots
+    win.destroy()
+
+
+def test_the_progress_dialog_closes_itself_after_a_success_if_asked():
+    from kram.core.mainloop import Signal
+    from kram.gtk.dialogs.progress import ProgressDialog
+    win = Gtk.Window()
+    win.present()
+    client = SimpleNamespace(event=Signal(), failed=Signal(), request=lambda _r: True, answer=lambda *a: None)
+    finished = []
+    dlg = ProgressDialog(client, {"op": "refresh"}, "Refreshing metadata", lambda ok, r: finished.append(ok))
+    assert not dlg.rpm_bar.get_visible()
+    dlg.auto_close.set_active(True)
+    dlg.start()
+    dlg.present(win)
+    client.failed.emit("pkexec died")
+    spin(seconds=0.1)
+    assert not finished and "error" in dlg.stage.get_css_classes()  # a failure stays on screen
+    dlg.close()
+    spin(lambda: bool(finished), 2)
+    assert finished == [False]
+    win.destroy()

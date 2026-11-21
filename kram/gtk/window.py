@@ -16,12 +16,15 @@ from ..app.browser import Browser, ReposChoice
 from ..app.custom_filters import CustomFilters
 from ..app.doc import Doc
 from ..app.package_list import Sort
+from ..app.progress import BUSY
 from ..core.model import CatalogSnapshot, PkgRow, TransactionPreview
 from ..core.settings import store as settings
 from ..i18n import _
 from . import icons
 from .actions import WindowActions, action_name
 from .details import DetailsView
+from .dialogs.apply import ApplyDialog
+from .dialogs.progress import ProgressDialog
 from .doc_view import DocView
 from .loop import GtkScheduler, post
 from .package_list import PackageListView
@@ -35,7 +38,7 @@ WINDOW_KEY = "gtk/window"             # {"width", "height", "maximized"}
 PANES_KEY = "gtk/panes"               # {"sidebar", "details"}: the two dividers' positions
 # the actions whose dialogs the GTK front end does not have yet (phase 2, §7.4 steps 4–5); not translated yet
 NOT_YET = ("repos", "copr", "cache", "notifications", "history", "show_in_history", "filters", "new_filter",
-           "open_file", "save_marks", "read_marks", "export_csv")
+           "open_file")
 NOT_YET_TEXT = "This is not in the GTK front end yet."
 
 
@@ -138,6 +141,7 @@ class MainWindow(Adw.ApplicationWindow):
             ("find", self.search.focus), ("back", b.go_back), ("quit", self.close), ("about", self.about),
             ("copy_name", b.copy_names), ("copy_nevra", b.copy_nevras), ("unmark", b.unmark_selected),
             ("lock", lambda: b.set_version_lock(True)), ("unlock", lambda: b.set_version_lock(False)),
+            ("save_marks", b.save_marks), ("read_marks", b.read_marks), ("export_csv", b.export_csv),
         ]:
             acts.connect(action_id, slot)
         for action_id in NOT_YET:
@@ -297,16 +301,20 @@ class MainWindow(Adw.ApplicationWindow):
     def set_apply_enabled(self, on: bool) -> None:
         self.acts.by_id["apply"].set_enabled(on)
 
-    # ---------------------------------------------------------------- BrowserView: dialogs (to come)
+    # ---------------------------------------------------------------- BrowserView: dialogs
 
     def review_changes(self, preview: TransactionPreview, request: dict, basearch: str, resolve,
                        done: Callable[[dict | None], None]) -> None:
-        self._not_yet()
-        done(None)
+        # with the recommendations the user unchecked, and download only if chosen; None when cancelled
+        ApplyDialog(preview, request, basearch, done, resolve=resolve).present(self)
 
     def run_helper(self, request: dict, title: str, done: Callable[[dict | None], None]) -> None:
-        self._not_yet()
-        done(None)
+        dlg = ProgressDialog(self.helper, request, title, lambda ok, result: done(result if ok else None))
+        if not dlg.start():
+            self.ui.warn(title, _(BUSY))
+            done(None)
+            return
+        dlg.present(self)  # over the dialog that started it (COPR, Package Cache): libadwaita stacks them
 
     def show_repos(self, snap, counts, owners, listed, installed, done: Callable[[ReposChoice | None], None]) -> None:
         self._not_yet()
