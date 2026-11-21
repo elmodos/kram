@@ -1,7 +1,7 @@
 # A GTK front end for Kram — implementation plan
 
-Status: **phase 2 started** (2026-11-22) on branch `feature/gtk`: spikes S1–S9 done (§14), the skeleton of
-`kram/gtk` opens the main window over the real catalog (§16). **Phase 1 done** (2026-11-21): the logic extraction (P1.0–P1.15) and the rename to `kram/qt` (P1.16) are merged
+Status: **phase 2 under way** (2026-11-22) on branch `feature/gtk`: spikes S1–S9 done (§14); `kram/gtk` has the
+main window and every dialog over `kram/app` (§7.4 steps 2–6); polish, translations and packaging are next (§16). **Phase 1 done** (2026-11-21): the logic extraction (P1.0–P1.15) and the rename to `kram/qt` (P1.16) are merged
 into `main` (P1.17), without a release of its own: they ship with the next release, see §15. Phase 2 (the GTK front
 end) is wanted, its look is settled from a mockup, and it starts after that merge and
 the spikes in §7.1, on a branch of its own until full parity. Short summary in `docs/PLAN.md` §10, "A GTK front end
@@ -796,13 +796,40 @@ bar, optional menu bar (D6/D12), panes, empty-list overlay, status bar, context 
 `sidebar.py` (S5), `doc_view.py` (S6), `icons.py` (S7), `details.py` (Adw.ViewSwitcher tabs), `search.py`,
 `status_bar.py`. The catalog loads, the list shows, sorting, the sidebar views, search, details and marking work.
 
-Not there yet (the window says "This is not in the GTK front end yet."): every dialog (Apply review, progress,
-repositories, COPR, cleanup, history, notifications, custom filters, install file, markings/CSV file flows, the
-Fedora N button and dialog), the Files tab's tree, the Versions column view, the header menu to hide columns and
-the saved column state (`gtk/columns`), the drop of an .rpm, `kram file.rpm`. Things to settle:
+**Dialogs (§7.4 steps 3–6), 2026-11-22.** `kram/gtk/dialogs/`: `common.py` (trees and tables over
+`Gtk.ColumnView`, read-only text, the dialog frame), `apply.py` (Apply review), `progress.py` (the helper's
+progress: no closing mid-transaction), `notifier.py` and `cache.py` (preferences dialogs; Cleanup's Compare
+view), `repos.py`, `copr.py`, `filters.py` (Custom Filters), `history.py` (a window of its own, not modal),
+`install.py` (the installer as a dialog, or as the only window of `kram file.rpm`), `upgrade.py` (the "Fedora N"
+button's check). Also: What's New as libadwaita's own page of the About dialog (`release_notes`), the Files tab
+(`gtk/files.py`: tree or list, filter, Copy Path, Show in File Manager), the Versions table, the column titles'
+menu to show or hide columns and the saved column state (`gtk/columns`), the drop of an .rpm, markings files and
+the CSV export (the existing `Browser` flows). Every action of the menus now does what it does in Qt; the "not
+yet" placeholder is gone.
 
-- New GTK-only strings are not translated yet: the alert buttons use GTK's own catalog ("gtk40"); the temporary
-  "not yet" text is not marked for translation. Every new msgid must go into all 12 catalogs before the tests pass
+How it was checked: `tests/test_gtk.py` (one or more tests per dialog, over fakes), and a run over the real
+catalog on the author's machine (Fedora 45, KDE) with a throwaway configuration (`XDG_CONFIG_HOME`), screenshots
+of every dialog but Install and Fedora N; Apply was opened to the review only. **Not checked yet**: a real
+transaction through the progress dialog (only with a fake helper), the installer with a real .rpm file, the
+Fedora N dialog with a real new release, GNOME itself, keyboard-only use, HiDPI.
+
+Things noticed on the way:
+
+- `Adw.ToolbarView` is final (no subclass): `InstallPage` is a box that holds one.
+- A `Gio.ListStore.splice` that puts the same object back does not bind its row again: the history puts a new
+  item in to show a row's counts.
+- A view's "current" setter must tell the logic as a click would (`History` expects that from Qt's
+  `setCurrentItem`); only a refill or a filter change of the same row is silent.
+- A hidden `Adw.Window` keeps the application running: the main window destroys the history window on close.
+- `kram file.rpm` runs a `NON_UNIQUE` application of its own, as Qt does, instead of going to the open Kram.
+- The test run ends with a GLib-CRITICAL `g_main_context_pop_thread_default` at interpreter exit (PyGObject's
+  asyncio policy); it was there before the dialogs and does not fail anything.
+
+Still to do (§7.4 steps 7–8): both themes and GNOME itself, scaling, keyboard-only use, translations, screenshots;
+the package split and README. Things to settle:
+
+- New GTK-only strings: none so far beyond GTK's own ("gtk40": alert and dialog buttons); every label of the
+  dialogs is an msgid the Qt front end already has. Every new msgid must go into all 12 catalogs before the tests pass
   (§11), so they will be added in batches.
 - Adwaita has no funnel icon: while the search filters, the field gets an accent outline and a tooltip instead.
 - The advisories tab shows libadwaita's attention dot, not the advisory's colour dot (view switcher pages take
