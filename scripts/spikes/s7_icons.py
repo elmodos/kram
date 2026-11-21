@@ -15,10 +15,9 @@ from pathlib import Path
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 import common  # noqa: E402,F401  (puts the repository on sys.path, pins the gi versions)
-
-import kram.gtk  # noqa: E402,F401
 from gi.repository import Gtk  # noqa: E402
 
+import kram.gtk  # noqa: E402,F401
 from kram.core.marks import Action  # noqa: E402
 from kram.core.model import Origin, Status  # noqa: E402
 
@@ -57,7 +56,7 @@ def main():
     Gtk.init()
 
     from PySide6.QtCore import QPointF, QRectF, QSize, Qt
-    from PySide6.QtGui import QColor, QFont, QIcon, QImage, QPainter
+    from PySide6.QtGui import QColor, QFont, QImage, QPainter
     from PySide6.QtWidgets import QApplication
     app = QApplication([])  # noqa: F841
     from kram.qt.icons import icon
