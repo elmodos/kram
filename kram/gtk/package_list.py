@@ -10,7 +10,7 @@ no Gtk.SortListModel ever asks them to compare.
 """
 from collections.abc import Callable
 
-from gi.repository import Gdk, Gio, GObject, Gtk, Pango
+from gi.repository import Gdk, Gio, GLib, GObject, Gtk, Pango
 
 from ..app.columns import (
     ALIGN_RIGHT,
@@ -20,7 +20,9 @@ from ..app.columns import (
     COL_ORIGIN,
     COL_STATUS,
     COL_SUMMARY,
+    HEADER_TIPS,
     HEADERS,
+    HIDEABLE,
     cell_icon,
     cell_style,
     cell_text,
@@ -126,6 +128,17 @@ class PackageListView(Gtk.ScrolledWindow):
                 column.set_fixed_width(DEFAULT_WIDTHS.get(col, 120))
             self.columns.append(column)
             view.append_column(column)
+        self._column_actions = Gio.SimpleActionGroup()
+        header_menu = Gio.Menu()
+        for col in HIDEABLE:  # right-click on the titles: show or hide the columns that may be hidden
+            act = Gio.SimpleAction.new_stateful(f"show-{col}", None,
+                                                GLib.Variant.new_boolean(self.columns[col].get_visible()))
+            act.connect("change-state", self._column_toggled, col)
+            self._column_actions.add_action(act)
+            header_menu.append(HEADERS[col] or HEADER_TIPS.get(col, ""), f"columns.show-{col}")
+        self.insert_action_group("columns", self._column_actions)
+        for column in self.columns:
+            column.set_header_menu(header_menu)
         self._sort_handler = view.get_sorter().connect("changed", self._header_sorted)
         view.connect("activate", lambda _v, pos: self.on_activate(pos))
         self.selection.connect("selection-changed", self._selection_changed)
@@ -136,6 +149,39 @@ class PackageListView(Gtk.ScrolledWindow):
         packages.sorted.connect(lambda _moved: self.refresh())
         packages.rows_changed.connect(self.refresh)
         self._reset()
+
+    # ---------------------------------------------------------------- columns
+
+    def _column_toggled(self, act: Gio.SimpleAction, value: GLib.Variant, col: int) -> None:
+        act.set_state(value)
+        self.columns[col].set_visible(value.get_boolean())
+
+    def column_state(self) -> dict:
+        """Order, widths and the hidden columns, for the settings (`gtk/columns`)."""
+        model = self.view.get_columns()
+        order = [int(model.get_item(i).get_id()) for i in range(model.get_n_items())]
+        return {"order": order,
+                "widths": {str(c): self.columns[c].get_fixed_width() for c in order if c != COL_SUMMARY},
+                "hidden": [c for c in order if not self.columns[c].get_visible()]}
+
+    def restore_columns(self, state: dict) -> None:
+        """Back as `column_state` gave them; a state of another version may lack columns: they keep their place."""
+        try:
+            order = [int(c) for c in state.get("order", [])]
+            widths = {int(c): int(w) for c, w in state.get("widths", {}).items()}
+            hidden = {int(c) for c in state.get("hidden", [])}
+        except (TypeError, ValueError, AttributeError):
+            return
+        for target, col in enumerate(c for c in order if 0 <= c < len(self.columns)):
+            self.view.insert_column(target, self.columns[col])
+        for col, width in widths.items():
+            if 0 <= col < len(self.columns) and col != COL_SUMMARY and width > 0:
+                self.columns[col].set_fixed_width(width)
+        if "hidden" in state:
+            for col in HIDEABLE:
+                on = col not in hidden
+                self.columns[col].set_visible(on)
+                self._column_actions.lookup_action(f"show-{col}").set_state(GLib.Variant.new_boolean(on))
 
     # ---------------------------------------------------------------- the model
 

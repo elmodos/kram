@@ -48,6 +48,7 @@ from .ui_port import GtkUi
 DETAILS_TAB_KEY = "details/tab-name"  # shared with Qt
 WINDOW_KEY = "gtk/window"             # {"width", "height", "maximized"}
 PANES_KEY = "gtk/panes"               # {"sidebar", "details"}: the two dividers' positions
+COLUMNS_KEY = "gtk/columns"           # the package list's {"order", "widths", "hidden"}
 # the actions whose dialogs the GTK front end does not have yet (phase 2, §7.4 steps 4–5); not translated yet
 
 
@@ -207,6 +208,10 @@ class MainWindow(Adw.ApplicationWindow):
             panes = json.loads(settings.get(PANES_KEY, "{}"))
         except (TypeError, ValueError):
             panes = {}
+        try:
+            self.list.restore_columns(json.loads(settings.get(COLUMNS_KEY, "{}")))
+        except (TypeError, ValueError):
+            pass
         self.hpaned.set_position(panes.get("sidebar", 270))
         self.vpaned.set_position(panes.get("details", 520))
         self.details.select_name(settings.get(DETAILS_TAB_KEY, "description"))
@@ -217,6 +222,7 @@ class MainWindow(Adw.ApplicationWindow):
         settings.set(DETAILS_TAB_KEY, self.details.current_name())
         width, height = self.get_default_size()
         settings.set(WINDOW_KEY, json.dumps({"width": width, "height": height, "maximized": self.is_maximized()}))
+        settings.set(COLUMNS_KEY, json.dumps(self.list.column_state()))
         settings.set(PANES_KEY, json.dumps({"sidebar": self.hpaned.get_position(),
                                             "details": self.vpaned.get_position()}))
 

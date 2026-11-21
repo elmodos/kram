@@ -654,3 +654,23 @@ def test_the_files_tab_shows_a_tree_or_a_list_and_filters():
     assert ui.calls[-1] == ("copy", "/usr/lib64/libtool.so.1")
     assert name_markup("libtool.so", "/usr/lib/libtool.so", path_filter("tool")) == "lib<b>tool</b>.so"
     win.destroy()
+
+
+def test_the_column_menu_hides_columns_and_the_state_comes_back():
+    from kram.app.columns import COL_DOWNLOAD, COL_NAME, COL_REPO, COL_STATUS
+    from kram.gtk.package_list import PackageListView
+    packages = PackageList()
+    view = PackageListView(packages)
+    assert not view.columns[COL_DOWNLOAD].get_visible()  # until the user shows it
+    view.activate_action("columns.show-%d" % COL_REPO, None)
+    assert not view.columns[COL_REPO].get_visible()
+    view.view.insert_column(0, view.columns[COL_NAME])
+    view.columns[COL_NAME].set_fixed_width(321)
+    state = view.column_state()
+    assert state["order"][0] == COL_NAME and COL_REPO in state["hidden"] and state["widths"][str(COL_NAME)] == 321
+    other = PackageListView(PackageList())
+    other.restore_columns(state)
+    assert other.column_state() == state
+    other.restore_columns({"order": "junk"})  # a broken setting changes nothing
+    assert other.column_state() == state
+    assert other.view.get_columns().get_item(1).get_id() == str(COL_STATUS)
