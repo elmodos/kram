@@ -1,5 +1,5 @@
 %global appid io.github.elmodos.Kram
-%global base_version 0.11.2
+%global base_version 0.11.3
 
 Name:           kram
 # A tagged release (v%%{base_version}) is plain %%{base_version}. Any other commit gets a snapshot from
@@ -119,6 +119,9 @@ QT_QPA_PLATFORM=offscreen %pytest
 %{_datadir}/kram/
 
 %changelog
+* Sat Nov 21 2026 Modo Ltunzher <offnormal@gmail.com> - 0.11.3-1
+- GNOME: Kram turns light or dark along with the desktop, in libadwaita's colours
+
 * Fri Nov 20 2026 Modo Ltunzher <offnormal@gmail.com> - 0.11.2-1
 - Apply works again (in 0.11.1 it did nothing)
 
