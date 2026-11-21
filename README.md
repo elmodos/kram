@@ -47,6 +47,8 @@ left, the selected package's details below](docs/screenshots/main.png)
   [Update notifications](docs/guide/update-notifications.md)
 - **One password per session** (polkit); browsing and searching need none.
 - **In 13 languages**. [Translations](docs/TRANSLATING.md)
+- **On GNOME**, light or dark as the desktop is, switching along with it, in libadwaita's colours. A Qt look
+  you chose yourself (`QT_STYLE_OVERRIDE`, or a platform theme such as qt6ct) is left as it is.
 
 ## User guide
 
