@@ -75,7 +75,7 @@ class CacheDialog(Adw.PreferencesDialog):
             title=_("Leftover configuration files"),
             description=_("Copies rpm keeps when you had changed a package's configuration file: your earlier "
                           "version (.rpmsave) or the package's new default it did not apply (.rpmnew)."))
-        buttons = Gtk.Box(spacing=6, valign=Gtk.Align.END)
+        buttons = Gtk.Box(spacing=6, halign=Gtk.Align.END, margin_top=6)
         self.search_root_btn = Gtk.Button(child=Adw.ButtonContent(label=_("Search All Folders…"),
                                                                   icon_name="edit-find-symbolic"),
                                           tooltip_text=_("Also search the folders only root can read"))
@@ -86,10 +86,11 @@ class CacheDialog(Adw.PreferencesDialog):
         self.delete_unused_btn.connect("clicked", lambda _b: self.cleanup.delete_unused())
         buttons.append(self.search_root_btn)
         buttons.append(self.delete_unused_btn)
-        self.leftovers_group.set_header_suffix(buttons)
         self.leftovers_status = Adw.ActionRow(use_markup=False, title_lines=0)
         self.leftovers_status.add_prefix(_image(LEFTOVERS_ICONS))
         self.leftovers_group.add(self.leftovers_status)
+        # under the list, not in the group's header or a row: there they squeeze the text in a narrow page
+        self.leftovers_group.add(buttons)
         page.add(self.leftovers_group)
         self.leftover_rows: list[Adw.ActionRow] = []
 
@@ -151,7 +152,6 @@ class CacheDialog(Adw.PreferencesDialog):
     def show_leftovers_status(self, text: str) -> None:
         """Searching, or the search failed: nothing to act on meanwhile."""
         self.leftovers_status.set_title(text)
-        self.leftovers_status.set_visible(bool(text))
         self.search_root_btn.set_visible(False)
         self.delete_unused_btn.set_sensitive(False)
 
@@ -163,7 +163,6 @@ class CacheDialog(Adw.PreferencesDialog):
         for row in self.leftover_rows:
             self.leftovers_group.add(row)
         self.leftovers_status.set_title(status)
-        self.leftovers_status.set_visible(bool(status))
         self.search_root_btn.set_visible(can_search_root)
         self.delete_unused_btn.set_sensitive(can_delete_unused)
 

@@ -180,19 +180,22 @@ class HistoryWindow(Adw.Window):
             node = self._store.get_item(i)
             if node.data.id == tid:
                 old = node.data
-                node.data = TransactionLine(old.id, old.date, text, old.user, old.command, old.tooltip, old.failed)
-                self._store.splice(i, 1, [node])  # the row shows it again
-                if self.history.current == tid:
-                    self.set_current(tid)
+                line = TransactionLine(old.id, old.date, text, old.user, old.command, old.tooltip, old.failed)
+                with self.selection.handler_block(self._selection_handler):  # the same row stays the current one
+                    self._store.splice(i, 1, [Node(line)])  # a new item: GTK does not bind the same one again
+                    self._select(self.history.current)
                 return
 
+    def _select(self, tid: int | None) -> None:
+        for i in range(self.selection.get_n_items()):
+            if self.selection.get_item(i).data.id == tid:
+                self.selection.set_selected(i)
+                return
+        self.selection.set_selected(Gtk.INVALID_LIST_POSITION)
+
     def set_current(self, tid: int | None) -> None:
-        with self.selection.handler_block(self._selection_handler):
-            for i in range(self.selection.get_n_items()):
-                if self.selection.get_item(i).data.id == tid:
-                    self.selection.set_selected(i)
-                    return
-            self.selection.set_selected(Gtk.INVALID_LIST_POSITION)
+        """As a click would: the logic hears of it."""
+        self._select(tid)
 
     def show_packages(self, lines: list[PackageLine]) -> None:
         self.package_selection.set_model(node_list(lines))
@@ -200,9 +203,9 @@ class HistoryWindow(Adw.Window):
 
     def set_hidden(self, hidden: set[int]) -> None:
         self._hidden = set(hidden)
-        current = self.history.current
-        self._filter.changed(Gtk.FilterChange.DIFFERENT)
-        self.set_current(current)
+        with self.selection.handler_block(self._selection_handler):  # a hidden current one stays current
+            self._filter.changed(Gtk.FilterChange.DIFFERENT)
+            self._select(self.history.current)
 
     def show_state(self, text: str) -> None:
         self.state.set_text(text)

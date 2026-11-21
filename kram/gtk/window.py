@@ -17,6 +17,8 @@ from ..app.custom_filters import CustomFilters
 from ..app.doc import Doc
 from ..app.package_list import Sort
 from ..app.progress import BUSY
+from ..app.release_watch import BUTTON_ICONS as RELEASE_ICONS
+from ..app.release_watch import ReleaseWatcher
 from ..core import releases
 from ..core.model import CatalogSnapshot, PkgRow, TransactionPreview
 from ..core.search import Mode
@@ -34,6 +36,7 @@ from .dialogs.install import InstallDialog
 from .dialogs.notifier import NotifierDialog
 from .dialogs.progress import ProgressDialog
 from .dialogs.repos import ReposDialog
+from .dialogs.upgrade import UpgradeDialog
 from .doc_view import DocView, release_notes
 from .loop import GtkScheduler, post
 from .package_list import PackageListView
@@ -65,6 +68,12 @@ class MainWindow(Adw.ApplicationWindow):
         self.acts = WindowActions(self, app)
         self.acts.set_downgrade_source(b.downgrade_items)
         self.search = SearchBox(b.search)
+        # the "Fedora N" button: on Reload, Bodhi is asked whether a new release is out
+        self.releases = ReleaseWatcher(post)
+        self.upgrade_action = Gio.SimpleAction(name="upgrade", enabled=False)
+        self.upgrade_action.connect("activate", lambda _a, _p: self.open_upgrade())
+        self.add_action(self.upgrade_action)
+        self._upgrade_dialog: UpgradeDialog | None = None
         self._build()
         self._connect_actions()
         self._restore_settings()
@@ -96,6 +105,13 @@ class MainWindow(Adw.ApplicationWindow):
             header.pack_end(Gtk.Button(icon_name=icon, action_name=f"win.{action_name(action_id)}",
                                        tooltip_text=self.acts.defs[action_id].label))
         header.pack_end(self.search)
+        first, fallback = RELEASE_ICONS
+        self.upgrade_button = Gtk.Button(action_name="win.upgrade", child=Adw.ButtonContent(
+            label="Fedora", icon_name=icons.first_themed((first, fallback)) or "software-update-available-symbolic"))
+        header.pack_end(self.upgrade_button)
+        self.releases.changed.connect(self.update_release_button)
+        b.refreshed.connect(self.releases.check)
+        self.update_release_button()
         self.menu_bar = Gtk.PopoverMenuBar.new_from_model(self.acts.menu_bar())
 
         # the package list, with what it says while it is empty over it
@@ -212,6 +228,14 @@ class MainWindow(Adw.ApplicationWindow):
     def _pref_changed(self, key: str) -> None:
         if key == preferences.MENU_BAR:
             self._show_menu_bar(preferences.value(key))
+        elif key == preferences.WATCH_RELEASES:
+            self.update_release_button()
+
+    def update_release_button(self) -> None:
+        button = self.releases.button()
+        self.upgrade_button.set_visible(button.visible)
+        self.upgrade_button.get_child().set_label(button.text)
+        self.upgrade_button.set_tooltip_text(button.tooltip or None)
 
     def _show_menu_bar(self, on: bool) -> None:
         """D6, D12: the classic menu bar is a setting; while it is shown the hamburger button is not."""
@@ -305,7 +329,7 @@ class MainWindow(Adw.ApplicationWindow):
         self.status.show_error(error)
 
     def apply_actions(self, state: ActionState, catalog: bool, busy: bool) -> None:
-        self.acts.apply_state(state)
+        self.acts.apply_state(state, {"upgrade": self.upgrade_action})
 
     def set_reload_enabled(self, on: bool) -> None:
         self.acts.by_id["reload"].set_enabled(on)
@@ -411,6 +435,16 @@ class MainWindow(Adw.ApplicationWindow):
         # after the drop returns: a dialog opened inside the drop handler holds up the drag source
         GLib.idle_add(lambda: (self.open_package_file(path), GLib.SOURCE_REMOVE)[1])
         return True
+
+    def open_upgrade(self) -> None:
+        target = self.releases.target()
+        snap = self.browser.snapshot
+        if target is None or snap is None:
+            return
+        if self._upgrade_dialog is None or self._upgrade_dialog.target != target:
+            self._upgrade_dialog = UpgradeDialog(target, self.releases.running, self.releases.running_eol(), snap,
+                                                 self.dnf)
+        self._upgrade_dialog.present(self)
 
     def open_cache(self) -> None:
         b = self.browser

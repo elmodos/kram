@@ -538,8 +538,8 @@ def test_the_history_window_loads_filters_and_undoes(monkeypatch):
     spin(lambda: win.state.get_text() == "3 transactions", 2)
     ids = [win.selection.get_item(i).data.id for i in range(win.selection.get_n_items())]
     assert ids == [3, 2, 1] and win._store.get_item(2).data.changes == "1 installed, 1 upgraded"
+    assert win.history.current == 3  # the newest, as it loaded
     win.set_current(1)
-    win._selected()
     shown = [(p.action, p.package, p.version) for p in
              (win.package_selection.get_item(i).data for i in range(win.package_selection.get_n_items()))]
     assert shown == [("Install", "fish.x86_64", "4.0-1"), ("Upgrade", "vim.x86_64", "9.1-1 → 9.1-2")]
@@ -600,3 +600,32 @@ def test_kram_file_rpm_runs_the_installer_on_its_own():
     assert file_argument(["--upgradable"]) is None
     assert file_argument(["/tmp/a.rpm"]) == "/tmp/a.rpm"
     assert file_argument(["file:///tmp/my%20a.rpm"]) == "/tmp/my a.rpm"
+
+
+def test_the_fedora_upgrade_dialog_checks_and_cannot_close_meanwhile():
+    from kram.gtk.dialogs.upgrade import UpgradeDialog
+    snap = SimpleNamespace(basearch="x86_64", rows=[], repos=[])
+    jobs = []
+    dnf = SimpleNamespace(submit=lambda fn, done, failed=None: jobs.append((done, failed)))
+    win = Adw.ApplicationWindow()
+    win.present()
+    dlg = UpgradeDialog(46, 45, "2026-12-01", snap, dnf)
+    dlg.present(win)
+    assert dlg.tree.get_model().get_n_items() == 1  # "No COPR projects are enabled."
+    dlg.check.emit("clicked")
+    assert jobs and not dlg.get_can_close() and dlg.cancel_button.get_visible() and dlg.log_box.get_visible()
+    dlg.upgrade._on_report("progress", {"done": 5, "total": 10})
+    assert 0.4 < dlg.busy.get_fraction() < 0.6
+    from kram.core import upgrade_audit
+    jobs[0][1](upgrade_audit.Cancelled())
+    assert dlg.get_can_close() and dlg.check.get_visible()
+    win.destroy()
+
+
+def test_the_release_button_follows_the_last_check():
+    from kram.gtk.window import MainWindow
+    win = SimpleNamespace(releases=SimpleNamespace(button=lambda: SimpleNamespace(visible=True, text="Fedora 46",
+                                                                                   tooltip="tip")),
+                          upgrade_button=Gtk.Button(child=Adw.ButtonContent(label="Fedora")))
+    MainWindow.update_release_button(win)
+    assert win.upgrade_button.get_visible() and win.upgrade_button.get_child().get_label() == "Fedora 46"
