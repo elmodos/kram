@@ -20,7 +20,10 @@ from ..app.details import (
 )
 from ..app.doc import Doc
 from ..core.model import PkgDetails, PkgRow
-from .doc_view import CHUNK, DocView
+from ..i18n import _
+from .dialogs.common import column, node_list
+from .doc_view import DocView
+from .files import FileList
 
 TAB_ICONS = {"description": "text-x-generic-symbolic", "general": "dialog-information-symbolic",
              "advisories": "security-medium-symbolic", "dependencies": "network-workgroup-symbolic",
@@ -35,7 +38,8 @@ class DetailsView(Gtk.Box):
     """`on_link(kind, target)`: a package or dependency link was clicked ("pkg" / "dep"); web links go to
     `on_web(url)`."""
 
-    def __init__(self):
+    def __init__(self, ui=None):
+        """`ui` (kram.app.ports.Ui): the Files tab copies paths and shows files with it."""
         super().__init__(orientation=Gtk.Orientation.VERTICAL)
         self.on_link: Callable[[str, str], None] = lambda kind, target: None
         self.on_web: Callable[[str], None] = lambda url: None
@@ -43,19 +47,18 @@ class DetailsView(Gtk.Box):
         self.docs: dict[str, DocView] = {}
         self.pages: dict[str, Adw.ViewStackPage] = {}
         titles = tab_titles()
-        self.files = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, margin_start=12, margin_end=12, margin_top=12,
-                             margin_bottom=12)
-        self.versions = Gtk.Grid(column_spacing=24, row_spacing=4, margin_start=12, margin_end=12, margin_top=12,
-                                 margin_bottom=12)
+        self.files = FileList(ui)
+        self.versions = self._versions_view()
         for name in TABS:
             if name == "files":
                 child = self.files
             elif name == "versions":
-                child = self.versions
+                child = _scrolled(self.versions)
             else:
-                child = self.docs[name] = DocView()
-                child.on_link = self._link
-            self.pages[name] = self.stack.add_titled_with_icon(_scrolled(child), name, titles[name], TAB_ICONS[name])
+                view = self.docs[name] = DocView()
+                view.on_link = self._link
+                child = _scrolled(view)
+            self.pages[name] = self.stack.add_titled_with_icon(child, name, titles[name], TAB_ICONS[name])
         self.pages["advisories"].set_visible(False)
         switcher = Adw.ViewSwitcher(stack=self.stack, policy=Adw.ViewSwitcherPolicy.WIDE, halign=Gtk.Align.START)
         self.append(switcher)
@@ -135,26 +138,28 @@ class DetailsView(Gtk.Box):
         self._set_versions(version_rows(d))
         self.docs["changelog"].set_doc(changelog_doc(d))
 
-    # ---------------------------------------------------------------- files and versions (to become their own
-    # widgets: a tree with a filter and a context menu, and a small column view)
+    # ---------------------------------------------------------------- files and versions
 
     def _set_files(self, files, complete: bool) -> None:
-        while (child := self.files.get_first_child()) is not None:
-            self.files.remove(child)
-        paths = list(files)
-        for start in range(0, len(paths), CHUNK):
-            label = Gtk.Label(label="\n".join(paths[start:start + CHUNK]), xalign=0, selectable=True)
-            label.add_css_class("monospace")
-            self.files.append(label)
+        self.files.set_files(list(files), complete)
+
+    @staticmethod
+    def _versions_view() -> Gtk.ColumnView:
+        view = Gtk.ColumnView(model=Gtk.NoSelection(model=node_list([])))
+        view.add_css_class("data-table")
+
+        def cell(title: str, get, width: int = 0, expand: bool = False):
+            def bind(widget: Gtk.Label, node) -> None:
+                v = node.data
+                widget.set_text(get(v))
+                (widget.add_css_class if v.bold else widget.remove_css_class)("kram-bold")
+                (widget.add_css_class if v.dimmed else widget.remove_css_class)("dim-label")
+            column(view, title, lambda: Gtk.Label(xalign=0, ellipsize=Pango.EllipsizeMode.END), bind,
+                   expand=expand, width=width)
+        cell(_("Version"), lambda v: v.evr, width=260)
+        cell(_("Repository"), lambda v: v.repo, width=360)
+        cell(_("State"), lambda v: v.state, expand=True)
+        return view
 
     def _set_versions(self, rows) -> None:
-        while (child := self.versions.get_first_child()) is not None:
-            self.versions.remove(child)
-        for y, v in enumerate(rows):
-            for x, text in enumerate((v.evr, v.repo, v.state)):
-                label = Gtk.Label(label=text, xalign=0, selectable=True, ellipsize=Pango.EllipsizeMode.END)
-                if v.bold:
-                    label.add_css_class("kram-bold")
-                if v.dimmed:
-                    label.add_css_class("dim-label")
-                self.versions.attach(label, x, y, 1, 1)
+        self.versions.get_model().set_model(node_list(rows))

@@ -59,7 +59,7 @@ class MainWindow(Adw.ApplicationWindow):
         self._history: HistoryWindow | None = None
         self.status = StatusBar(lambda: self.browser.open_repos())
         self.ui = GtkUi(self, self.status.message)
-        self.details = DetailsView()
+        self.details = DetailsView(self.ui)
         self.scheduler = GtkScheduler()
         self.browser = b = Browser(self, self.ui, self.scheduler, self.details, post)
         self.dnf, self.catalog, self.helper, self.marker = b.dnf, b.catalog, b.helper, b.marker

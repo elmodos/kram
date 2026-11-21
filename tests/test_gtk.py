@@ -629,3 +629,28 @@ def test_the_release_button_follows_the_last_check():
                           upgrade_button=Gtk.Button(child=Adw.ButtonContent(label="Fedora")))
     MainWindow.update_release_button(win)
     assert win.upgrade_button.get_visible() and win.upgrade_button.get_child().get_label() == "Fedora 46"
+
+
+def test_the_files_tab_shows_a_tree_or_a_list_and_filters():
+    from kram.app.ports import RecordingUi
+    from kram.core.file_tree import path_filter
+    from kram.gtk.files import FileList, name_markup
+    ui = RecordingUi([])
+    files = FileList(ui)
+    win = Gtk.Window(child=files, default_width=600, default_height=400)
+    files.set_files(["/usr/bin/tool", "/usr/lib64/libtool.so.1", "/usr/share/doc/tool/README"], True)
+    assert files._stale  # not built while hidden
+    win.present()
+    spin(lambda: not files._stale, 2)
+    names = [files.selection.get_item(i).get_item().name for i in range(files.selection.get_n_items())]
+    assert names[:3] == ["usr", "bin", "tool"] and files.count.get_text() == "3 files"  # every folder open
+    files.list_button.set_active(True)
+    paths = [files.selection.get_item(i).path for i in range(files.selection.get_n_items())]
+    assert paths == ["/usr/bin/tool", "/usr/lib64/libtool.so.1", "/usr/share/doc/tool/README"]
+    files.filter.set_text("*.so*")
+    spin(lambda: files.count.get_text() == "1 of 3 files", 2)
+    files.selection.select_item(0, True)
+    files.copy_paths()
+    assert ui.calls[-1] == ("copy", "/usr/lib64/libtool.so.1")
+    assert name_markup("libtool.so", "/usr/lib/libtool.so", path_filter("tool")) == "lib<b>tool</b>.so"
+    win.destroy()
