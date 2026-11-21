@@ -54,6 +54,10 @@ class KramApplication(Adw.Application):
 
     def do_startup(self) -> None:
         Adw.Application.do_startup(self)
+        self.load_style()
+
+    @staticmethod
+    def load_style() -> None:
         provider = Gtk.CssProvider()
         provider.load_from_string(css() + EXTRA_CSS)
         Gtk.StyleContext.add_provider_for_display(Gdk.Display.get_default(), provider,
@@ -82,5 +86,49 @@ class KramApplication(Adw.Application):
             self.window.activate_from_outside(view, token)
 
 
+class InstallApplication(Adw.Application):
+    """`kram file.rpm` (file managers: "Open with Kram"): only the installer, no main window, and not the single
+    instance either, as in the Qt front end: it runs beside an open Kram."""
+
+    def __init__(self, path: str):
+        super().__init__(application_id=APP_ID, flags=Gio.ApplicationFlags.NON_UNIQUE)
+        self.path = path
+        self.window = None
+
+    def do_startup(self) -> None:
+        Adw.Application.do_startup(self)
+        KramApplication.load_style()
+
+    def do_activate(self) -> None:
+        if self.window is not None:
+            self.window.present()
+            return
+        from ..core.catalog import Catalog
+        from ..core.worker import DnfWorker
+        from ..ipc.client import HelperClient
+        from .dialogs.install import InstallWindow
+        from .loop import post
+        self.dnf, self.helper = DnfWorker(post), HelperClient(post)
+        self.window = InstallWindow(self, self.path, Catalog(), self.dnf, self.helper)
+        self.window.present()
+
+    def do_shutdown(self) -> None:
+        if self.window is not None:
+            self.helper.stop()
+            self.dnf.shutdown()
+        Adw.Application.do_shutdown(self)
+
+
+def file_argument(args: list[str]) -> str | None:
+    """The package file of `kram file.rpm`: the first argument that is no option; a file: URL as its path."""
+    files = [a for a in args if not a.startswith("-")]
+    if not files:
+        return None
+    return Gio.File.new_for_uri(files[0]).get_path() if files[0].startswith("file:") else files[0]
+
+
 def main(argv: list[str] | None = None) -> int:
-    return KramApplication().run(argv if argv is not None else sys.argv)
+    argv = argv if argv is not None else sys.argv
+    if (path := file_argument(argv[1:])) is not None:
+        return InstallApplication(path).run(argv[:1])
+    return KramApplication().run(argv)

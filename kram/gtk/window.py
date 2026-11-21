@@ -1,18 +1,18 @@
 """The main window for GTK: a view of kram.app.browser.Browser, as kram.qt.main_window is. It builds the widgets
 (docs/GTK_FRONTEND.md §6), wires them to Browser and shows its dialogs.
 
-The dialogs themselves (Apply, progress, repositories, COPR, …) come in later steps of phase 2; until then their
-actions say so instead.
+The dialogs are in kram.gtk.dialogs.
 """
 import json
 from collections.abc import Callable
+from pathlib import Path
 
 from gi.repository import Adw, Gdk, Gio, GLib, Gtk
 
 from .. import HOMEPAGE, __version__
 from ..app import preferences
 from ..app.actions import ActionState, DynamicItem
-from ..app.browser import Browser, ReposChoice
+from ..app.browser import Browser, ReposChoice, rpm_path
 from ..app.custom_filters import CustomFilters
 from ..app.doc import Doc
 from ..app.package_list import Sort
@@ -30,6 +30,7 @@ from .dialogs.cache import CacheDialog
 from .dialogs.copr import CoprDialog
 from .dialogs.filters import FiltersDialog
 from .dialogs.history import HistoryWindow
+from .dialogs.install import InstallDialog
 from .dialogs.notifier import NotifierDialog
 from .dialogs.progress import ProgressDialog
 from .dialogs.repos import ReposDialog
@@ -45,8 +46,6 @@ DETAILS_TAB_KEY = "details/tab-name"  # shared with Qt
 WINDOW_KEY = "gtk/window"             # {"width", "height", "maximized"}
 PANES_KEY = "gtk/panes"               # {"sidebar", "details"}: the two dividers' positions
 # the actions whose dialogs the GTK front end does not have yet (phase 2, §7.4 steps 4–5); not translated yet
-NOT_YET = ("open_file",)
-NOT_YET_TEXT = "This is not in the GTK front end yet."
 
 
 class MainWindow(Adw.ApplicationWindow):
@@ -133,6 +132,9 @@ class MainWindow(Adw.ApplicationWindow):
         view.add_top_bar(self.menu_bar)
         view.add_bottom_bar(self.status)
         self.set_content(view)
+        drop = Gtk.DropTarget.new(Gdk.FileList, Gdk.DragAction.COPY)  # an .rpm from the file manager
+        drop.connect("drop", self._dropped)
+        self.add_controller(drop)
         self._show_menu_bar(preferences.value(preferences.MENU_BAR))
 
         self._popover = Gtk.PopoverMenu(has_arrow=False)
@@ -150,22 +152,17 @@ class MainWindow(Adw.ApplicationWindow):
             ("copy_name", b.copy_names), ("copy_nevra", b.copy_nevras), ("unmark", b.unmark_selected),
             ("lock", lambda: b.set_version_lock(True)), ("unlock", lambda: b.set_version_lock(False)),
             ("filters", lambda: self.custom_filters.edit()), ("new_filter", self.new_filter_from_view),
-            ("history", self.open_history), ("show_in_history", self.show_in_history),
+            ("open_file", lambda: self.open_package_file()), ("history", self.open_history), ("show_in_history", self.show_in_history),
             ("repos", b.open_repos), ("copr", self.open_copr), ("cache", self.open_cache), ("notifications", self.open_notifications),
             ("save_marks", b.save_marks), ("read_marks", b.read_marks), ("export_csv", b.export_csv),
         ]:
             acts.connect(action_id, slot)
-        for action_id in NOT_YET:
-            acts.connect(action_id, self._not_yet)
         from ..app.actions import MARK_ACTIONS, mark_id, mark_upgrades_id
         from ..app.browser import UPGRADE_KINDS
         for kind in UPGRADE_KINDS:
             acts.connect(mark_upgrades_id(kind), lambda k=kind: self.marker.mark_upgrades(k))
         for mark in MARK_ACTIONS:
             acts.connect(mark_id(mark), lambda m=mark: b.mark_selected(m))
-
-    def _not_yet(self) -> None:
-        self.ui.info("Kram", NOT_YET_TEXT)
 
     def _edit_filters(self, filters, snap, select, new, resolve_provides, done) -> None:
         FiltersDialog(filters, snap, done, select=select, new=new, resolve_provides=resolve_provides).present(self)
@@ -384,6 +381,36 @@ class MainWindow(Adw.ApplicationWindow):
         rows = self.selected_rows()
         if len(rows) == 1:
             self.open_history(rows[0].name)
+
+    def open_package_file(self, path: str | None = None) -> None:
+        b = self.browser
+        if not b.can_open_file():
+            return
+        if not path:
+            downloads = GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_DOWNLOAD) or GLib.get_home_dir()
+
+            def chosen(path: str | None) -> None:
+                if path:
+                    settings.set("install/dir", str(Path(path).parent))
+                    self.open_package_file(path)
+            self.ui.choose_open_file(_("Open Package File"), settings.get("install/dir", downloads),
+                                     _("RPM packages (*.rpm)"), chosen)
+            return
+
+        def closed(changed: bool) -> None:
+            if changed:
+                b.reload()
+            b.update_actions()
+        InstallDialog(path, self.catalog, self.dnf, self.helper, b.snapshot.basearch, marks=len(b.packages.marks),
+                      done=closed).present(self)
+
+    def _dropped(self, _target, files: Gdk.FileList, _x, _y) -> bool:
+        paths = [f.get_path() for f in files.get_files()]
+        if None in paths or (path := rpm_path(paths)) is None or not self.browser.can_open_file():
+            return False
+        # after the drop returns: a dialog opened inside the drop handler holds up the drag source
+        GLib.idle_add(lambda: (self.open_package_file(path), GLib.SOURCE_REMOVE)[1])
+        return True
 
     def open_cache(self) -> None:
         b = self.browser

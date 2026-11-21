@@ -560,3 +560,43 @@ def test_the_history_window_loads_filters_and_undoes(monkeypatch):
     assert not win.get_visible()  # hidden, kept for the next time
     win.destroy()
     parent.destroy()
+
+
+def test_the_install_dialog_shows_the_file_and_installs_it(monkeypatch):
+    from test_install_flow import Catalog, Sync, make_rpm
+
+    from kram.app import install
+    from kram.core import local_rpm
+    from kram.gtk.dialogs import install as install_dialog
+    rpm = make_rpm()
+    monkeypatch.setattr(local_rpm, "read", lambda path: rpm)
+    monkeypatch.setattr(install, "DnfWorker", lambda post, name: Sync())
+    monkeypatch.setattr(install_dialog, "post", lambda fn: fn())
+    win = Adw.ApplicationWindow(default_width=900, default_height=780)
+    win.present()
+    closed = []
+    helper = SimpleNamespace(busy=False)
+    dlg = install_dialog.InstallDialog(rpm.path, Catalog(), Sync(), helper, marks=2, done=closed.append)
+    dlg.present(win)
+    page = dlg.page
+    spin(lambda: page.install.get_sensitive(), 2)
+    assert "tool" in page.title.get_text() and "2.0-1.x86_64" in page.title.get_text()
+    assert page.install.get_child().get_label() == "Upgrade" and page.cmd_box.get_visible()
+    assert "sudo dnf5 install /tmp/tool-2.0-1.x86_64.rpm" == page.cmd.get_text()
+    assert "Signed by Fedora." in page.notes_text() and "tool" in _texts(page.changes)
+    ran = []
+    page.run_transaction = lambda request, title, done: ran.append((request, done))
+    page.install.emit("clicked")
+    request, done = ran[0]
+    assert request["op"] == "local_install"
+    done(True)
+    spin(lambda: bool(closed), 2)
+    assert closed == [True]  # it ran: the main window reloads
+    win.destroy()
+
+
+def test_kram_file_rpm_runs_the_installer_on_its_own():
+    from kram.gtk.app import file_argument
+    assert file_argument(["--upgradable"]) is None
+    assert file_argument(["/tmp/a.rpm"]) == "/tmp/a.rpm"
+    assert file_argument(["file:///tmp/my%20a.rpm"]) == "/tmp/my a.rpm"

@@ -40,6 +40,11 @@ class ChangesTree(Gtk.ScrolledWindow):
                 text.set_markup(_section_markup(node.data))
                 box.set_tooltip_text(None)
                 return
+            if isinstance(node.data, str):  # a line of its own: a resolver problem
+                image.set_visible(False)
+                text.set_text(node.data)
+                box.set_tooltip_text(node.data)
+                return
             row: ChangeRow = node.data
             text.set_text(row.name)
             if row.group_id:
@@ -67,8 +72,9 @@ class ChangesTree(Gtk.ScrolledWindow):
         column(self.view, _("Repository"), label, text_of("repo"))
         column(self.view, _("Size"), lambda: label(numeric=True), text_of("size"))
 
-    def show_sections(self, sections: list[ChangeSection]) -> None:
-        nodes = [Node(s, [Node(r) for r in s.rows]) for s in sections]
+    def show_sections(self, sections: list[ChangeSection], lines: list[str] = ()) -> None:
+        """The sections, then `lines` (resolver problems) of their own."""
+        nodes = [Node(s, [Node(r) for r in s.rows]) for s in sections] + [Node(line) for line in lines]
         self.view.set_model(Gtk.NoSelection(model=tree_model(nodes)))
 
 
