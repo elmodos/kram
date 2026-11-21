@@ -364,3 +364,77 @@ def test_the_release_notes_go_to_the_about_dialog():
     about = Adw.AboutDialog()
     about.set_release_notes(release_notes(load()))  # the shipped metainfo parses
     assert about.get_release_notes()
+
+
+def _repos():
+    from kram.core.model import Origin, RepoInfo
+    return [RepoInfo("fedora", "Fedora 44 - x86_64", True, Origin.FEDORA, 60, 99, "/etc/yum.repos.d/fedora.repo"),
+            RepoInfo("fedora-debuginfo", "Fedora 44 - Debug", False, Origin.FEDORA, 60, 99,
+                     "/etc/yum.repos.d/fedora.repo"),
+            RepoInfo("code", "Visual Studio Code", True, Origin.THIRD_PARTY, 60, 99, "/etc/yum.repos.d/vscode.repo")]
+
+
+def _select_repo(dlg, repo_id: str) -> None:
+    for i in range(dlg.selection.get_n_items()):
+        if dlg.selection.get_item(i).data.repo.id == repo_id:
+            dlg.selection.set_selected(i)
+            return
+    raise AssertionError(repo_id)
+
+
+def test_the_repositories_dialog_toggles_filters_and_chooses():
+    from collections import Counter
+
+    from kram.app.ports import RecordingUi
+    from kram.gtk.dialogs.repos import ReposDialog
+    win = Gtk.Window(default_width=1200, default_height=700)
+    win.present()
+    closed = []
+    dlg = ReposDialog(_repos(), Counter({"fedora": 70000, "code": 3}), lambda d, ok: closed.append((d, ok)),
+                      listed=Counter({"code": 3}), installed=Counter({"code": 1}))
+    dlg.present(win)
+    spin(seconds=0.3)
+    assert dlg.selection.get_n_items() == 2  # no debuginfo repository unless asked for
+    dlg.show_aux.set_active(True)
+    assert dlg.selection.get_n_items() == 3
+    dlg.filter.set_text("visual")
+    spin(lambda: dlg.selection.get_n_items() == 1, 2)
+    assert dlg.selection.get_item(0).data.repo.id == "code"
+    dlg.filter.set_text("")
+    spin(lambda: dlg.selection.get_n_items() == 3, 2)
+    # the checkbox of a row
+    assert not dlg.apply_btn.get_sensitive()
+    check = next(w for w in _walk(dlg.table) if isinstance(w, Gtk.CheckButton) and w.repo_id == "code")
+    check.set_active(False)
+    assert dlg.changes() == {"code": False} and dlg.apply_btn.get_sensitive()
+    check.set_active(True)
+    # the menu of a repository
+    menu = dlg.menu_model("code")
+    labels = [menu.get_item_link(s, "section").get_item_attribute_value(i, "label", None).get_string()
+              for s in range(menu.get_n_items()) for i in range(menu.get_item_link(s, "section").get_n_items())]
+    assert labels == ["Show Packages", "Remove Repository…", "Copy Path", "Show in File Manager"]
+    # removing it closes with the choice
+    dlg.repos._ui = RecordingUi(["remove"])
+    _select_repo(dlg, "code")
+    assert dlg.remove_btn.get_sensitive()
+    dlg.remove_btn.emit("clicked")
+    spin(lambda: bool(closed), 2)
+    assert closed and closed[0][1] is False and dlg.remove_repos == ["code"]
+    win.destroy()
+
+
+def test_the_repositories_dialog_applies():
+    from collections import Counter
+
+    from kram.gtk.dialogs.repos import ReposDialog
+    win = Gtk.Window()
+    win.present()
+    closed = []
+    dlg = ReposDialog(_repos(), Counter(), lambda d, ok: closed.append(ok))
+    dlg.present(win)
+    dlg.repos.set_enabled("fedora", False)
+    dlg._update_buttons()
+    dlg.apply_btn.emit("clicked")
+    spin(lambda: bool(closed), 2)
+    assert closed == [True] and dlg.changes() == {"fedora": False}
+    win.destroy()

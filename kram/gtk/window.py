@@ -28,6 +28,7 @@ from .dialogs.apply import ApplyDialog
 from .dialogs.cache import CacheDialog
 from .dialogs.notifier import NotifierDialog
 from .dialogs.progress import ProgressDialog
+from .dialogs.repos import ReposDialog
 from .doc_view import DocView, release_notes
 from .loop import GtkScheduler, post
 from .package_list import PackageListView
@@ -40,7 +41,7 @@ DETAILS_TAB_KEY = "details/tab-name"  # shared with Qt
 WINDOW_KEY = "gtk/window"             # {"width", "height", "maximized"}
 PANES_KEY = "gtk/panes"               # {"sidebar", "details"}: the two dividers' positions
 # the actions whose dialogs the GTK front end does not have yet (phase 2, §7.4 steps 4–5); not translated yet
-NOT_YET = ("repos", "copr", "history", "show_in_history", "filters", "new_filter",
+NOT_YET = ("copr", "history", "show_in_history", "filters", "new_filter",
            "open_file")
 NOT_YET_TEXT = "This is not in the GTK front end yet."
 
@@ -144,7 +145,7 @@ class MainWindow(Adw.ApplicationWindow):
             ("find", self.search.focus), ("back", b.go_back), ("quit", self.close), ("about", self.about),
             ("copy_name", b.copy_names), ("copy_nevra", b.copy_nevras), ("unmark", b.unmark_selected),
             ("lock", lambda: b.set_version_lock(True)), ("unlock", lambda: b.set_version_lock(False)),
-            ("cache", self.open_cache), ("notifications", self.open_notifications),
+            ("repos", b.open_repos), ("cache", self.open_cache), ("notifications", self.open_notifications),
             ("save_marks", b.save_marks), ("read_marks", b.read_marks), ("export_csv", b.export_csv),
         ]:
             acts.connect(action_id, slot)
@@ -321,8 +322,9 @@ class MainWindow(Adw.ApplicationWindow):
         dlg.present(self)  # over the dialog that started it (COPR, Package Cache): libadwaita stacks them
 
     def show_repos(self, snap, counts, owners, listed, installed, done: Callable[[ReposChoice | None], None]) -> None:
-        self._not_yet()
-        done(None)
+        def closed(dlg: ReposDialog, accepted: bool) -> None:
+            done(ReposChoice(dlg.show_repo, tuple(dlg.remove_repos or ()), dlg.changes() if accepted else None))
+        ReposDialog(snap.repos, counts, closed, owners=owners, listed=listed, installed=installed).present(self)
 
     # ---------------------------------------------------------------- the other dialogs
 
