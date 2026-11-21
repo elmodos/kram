@@ -475,3 +475,41 @@ def test_the_copr_dialog_lists_searches_and_enables(monkeypatch):
     spin(seconds=0.2)
     assert shown == [repo]
     win.destroy()
+
+
+def test_the_custom_filters_dialog_edits_a_copy():
+    from kram.core.custom_filters import Condition, CustomFilter, Field, Op
+    from kram.gtk.dialogs.filters import FiltersDialog
+    snap = CatalogSnapshot(rows(30), 10, 0, 0.1)
+    filters = [CustomFilter("Big", [Condition(Field.NAME, Op.CONTAINS, "pkg001")]), CustomFilter("Other")]
+    win = Gtk.Window(default_width=1000, default_height=600)
+    win.present()
+    results = []
+    dlg = FiltersDialog(filters, snap, results.append, select="Big")
+    dlg.present(win)
+    spin(lambda: "match" in dlg.count.get_text(), 2)
+    assert dlg.name.get_text() == "Big" and len(dlg._rows) == 1
+    assert dlg.count.get_text() == "10 packages match"  # pkg0010 … pkg0019
+    dlg._rows[0].entry.set_text("pkg0012")
+    spin(lambda: dlg.count.get_text() == "1 package matches", 2)
+    dlg.name.set_text("Twelve")
+    assert dlg.list.get_row_at_index(0).get_child().get_text() == "Twelve"
+    dlg.list.select_row(dlg.list.get_row_at_index(1))
+    assert dlg.name.get_text() == "Other" and dlg._rows == []
+    dlg._add_row(Condition(Field.ARCH, Op.IS, "x86_64"))
+    dlg.delete_btn.emit("clicked")  # Other goes
+    assert [f.name for f in dlg.filters()] == ["Twelve"] and dlg.name.get_text() == "Twelve"
+    dlg._add(CustomFilter(dlg.edit.unique("Twelve")))
+    assert dlg.name.get_text() == "Twelve 2"
+    dlg.name.set_text("")
+    dlg._accept(None)  # no name: it says so and stays
+    spin(seconds=0.1)
+    assert results == []
+    dlg.name.set_text("Mine")
+    dlg._accept(None)
+    spin(lambda: bool(results), 2)
+    saved, current = results[0]
+    assert [f.name for f in saved] == ["Twelve", "Mine"] and current == "Mine"
+    assert saved[0].conditions == [Condition(Field.NAME, Op.CONTAINS, "pkg0012")]
+    assert filters[0].name == "Big"  # the caller's list is not touched
+    win.destroy()
