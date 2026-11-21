@@ -29,6 +29,7 @@ from .dialogs.apply import ApplyDialog
 from .dialogs.cache import CacheDialog
 from .dialogs.copr import CoprDialog
 from .dialogs.filters import FiltersDialog
+from .dialogs.history import HistoryWindow
 from .dialogs.notifier import NotifierDialog
 from .dialogs.progress import ProgressDialog
 from .dialogs.repos import ReposDialog
@@ -44,7 +45,7 @@ DETAILS_TAB_KEY = "details/tab-name"  # shared with Qt
 WINDOW_KEY = "gtk/window"             # {"width", "height", "maximized"}
 PANES_KEY = "gtk/panes"               # {"sidebar", "details"}: the two dividers' positions
 # the actions whose dialogs the GTK front end does not have yet (phase 2, §7.4 steps 4–5); not translated yet
-NOT_YET = ("history", "show_in_history", "open_file")
+NOT_YET = ("open_file",)
 NOT_YET_TEXT = "This is not in the GTK front end yet."
 
 
@@ -53,6 +54,7 @@ class MainWindow(Adw.ApplicationWindow):
         super().__init__(application=app, title="Kram", icon_name=app.get_application_id())
         self._restore_size()
         self._closing = False
+        self._history: HistoryWindow | None = None
         self.status = StatusBar(lambda: self.browser.open_repos())
         self.ui = GtkUi(self, self.status.message)
         self.details = DetailsView()
@@ -148,6 +150,7 @@ class MainWindow(Adw.ApplicationWindow):
             ("copy_name", b.copy_names), ("copy_nevra", b.copy_nevras), ("unmark", b.unmark_selected),
             ("lock", lambda: b.set_version_lock(True)), ("unlock", lambda: b.set_version_lock(False)),
             ("filters", lambda: self.custom_filters.edit()), ("new_filter", self.new_filter_from_view),
+            ("history", self.open_history), ("show_in_history", self.show_in_history),
             ("repos", b.open_repos), ("copr", self.open_copr), ("cache", self.open_cache), ("notifications", self.open_notifications),
             ("save_marks", b.save_marks), ("read_marks", b.read_marks), ("export_csv", b.export_csv),
         ]:
@@ -227,6 +230,8 @@ class MainWindow(Adw.ApplicationWindow):
                 self._closing = True
                 self._save_settings()
                 self.browser.shutdown()
+                if self._history is not None:  # hidden, it would keep the application running
+                    self._history.destroy()
                 preferences.changed.disconnect(self._pref_changed)
                 self.close()
         self.browser.can_close(answered)
@@ -347,6 +352,38 @@ class MainWindow(Adw.ApplicationWindow):
         b.catalog_loaded.connect(refresh)  # after enabling or removing a project
         dlg.connect("closed", lambda _d: b.catalog_loaded.disconnect(refresh))
         dlg.present(self)
+
+    def open_history(self, name: str | None = None) -> None:
+        """File → Transaction History; with a package name, filtered by it (Package → Show in History)."""
+        b = self.browser
+        if b.snapshot is None:
+            return
+        win = self._history
+        if win is None:
+            win = self._history = HistoryWindow(self.dnf, self.catalog, self)
+            win.on_show_package = self._show_from_history
+            win.on_undo = lambda tid: b.undo_transaction(tid, win.rows_of(tid), win.close)
+            # after Apply the new transaction shows; a closed window reads the history again when it opens
+            b.catalog_loaded.connect(lambda _snap: win.get_visible() and win.reload())
+        if not win.get_visible():
+            win.reload()
+        if name is not None:
+            win.show_package_name(name)
+        win.set_marking(b.snapshot is not None, b.busy())
+        win.present()
+
+    def _show_from_history(self, key: tuple[str, str]) -> None:
+        """A package activated in the history: the user wants it, so the history closes and the package list gets
+        the focus (selected behind the window, it was easy to miss)."""
+        if self._history is not None:
+            self._history.close()
+        self.browser.navigate(key)
+        self.focus_list()
+
+    def show_in_history(self) -> None:
+        rows = self.selected_rows()
+        if len(rows) == 1:
+            self.open_history(rows[0].name)
 
     def open_cache(self) -> None:
         b = self.browser

@@ -513,3 +513,50 @@ def test_the_custom_filters_dialog_edits_a_copy():
     assert saved[0].conditions == [Condition(Field.NAME, Op.CONTAINS, "pkg0012")]
     assert filters[0].name == "Big"  # the caller's list is not touched
     win.destroy()
+
+
+def test_the_history_window_loads_filters_and_undoes(monkeypatch):
+    from kram.app import history
+    from kram.core.history import HistoryItem, HistoryTransaction
+    from kram.core.model import Reason
+    from kram.gtk.dialogs.history import HistoryWindow
+    transactions = [HistoryTransaction(3, 1795000000, 0, "dnf5 remove fish", "", True),
+                    HistoryTransaction(2, 1794000000, 1000, "kram", "", False),
+                    HistoryTransaction(1, 1793000000, 1000, "kram", "", True)]
+    items = {3: (HistoryItem("fish", "x86_64", "4.0-1", "remove", Reason.USER, "@System"),),
+             2: (HistoryItem("vim", "x86_64", "9.1-2", "upgrade", Reason.USER, "updates"),),
+             1: (HistoryItem("vim", "x86_64", "9.1-2", "upgrade", Reason.USER, "updates"),
+                 HistoryItem("vim", "x86_64", "9.1-1", "replaced", Reason.USER, "@System"),
+                 HistoryItem("fish", "x86_64", "4.0-1", "install", Reason.USER, "fedora"))}
+    catalog = SimpleNamespace(history=lambda: transactions, history_items=lambda ids: {i: items[i] for i in ids})
+    worker = SimpleNamespace(submit=lambda fn, done, failed=None: done(fn()))
+    monkeypatch.setattr(history, "CHUNK", 2)
+    parent = Gtk.Window()
+    win = HistoryWindow(worker, catalog, parent)
+    win.reload()
+    win.present()
+    spin(lambda: win.state.get_text() == "3 transactions", 2)
+    ids = [win.selection.get_item(i).data.id for i in range(win.selection.get_n_items())]
+    assert ids == [3, 2, 1] and win._store.get_item(2).data.changes == "1 installed, 1 upgraded"
+    win.set_current(1)
+    win._selected()
+    shown = [(p.action, p.package, p.version) for p in
+             (win.package_selection.get_item(i).data for i in range(win.package_selection.get_n_items()))]
+    assert shown == [("Install", "fish.x86_64", "4.0-1"), ("Upgrade", "vim.x86_64", "9.1-1 → 9.1-2")]
+    opened = []
+    win.on_show_package = opened.append
+    win._activated(win.packages, 0)
+    assert opened == [("fish", "x86_64")]
+    win.show_package_name("FISH")
+    assert win.selection.get_n_items() == 2 and win.state.get_text() == "2 of 3 transactions"
+    undone = []
+    win.on_undo = undone.append
+    assert not win.undo.get_sensitive()  # no catalog yet
+    win.set_marking(True, False)
+    assert win.undo.get_sensitive()
+    win.undo.emit("clicked")
+    assert undone == [1]
+    win.close()
+    assert not win.get_visible()  # hidden, kept for the next time
+    win.destroy()
+    parent.destroy()
