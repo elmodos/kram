@@ -12,10 +12,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
-import gi  # noqa: E402
-
-gi.require_version("Gtk", "4.0")
-gi.require_version("Adw", "1")
+import kram.gtk  # noqa: E402,F401  (pins the gi versions before anything imports from gi.repository)
 
 
 def snapshot():
@@ -63,6 +60,7 @@ class Stopwatch:
 
 
 def versions() -> str:
+    import gi
     from gi.repository import Adw, GLib, Gtk
     return (f"GTK {Gtk.get_major_version()}.{Gtk.get_minor_version()}.{Gtk.get_micro_version()}, "
             f"libadwaita {Adw.get_major_version()}.{Adw.get_minor_version()}.{Adw.get_micro_version()}, "

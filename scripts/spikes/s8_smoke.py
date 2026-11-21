@@ -7,9 +7,9 @@ doc view over made-up rows in a window, waits for its first painted frame, rende
 import sys
 
 from common import fake_snapshot, versions
+from gi.repository import Adw, Gdk, Gio, GLib, Graphene, Gtk
 
 import kram.gtk  # noqa: F401
-from gi.repository import Adw, Gdk, Gio, GLib, Graphene, Gtk
 
 
 def main() -> int:

@@ -20,7 +20,6 @@ from ..app.columns import (
     COL_ORIGIN,
     COL_STATUS,
     COL_SUMMARY,
-    HEADER_TIPS,
     HEADERS,
     cell_icon,
     cell_style,
@@ -42,14 +41,16 @@ TINT_CLASSES = {action: f"kram-mark-{action.value}" for action in MARK_BACKGROUN
 
 def css() -> str:
     """The list's own styles. A marked row's tint is a translucent image over the row's background, so the hover
-    and selection colours still show through it."""
-    tints = "\n".join(f"columnview.kram-packages row.{cls} {{ background-image: image(rgba({r}, {g}, {b}, "
-                      f"{a / 255:.3f})); }}"
+    and selection colours still show through it. It is drawn by each cell's own box, which takes the cell's padding
+    so that the tint fills the row without gaps: changing GTK's own row widget while the list is being filled breaks
+    GTK (criticals, then an abort)."""
+    tints = "\n".join(f".kram-cell.{cls} {{ background-image: image(rgba({r}, {g}, {b}, {a / 255:.3f})); }}"
                       for action, cls in TINT_CLASSES.items() for r, g, b, a in [MARK_BACKGROUND[action]])
     return tints + """
 .kram-bold { font-weight: bold; }
 .kram-italic { font-style: italic; }
-columnview.kram-packages > listview > row > cell { padding-top: 1px; padding-bottom: 1px; }
+columnview.kram-packages > listview > row > cell { padding: 0; }
+.kram-cell { padding: 2px 6px; }
 """
 
 
@@ -69,12 +70,13 @@ class _Cell:
     def __init__(self, col: int):
         self.col, self.pos = col, -1
         self.box = Gtk.Box(spacing=4, hexpand=True)
+        self.box.add_css_class("kram-cell")
         self.image = self.label = None
         if col in ICON_COLUMNS or col == COL_CANDIDATE:
             self.image = Gtk.Image(pixel_size=16)
             self.box.append(self.image)
         if col in ICON_COLUMNS:
-            self.box.set_halign(Gtk.Align.CENTER)
+            self.image.set_hexpand(True)  # centred in a box that fills the cell, for the tint
         else:
             self.label = Gtk.Label(xalign=1 if col in ALIGN_RIGHT else 0, hexpand=True,
                                    ellipsize=Pango.EllipsizeMode.END, single_line_mode=True)
@@ -195,15 +197,12 @@ class PackageListView(Gtk.ScrolledWindow):
                 else:
                     cell.label.remove_css_class(cls)
         cell.box.set_tooltip_text(cell_tooltip(r, col, ctx))
-        # the row's tint: the row widget is the cell's grandparent, shared by every cell of the row
-        row_widget = (cell.box.get_parent() or cell.box).get_parent()
-        if row_widget is not None:
-            tint = row_tint(r, ctx.marks)
-            for action, cls in TINT_CLASSES.items():
-                if action is tint:
-                    row_widget.add_css_class(cls)
-                else:
-                    row_widget.remove_css_class(cls)
+        tint = row_tint(r, ctx.marks)
+        for action, cls in TINT_CLASSES.items():
+            if action is tint:
+                cell.box.add_css_class(cls)
+            else:
+                cell.box.remove_css_class(cls)
 
     # ---------------------------------------------------------------- clicks
 

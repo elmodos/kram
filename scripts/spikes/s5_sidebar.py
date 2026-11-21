@@ -8,11 +8,10 @@ import sys
 from pathlib import Path
 
 from common import snapshot, versions
+from gi.repository import Adw, Gdk, Gio, GLib, Gtk
 from s2_s4_list import shoot
 
 import kram.gtk  # noqa: F401
-from gi.repository import Adw, Gdk, Gio, GLib, Gtk
-
 from kram.app.sidebar import VIEWS, SidebarModel
 from kram.core.marks import MarkSet
 from kram.gtk import icons

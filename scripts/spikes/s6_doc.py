@@ -8,11 +8,10 @@ import sys
 from pathlib import Path
 
 from common import Stopwatch, versions
+from gi.repository import Adw, Gio, GLib, Gtk
 from s2_s4_list import shoot
 
 import kram.gtk  # noqa: F401
-from gi.repository import Adw, Gio, GLib, Gtk
-
 from kram.app.details import dependencies_doc
 from kram.core.catalog import Catalog
 

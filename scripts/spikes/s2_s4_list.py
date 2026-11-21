@@ -12,10 +12,9 @@ import sys
 from pathlib import Path
 
 from common import snapshot, versions
-
-import kram.gtk  # noqa: F401
 from gi.repository import Adw, Gdk, Gio, GLib, Graphene, Gtk
 
+import kram.gtk  # noqa: F401
 from kram.app.actions import package_menu_items
 from kram.app.columns import COL_NAME, COL_SUMMARY
 from kram.app.package_list import PackageList
@@ -138,7 +137,7 @@ def main():
             view.show_sort((COL_NAME, False))
             packages.sort(COL_NAME, False)
             installed = [i for i in range(len(packages)) if packages.row(i).installed][:8]
-            for i, action in zip(installed, (Action.REMOVE, Action.REINSTALL, Action.MARK_DEP)):
+            for i, action in zip(installed, (Action.REMOVE, Action.REINSTALL, Action.MARK_DEP), strict=False):
                 packages.marks.set(packages.row(i), action)
             packages.marks_changed()
             view.select(3)
