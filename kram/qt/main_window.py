@@ -391,7 +391,7 @@ class MainWindow(QMainWindow):
 
     def about(self):
         box = QMessageBox(QMessageBox.Icon.NoIcon, _("About Kram"),
-                          f"<h3>Kram (Qt) {__version__}</h3><p>{toolkit_versions()}</p>"
+                          f"<h3>Kram · Qt {__version__}</h3><p>{toolkit_versions()}</p>"
                           f"<p>{_('A Synaptic-style package manager for Fedora.')}</p>"
                           f"<p><a href='{HOMEPAGE}'>{HOMEPAGE}</a></p>"
                           f"<p>Copyright © 2026 Modo Ltunzher<br>{_('Released under the MIT License.')}</p>",
