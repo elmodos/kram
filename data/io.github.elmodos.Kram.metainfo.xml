@@ -77,6 +77,14 @@
   <content_rating type="oars-1.1"/>
   <translation type="gettext">kram</translation>
   <releases>
+    <release version="0.13.0" date="2026-11-22">
+      <description>
+        <ul>
+          <li>When a marked package conflicts with installed ones, Kram offers to mark those for removal and shows the review, as dnf swap does: switching kram-qt for kram-gtk, or ffmpeg-free for ffmpeg.</li>
+          <li>The equivalent command of several kinds of change is one dnf5 do, a single transaction as Kram runs it.</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.12.1" date="2026-11-22">
       <description>
         <ul>
