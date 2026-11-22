@@ -17,6 +17,7 @@ from kram.app.actions import (
     menu_bar,
     walk,
 )
+from kram.app.parity import Feature  # noqa: E402  (the feature marks of the parity tests)
 from kram.core.marks import Action, MarkSet
 from kram.core.model import Origin, PkgRow, Status
 
@@ -129,6 +130,8 @@ def test_preferences_round_trip_and_announce_changes():
         preferences.changed.disconnect(seen.append)
 
 
+@pytest.mark.feature(Feature.SETTINGS_FROM_REGISTRY, front="qt")
+@pytest.mark.feature(Feature.TOOLBAR_STYLE, front="qt")
 def test_each_toolkit_has_its_own_settings():
     qt = {p.key for p in preferences.prefs_for("qt")}
     gtk = {p.key for p in preferences.prefs_for("gtk")}
@@ -189,6 +192,7 @@ def test_the_qt_menus_are_those_of_0_11_3(window):
     assert [[a.text(), [s.toString() for s in a.shortcuts()]] for a in window.actions()] == recorded[3]
 
 
+@pytest.mark.feature(Feature.MENU_BAR, front="qt")
 def test_the_qt_menu_bar_is_the_data(window):
     from kram.qt.actions import TOOLKIT
     defs = {d.id: d for d in action_defs()}

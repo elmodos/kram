@@ -8,6 +8,7 @@ from types import SimpleNamespace
 import pytest
 
 from kram import notifier
+from kram.app.parity import Feature  # noqa: E402  (the feature marks of the parity tests)
 from kram.app.ports import FakeBus
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -160,6 +161,7 @@ def test_recheck_only_when_the_checker_is_on(monkeypatch, enabled):
     assert (started in calls) is enabled  # never shows the icon of a checker the user turned off
 
 
+@pytest.mark.feature(Feature.UPDATE_NOTIFICATIONS, front="qt")
 def test_notifier_dialog(monkeypatch, autostart):
     pytest.importorskip("PySide6.QtWidgets")
     import os

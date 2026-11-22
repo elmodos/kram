@@ -2,6 +2,9 @@
 import csv
 import io
 
+import pytest
+
+from kram.app.parity import Feature  # noqa: E402  (the feature marks of the parity tests)
 from kram.core.csv_export import COLUMNS, write_csv
 from kram.core.marks import Action, MarkSet
 from kram.core.model import Advisory, Origin, PkgRow, Reason, Status
@@ -48,6 +51,7 @@ def test_nothing_listed_is_just_the_header():
     assert n == 0 and lines == []
 
 
+@pytest.mark.feature(Feature.CSV_EXPORT, front="qt")
 def test_the_window_exports_what_it_lists(monkeypatch, tmp_path):
     import os
 

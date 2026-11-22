@@ -14,6 +14,8 @@ from types import SimpleNamespace
 
 import pytest
 
+from kram.app.parity import Feature  # noqa: E402  (the feature marks of the parity tests)
+
 gi = pytest.importorskip("gi")
 from gi.repository import GLib  # noqa: E402  (GLib alone does not initialize GTK)
 
@@ -86,6 +88,7 @@ def test_accelerators_are_gtks():
             assert Gtk.accelerator_parse(accel(s))[0], s
 
 
+@pytest.mark.feature(Feature.NON_PIXELATED_ICONS, front="gtk")
 def test_painted_icons_draw_at_every_scale():
     """The vectors draw onto a surface of any screen scale, and the icon fills its box."""
     import cairo
@@ -101,6 +104,7 @@ def test_painted_icons_draw_at_every_scale():
             assert any(surface.get_data()), ref  # something was drawn
 
 
+@pytest.mark.feature(Feature.ROW_MARKS_TINT, front="gtk")
 def test_an_empty_shown_list_fills_without_criticals():
     """Spike S3's trap: a realized, empty list that fills (the first catalog load) made GTK abort while the row
     tints changed GTK's own row widgets."""
@@ -125,6 +129,7 @@ def test_an_empty_shown_list_fills_without_criticals():
     win.destroy()
 
 
+@pytest.mark.feature(Feature.PACKAGE_LIST_SORT, front="gtk")
 def test_the_header_shows_one_sort_and_sorts_through_the_list():
     from kram.app.columns import COL_NAME, COL_SUMMARY
     from kram.gtk.package_list import PackageListView
@@ -143,6 +148,7 @@ def test_the_header_shows_one_sort_and_sorts_through_the_list():
     assert sorter.get_primary_sort_column() is None
 
 
+@pytest.mark.feature(Feature.SETTINGS_FROM_REGISTRY, front="gtk")
 def test_the_settings_menu_has_exactly_the_gtk_preferences(monkeypatch):
     """§4.1a: a preference of the registry shows up in the GTK menus with no GTK code, and only those for GTK."""
     from kram.gtk.actions import WindowActions, pref_action_name
@@ -166,6 +172,9 @@ def test_the_settings_menu_has_exactly_the_gtk_preferences(monkeypatch):
     assert "win.pref-gtk-menubar" in wanted and not any("toolbar" in a for a in found)
 
 
+@pytest.mark.feature(Feature.SIDEBAR_VIEWS, front="gtk")
+@pytest.mark.feature(Feature.MENU_BAR, front="gtk")
+@pytest.mark.feature(Feature.HAMBURGER_MENU, front="gtk")
 def test_the_main_window_shows_the_catalog(monkeypatch):
     import kram.gtk.window as window_module
     from kram.app.browser import Browser
@@ -219,6 +228,7 @@ def _texts(widget: Gtk.Widget) -> list[str]:
     return out
 
 
+@pytest.mark.feature(Feature.APPLY_REVIEW, front="gtk")
 def test_the_apply_dialog_reviews_and_resolves_again():
     from kram.gtk.dialogs.apply import ApplyDialog
     win = Gtk.Window(default_width=900, default_height=700)
@@ -268,6 +278,7 @@ def _walk(widget: Gtk.Widget):
         child = child.get_next_sibling()
 
 
+@pytest.mark.feature(Feature.PROGRESS_DIALOG, front="gtk")
 def test_the_progress_dialog_follows_the_helper_and_stays_until_it_is_done():
     from kram.core.mainloop import Signal
     from kram.gtk.dialogs.progress import ProgressDialog
@@ -316,6 +327,7 @@ def test_the_progress_dialog_closes_itself_after_a_success_if_asked():
     win.destroy()
 
 
+@pytest.mark.feature(Feature.UPDATE_NOTIFICATIONS, front="gtk")
 def test_the_notifier_dialog_turns_things_on_and_off(monkeypatch, tmp_path):
     from kram.app.ports import FakeBus
     from kram.gtk.dialogs import notifier as notifier_dialog
@@ -340,6 +352,7 @@ def test_the_notifier_dialog_turns_things_on_and_off(monkeypatch, tmp_path):
     assert not row.notifier.turned_off()
 
 
+@pytest.mark.feature(Feature.CLEANUP_DIALOG, front="gtk")
 def test_the_cleanup_dialog_shows_the_caches_and_the_leftovers():
     from kram.app.cache import CacheLine, LeftoverLine
     from kram.gtk.dialogs.cache import CacheDialog
@@ -362,6 +375,7 @@ def test_the_cleanup_dialog_shows_the_caches_and_the_leftovers():
     assert dlg.leftover_rows == [] and dlg.leftovers_status.get_title() == "Nothing found."
 
 
+@pytest.mark.feature(Feature.WHATS_NEW, front="gtk")
 def test_the_release_notes_go_to_the_about_dialog():
     from kram.core.releases import Release, load
     from kram.gtk.doc_view import release_notes
@@ -389,6 +403,7 @@ def _select_repo(dlg, repo_id: str) -> None:
     raise AssertionError(repo_id)
 
 
+@pytest.mark.feature(Feature.REPOSITORIES_DIALOG, front="gtk")
 def test_the_repositories_dialog_toggles_filters_and_chooses():
     from collections import Counter
 
@@ -447,6 +462,7 @@ def test_the_repositories_dialog_applies():
     win.destroy()
 
 
+@pytest.mark.feature(Feature.COPR_DIALOG, front="gtk")
 def test_the_copr_dialog_lists_searches_and_enables(monkeypatch):
     import json
     from collections import Counter
@@ -484,6 +500,7 @@ def test_the_copr_dialog_lists_searches_and_enables(monkeypatch):
     win.destroy()
 
 
+@pytest.mark.feature(Feature.CUSTOM_FILTERS_DIALOG, front="gtk")
 def test_the_custom_filters_dialog_edits_a_copy():
     from kram.core.custom_filters import Condition, CustomFilter, Field, Op
     from kram.gtk.dialogs.filters import FiltersDialog
@@ -522,6 +539,7 @@ def test_the_custom_filters_dialog_edits_a_copy():
     win.destroy()
 
 
+@pytest.mark.feature(Feature.HISTORY_WINDOW, front="gtk")
 def test_the_history_window_loads_filters_and_undoes(monkeypatch):
     from kram.app import history
     from kram.core.history import HistoryItem, HistoryTransaction
@@ -569,6 +587,7 @@ def test_the_history_window_loads_filters_and_undoes(monkeypatch):
     parent.destroy()
 
 
+@pytest.mark.feature(Feature.INSTALL_FILE_DIALOG, front="gtk")
 def test_the_install_dialog_shows_the_file_and_installs_it(monkeypatch):
     from test_install_flow import Catalog, Sync, make_rpm
 
@@ -609,6 +628,7 @@ def test_kram_file_rpm_runs_the_installer_on_its_own():
     assert file_argument(["file:///tmp/my%20a.rpm"]) == "/tmp/my a.rpm"
 
 
+@pytest.mark.feature(Feature.FEDORA_UPGRADE_BUTTON, front="gtk")
 def test_the_fedora_upgrade_dialog_checks_and_cannot_close_meanwhile():
     from kram.gtk.dialogs.upgrade import UpgradeDialog
     snap = SimpleNamespace(basearch="x86_64", rows=[], repos=[])
@@ -629,6 +649,8 @@ def test_the_fedora_upgrade_dialog_checks_and_cannot_close_meanwhile():
     win.destroy()
 
 
+@pytest.mark.feature(Feature.FEDORA_UPGRADE_BUTTON, front="gtk")
+@pytest.mark.feature(Feature.RELEASE_WATCH, front="gtk")
 def test_the_release_button_follows_the_last_check():
     from kram.gtk.window import MainWindow
     win = SimpleNamespace(releases=SimpleNamespace(button=lambda: SimpleNamespace(visible=True, text="Fedora 46",
@@ -638,6 +660,7 @@ def test_the_release_button_follows_the_last_check():
     assert win.upgrade_button.get_visible() and win.upgrade_button.get_child().get_label() == "Fedora 46"
 
 
+@pytest.mark.feature(Feature.FILES_TAB_TREE, front="gtk")
 def test_the_files_tab_shows_a_tree_or_a_list_and_filters():
     from kram.app.ports import RecordingUi
     from kram.core.file_tree import path_filter
@@ -663,6 +686,7 @@ def test_the_files_tab_shows_a_tree_or_a_list_and_filters():
     win.destroy()
 
 
+@pytest.mark.feature(Feature.PACKAGE_LIST_COLUMNS, front="gtk")
 def test_the_column_menu_hides_columns_and_the_state_comes_back():
     from kram.app.columns import COL_DOWNLOAD, COL_NAME, COL_REPO, COL_STATUS
     from kram.gtk.package_list import PackageListView
@@ -683,6 +707,7 @@ def test_the_column_menu_hides_columns_and_the_state_comes_back():
     assert other.view.get_columns().get_item(1).get_id() == str(COL_STATUS)
 
 
+@pytest.mark.feature(Feature.ABOUT_TOOLKIT, front="gtk")
 def test_the_gtk_front_end_names_gtk_and_libadwaita():
     from kram.gtk.window import toolkit_versions
     text = toolkit_versions()

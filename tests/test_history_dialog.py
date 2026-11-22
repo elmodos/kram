@@ -3,6 +3,8 @@ import os
 
 import pytest
 
+from kram.app.parity import Feature  # noqa: E402  (the feature marks of the parity tests)
+
 pytest.importorskip("PySide6.QtWidgets")
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
@@ -78,6 +80,7 @@ def test_shows_the_packages_of_the_current_transaction(dialog):
                     ["Upgrade", "vim.x86_64", "9.1-1 → 9.1-2", "updates", "user"]]
 
 
+@pytest.mark.feature(Feature.HISTORY_WINDOW, front="qt")
 def test_filter_by_package_name(dialog):
     dlg, _catalog = dialog
     dlg.filter.setText("FISH")

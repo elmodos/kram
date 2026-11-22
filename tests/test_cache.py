@@ -6,6 +6,8 @@ import shutil
 
 import pytest
 
+from kram.app.parity import Feature  # noqa: E402  (the feature marks of the parity tests)
+
 pytest.importorskip("libdnf5")
 
 from kram.app import cache as app_cache
@@ -99,6 +101,7 @@ def test_packagekit_transaction(packagekit, monkeypatch, owned, transactions, ex
     assert len(calls) == (2 if owned == "b true" else 1)
 
 
+@pytest.mark.feature(Feature.CLEANUP_DIALOG, front="qt")
 def test_dialog_shows_the_report(monkeypatch):
     pytest.importorskip("PySide6.QtWidgets")
     os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")

@@ -3,6 +3,8 @@ import os
 
 import pytest
 
+from kram.app.parity import Feature  # noqa: E402  (the feature marks of the parity tests)
+
 pytest.importorskip("PySide6.QtWidgets")
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
@@ -54,6 +56,7 @@ def test_rows_are_as_tall_as_the_tree_views(app):
     assert view.rowHeight(0) == view.sizeHintForRow(0) == tree.sizeHintForRow(0)
 
 
+@pytest.mark.feature(Feature.PACKAGE_LIST_COLUMNS, front="qt")
 def test_the_tree_views_saved_columns_still_apply(app):
     model = PackageTableModel()
     model.set_rows(rows(3), "x86_64")
@@ -180,6 +183,7 @@ def test_the_download_size_column_is_hidden_after_the_installed_size(app):
     assert model.data(model.index(0, 2)) == "vlc"
 
 
+@pytest.mark.feature(Feature.PACKAGE_LIST_COLUMNS, front="qt")
 def test_a_header_state_saved_before_the_download_size_keeps_it_hidden(app, tmp_path):
     from PySide6.QtCore import QSettings
 

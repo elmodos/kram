@@ -5,6 +5,8 @@ from urllib.parse import urlsplit
 
 import pytest
 
+from kram.app.parity import Feature  # noqa: E402  (the feature marks of the parity tests)
+
 pytest.importorskip("libdnf5")
 pytest.importorskip("PySide6.QtWidgets")
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
@@ -111,6 +113,7 @@ def button(window):
     return window.releases.act_upgrade.isVisible(), window.releases.act_upgrade.text()
 
 
+@pytest.mark.feature(Feature.FEDORA_UPGRADE_BUTTON, front="qt")
 def test_new_release_shows_the_button(fedora):
     fedora.show()
     assert not fedora.releases.act_upgrade.isVisible()
@@ -220,6 +223,7 @@ def test_mark_upgrades_icon_follows_whether_there_is_anything_to_mark(app, monke
         win.dnf.shutdown()
 
 
+@pytest.mark.feature(Feature.STATUS_CLICK_MARKS_LIKELY, front="qt")
 def test_status_icon_click_marks_the_likely_action_only_when_chosen(window, monkeypatch):
     from kram.core.marks import Action
     from kram.core.model import Origin, PkgRow, Status
@@ -403,6 +407,7 @@ def test_the_sidebar_filter_is_not_worked_out_again_for_every_keystroke(window, 
     assert len(calls) == 15
 
 
+@pytest.mark.feature(Feature.DETAILS_TABS, front="qt")
 def test_details_wait_for_the_cursor_to_rest(window, monkeypatch):
     from kram.core.model import Origin, PkgRow, Status
 

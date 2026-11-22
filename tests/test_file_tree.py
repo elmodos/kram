@@ -3,6 +3,7 @@ import os
 
 import pytest
 
+from kram.app.parity import Feature  # noqa: E402  (the feature marks of the parity tests)
 from kram.core.file_tree import build_tree, path_filter
 
 PATHS = [
@@ -131,6 +132,7 @@ def rows(widget):
     return out
 
 
+@pytest.mark.feature(Feature.FILES_TAB_TREE, front="qt")
 def test_tree_view_open_to_the_last_file(files):
     files.set_files(["/usr/bin/kram", "/etc/kram.conf"], True)
     assert rows(files) == ["etc", "  kram.conf", "usr", "  bin", "    kram"]

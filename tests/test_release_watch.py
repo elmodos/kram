@@ -1,5 +1,8 @@
 """kram.app.release_watch without a toolkit: what the Fedora N button shows, from Bodhi's answer."""
+import pytest
+
 from kram.app import preferences, release_watch
+from kram.app.parity import Feature  # noqa: E402  (the feature marks of the parity tests)
 from kram.core import net
 from kram.core.settings import store as settings
 
@@ -24,6 +27,7 @@ def watcher(monkeypatch, answer):
     return w, asked, changes
 
 
+@pytest.mark.feature(Feature.RELEASE_WATCH, front="qt")
 def test_only_a_watcher_asks_and_the_button_follows(monkeypatch):
     w, asked, changes = watcher(monkeypatch, BODHI)
     preferences.set_value(preferences.WATCH_RELEASES, False)

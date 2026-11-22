@@ -5,6 +5,8 @@ from types import SimpleNamespace
 
 import pytest
 
+from kram.app.parity import Feature  # noqa: E402  (the feature marks of the parity tests)
+
 pytest.importorskip("PySide6.QtWidgets")
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
@@ -200,6 +202,7 @@ def test_unapplied_changes_come_first(app):
     assert dlg.remove_btn.toolTip() == "Apply or undo the changes first."
 
 
+@pytest.mark.feature(Feature.REPOSITORIES_DIALOG, front="qt")
 def test_show_packages_closes_with_the_repository(app):
     dlg = actions_dialog(app)
     select(dlg, "code")
