@@ -26,7 +26,8 @@ sudo dnf copr enable elmodos/Kram
 sudo dnf install kram
 ```
 
-Already installed: `sudo dnf upgrade kram`.
+That is the Qt front end, for KDE Plasma and other Qt desktops; for GNOME, install `kram-gtk` (GTK 4 and
+libadwaita) instead. Already installed: `sudo dnf upgrade`. To change front ends: `sudo dnf swap kram-qt kram-gtk`.
 """
 
 

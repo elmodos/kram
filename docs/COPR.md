@@ -39,7 +39,10 @@ webhook with the **push** event), never `elmodos/Kram`, where a snapshot would r
    `data/io.github.elmodos.Kram.metainfo.xml`. `tests/test_packaging.py` fails if they disagree.
 2. Commit "Release X.Y.Z", `git tag -a v<version> -m "Kram <version>"`, run `scripts/rpm_check.sh` (below),
    then `git push origin main v<version>`.
-3. The tag webhook starts the Copr build.
+3. The tag push starts two things: the Copr webhook builds the packages, and the GitHub workflow
+   `.github/workflows/release.yml` publishes a GitHub release for the tag, with the notes
+   `scripts/release_notes.py` writes from the spec's `%changelog` for that version (and the install commands). It
+   skips a tag that already has a release; Actions → Release → Run workflow, with a tag, fills in a missing one.
 
 ## Before pushing a packaging change or a release
 
@@ -57,5 +60,10 @@ translations. The first run downloads the build dependencies (a few minutes); th
   Rawhide" badge is static (shields.io can't list the project's chroots), so edit it when the chroots change.
 - The metainfo screenshots point at `docs/screenshots/*.png` on `main` (raw.githubusercontent.com); replace the
   images to change them, the URLs stay the same. They are real screenshots taken on Plasma.
-- Runtime dependencies: python3-libdnf5, python3-rpm, python3-pyside6, polkit, dnf5-plugins (for `dnf5 copr`
-  and `dnf5 config-manager`).
+- Packages (one spec, one SRPM, `docs/GTK_FRONTEND.md` §10): `kram-common` (the logic, the root helper, the tray
+  checker, translations), and one front end: `kram-qt` (`dnf install kram` installs it; it replaced the single
+  `kram` package of 0.11 and older) or `kram-gtk`. They conflict; `/usr/bin/kram` is an `alternatives` link to the
+  installed one.
+- Runtime dependencies: `kram-common` python3-libdnf5, python3-rpm, polkit, dnf5-plugins (for `dnf5 copr` and
+  `dnf5 config-manager`), hicolor-icon-theme, python3-gobject-base (the tray icon); `kram-qt` python3-pyside6;
+  `kram-gtk` python3-gobject, gobject-introspection (the cairo typelib), gtk4, libadwaita ≥ 1.7.

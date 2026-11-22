@@ -6,9 +6,10 @@ from pathlib import Path
 
 from .. import APP_ID
 
-# a source checkout first, then where the package installs it
+# a source checkout first, then the copy kram-common installs for every front end (the AppStream one in
+# /usr/share/metainfo comes only with kram-qt, the front end software centres install)
 METAINFO = (Path(__file__).resolve().parents[2] / "data" / f"{APP_ID}.metainfo.xml",
-            Path("/usr/share/metainfo") / f"{APP_ID}.metainfo.xml")
+            Path("/usr/share/kram") / f"{APP_ID}.metainfo.xml")
 
 
 @dataclass(slots=True)

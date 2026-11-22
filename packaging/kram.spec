@@ -1,5 +1,8 @@
 %global appid io.github.elmodos.Kram
 %global base_version 0.11.3
+# the first version that is split into kram-common + kram-qt + kram-gtk; the single kram package before it is
+# obsoleted by kram-qt
+%global split_version 0.12.0
 
 Name:           kram
 # A tagged release (v%%{base_version}) is plain %%{base_version}. Any other commit gets a snapshot from
@@ -25,25 +28,73 @@ BuildRequires:  python3-libdnf5
 BuildRequires:  python3-rpm
 BuildRequires:  python3-pyside6
 BuildRequires:  python3-gobject-base
+# the GTK front end's tests (tests/test_gtk.py): GTK's own broadway display server (in gtk4) stands in for a desktop
+BuildRequires:  python3-gobject
+BuildRequires:  gtk4
+BuildRequires:  libadwaita >= 1.7
+BuildRequires:  gobject-introspection
 
+%global _description %{expand:
+Kram is a package manager in the style of Synaptic, built on libdnf5. It lists every package in the enabled
+repositories with its status, origin (Fedora, COPR, third-party), versions and size; has ranked search by
+name, description, provides and files; marks changes, previews the whole transaction and applies it. It also
+enables and disables repositories and manages COPR projects.}
+
+%description %_description
+
+%package        common
+Summary:        Synaptic-style package manager for Fedora: files shared by the front ends
 Requires:       python3-libdnf5
 Requires:       python3-rpm
-# pulls in Qt itself (qt6-qtbase, qt6-qtsvg for the SVG icons) through its library dependencies
-Requires:       python3-pyside6
 Requires:       polkit
 # "dnf5 copr" and "dnf5 config-manager" (COPR and repository changes)
 Requires:       dnf5-plugins
 Requires:       hicolor-icon-theme
 # the tray update checker's icon: a StatusNotifierItem over Gio D-Bus, lighter than Qt
 Requires:       python3-gobject-base
+
+%description    common %_description
+
+This package has the package management logic, the root helper, the tray update checker and the translations
+shared by the front ends, which require it: install kram (the Qt front end, kram-qt) or kram-gtk.
+
+%package        qt
+Summary:        Synaptic-style package manager for Fedora: Qt front end
+Requires:       kram-common = %{version}-%{release}
+# pulls in Qt itself (qt6-qtbase, qt6-qtsvg for the SVG icons) through its library dependencies
+Requires:       python3-pyside6
 # translations of Qt's standard buttons (Yes, No, Cancel…) in the UI language
 Recommends:     qt6-qttranslations
+Conflicts:      kram-gtk
+# existing installs of the single kram package move to the Qt front end, and "dnf install kram" keeps working
+Obsoletes:      kram < %{split_version}
+Provides:       kram = %{version}-%{release}
+# /usr/bin/kram (%%post)
+Requires(post):   alternatives
+Requires(postun): alternatives
 
-%description
-Kram is a package manager in the style of Synaptic, built on libdnf5. It lists every package in the enabled
-repositories with its status, origin (Fedora, COPR, third-party), versions and size; has ranked search by
-name, description, provides and files; marks changes, previews the whole transaction and applies it. It also
-enables and disables repositories and manages COPR projects.
+%description    qt %_description
+
+This package is the Qt front end, for KDE Plasma and other Qt desktops.
+
+%package        gtk
+Summary:        Synaptic-style package manager for Fedora: GTK front end
+Requires:       kram-common = %{version}-%{release}
+# python3-gobject, not -base: the painted icons use cairo
+Requires:       python3-gobject
+Requires:       gtk4
+# Adw.ToggleGroup
+Requires:       libadwaita >= 1.7
+# the cairo typelib (cairo-1.0.typelib) that Gtk's and Adw's typelibs depend on; nothing above pulls it in
+Requires:       gobject-introspection
+Conflicts:      kram-qt
+# /usr/bin/kram (%%post)
+Requires(post):   alternatives
+Requires(postun): alternatives
+
+%description    gtk %_description
+
+This package is the GTK 4 and libadwaita front end, for GNOME.
 
 %prep
 %autosetup -n %{name}-%{base_version}
@@ -61,9 +112,24 @@ done
 
 %install
 %pyproject_install
+# /usr/bin/kram is the GUI front end that is installed: kram-qt and kram-gtk each have a launcher of their own in
+# /usr/libexec/kram and point /usr/bin/kram at it with alternatives (%%post). The Qt launcher is the one pyproject's
+# gui-scripts entry point generates.
+install -d %{buildroot}%{_libexecdir}/kram
+mv %{buildroot}%{_bindir}/kram %{buildroot}%{_libexecdir}/kram/kram-qt
+cat > %{buildroot}%{_libexecdir}/kram/kram-gtk <<'LAUNCHER'
+#!%{python3} -sP
+import sys
+from kram.gtk.app import main
+sys.exit(main())
+LAUNCHER
+chmod 0755 %{buildroot}%{_libexecdir}/kram/kram-gtk
+# owned by both front ends as %%ghost: alternatives makes it a symbolic link, rpm only knows whose it is
+touch %{buildroot}%{_bindir}/kram
 # the helper's work directory: root only, see LOCAL_DIR in kram/helper/kram_helper.py
 install -d -m 0700 %{buildroot}%{_localstatedir}/cache/kram
-%pyproject_save_files -l kram
+# the units' enabled state of logged-in users, kept across the replacement of the single kram package (%%pre)
+install -d -m 0700 %{buildroot}%{_localstatedir}/lib/rpm-state/kram
 # the root helper: started by pkexec at the path the polkit policy names
 install -Dpm 0755 kram/helper/kram_helper.py %{buildroot}%{_libexecdir}/kram-helper
 install -Dpm 0644 data/%{appid}.policy %{buildroot}%{_datadir}/polkit-1/actions/%{appid}.policy
@@ -71,6 +137,8 @@ install -Dpm 0644 data/%{appid}.desktop %{buildroot}%{_datadir}/applications/%{a
 # Xfce only (OnlyShowIn): puts Kram in the Settings Manager's System section
 install -Dpm 0644 data/%{appid}.xfce-settings.desktop %{buildroot}%{_datadir}/applications/%{appid}.xfce-settings.desktop
 install -Dpm 0644 data/%{appid}.metainfo.xml %{buildroot}%{_metainfodir}/%{appid}.metainfo.xml
+# the same file for What's New in every front end (kram/core/releases.py): the AppStream one is kram-qt's only
+install -Dpm 0644 data/%{appid}.metainfo.xml %{buildroot}%{_datadir}/kram/%{appid}.metainfo.xml
 install -Dpm 0644 data/%{appid}.svg %{buildroot}%{_datadir}/icons/hicolor/scalable/apps/%{appid}.svg
 # the tray update checker: systemd user units, none enabled by default (Kram's settings turn it on)
 install -Dpm 0644 -t %{buildroot}%{_userunitdir} data/systemd/kram-*
@@ -89,27 +157,91 @@ desktop-file-validate %{buildroot}%{_datadir}/applications/%{appid}.xfce-setting
 appstream-util validate-relax --nonet %{buildroot}%{_metainfodir}/%{appid}.metainfo.xml
 QT_QPA_PLATFORM=offscreen %pytest
 
-%post
+# The menu entries, in each GUI front end (identical files, one buildroot): they run /usr/bin/kram, which a front
+# end provides.
+%global gui_files %{expand:
+%{_datadir}/applications/%{appid}.desktop
+%{_datadir}/applications/%{appid}.xfce-settings.desktop
+}
+
+%global user_units kram-update-check.timer kram-update-check.path kram-tray.service
+
+%pre common
+# Replacing the single kram package (< %%{split_version}): rpm erases it after this package is installed, and its
+# %%preun disables the user units for every logged-in user, as on removal. Remember which ones were enabled;
+# %%posttrans enables them again.
+state=%{_localstatedir}/lib/rpm-state/kram/enabled-units
+rm -f "$state"
+if rpm -q --quiet kram && [ -d /run/systemd/system ]; then
+    mkdir -p -m 0700 "${state%%/*}"
+    for user in $(systemctl list-units 'user@*' --legend=no | sed -n -r 's/.*user@([0-9]+).service.*/\1/p'); do
+        for unit in kram-update-check.timer kram-update-check.path; do
+            if SYSTEMD_BUS_TIMEOUT=15s systemctl --user -M "$user@" is-enabled --quiet "$unit" 2>/dev/null; then
+                echo "$user $unit" >> "$state"
+            fi
+        done
+    done
+fi
+:
+
+%post common
 # the user presets ("disable *") leave the update checker off; Kram's settings turn it on per user
 %systemd_user_post kram-update-check.timer kram-update-check.path
 
-%preun
+%preun common
 # removal: stop and disable it for every logged-in user
-%systemd_user_preun kram-update-check.timer kram-update-check.path kram-tray.service
+%systemd_user_preun %{user_units}
 
-%postun
+%postun common
 # upgrade: a running tray icon still has the old code loaded; restart it for every logged-in user
 %systemd_user_postun_with_restart kram-tray.service
 
-%files -f %{pyproject_files} -f %{name}.lang
+%post qt
+# the single kram package (< %%{split_version}) had /usr/bin/kram as a file; it is erased only after this
+# scriptlet, and as kram-qt owns the path (%%ghost) rpm would leave that file there
+[ -L %{_bindir}/kram ] || rm -f %{_bindir}/kram
+%{_sbindir}/alternatives --install %{_bindir}/kram kram %{_libexecdir}/kram/kram-qt 20
+
+%postun qt
+# removal, also in "dnf swap kram-qt kram-gtk": after kram-gtk's %%post, so /usr/bin/kram moves to kram-gtk here
+if [ $1 -eq 0 ]; then
+    %{_sbindir}/alternatives --remove kram %{_libexecdir}/kram/kram-qt
+fi
+
+%post gtk
+[ -L %{_bindir}/kram ] || rm -f %{_bindir}/kram
+%{_sbindir}/alternatives --install %{_bindir}/kram kram %{_libexecdir}/kram/kram-gtk 10
+
+%postun gtk
+if [ $1 -eq 0 ]; then
+    %{_sbindir}/alternatives --remove kram %{_libexecdir}/kram/kram-gtk
+fi
+
+%posttrans common
+state=%{_localstatedir}/lib/rpm-state/kram/enabled-units
+if [ -s "$state" ]; then
+    for user in $(cut -d' ' -f1 "$state" | sort -u); do
+        units=$(sed -n "s/^$user //p" "$state")
+        SYSTEMD_BUS_TIMEOUT=15s systemctl --user -M "$user@" enable --now $units >/dev/null 2>&1 || :
+        # as Kram's settings do: count now, which shows the tray icon when there are updates
+        SYSTEMD_BUS_TIMEOUT=15s systemctl --user -M "$user@" start --no-block kram-update-check.service >/dev/null 2>&1 || :
+    done
+fi
+rm -f "$state"
+:
+
+%files common -f %{name}.lang
 %doc README.md
+%license LICENSE
+%{python3_sitelib}/kram/
+%exclude %{python3_sitelib}/kram/qt/
+%exclude %{python3_sitelib}/kram/gtk/
+%{python3_sitelib}/kram-*.dist-info/
 %dir %attr(0700,root,root) %{_localstatedir}/cache/kram
-%{_bindir}/kram
+%dir %attr(0700,root,root) %{_localstatedir}/lib/rpm-state/kram
 %{_libexecdir}/kram-helper
+%dir %{_libexecdir}/kram
 %{_datadir}/polkit-1/actions/%{appid}.policy
-%{_datadir}/applications/%{appid}.desktop
-%{_datadir}/applications/%{appid}.xfce-settings.desktop
-%{_metainfodir}/%{appid}.metainfo.xml
 %{_datadir}/icons/hicolor/scalable/apps/%{appid}.svg
 %{_userunitdir}/kram-update-check.service
 %{_userunitdir}/kram-update-check.timer
@@ -117,6 +249,22 @@ QT_QPA_PLATFORM=offscreen %pytest
 %{_userunitdir}/kram-tray.service
 %{_datadir}/icons/hicolor/scalable/status/%{appid}-update-*.svg
 %{_datadir}/kram/
+
+%files qt
+%{gui_files}
+# A software centre installs an AppStream component through the package that holds its metainfo: kram-qt, as
+# "dnf install kram" does. Not in kram-gtk too: appstream-builder keeps one of two packages with the same component
+# (it kept kram-gtk) and vetoes the other as a duplicate. kram-gtk is installed with dnf (README).
+%{_metainfodir}/%{appid}.metainfo.xml
+%ghost %{_bindir}/kram
+%{_libexecdir}/kram/kram-qt
+%{python3_sitelib}/kram/qt/
+
+%files gtk
+%{gui_files}
+%ghost %{_bindir}/kram
+%{_libexecdir}/kram/kram-gtk
+%{python3_sitelib}/kram/gtk/
 
 %changelog
 * Sat Nov 21 2026 Modo Ltunzher <offnormal@gmail.com> - 0.11.3-1

@@ -1,6 +1,6 @@
 # A GTK front end for Kram — implementation plan
 
-Status: **phase 2 under way** (2026-11-22) on branch `feature/gtk`: spikes S1–S9 done (§14); `kram/gtk` has the
+Status: **phase 2 under way** (2026-11-22) on branch `feature/gtk`: spikes S1–S10 done (§14; S10 on `feature/split-packaging`: the names are `kram-qt` + `kram-gtk` + `kram-common`); `kram/gtk` has the
 main window and every dialog over `kram/app` (§7.4 steps 2–6); polish and packaging are next (§16). **Phase 1 done** (2026-11-21): the logic extraction (P1.0–P1.15) and the rename to `kram/qt` (P1.16) are merged
 into `main` (P1.17), without a release of its own: they ship with the next release, see §15. Phase 2 (the GTK front
 end) is wanted, its look is settled from a mockup, and it starts after that merge and
@@ -26,8 +26,8 @@ Kram's UI is PySide6 (Qt 6). On GNOME it looks like a foreign app (Fusion with a
 | D5 | **Separate packages per front end**, so that nobody installs the other toolkit. Names: D9, §10. | 2026-11-21 |
 | D6 | **GTK main menu**: a hamburger menu in the header bar by default. A classic menu bar (`Gtk.PopoverMenuBar`, the same File / Edit / Package / Settings / Help as in Qt) is a setting, hidden by default. Synaptic's users are old Linux hands who remember GTK 2 menus; GNOME's default is the header bar menu. | 2026-11-21 |
 | D7 | **GTK sidebar view switch**: at the bottom of the sidebar, every view visible and one click away, as a **vertical `Adw.ToggleGroup`** (libadwaita's segmented control). Rejected: a dropdown (two clicks, views hidden), a linked column of `Gtk.ToggleButton`s (its corners render broken), separate flat buttons with gaps (less clearly a control). | 2026-11-21 |
-| D8 | **The front ends conflict; no run-time choice.** Each front-end package ships its own `/usr/bin/kram`, written for its toolkit. Only one is installed at a time, so there is no selector and no "which desktop gets which" rule (former Q2). | 2026-11-21 |
-| D9 | **Package names `kram-qt` + `kram-gtk` (+ `kram-common`), if and only if** an installed `kram` (≤ 0.11.x / the last single-package release) is replaced by `kram-qt` on a plain `dnf upgrade`, never by `kram-gtk`, and the upgrade does not turn off the tray checker. Verified in a container first (spike S10, §7.1). **If that does not hold: `kram` (Qt) + `kram-gtk`.** §10. | 2026-11-21 |
+| D8 | **The front ends conflict; no run-time choice.** Each front-end package ships its own launcher, written for its toolkit, and points `/usr/bin/kram` at it with `alternatives` (§10). Only one is installed at a time, so there is no selector and no "which desktop gets which" rule (former Q2). | 2026-11-21 |
+| D9 | **Package names `kram-qt` + `kram-gtk` (+ `kram-common`), if and only if** an installed `kram` (≤ 0.11.x / the last single-package release) is replaced by `kram-qt` on a plain `dnf upgrade`, never by `kram-gtk`, and the upgrade does not turn off the tray checker. Verified in a container first (spike S10, §7.1). **If that does not hold: `kram` (Qt) + `kram-gtk`.** §10. **S10 holds (2026-11-22, §14): the names are `kram-qt` + `kram-gtk` + `kram-common`**, with the unit restore in `kram-common`'s `%pre`/`%posttrans`. | 2026-11-21 |
 | D10 | **Rename `kram/ui` to `kram/qt`** as a separate mechanical commit at the end of phase 1 (former Q3). | 2026-11-21 |
 | D11 | **Settings are defined once, for both front ends**: a registry in `kram/app` (§4.1a). A new setting added there shows up in both front ends' Settings menus with no front-end code. A setting meant for one toolkit only (Qt's toolbar style, GTK's menu bar) carries that toolkit, and the other front end ignores it. The GTK front end has, at least: "Clicking the status icon marks the likely action", "Watch Fedora Releases", "Show Menu Bar". | 2026-11-21 |
 | D12 | **The GTK hamburger button is hidden while the menu bar is shown** (former Q5). Turning the menu bar off in Settings brings it back. | 2026-11-21 |
@@ -163,7 +163,7 @@ kram/
 ```
 
 `kram/__main__.py` goes away: each front end has its entry point (`kram.qt.__main__:main`,
-`kram.gtk.__main__:main`), and each front-end package installs its own `/usr/bin/kram` pointing at it (§9).
+`kram.gtk.__main__:main`), and each front-end package installs its own launcher, which `/usr/bin/kram` points at (§10).
 
 Rules for `kram/app`:
 
@@ -615,11 +615,10 @@ Every step ends with tests green in both front ends and a manual run on GNOME (a
 
 The front ends conflict and only one is installed, so nothing chooses between them.
 
-- `pyproject.toml` cannot install two different `kram` scripts from one project, so the scripts are not generated from
-  `[project.gui-scripts]` any more: the spec installs `/usr/bin/kram` per front-end subpackage, a three-line Python
-  launcher (`from kram.qt.__main__ import main` / `from kram.gtk.__main__ import main`, `sys.exit(main())`). Keep
-  `[project.gui-scripts]` out of the wheel, or point it at the Qt one only for `pip install -e .` development;
-  decide while doing it and write down why.
+- `pyproject.toml` cannot install two different `kram` scripts from one project. Decided 2026-11-22:
+  `[project.gui-scripts]` keeps `kram = kram.qt.__main__:main` (so `pip install -e .` gives a working `kram`); the
+  spec moves that generated script to `/usr/libexec/kram/kram-qt` and writes `/usr/libexec/kram/kram-gtk` itself
+  (`from kram.gtk.app import main`, `sys.exit(main())`). `/usr/bin/kram` is an `alternatives` link (§10).
 - A source checkout runs either with `python3 -m kram.qt` or `python3 -m kram.gtk`.
 - `kram file.rpm`, `kram --upgradable` and the tray's `Activate(view, token)` behave the same in both. The tray
   (`kram/notifier`) does not change: it starts `kram --upgradable` or calls `Activate`, whichever front end owns the
@@ -634,18 +633,38 @@ The split ships together with the first GTK release (D13): until then `kram` sta
 
 - **`kram-common`**: `kram/core`, `kram/app`, `kram/helper`, `kram/ipc`, `kram/notifier`, `kram/instance.py`,
   `kram/i18n.py`, `kram/__init__.py`, translations (`%find_lang`), `/usr/libexec/kram-helper`, the polkit policy,
-  the systemd user units **and their scriptlets**, the tray icons, `/var/cache/kram`, metainfo, the app icon, the
-  desktop files (one `.desktop` for both: `Exec=kram %f`; the Xfce settings entry). Requires: python3-libdnf5,
-  python3-rpm, polkit, dnf5-plugins, hicolor-icon-theme, python3-gobject-base (tray), and a front end:
-  `Requires: (kram-qt or kram-gtk)`, so that `dnf install kram-common` alone is not a broken install.
-- **`kram-qt`**: `kram/qt`, `/usr/bin/kram` (Qt launcher). Requires kram-common = %{version}-%{release},
+  the systemd user units **and their scriptlets**, the tray icons, `/var/cache/kram`, the release notes for What's New (a
+  copy of the metainfo), the app icon. Requires: python3-libdnf5,
+  python3-rpm, polkit, dnf5-plugins, hicolor-icon-theme, python3-gobject-base (tray). **No dependency on a front
+  end**: each front end requires `kram-common`, never the other way round, so a new front end (`kram-tui`) needs no
+  change to `kram-common`. Nobody installs `kram-common` by hand: `dnf install kram` brings `kram-qt` and with it
+  `kram-common`, `dnf install kram-gtk` the same with GTK (decided 2026-11-22).
+- **`kram-qt`**: `kram/qt`, `/usr/libexec/kram/kram-qt` (Qt launcher). Requires kram-common = %{version}-%{release},
   python3-pyside6; Recommends qt6-qttranslations. `Conflicts: kram-gtk`. **`Obsoletes: kram < <split version>`,
   `Provides: kram = %{version}-%{release}`**: existing users are moved to it by `dnf upgrade`, and `dnf install kram`
   keeps working.
-- **`kram-gtk`**: `kram/gtk`, `/usr/bin/kram` (GTK launcher). Requires kram-common = %{version}-%{release},
+- **`kram-gtk`**: `kram/gtk`, `/usr/libexec/kram/kram-gtk` (GTK launcher). Requires kram-common = %{version}-%{release},
   python3-gobject (not -base: cairo), gtk4, libadwaita >= 1.7 (`Adw.ToggleGroup`; check every COPR chroot).
   `Conflicts: kram-qt`. **No `Obsoletes` and no `Provides: kram`**: only one package may obsolete `kram`, and a second
   provider of `kram` would make `dnf install kram` ambiguous. Switching: `dnf swap kram-qt kram-gtk` (README).
+- **`/usr/bin/kram`** (decided 2026-11-22): one buildroot cannot hold two different files at one path, so each GUI
+  front end registers its launcher with `alternatives` (`%post`: `alternatives --install /usr/bin/kram kram
+  /usr/libexec/kram/kram-<toolkit> <priority>`; `%postun` on removal: `--remove`) and owns `/usr/bin/kram` as
+  `%ghost`. The front ends conflict, so the link always has one target; in `dnf swap` the new front end's `%post`
+  registers it and the old one's `%postun` removes its own, which moves the link. `%post` first deletes a
+  `/usr/bin/kram` that is not a link: the single `kram` package (< 0.12.0) had a file there, and rpm keeps a file
+  that another installed package owns. The desktop file and the tray keep running `kram`.
+- **Metainfo and desktop files** (decided 2026-11-22). A software centre installs an AppStream component through
+  the package that holds its metainfo, so it cannot be `kram-common` (no front end). With identical metainfo in
+  `kram-qt` and `kram-gtk`, `appstream-builder` keeps one (it kept `kram-gtk`) and vetoes the other as a duplicate,
+  so Discover on KDE would install GTK. So the AppStream metainfo (`/usr/share/metainfo`) is `kram-qt`'s only:
+  software centres install `kram-qt`, as `dnf install kram` does, and `kram-gtk` is installed with dnf (README).
+  What's New reads the release notes from a copy in `kram-common`, `/usr/share/kram/io.github.elmodos.Kram.metainfo.xml`
+  (`kram/core/releases.py`). The desktop files (one desktop id for both, `Exec=kram %f`; the Xfce settings entry)
+  are in both GUI front ends, identical files, since they need `/usr/bin/kram`. The app icon stays in
+  `kram-common`; `appstream-builder` finds it there (it unpacks the packages a front end requires).
+- **A terminal front end** (`kram-tui`, planned) is not a GUI alternative: it does not conflict with `kram-qt` or
+  `kram-gtk`, has its own command `kram-tui`, and requires `kram-common` like the others.
 
 **Spike S10 decides the names (D9)**, in a Fedora container with `scripts/rpm_check.sh`'s setup:
 
@@ -664,7 +683,7 @@ The split ships together with the first GTK release (D13): until then `kram` sta
 If step 2 or 3 cannot be made reliable: name the packages **`kram` (Qt) + `kram-gtk` + `kram-common`** instead (no
 `Obsoletes` needed, `kram` simply becomes the Qt front end), and record why in §14.
 
-`%check` runs the toolkit-free tests plus the installed front end's (S8 for GTK). `.copr/Makefile` needs no change
+`%check` runs the whole suite, Qt and GTK tests alike: the spec BuildRequires python3-gobject, gtk4 and libadwaita ≥ 1.7 (every COPR chroot has it: Fedora 43 has 1.8.8), and `tests/test_gtk.py` starts broadway itself (S8). The GTK typelibs need `cairo-1.0.typelib`, which only `gobject-introspection` ships and nothing else pulls in: without it mock skipped `test_gtk.py` as a whole, and a minimal system could not start `kram-gtk`; it is a BuildRequires and a Requires of `kram-gtk`. In mock (2026-11-22, x86_64): Fedora 43, 44 and Rawhide pass, 615 tests (Rawhide 613 + the 2 menu recordings, skipped on a release without a number). `.copr/Makefile` needs no change
 (one SRPM). **Versions of the packages.** All of them come from one spec and one SRPM (`packaging/kram.spec`), so `kram-common`,
 `kram-qt` and `kram-gtk` always carry the same `%{version}-%{release}`, and their `Requires` pin each other with `=`.
 A fix in one front end therefore gives the other front end a new version too, with the same files: a rebuild, which
@@ -745,8 +764,9 @@ had 68,290 rows. Fedora 44 has GTK 4.22.5 and libadwaita 1.9.4 (`Adw.ToggleGroup
 | S5 | One `Gtk.ListView` (`navigation-sidebar`) over a `Gtk.TreeListModel` for every view: flat views are entries without children, Origin's repositories are children always unfolded with no arrow (`hide-expander`), Environments fold. Vertical homogeneous `Adw.ToggleGroup` below; all six icons exist in Adwaita. | `kram/gtk/sidebar.py` |
 | S6 | `kernel-core`: 16,083 provides, 1,000 shown. One wrapping label per section: **~2 s** to the first frame. 50-line labels without wrapping: **~60 ms**; the doc is built in 3 ms. Section lines do not wrap (a long dependency scrolls sideways). | `kram/gtk/doc_view.py` |
 | S7 | A cairo node per icon could not be snapped to the screen's pixels (its CTM is not the screen's grid). Instead each icon is drawn once per screen scale into a texture of exactly that many pixels and placed with the NEAREST filter, as Qt caches pixmaps; the window tells `kram.gtk.icons.set_scale`. Side by side with Qt at 100/125/150/200 %, light and dark: the same pixels, crisp 1 px borders (`s7_icons.py`). Glyphs need grey antialiasing (subpixel fringes otherwise). | `kram/gtk/icons.py`. To do: a look at a real 125 %/150 % screen |
-| S8 | In a Fedora 44 container: `GDK_BACKEND=broadway` with `gtk4-broadwayd` (in `gtk4` itself, no GL) works and is the cleanest; `xvfb-run` and `weston --backend=headless` work too (software Vulkan, noisy warnings); `mutter --headless` needs a session bus. | GTK tests under broadway; `%check` in mock still to try with the packaging (§10) |
-| S9 | `Adw.Application(application_id=APP_ID, HANDLES_COMMAND_LINE)`; `Activate(view, token)` exported at `/` from `do_dbus_register`. A second `kram --upgradable` hands its command line to the first (GApplication's own remote activation, `XDG_ACTIVATION_TOKEN` arrives as the platform data's `activation-token`) and exits 0; a `gdbus` call of Activate reaches the window, which calls `set_startup_id(token)` before `present()`. **To check by hand**: a real tray click focusing the window on Plasma and GNOME (`s9_instance.py --id io.github.elmodos.Kram` with no Kram running). | `kram/gtk/app.py` |
+| S8 | In a Fedora 44 container: `GDK_BACKEND=broadway` with `gtk4-broadwayd` (in `gtk4` itself, no GL) works and is the cleanest; `xvfb-run` and `weston --backend=headless` work too (software Vulkan, noisy warnings); `mutter --headless` needs a session bus. | GTK tests under broadway; in `%check` since the split (§10): passes in mock for Fedora 43, 44 and Rawhide (with `gobject-introspection` for the cairo typelib) |
+| S9 | `Adw.Application(application_id=APP_ID, HANDLES_COMMAND_LINE)`; `Activate(view, token)` exported at `/` from `do_dbus_register`. A second `kram --upgradable` hands its command line to the first (GApplication's own remote activation, `XDG_ACTIVATION_TOKEN` arrives as the platform data's `activation-token`) and exits 0; a `gdbus` call of Activate reaches the window, which calls `set_startup_id(token)` before `present()`. A real tray click focuses the window on Plasma and GNOME: checked by the author, 2026-11-22. | `kram/gtk/app.py` |
+| S10 | `scripts/spikes/s10_split.sh`: kram 0.11.3 (the tag) and the split spec of the working tree as 0.12.0, in a Fedora 44 container booted with systemd and a lingering user whose tray checker is enabled. `dnf upgrade` (three times from scratch) and `dnf distro-sync` replace `kram` by `kram-qt` + `kram-common`, never `kram-gtk`. **The known risk is real**: the old kram's `%preun` disables both units for the logged-in user (`Removed …kram-update-check.timer`, `…path`). Fixed in `kram-common`: `%pre` (only while a package named `kram` is installed) writes the enabled units of every running user manager to `/var/lib/rpm-state/kram/enabled-units`; `%posttrans` enables them again with `--now` and starts one count, as Kram's settings do. After it both units are enabled and active every time. `dnf swap kram-qt kram-gtk` and back keep the units; `kram-gtk` pulls in no Qt, `kram-qt` no GTK 4 or libadwaita; `dnf install kram` on a clean system gives `kram-qt` + `kram-common`, `dnf install kram-gtk` gives `kram-gtk` + `kram-common`. Container notes: the host user needs `fs.inotify.max_user_instances` above its desktop's use (the script checks it), and util-linux for the PAM `login` service of `systemctl --user -M`. | D9: **`kram-qt` + `kram-gtk` + `kram-common`**. `/usr/bin/kram` is an `alternatives` link to `/usr/libexec/kram/kram-qt` or `-gtk` (§10); the script checks it after every step and that removal leaves neither the link nor the alternative |
 
 
 ---
@@ -824,9 +844,10 @@ yet" placeholder is gone.
 How it was checked: `tests/test_gtk.py` (one or more tests per dialog, over fakes), and a run over the real
 catalog on the author's machine (Fedora 45, KDE) with a throwaway configuration (`XDG_CONFIG_HOME`), screenshots
 of every dialog but Install and Fedora N; Apply was opened to the review only. Checked by the author by hand: a
-real transaction through the progress dialog, the installer with a real .rpm file, HiDPI (125 %). **Not checked
-yet**: the Fedora N dialog with a real new release (rare; to be checked later), GNOME itself, keyboard-only use beyond
-Tab.
+real transaction through the progress dialog, the installer with a real .rpm file, HiDPI (125 %), the window on
+GNOME itself, a tray click focusing the open GTK window on Plasma and GNOME (S9) (2026-11-22). **Not checked
+yet**, not blocking the release (the author, 2026-11-22): the Fedora N dialog with a real new release (rare),
+keyboard-only use beyond Tab.
 
 Translations: every string of the GTK front end is in the catalogs and translated in all 12 (the new strings reuse
 the msgids of the Qt front end; `test_po_compiles_and_is_complete` checks it). An earlier version of this section
@@ -849,8 +870,8 @@ Things noticed on the way:
 - The test run ends with a GLib-CRITICAL `g_main_context_pop_thread_default` at interpreter exit (PyGObject's
   asyncio policy); it was there before the dialogs and does not fail anything.
 
-Still to do (§7.4 steps 7–8): both themes and GNOME itself, scaling, keyboard-only use, translations, screenshots;
-the package split and README. Things to settle:
+Done since (2026-11-22): GNOME itself, scaling, translations, the package split (§10) and README. Left, not blocking
+0.12.0: keyboard-only use beyond Tab, GTK screenshots. Things to settle:
 
 - New GTK-only strings: none so far beyond GTK's own ("gtk40": alert and dialog buttons); every label of the
   dialogs is an msgid the Qt front end already has. Every new msgid must go into all 12 catalogs before the tests pass

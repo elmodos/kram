@@ -182,9 +182,27 @@ def window():
 def test_the_qt_menus_are_those_of_0_11_3(window):
     """Recorded from the window of 0.11.3, before the menus were data: menu bar, context menu, the shortcuts of
     the table and of the window."""
+    from PySide6.QtGui import QKeySequence
     from PySide6.QtWidgets import QMenu
+
+    from kram.qt.actions import STANDARD_KEYS
     recorded = [json.loads(line) for line in
                 (Path(__file__).with_name("data") / "qt_menus_0.11.3.json").read_text().splitlines()]
+    # Find and Quit take the platform's keys, which change with the Qt version (Qt 6.10, Fedora 43, gives Quit the
+    # Exit key, later ones nothing offscreen): expect what this Qt gives, as 0.11.3 did
+    platform = {d.label: [k for k in [QKeySequence(STANDARD_KEYS[d.id]).toString()] if k]
+                for d in action_defs() if d.id in STANDARD_KEYS}
+
+    def with_platform_keys(entries):
+        for entry in entries:
+            if isinstance(entry, list):
+                if entry[0] in platform:
+                    entry[1] = platform[entry[0]]
+                if len(entry) > 6:
+                    with_platform_keys(entry[6])
+        return entries
+    for i, part in enumerate(recorded):
+        recorded[i] = with_platform_keys(part)
     assert dump_menu(window.menuBar()) == recorded[0]
     context = QMenu()
     window.acts.fill_package_menu(context)

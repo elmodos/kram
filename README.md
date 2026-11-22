@@ -12,7 +12,8 @@
 A Synaptic-style package manager for Fedora: the full package list, checkboxes, statuses and origins,
 search that works, and nothing happens until you press **Apply**.
 
-Built on libdnf5 (the same library as `dnf5`) and Qt 6.
+Built on libdnf5 (the same library as `dnf5`), with two front ends to choose from: Qt 6 for KDE Plasma and other
+Qt desktops, GTK 4 and libadwaita for GNOME.
 
 ![Kram's main window: every package with its status, origin, versions, size and repository, filters on the
 left, the selected package's details below](docs/screenshots/main.png)
@@ -47,8 +48,9 @@ left, the selected package's details below](docs/screenshots/main.png)
   [Update notifications](docs/guide/update-notifications.md)
 - **One password per session** (polkit); browsing and searching need none.
 - **In 13 languages**. [Translations](docs/TRANSLATING.md)
-- **On GNOME**, light or dark as the desktop is, switching along with it, in libadwaita's colours. A Qt look
-  you chose yourself (`QT_STYLE_OVERRIDE`, or a platform theme such as qt6ct) is left as it is.
+- **On GNOME**, a GTK 4 and libadwaita window (`kram-gtk`). The Qt one also fits in there: light or dark as the
+  desktop is, switching along with it, in libadwaita's colours; a Qt look you chose yourself (`QT_STYLE_OVERRIDE`,
+  or a platform theme such as qt6ct) is left as it is.
 
 ## User guide
 
@@ -68,12 +70,29 @@ What each part of Kram does, with screenshots:
 
 ## Installing
 
-From COPR:
+From COPR, with the Qt front end (`kram-qt`), for KDE Plasma and other Qt desktops:
 
 ```sh
 sudo dnf copr enable elmodos/Kram
 sudo dnf install kram
 ```
+
+Or with the GTK 4 and libadwaita front end, for GNOME:
+
+```sh
+sudo dnf copr enable elmodos/Kram
+sudo dnf install kram-gtk
+```
+
+Both are the same program and start with `kram`; only one of them can be installed at a time. To change from one
+to the other (settings, saved markings and the tray icon stay as they are):
+
+```sh
+sudo dnf swap kram-qt kram-gtk   # Qt → GTK
+sudo dnf swap kram-gtk kram-qt   # GTK → Qt
+```
+
+Kram 0.11 and older was a single `kram` package; `dnf upgrade` replaces it with `kram-qt`.
 
 To build the RPM yourself, or to run Kram from a checkout, see
 [CONTRIBUTING.md](CONTRIBUTING.md).

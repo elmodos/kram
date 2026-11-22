@@ -1,6 +1,7 @@
 #!/bin/bash
-# Build the RPM the way COPR does (.copr/Makefile → SRPM → rpmbuild) in a throwaway Fedora container, install
-# it and check the installed layout. Uncommitted changes are included.
+# Build the RPMs the way COPR does (.copr/Makefile → SRPM → rpmbuild) in a throwaway Fedora container, install
+# them and check the installed layout: kram-common with kram-qt first, then kram-gtk in place of kram-qt.
+# Uncommitted changes are included.
 # Usage: scripts/rpm_check.sh [release, default 44] [directory to copy the built SRPM and RPM to]
 set -euo pipefail
 release=${1:-44}
@@ -21,7 +22,7 @@ exec podman run --rm "${out[@]}" -v "$src:/src:ro,Z" -v "kram-dnf-cache-$release
     echo "### SRPM"
     make -s -f .copr/Makefile srpm outdir=/out
     srpm=$(ls /out/*.src.rpm) && echo "$srpm"
-    echo "### build (with %check: desktop-file-validate, appstream-util, pytest)"
+    echo "### build (with %check: desktop-file-validate, appstream-util, pytest incl. the GTK tests)"
     dnf5 -q -y builddep "$srpm" >/dev/null 2>&1
     # %generate_buildrequires: let rpmbuild list the dynamic BuildRequires, install them, then build
     rpmbuild -rr "$srpm" --define "_srcrpmdir /out/br" >/dev/null 2>&1 || true
@@ -30,21 +31,30 @@ exec podman run --rm "${out[@]}" -v "$src:/src:ro,Z" -v "kram-dnf-cache-$release
         tail -60 /tmp/build.log; exit 1
     fi
     grep -E "^(warning|E:|W:)|passed|failed|validated" /tmp/build.log || true
-    rpm=$(ls /out/noarch/kram-*.noarch.rpm) && echo "$rpm"
-    echo "### install"
+    ls /out/noarch/kram-*.noarch.rpm
+    common=$(ls /out/noarch/kram-common-*.noarch.rpm)
+    echo "### install kram-common and kram-qt"
     rm -f /etc/rpm/macros.image-language-conf  # the container image skips translations (%_install_langs)
-    dnf5 -q -y install "$rpm" >/dev/null 2>&1
-    rpm -ql kram | grep -v "site-packages/kram/.*\.py$\|__pycache__"
+    # a local repository, so that dnf resolves kram, kram-qt and kram-gtk by name
+    dnf5 -q -y install createrepo_c >/dev/null 2>&1
+    mkdir /repo && cp /out/noarch/kram-*.noarch.rpm /repo/ && createrepo_c -q /repo
+    printf "[kram-local]\nname=kram local\nbaseurl=file:///repo\ngpgcheck=0\n" > /etc/yum.repos.d/kram-local.repo
+    dnf5 -q -y install kram >/dev/null 2>&1  # kram-qt provides kram
+    rpm -qa "kram*" | sort
+    rpm -ql kram-common kram-qt | grep -v "site-packages/kram/.*\.py$\|__pycache__"
     head -1 /usr/libexec/kram-helper
-    grep -m1 "^from kram" /usr/bin/kram  # the entry point: kram.qt.__main__
+    launcher() {  # $1 = qt or gtk: /usr/bin/kram is the alternatives link to its launcher
+        [ "$(readlink -f /usr/bin/kram)" = "/usr/libexec/kram/kram-$1" ] || { ls -l /usr/bin/kram; exit 1; }
+        echo "/usr/bin/kram → $(readlink -f /usr/bin/kram): $(grep -m1 "^from kram" /usr/bin/kram)"
+    }
+    launcher qt
     python3 -c "import kram.qt.__main__"
     echo "### installed helper (as root)"
     printf "%s\n" "{\"op\":\"ping\"}" "{\"op\":\"quit\"}" | /usr/libexec/kram-helper | head -1
     echo "### local_install (as root, files of a normal user)"
     dnf5 -q download --destdir /tmp/dl hello >/dev/null 2>&1
-    python3 /build/scripts/check_local_install.py "$rpm" /tmp/dl/hello-*.rpm
+    python3 /build/scripts/check_local_install.py "$common" /tmp/dl/hello-*.rpm
     echo "### the installer: upgrade, downgrade, kernel-like, newer in a repository (test packages)"
-    dnf5 -q -y install createrepo_c >/dev/null 2>&1
     (cd / && python3 /build/scripts/check_local_versions.py)
     echo "### the GUI uses the installed helper and translations"
     cd /  # not /build: that is a source checkout, and python3 -c would import kram from it
@@ -59,5 +69,23 @@ print(kram.__file__, HelperClient(lambda _f: None)._command(), _(\"Reload\"))
 "
     xmllint --noout --dtdvalid /usr/share/polkit-1/policyconfig-1.dtd /usr/share/polkit-1/actions/io.github.elmodos.Kram.policy 2>/dev/null \
         && echo "policy: valid" || echo "policy: xmllint/dtd not available, skipped"
+    echo "### kram-gtk in place of kram-qt"
+    dnf5 -q -y swap kram-qt kram-gtk >/dev/null 2>&1
+    rpm -qa "kram*" | sort
+    launcher gtk
+    python3 -c "import kram.gtk.app"
+    # software centres install kram-qt: only it has the AppStream metainfo; What is New reads the copy in kram-common
+    if [ -e /usr/share/metainfo/io.github.elmodos.Kram.metainfo.xml ]; then echo "kram-gtk has AppStream metainfo"; exit 1; fi
+    python3 -c "
+import kram
+from kram.core import releases
+assert releases.load()[0].version == kram.__version__
+print(\"release notes without kram-qt:\", releases.load()[0].version)
+"
+    echo "### what each front end pulls in"
+    deps() { dnf5 -q repoquery --requires --resolve --recursive "$1" 2>/dev/null; }
+    if deps kram-gtk | grep -iE "pyside|qt6-qtbase"; then echo "kram-gtk pulls in Qt"; exit 1; fi
+    if deps kram-qt | grep -E "^(gtk4|libadwaita)-[0-9]"; then echo "kram-qt pulls in GTK 4"; exit 1; fi
+    echo "kram-gtk: no Qt; kram-qt: no GTK 4 / libadwaita"
     echo "ALL CHECKS PASSED"
 '
