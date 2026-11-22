@@ -720,6 +720,11 @@ Answered by the author on 2026-11-21; the answers are decisions D8–D13 in §1.
 - Q5 Hamburger while the menu bar is shown → hidden (D12).
 - Q6 Releases → phase 1 as one release (later: merged into `main`, shipped with the next release); GTK on a branch until full parity, released with the package split (D13).
 
+- Q7 (open, 2026-11-22) Painted status icons exist twice: the drawings in `kram/gtk/icons.py` (cairo) and
+  `kram/qt/icons.py` (QPainter), ported by hand. Shapes and colours come from `kram/app/icons.py`, which both share.
+  A change to a drawing must be made in both until the drawings move into one neutral description that each front
+  end renders. Leave it as it is for now, or make that move before the GTK release?
+
 New questions go here, with the date, until the author answers them.
 
 ---
