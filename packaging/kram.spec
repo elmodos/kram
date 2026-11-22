@@ -1,5 +1,5 @@
 %global appid io.github.elmodos.Kram
-%global base_version 0.11.3
+%global base_version 0.12.0
 # the first version that is split into kram-common + kram-qt + kram-gtk; the single kram package before it is
 # obsoleted by kram-qt
 %global split_version 0.12.0
@@ -267,6 +267,13 @@ rm -f "$state"
 %{python3_sitelib}/kram/gtk/
 
 %changelog
+* Sun Nov 22 2026 Modo Ltunzher <offnormal@gmail.com> - 0.12.0-1
+- GNOME: a GTK 4 and libadwaita front end, kram-gtk, with the package list, menus, preferences and every dialog of the Qt one
+- Switching front ends: dnf swap kram-qt kram-gtk, and back; the settings and the tray icon stay as they are
+- Packaging: kram is now kram-qt and kram-common; dnf upgrade replaces the old package and keeps the tray icon on
+- About: shows which front end and toolkit version is running
+- Icons: the painted status and origin icons are sharp at fractional screen scales (125 %, 150 %)
+
 * Sat Nov 21 2026 Modo Ltunzher <offnormal@gmail.com> - 0.11.3-1
 - GNOME: Kram turns light or dark along with the desktop, in libadwaita's colours
 

@@ -30,8 +30,8 @@ released front end.
 
 `FRONTS_RELEASED` names the front ends that are released. For them, any `PLANNED` or `NOT_IMPLEMENTED` entry fails the
 test run. A front end that is not in `FRONTS_RELEASED` may have `PLANNED` entries; the test checks that each entry is one
-of the statuses above, and that a `SUPPORTED` entry has a marked test. Currently only `qt` is released. `gtk` is built and in
-`main`, but not in the packages yet; it joins `FRONTS_RELEASED` with its release. `tui` is planned, not started.
+of the statuses above, and that a `SUPPORTED` entry has a marked test. `qt` and `gtk` are released (`gtk`
+since 0.12.0, as the `kram-gtk` package). `tui` is planned, not started.
 
 To release a front end: make every entry `SUPPORTED`, `PARTIAL` or `NOT_INTENDED` (with notes), then add its name to
 `FRONTS_RELEASED` in the same commit.

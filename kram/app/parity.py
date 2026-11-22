@@ -641,7 +641,7 @@ TUI: dict[Feature, Entry] = {
 }
 
 # the front ends that are released: any PLANNED or NOT_IMPLEMENTED entry in them fails the test run
-FRONTS_RELEASED: frozenset[str] = frozenset({"qt"})
+FRONTS_RELEASED: frozenset[str] = frozenset({"qt", "gtk"})
 
 FRONTS: dict[str, dict[Feature, Entry]] = {"qt": QT, "gtk": GTK, "tui": TUI}
 
