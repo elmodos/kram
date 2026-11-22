@@ -1,20 +1,17 @@
 """Small painted status/origin icons for GTK, the same shapes and colours as kram.qt.icons; the theme icons of comps
 groups and the other ("theme", names) references.
 
-The vectors are drawn with cairo in a 16×16 grid into a texture of exactly the screen's pixels (the window tells
-`set_scale`), as kram.qt.icons caches pixmaps: sharp at 125 %, 150 %, 200 %, and drawn once rather than per frame.
-One paintable per IconRef, shared by every image that shows it. (A cairo node per icon was tried first: GTK
-rasterizes it, but its pixel grid is not the screen's, so the 1 px borders could not be snapped.)
+The vectors are drawn with cairo in a 16×16 grid, as a cairo node of each snapshot: GTK rasterizes them at the
+screen's own resolution, so they stay sharp at fractional scales (125 %). A texture drawn for an integer scale and
+resampled was stretched and pixelated there. One paintable per IconRef, shared by every image that shows it.
 """
 import colorsys
 import math
-import sys
-import weakref
 from collections.abc import Callable
 from functools import cache
 
 import cairo
-from gi.repository import Gdk, GLib, GObject, Graphene, Gsk, Gtk, Pango, PangoCairo
+from gi.repository import Gdk, GObject, Graphene, Gtk, Pango, PangoCairo
 
 from ..app.icons import ADVISORY_COLOR, ORIGIN_STYLE, IconRef, group_icon_names
 from ..core.marks import Action
@@ -306,34 +303,6 @@ def paint(cr: cairo.Context, draw: Draw, x: float, y: float, side: float) -> Non
     cr.restore()
 
 
-_scale = 1.0  # the screen scale the textures are drawn for; see set_scale
-_live: "weakref.WeakSet[PaintedIcon]" = weakref.WeakSet()
-
-
-def set_scale(scale: float) -> None:
-    """The window's surface scale (Gdk.Surface.get_scale: 1.25 at 125 %). Icons are drawn for it, so that each of
-    their pixels is a screen pixel, as Qt's cached pixmaps are."""
-    global _scale
-    if scale > 0 and scale != _scale:
-        _scale = scale
-        for icon in list(_live):
-            icon.invalidate_contents()
-
-
-@cache
-def texture(draw: Draw, side: int, scale: float) -> Gdk.Texture:
-    """The icon drawn into ceil(side × scale) device pixels: drawn once, shown many times (a list shows hundreds)."""
-    px = math.ceil(side * scale)
-    surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, px, px)
-    surface.set_device_scale(scale, scale)
-    cr = cairo.Context(surface)
-    paint(cr, draw, 0, 0, side)
-    surface.flush()
-    fmt = (Gdk.MemoryFormat.B8G8R8A8_PREMULTIPLIED if sys.byteorder == "little"
-           else Gdk.MemoryFormat.A8R8G8B8_PREMULTIPLIED)  # cairo's ARGB32 is native-endian
-    return Gdk.MemoryTexture.new(px, px, fmt, GLib.Bytes.new(bytes(surface.get_data())), surface.get_stride())
-
-
 class PaintedIcon(GObject.Object, Gdk.Paintable):
     """A painted icon: 16×16 by nature, shown from a texture drawn at the screen's scale and placed without
     smoothing, so a 1 px border stays one crisp pixel at 125 % and 150 %."""
@@ -343,7 +312,6 @@ class PaintedIcon(GObject.Object, Gdk.Paintable):
         super().__init__()
         self._draw = draw
         self._size = size
-        _live.add(self)
 
     def do_get_intrinsic_width(self) -> int:
         return self._size
@@ -352,16 +320,15 @@ class PaintedIcon(GObject.Object, Gdk.Paintable):
         return self._size
 
     def do_get_flags(self) -> Gdk.PaintableFlags:
-        return Gdk.PaintableFlags.SIZE  # the contents change with the screen scale
+        return Gdk.PaintableFlags.SIZE  # the drawing does not depend on the screen scale, only the size
 
     def do_snapshot(self, snapshot: Gtk.Snapshot, width: float, height: float) -> None:
-        side = min(width, height)
-        # centred on whole screen pixels: a half pixel offset (an odd-width cell) makes NEAREST drop or double
-        # columns and rows, which reads as pixelation
-        x = math.floor((width - side) / 2 * _scale) / _scale
-        y = math.floor((height - side) / 2 * _scale) / _scale
-        rect = Graphene.Rect().init(x, y, side, side)
-        snapshot.append_scaled_texture(texture(self._draw, round(side), _scale), Gsk.ScalingFilter.NEAREST, rect)
+        """Drawn as vectors each time, by GTK, at the screen's own resolution: a texture resampled at a fractional
+        scale (125 %) came out stretched and pixelated. The position is rounded to whole logical pixels only."""
+        side = round(min(width, height))
+        x, y = math.floor((width - side) / 2), math.floor((height - side) / 2)  # whole logical pixels
+        cr = snapshot.append_cairo(Graphene.Rect().init(x, y, side, side))
+        paint(cr, self._draw, x, y, side)
 
 
 @cache

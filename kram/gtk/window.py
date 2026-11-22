@@ -86,7 +86,6 @@ class MainWindow(Adw.ApplicationWindow):
         self._connect_actions()
         self._restore_settings()
         self.connect("close-request", self._close_request)
-        self.connect("realize", self._realized)
         preferences.changed.connect(self._pref_changed)
         b.reload()
 
@@ -232,19 +231,6 @@ class MainWindow(Adw.ApplicationWindow):
         settings.set(COLUMNS_KEY, json.dumps(self.list.column_state()))
         settings.set(PANES_KEY, json.dumps({"sidebar": self.hpaned.get_position(),
                                             "details": self.vpaned.get_position()}))
-
-    def _realized(self, _window) -> None:
-        surface = self.get_surface()
-        surface.connect("notify::scale", lambda s, _p: icons.set_scale(s.get_scale()))
-        surface.connect("enter-monitor", lambda s, _m: icons.set_scale(s.get_scale()))
-        icons.set_scale(surface.get_scale())
-
-    def do_snapshot(self, snapshot: Gtk.Snapshot) -> None:
-        # a fractional scale (125 %) may change without a notification: the icons drawn in this frame must be for the
-        # scale this frame is drawn at, or they are stretched by the compositor and resampled
-        if (surface := self.get_surface()) is not None:
-            icons.set_scale(surface.get_scale())
-        Adw.ApplicationWindow.do_snapshot(self, snapshot)
 
     def _pref_changed(self, key: str) -> None:
         if key == preferences.MENU_BAR:

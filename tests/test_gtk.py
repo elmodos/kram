@@ -87,11 +87,18 @@ def test_accelerators_are_gtks():
 
 
 def test_painted_icons_draw_at_every_scale():
+    """The vectors draw onto a surface of any screen scale, and the icon fills its box."""
+    import cairo
+
     from kram.gtk import icons
     for scale in (1.0, 1.25, 1.5, 2.0):
         for ref in (("status", Status.UPGRADABLE), ("mark", Action.REMOVE), ("origin", Origin.COPR), ("blocked",)):
-            tex = icons.texture(icons.drawer(ref), 16, scale)
-            assert tex.get_width() == round(16 * scale + 0.4999)
+            side = 16
+            surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, round(side * scale), round(side * scale))
+            surface.set_device_scale(scale, scale)
+            icons.paint(cairo.Context(surface), icons.drawer(ref), 0, 0, side)
+            surface.flush()
+            assert any(surface.get_data()), ref  # something was drawn
 
 
 def test_an_empty_shown_list_fills_without_criticals():

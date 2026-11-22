@@ -829,6 +829,8 @@ Things noticed on the way:
   item in to show a row's counts.
 - A view's "current" setter must tell the logic as a click would (`History` expects that from Qt's
   `setCurrentItem`); only a refill or a filter change of the same row is silent.
+- Painted icons are cairo nodes again, not textures (2026-11-22): a texture drawn for an integer scale and
+  resampled at 125 % came out stretched and pixelated. §14 S7 describes the texture approach that was replaced.
 - A hidden `Adw.Window` keeps the application running: the main window destroys the history window on close.
 - `kram file.rpm` runs a `NON_UNIQUE` application of its own, as Qt does, instead of going to the open Kram.
 - The test run ends with a GLib-CRITICAL `g_main_context_pop_thread_default` at interpreter exit (PyGObject's
