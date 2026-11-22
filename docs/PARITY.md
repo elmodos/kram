@@ -30,8 +30,8 @@ released front end.
 
 `FRONTS_RELEASED` names the front ends that are released. For them, any `PLANNED` or `NOT_IMPLEMENTED` entry fails the
 test run. A front end that is not in `FRONTS_RELEASED` may have `PLANNED` entries; the test checks that each entry is one
-of the statuses above, and that a `SUPPORTED` entry has a marked test. Currently `qt` and `gtk` are released, and `tui`
-is in development.
+of the statuses above, and that a `SUPPORTED` entry has a marked test. Currently only `qt` is released. `gtk` is built and in
+`main`, but not in the packages yet; it joins `FRONTS_RELEASED` with its release. `tui` is planned, not started.
 
 To release a front end: make every entry `SUPPORTED`, `PARTIAL` or `NOT_INTENDED` (with notes), then add its name to
 `FRONTS_RELEASED` in the same commit.
@@ -49,6 +49,8 @@ To release a front end: make every entry `SUPPORTED`, `PARTIAL` or `NOT_INTENDED
 ## Adding a feature
 
 1. Add the name to `Feature` in its sorted place, with its scope prefix, and its description to `DESCRIPTIONS`.
+   If it is an action of the main window or a setting, name it in `ACTION_FEATURES` or `SETTING_FEATURES`: a test fails
+   for an action or a setting that has no feature.
 2. Set its entry in every table (`QT`, `GTK`, `TUI`). Use `PLANNED` for a front end in development, and `NOT_INTENDED`
    with a note where it does not fit.
 3. If you set an entry to `SUPPORTED`, mark the test that proves it.

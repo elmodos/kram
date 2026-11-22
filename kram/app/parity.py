@@ -86,6 +86,7 @@ class Feature(Enum):
     LIST_ROW_TINT = "list_row_tint"
     LIST_SORT = "list_sort"
     LIST_STATUS_CLICK = "list_status_click"
+    LIST_VERSION_LOCK = "list_version_lock"
     MARKINGS_CSV_EXPORT = "markings_csv_export"
     MARKINGS_FILE = "markings_file"
     MARK_APPLY_BUTTON = "mark_apply_button"
@@ -221,6 +222,7 @@ DESCRIPTIONS: dict[Feature, str] = {
     Feature.LIST_MULTI_SELECT: 'Several rows selected at once; the actions apply to all of them',
     Feature.LIST_ROW_TINT: "Rows with a mark are tinted with the mark's colour",
     Feature.LIST_SORT: 'Sorting by a column header, one sort at a time',
+    Feature.LIST_VERSION_LOCK: 'Lock Version and Unlock Version: keep a package at its installed version',
     Feature.LIST_STATUS_CLICK: 'A click on the status cell opens the status menu, or marks the likely action',
     Feature.MARKINGS_CSV_EXPORT: 'Export the package list as CSV',
     Feature.MARKINGS_FILE: 'Save the marks to a file and read them back',
@@ -343,6 +345,7 @@ QT: dict[Feature, Entry] = {
     Feature.LIST_MULTI_SELECT: Entry(Support.PARTIAL, 'not tested'),
     Feature.LIST_ROW_TINT: Entry(Support.PARTIAL, 'row tints are not tested'),
     Feature.LIST_SORT: Entry(Support.PARTIAL, "header sort is Qt's own; no test of the header"),
+    Feature.LIST_VERSION_LOCK: Entry(Support.PARTIAL, "the logic is in test_versionlock.py; the menu items are not tested"),
     Feature.LIST_STATUS_CLICK: Entry(Support.SUPPORTED),
     Feature.MARKINGS_CSV_EXPORT: Entry(Support.SUPPORTED),
     Feature.MARKINGS_FILE: Entry(Support.SUPPORTED),
@@ -393,6 +396,7 @@ QT: dict[Feature, Entry] = {
 }
 
 GTK: dict[Feature, Entry] = {
+    Feature.LIST_VERSION_LOCK: Entry(Support.PARTIAL, "the logic is in test_versionlock.py; the menu items are not tested"),
     Feature.DETAILS_ADVISORIES_TAB: Entry(Support.PARTIAL, 'not tested in GTK'),
     Feature.DETAILS_BLOCKED_REASON: Entry(Support.PARTIAL, 'not tested in GTK'),
     Feature.DETAILS_CHANGELOG: Entry(Support.PARTIAL, 'not tested'),
@@ -405,7 +409,7 @@ GTK: dict[Feature, Entry] = {
     Feature.DETAILS_LINKS: Entry(Support.PARTIAL, 'not tested'),
     Feature.DETAILS_REMEMBER_TAB: Entry(Support.PARTIAL, 'not tested'),
     Feature.DETAILS_TABS: Entry(Support.PARTIAL, 'the tabs show the shared docs; no GTK test of the tabs'),
-    Feature.DETAILS_VERSIONS: Entry(Support.PARTIAL, 'the versions table has no test'),
+    Feature.DETAILS_VERSIONS: Entry(Support.SUPPORTED),
     Feature.DIALOG_ABOUT_TOOLKIT: Entry(Support.SUPPORTED),
     Feature.DIALOG_APPLY: Entry(Support.SUPPORTED),
     Feature.DIALOG_APPLY_CANNOT_APPLY: Entry(Support.PARTIAL, 'the buttons are not tested'),
@@ -452,19 +456,19 @@ GTK: dict[Feature, Entry] = {
     Feature.DIALOG_WHATS_NEW: Entry(Support.SUPPORTED),
     Feature.ICON_NON_PIXELATED: Entry(Support.SUPPORTED),
     Feature.INSTALL_FILE_ARGUMENT: Entry(Support.PARTIAL, 'only the argument parsing is tested; the installer runs by hand'),
-    Feature.INSTALL_FILE_DROP: Entry(Support.PARTIAL, 'dropping an .rpm on the window is not tested'),
+    Feature.INSTALL_FILE_DROP: Entry(Support.SUPPORTED),
     Feature.INSTALL_FILE_OPEN_MENU: Entry(Support.PARTIAL, 'not tested'),
     Feature.INSTANCE_ACTIVATION_TOKEN: Entry(Support.PARTIAL, 'checked by hand (S9)'),
     Feature.INSTANCE_TRAY: Entry(Support.PARTIAL, 'checked by hand (S9); the Activate interface is not tested'),
     Feature.LIST_COLUMNS: Entry(Support.SUPPORTED),
-    Feature.LIST_CONTEXT_MENU: Entry(Support.PARTIAL, 'right-click menu of a row is not tested'),
-    Feature.LIST_DOUBLE_CLICK_MARK: Entry(Support.PARTIAL, 'not tested'),
+    Feature.LIST_CONTEXT_MENU: Entry(Support.SUPPORTED),
+    Feature.LIST_DOUBLE_CLICK_MARK: Entry(Support.SUPPORTED),
     Feature.LIST_EMPTY_EXPLANATION: Entry(Support.PARTIAL, 'not tested'),
     Feature.LIST_LOCK_PADLOCK: Entry(Support.PARTIAL, 'not tested'),
-    Feature.LIST_MULTI_SELECT: Entry(Support.PARTIAL, 'not tested'),
+    Feature.LIST_MULTI_SELECT: Entry(Support.SUPPORTED),
     Feature.LIST_ROW_TINT: Entry(Support.SUPPORTED),
     Feature.LIST_SORT: Entry(Support.SUPPORTED),
-    Feature.LIST_STATUS_CLICK: Entry(Support.PARTIAL, 'implemented, not tested'),
+    Feature.LIST_STATUS_CLICK: Entry(Support.SUPPORTED),
     Feature.MARKINGS_CSV_EXPORT: Entry(Support.PARTIAL, 'wired to the shared Browser flow; not tested in GTK'),
     Feature.MARKINGS_FILE: Entry(Support.PARTIAL, 'wired to the shared Browser flow; not tested in GTK'),
     Feature.MARK_APPLY_BUTTON: Entry(Support.PARTIAL, 'not tested'),
@@ -485,7 +489,7 @@ GTK: dict[Feature, Entry] = {
     Feature.RELEASE_BUTTON: Entry(Support.SUPPORTED),
     Feature.RELEASE_DIALOG: Entry(Support.SUPPORTED),
     Feature.RELEASE_WATCH: Entry(Support.SUPPORTED),
-    Feature.SEARCH_BAR: Entry(Support.PARTIAL, 'search logic in test_search_controller.py; the bar has no widget test'),
+    Feature.SEARCH_BAR: Entry(Support.SUPPORTED),
     Feature.SEARCH_FILTER_WHILE_TYPING: Entry(Support.PARTIAL, 'not tested'),
     Feature.SEARCH_MODES: Entry(Support.PARTIAL, 'not tested'),
     Feature.SETTINGS_MENU_BAR: Entry(Support.SUPPORTED),
@@ -504,7 +508,7 @@ GTK: dict[Feature, Entry] = {
     Feature.SYSTEM_POLKIT: Entry(Support.PARTIAL, "the helper's requests are tested; the prompt is not"),
     Feature.SYSTEM_THEME_FOLLOWS_DESKTOP: Entry(Support.NOT_INTENDED, "libadwaita follows the desktop's style and colour scheme"),
     Feature.SYSTEM_WEB_LINKS: Entry(Support.PARTIAL, 'not tested'),
-    Feature.TRANSLATIONS_CATALOGS: Entry(Support.PARTIAL, 'GTK-only strings are not translated yet (GTK_FRONTEND.md §16)'),
+    Feature.TRANSLATIONS_CATALOGS: Entry(Support.SUPPORTED),
     Feature.WINDOW_CLOSE_PENDING: Entry(Support.PARTIAL, 'not tested'),
     Feature.WINDOW_FRACTIONAL_SCALE: Entry(Support.PARTIAL, 'checked by hand: pixelation at 125 % fixed with vector icons; the user confirms'),
     Feature.WINDOW_HEADER_BUTTONS: Entry(Support.PARTIAL, 'not tested'),
@@ -515,6 +519,7 @@ GTK: dict[Feature, Entry] = {
 
 # the terminal front end, in development: PLANNED until built; see docs/PARITY.md
 TUI: dict[Feature, Entry] = {
+    Feature.LIST_VERSION_LOCK: Entry(Support.PLANNED),
     Feature.DETAILS_ADVISORIES_TAB: Entry(Support.PLANNED),
     Feature.DETAILS_BLOCKED_REASON: Entry(Support.PLANNED),
     Feature.DETAILS_CHANGELOG: Entry(Support.PLANNED),
@@ -636,6 +641,58 @@ TUI: dict[Feature, Entry] = {
 }
 
 # the front ends that are released: any PLANNED or NOT_IMPLEMENTED entry in them fails the test run
-FRONTS_RELEASED: frozenset[str] = frozenset({"qt", "gtk"})
+FRONTS_RELEASED: frozenset[str] = frozenset({"qt"})
 
 FRONTS: dict[str, dict[Feature, Entry]] = {"qt": QT, "gtk": GTK, "tui": TUI}
+
+
+# Every action of the main window (kram.app.actions.action_defs) and every setting of the registry
+# (kram.app.preferences) names the feature it belongs to. A new one without an entry fails tests/test_parity.py.
+ACTION_FEATURES: dict[str, Feature] = {
+    "about": Feature.DIALOG_ABOUT_TOOLKIT,
+    "apply": Feature.MARK_APPLY_BUTTON,
+    "back": Feature.DETAILS_LINKS,
+    "cache": Feature.DIALOG_CLEANUP,
+    "copr": Feature.DIALOG_COPR,
+    "copy_name": Feature.MENU_PACKAGE,
+    "copy_nevra": Feature.MENU_PACKAGE,
+    "export_csv": Feature.MARKINGS_CSV_EXPORT,
+    "filters": Feature.DIALOG_CUSTOM_FILTERS,
+    "find": Feature.SEARCH_BAR,
+    "history": Feature.DIALOG_HISTORY,
+    "lock": Feature.LIST_VERSION_LOCK,
+    "mark.install": Feature.MARK_INSTALL_REMOVE,
+    "mark.mark_dep": Feature.MENU_PACKAGE,
+    "mark.mark_user": Feature.MENU_PACKAGE,
+    "mark.reinstall": Feature.MENU_PACKAGE,
+    "mark.remove": Feature.MARK_INSTALL_REMOVE,
+    "mark.upgrade": Feature.MARK_UPGRADE_ALL,
+    "mark_unneeded": Feature.MARK_UNNEEDED,
+    "mark_upgrades": Feature.MARK_UPGRADE_ALL,
+    "mark_upgrades.fixes": Feature.MARK_UPGRADE_BY_ADVISORY,
+    "mark_upgrades.security": Feature.MARK_UPGRADE_BY_ADVISORY,
+    "mark_upgrades.security_high": Feature.MARK_UPGRADE_BY_ADVISORY,
+    "new_filter": Feature.DIALOG_CUSTOM_FILTERS_NEW_FROM_VIEW,
+    "notifications": Feature.DIALOG_NOTIFICATIONS,
+    "open_file": Feature.INSTALL_FILE_OPEN_MENU,
+    "properties": Feature.DETAILS_TABS,
+    "quit": Feature.MENU_BAR,
+    "read_marks": Feature.MARKINGS_FILE,
+    "reload": Feature.WINDOW_HEADER_BUTTONS,
+    "reload_cache": Feature.MENU_BAR,
+    "repos": Feature.DIALOG_REPOSITORIES,
+    "save_marks": Feature.MARKINGS_FILE,
+    "show_in_history": Feature.DIALOG_HISTORY,
+    "unlock": Feature.LIST_VERSION_LOCK,
+    "unmark": Feature.MARK_UNMARK_ONE,
+    "unmark_all": Feature.MARK_UNMARK_ALL,
+    "why_blocked": Feature.DETAILS_BLOCKED_REASON,
+}
+
+SETTING_FEATURES: dict[str, Feature] = {
+    "gtk/menubar": Feature.SETTINGS_MENU_BAR,
+    "distro/watch": Feature.SETTINGS_WATCH_RELEASES,
+    "table/status_click": Feature.SETTINGS_STATUS_CLICK,
+    "toolbar/style": Feature.SETTINGS_TOOLBAR_STYLE,
+    "update_checker/stale_days": Feature.DIALOG_NOTIFICATIONS_STALE_DAYS,
+}

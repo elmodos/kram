@@ -772,3 +772,135 @@ def test_tab_leaves_the_package_table_for_the_next_widget():
     spin(seconds=0.1)
     assert win.get_focus() is before
     win.destroy()
+
+
+def _bound_cells(view):
+    """The cells the list currently shows, once it has drawn: (position, column, cell)."""
+    return [(c.pos, c.col, c) for c in view._bound.values() if c.pos >= 0]
+
+
+@pytest.mark.feature(Feature.LIST_CONTEXT_MENU, front="gtk")
+def test_a_right_click_on_a_row_selects_it_and_opens_its_menu():
+    from kram.gtk.package_list import PackageListView
+    packages = PackageList()
+    packages.set_rows(rows(20), "x86_64")
+    view = PackageListView(packages)
+    win = Gtk.Window(child=view, default_width=600, default_height=300)
+    win.present()
+    spin(seconds=0.3)
+    opened = []
+    view.on_context_menu = lambda pos, widget, x, y: opened.append(pos)
+    pos, _col, cell = next(c for c in _bound_cells(view) if c[0] == 4)
+    gesture = SimpleNamespace(get_current_button=lambda: Gdk.BUTTON_SECONDARY, set_state=lambda state: None)
+    view._pressed(gesture, 1, 5.0, 5.0, cell)
+    assert opened == [4] and view.selected_positions() == [4]
+    win.destroy()
+
+
+@pytest.mark.feature(Feature.LIST_STATUS_CLICK, front="gtk")
+def test_a_click_on_the_status_cell_is_the_status_click():
+    from kram.app.columns import COL_STATUS
+    from kram.gtk.package_list import PackageListView
+    packages = PackageList()
+    packages.set_rows(rows(20), "x86_64")
+    view = PackageListView(packages)
+    win = Gtk.Window(child=view, default_width=600, default_height=300)
+    win.present()
+    spin(seconds=0.3)
+    clicked = []
+    view.on_status_click = lambda pos, widget: clicked.append(pos)
+    pos, _col, cell = next(c for c in _bound_cells(view) if c[1] == COL_STATUS and c[0] == 2)
+    gesture = SimpleNamespace(get_current_button=lambda: Gdk.BUTTON_PRIMARY, set_state=lambda state: None)
+    view._pressed(gesture, 1, 5.0, 5.0, cell)
+    assert clicked == [2]
+    win.destroy()
+
+
+@pytest.mark.feature(Feature.LIST_DOUBLE_CLICK_MARK, front="gtk")
+def test_activating_a_row_is_the_likely_mark():
+    from kram.gtk.package_list import PackageListView
+    packages = PackageList()
+    packages.set_rows(rows(20), "x86_64")
+    view = PackageListView(packages)
+    activated = []
+    view.on_activate = activated.append
+    view.view.emit("activate", 3)  # what a double click or Enter on a row emits
+    assert activated == [3]
+
+
+@pytest.mark.feature(Feature.LIST_MULTI_SELECT, front="gtk")
+def test_several_rows_are_selected_at_once():
+    from kram.gtk.package_list import PackageListView
+    packages = PackageList()
+    packages.set_rows(rows(20), "x86_64")
+    view = PackageListView(packages)
+    win = Gtk.Window(child=view, default_width=600, default_height=300)
+    win.present()
+    spin(seconds=0.2)
+    view.selection.select_range(2, 3, True)  # rows 2, 3, 4
+    assert view.selected_positions() == [2, 3, 4]
+    win.destroy()
+
+
+@pytest.mark.feature(Feature.SEARCH_BAR, front="gtk")
+def test_the_search_field_and_its_mode_go_to_the_controller():
+    from kram.core.mainloop import Signal
+    from kram.core.search import Mode
+    from kram.gtk.search import SearchBox
+    calls = []
+    controller = SimpleNamespace(shown=Signal(), filtering=False, edited=lambda text: calls.append(("edited", text)),
+                                 mode_chosen=lambda mode: calls.append(("mode", mode)),
+                                 submit=lambda: calls.append(("submit",)))
+    box = SearchBox(controller)
+    box.entry.set_text("kram")
+    spin(lambda: ("edited", "kram") in calls, 2)  # the search field reports after a moment, on the main loop
+    assert ("edited", "kram") in calls
+    box.mode_box.set_selected(int(Mode.FILE))
+    assert ("mode", int(Mode.FILE)) in calls
+    controller.shown.emit("", Mode.NAME)  # the controller shows the search it holds: the field follows
+    assert box.entry.get_text() == "" and box.mode_box.get_selected() == int(Mode.NAME)
+
+
+@pytest.mark.feature(Feature.DETAILS_VERSIONS, front="gtk")
+def test_the_versions_tab_lists_each_version_with_its_state():
+    from kram.app.details import VersionRow
+    from kram.gtk.details import DetailsView
+    details = DetailsView()
+    details._set_versions([VersionRow("5.3-1", "@System", "installed", True, False),
+                           VersionRow("5.4-1", "fedora", "candidate", True, False),
+                           VersionRow("5.2-1", "fedora", "excluded by the version lock", False, True)])
+    model = details.versions.get_model()
+    assert model.get_n_items() == 3
+    rows_ = [model.get_item(i).data for i in range(model.get_n_items())]
+    assert [r.evr for r in rows_] == ["5.3-1", "5.4-1", "5.2-1"] and rows_[2].dimmed
+
+
+@pytest.mark.feature(Feature.INSTALL_FILE_DROP, front="gtk")
+def test_an_rpm_dropped_on_the_window_opens_the_installer(monkeypatch):
+    import kram.gtk.window as window_module
+    from kram.app.browser import Browser
+    from kram.gtk.app import KramApplication
+    from kram.gtk.window import MainWindow
+    snap = CatalogSnapshot(rows(30), 10, 0, 0.1)
+    catalog = SimpleNamespace(load=lambda *a, **k: snap, blocked_upgrades=lambda: {},
+                              details=lambda key: (_ for _ in ()).throw(LookupError(key)))
+    monkeypatch.setattr(window_module, "Browser",
+                        lambda view, ui, scheduler, details, post: Browser(view, ui, scheduler, details, post,
+                                                                           catalog=catalog))
+    app = KramApplication()
+    app.register(None)
+    win = MainWindow(app)
+    win.present()
+    spin(lambda: win.browser.snapshot is not None, 3)
+    opened = []
+    monkeypatch.setattr(win, "open_package_file", lambda path=None: opened.append(path))
+    monkeypatch.setattr(win.browser, "can_open_file", lambda: True)
+    from gi.repository import Gio
+    files = Gdk.FileList.new_from_array([Gio.File.new_for_path("/tmp/tool-1.0-1.x86_64.rpm")])
+    assert win._dropped(None, files, 0, 0) is True
+    spin(lambda: bool(opened), 2)
+    assert opened == ["/tmp/tool-1.0-1.x86_64.rpm"]
+    other = Gdk.FileList.new_from_array([Gio.File.new_for_path("/tmp/notes.txt")])
+    assert win._dropped(None, other, 0, 0) is False
+    win.close()
+    spin(seconds=0.2)

@@ -6,7 +6,9 @@ the check is the same on a machine without GTK as in the container."""
 import ast
 from pathlib import Path
 
-from kram.app.parity import FRONTS, FRONTS_RELEASED, Feature, Support
+from kram.app import preferences
+from kram.app.actions import action_defs
+from kram.app.parity import ACTION_FEATURES, FRONTS, FRONTS_RELEASED, SETTING_FEATURES, Feature, Support
 
 TESTS = Path(__file__).resolve().parent
 
@@ -83,3 +85,18 @@ def test_the_marks_name_known_features_and_fronts():
     unknown = [(front, name) for front, name in proved_features()
                if front not in FRONTS or name not in Feature.__members__]
     assert not unknown, f"marks that name no feature or front: {unknown}"
+
+
+def test_every_action_names_its_feature():
+    """A menu action or a button of the main window is a feature; a new one needs an entry in ACTION_FEATURES."""
+    actions = {d.id for d in action_defs()}
+    assert not actions - set(ACTION_FEATURES), f"actions without a feature: {sorted(actions - set(ACTION_FEATURES))}"
+    assert not set(ACTION_FEATURES) - actions, f"entries for no action: {sorted(set(ACTION_FEATURES) - actions)}"
+    assert all(isinstance(f, Feature) for f in ACTION_FEATURES.values())
+
+
+def test_every_setting_names_its_feature():
+    keys = {p.key for p in preferences.PREFS}
+    assert not keys - set(SETTING_FEATURES), f"settings without a feature: {sorted(keys - set(SETTING_FEATURES))}"
+    assert not set(SETTING_FEATURES) - keys, f"entries for no setting: {sorted(set(SETTING_FEATURES) - keys)}"
+    assert all(isinstance(f, Feature) for f in SETTING_FEATURES.values())
