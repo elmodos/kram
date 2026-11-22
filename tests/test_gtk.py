@@ -674,3 +674,9 @@ def test_the_column_menu_hides_columns_and_the_state_comes_back():
     other.restore_columns({"order": "junk"})  # a broken setting changes nothing
     assert other.column_state() == state
     assert other.view.get_columns().get_item(1).get_id() == str(COL_STATUS)
+
+
+def test_the_gtk_front_end_names_gtk_and_libadwaita():
+    from kram.gtk.window import toolkit_versions
+    text = toolkit_versions()
+    assert text.startswith("GTK 4.") and ", libadwaita 1." in text

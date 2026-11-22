@@ -52,6 +52,13 @@ COLUMNS_KEY = "gtk/columns"           # the package list's {"order", "widths", "
 # the actions whose dialogs the GTK front end does not have yet (phase 2, §7.4 steps 4–5); not translated yet
 
 
+
+def toolkit_versions() -> str:
+    """The toolkit this front end runs on, for About: GTK's and libadwaita's versions."""
+    return (f"GTK {Gtk.get_major_version()}.{Gtk.get_minor_version()}.{Gtk.get_micro_version()}, "
+            f"libadwaita {Adw.get_major_version()}.{Adw.get_minor_version()}.{Adw.get_micro_version()}")
+
+
 class MainWindow(Adw.ApplicationWindow):
     def __init__(self, app: Adw.Application):
         super().__init__(application=app, title="Kram", icon_name=app.get_application_id())
@@ -497,7 +504,7 @@ class MainWindow(Adw.ApplicationWindow):
     def about(self) -> None:
         about = Adw.AboutDialog(application_name="Kram", application_icon=self.get_application().get_application_id(),
                                 version=__version__, website=HOMEPAGE, issue_url=f"{HOMEPAGE}/issues",
-                                comments=_("A Synaptic-style package manager for Fedora."),
+                                comments=f"{_('A Synaptic-style package manager for Fedora.')}\n\n{toolkit_versions()}",
                                 copyright="© 2026 Modo Ltunzher", license_type=Gtk.License.MIT_X11)
         notes = release_notes(releases.load())
         if notes:  # libadwaita's own What's New page
