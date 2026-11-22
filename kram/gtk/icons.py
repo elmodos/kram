@@ -356,7 +356,11 @@ class PaintedIcon(GObject.Object, Gdk.Paintable):
 
     def do_snapshot(self, snapshot: Gtk.Snapshot, width: float, height: float) -> None:
         side = min(width, height)
-        rect = Graphene.Rect().init((width - side) / 2, (height - side) / 2, side, side)
+        # centred on whole screen pixels: a half pixel offset (an odd-width cell) makes NEAREST drop or double
+        # columns and rows, which reads as pixelation
+        x = math.floor((width - side) / 2 * _scale) / _scale
+        y = math.floor((height - side) / 2 * _scale) / _scale
+        rect = Graphene.Rect().init(x, y, side, side)
         snapshot.append_scaled_texture(texture(self._draw, round(side), _scale), Gsk.ScalingFilter.NEAREST, rect)
 
 
