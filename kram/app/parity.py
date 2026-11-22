@@ -31,6 +31,7 @@ class Feature(Enum):
     DIALOG_APPLY = "dialog_apply"
     DIALOG_APPLY_CANNOT_APPLY = "dialog_apply_cannot_apply"
     DIALOG_APPLY_COMMAND = "dialog_apply_command"
+    DIALOG_APPLY_CONFLICTS = "dialog_apply_conflicts"
     DIALOG_APPLY_DOWNLOAD_ONLY = "dialog_apply_download_only"
     DIALOG_APPLY_FREE_SPACE = "dialog_apply_free_space"
     DIALOG_APPLY_RECOMMENDATIONS = "dialog_apply_recommendations"
@@ -168,6 +169,7 @@ DESCRIPTIONS: dict[Feature, str] = {
     Feature.DIALOG_APPLY: 'The Apply changes review: everything the transaction does, before it runs',
     Feature.DIALOG_APPLY_CANNOT_APPLY: "When nothing can be done: the problem, with 'Undo What Is Possible' and 'Show Locked Packages'",
     Feature.DIALOG_APPLY_COMMAND: "'Equivalent command': the dnf5 command the transaction runs, shown read-only",
+    Feature.DIALOG_APPLY_CONFLICTS: 'Installed packages that conflict with the marked changes are offered for removal, then the review; Kram closes after it removed its own front end',
     Feature.DIALOG_APPLY_DOWNLOAD_ONLY: "Checkbox 'Download packages only': fetch the packages, install nothing",
     Feature.DIALOG_APPLY_FREE_SPACE: 'Apply stays off when the disk cannot hold the change; a download that fits is allowed',
     Feature.DIALOG_APPLY_RECOMMENDATIONS: 'Recommended packages with a checkbox each; unchecking resolves again without them',
@@ -291,6 +293,7 @@ QT: dict[Feature, Entry] = {
     Feature.DIALOG_APPLY: Entry(Support.SUPPORTED),
     Feature.DIALOG_APPLY_CANNOT_APPLY: Entry(Support.PARTIAL, 'the buttons are not tested'),
     Feature.DIALOG_APPLY_COMMAND: Entry(Support.SUPPORTED),
+    Feature.DIALOG_APPLY_CONFLICTS: Entry(Support.SUPPORTED),
     Feature.DIALOG_APPLY_DOWNLOAD_ONLY: Entry(Support.SUPPORTED),
     Feature.DIALOG_APPLY_FREE_SPACE: Entry(Support.SUPPORTED),
     Feature.DIALOG_APPLY_RECOMMENDATIONS: Entry(Support.SUPPORTED),
@@ -414,6 +417,7 @@ GTK: dict[Feature, Entry] = {
     Feature.DIALOG_APPLY: Entry(Support.SUPPORTED),
     Feature.DIALOG_APPLY_CANNOT_APPLY: Entry(Support.PARTIAL, 'the buttons are not tested'),
     Feature.DIALOG_APPLY_COMMAND: Entry(Support.SUPPORTED),
+    Feature.DIALOG_APPLY_CONFLICTS: Entry(Support.SUPPORTED),
     Feature.DIALOG_APPLY_DOWNLOAD_ONLY: Entry(Support.SUPPORTED),
     Feature.DIALOG_APPLY_FREE_SPACE: Entry(Support.PARTIAL, 'not tested in GTK'),
     Feature.DIALOG_APPLY_RECOMMENDATIONS: Entry(Support.SUPPORTED),
@@ -537,6 +541,7 @@ TUI: dict[Feature, Entry] = {
     Feature.DIALOG_APPLY: Entry(Support.PLANNED),
     Feature.DIALOG_APPLY_CANNOT_APPLY: Entry(Support.PLANNED),
     Feature.DIALOG_APPLY_COMMAND: Entry(Support.PLANNED),
+    Feature.DIALOG_APPLY_CONFLICTS: Entry(Support.PLANNED),
     Feature.DIALOG_APPLY_DOWNLOAD_ONLY: Entry(Support.PLANNED),
     Feature.DIALOG_APPLY_FREE_SPACE: Entry(Support.PLANNED),
     Feature.DIALOG_APPLY_RECOMMENDATIONS: Entry(Support.PLANNED),

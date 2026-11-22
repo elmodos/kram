@@ -52,9 +52,9 @@ def test_request_and_command():
     req = m.request(ROWS)
     assert req == {"install": ["fish.x86_64"], "upgrade": ["firefox.x86_64"],
                    "downgrade": ["bash-5-1.x86_64"], "remove": ["veyon.x86_64"]}
-    assert dnf5_command(req).splitlines() == [
-        "sudo dnf5 install fish.x86_64", "sudo dnf5 upgrade firefox.x86_64",
-        "sudo dnf5 downgrade bash-5-1.x86_64", "sudo dnf5 remove veyon.x86_64"]
+    # one transaction: one `dnf5 do`, as separate commands could fail where the whole does not
+    assert dnf5_command(req) == ("sudo dnf5 do --action=install fish.x86_64 --action=upgrade firefox.x86_64 "
+                                 "--action=downgrade bash-5-1.x86_64 --action=remove veyon.x86_64")
 
 
 def test_remark_replaces_and_unmark():
@@ -111,9 +111,8 @@ def test_restore_takes_back_a_mark():
 def test_command_shows_unchecked_recommendations():
     req = {"install": ["virt-manager.noarch"], "remove": ["fish.x86_64"],
            "exclude_weak": ["libvirt-daemon-kvm", "libvirt-daemon-qemu"]}
-    assert dnf5_command(req).splitlines() == [
-        "sudo dnf5 install --setopt=exclude_from_weak=libvirt-daemon-kvm,libvirt-daemon-qemu virt-manager.noarch",
-        "sudo dnf5 remove fish.x86_64"]
+    assert dnf5_command(req) == ("sudo dnf5 do --setopt=exclude_from_weak=libvirt-daemon-kvm,libvirt-daemon-qemu "
+                                 "--action=install virt-manager.noarch --action=remove fish.x86_64")
 
 
 def test_command_for_download_only():
@@ -147,6 +146,27 @@ KDE_APPS = GroupInfo("kde-apps", "KDE Applications", "", False, frozenset({"dolp
 KDE_ENV = GroupInfo("kde-desktop-environment", "KDE Plasma Workspaces", "", False, frozenset({"plasma-desktop"}),
                     environment=True, groups=("kde-desktop",), optional_groups=("kde-education",))
 DEV_TOOLS = GroupInfo("development-tools", "Development Tools", "", True, frozenset({"gcc", "make"}))
+
+
+def test_command_for_one_transaction():
+    """A swap (kram-qt for kram-gtk, as the conflict offer marks it) runs as one transaction: `dnf5 do`."""
+    swap = {"install": ["kram-gtk.noarch"], "remove": ["kram-qt.noarch"]}
+    assert dnf5_command(swap) == "sudo dnf5 do --action=install kram-gtk.noarch --action=remove kram-qt.noarch"
+    # one action stays the plain command; reason changes stay apart, they do not change what resolves
+    assert dnf5_command({"install": ["a.x86_64", "b.x86_64"], "mark_user": ["c.x86_64"]}).splitlines() == [
+        "sudo dnf5 install a.x86_64 b.x86_64", "sudo dnf5 mark user c.x86_64"]
+    assert dnf5_command({**swap, "mark_dep": ["c.x86_64"]}).splitlines() == [
+        "sudo dnf5 do --action=install kram-gtk.noarch --action=remove kram-qt.noarch",
+        "sudo dnf5 mark dependency c.x86_64"]
+    # groups and environments are @ids, with the packages of the same action
+    req = {"install": ["fish.x86_64"], "group_install": ["kde-apps"], "environment_remove": ["xfce-desktop"]}
+    assert dnf5_command(req) == "sudo dnf5 do --action=install fish.x86_64 @kde-apps --action=remove @xfce-desktop"
+    # a download-only run removes nothing: what is left may be one action again
+    assert dnf5_command({**swap, "download_only": True}) == "sudo dnf5 install --downloadonly kram-gtk.noarch"
+    # `dnf5 do` has no --with-optional: such an install keeps its own command
+    req = {"remove": ["fish.x86_64"], "group_install_optional": ["kde-apps"]}
+    assert dnf5_command(req).splitlines() == ["sudo dnf5 remove fish.x86_64",
+                                              "sudo dnf5 group install --with-optional kde-apps"]
 
 
 def test_group_actions():

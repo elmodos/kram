@@ -531,6 +531,42 @@ class Catalog:
                  and tp.get_reason() == T.TransactionItemReason_DEPENDENCY}
         return sorted(k for k in found if k in self._pkgs)
 
+    def conflict_removals(self, request: dict) -> list[tuple[str, str]]:
+        """Installed packages that stand in the way of `request` (marked changes that do not resolve), as keys: the
+        ones `dnf5 install --allowerasing` would remove although they are not marked. Like Synaptic, Kram offers to
+        mark them, so that switching kram-qt for kram-gtk or ffmpeg-free for ffmpeg can be done by marking.
+
+        Only when the request resolves with them marked for removal and without allow_erasing: allowed to erase,
+        the solver may also swap or downgrade packages, and that is not what is offered. [] otherwise."""
+        excluded = list(request.get("exclude_weak", ()))
+
+        def erasing(extra: list[str]):
+            goal = build_goal(self._base, {**request, "exclude_weak": [*excluded, *extra]})
+            goal.set_allow_erasing(True)
+            return goal
+        tr = self._resolve_goal(erasing, [])
+        if tr.get_problems() != libdnf5.base.GoalProblem_NO_PROBLEM:
+            return []
+        T = libdnf5.transaction
+        marked = set(request.get("remove", ()))
+        # not the dependencies nothing needs any more (clean_requirements_on_remove): removing a package takes those
+        # anyway, they do not stand in the way
+        found = sorted({(p.get_name(), p.get_arch()) for tp in tr.get_transaction_packages()
+                        if tp.get_action() == T.TransactionItemAction_REMOVE
+                        and tp.get_reason() != T.TransactionItemReason_CLEAN
+                        and (p := tp.get_package()).get_nevra() not in marked
+                        and f"{p.get_name()}.{p.get_arch()}" not in marked and p.get_name() not in marked})
+        found = [k for k in found if k in self._pkgs]
+        if not found:
+            return []
+        with_them = {**request, "remove": [*request.get("remove", ()), *(f"{n}.{a}" for n, a in found)]}
+
+        def plain(extra: list[str]):
+            return build_goal(self._base, {**with_them, "exclude_weak": [*excluded, *extra]})
+        if self._resolve_goal(plain, []).get_problems() != libdnf5.base.GoalProblem_NO_PROBLEM:
+            return []
+        return found
+
     def resolve(self, request: dict, sizes: bool = True) -> TransactionPreview:
         """Dry-run the transaction the helper would run (same goal builder), without root or downloads.
 

@@ -163,8 +163,29 @@ def dnf5_command(request: dict[str, list[str]]) -> str:
     if request.get("revert"):
         skip = " --skip-unavailable" if request.get("skip_unavailable") else ""
         return f"sudo dnf5 history undo{option}{skip} {request['revert'][0]}"
-    return "\n".join(f"sudo dnf5 {verb}{option if k in downloading else ''} {' '.join(request[k])}"
-                     for k, verb in verbs if request.get(k) and (k in downloading or not only_download))
+    lines = [(k, f"sudo dnf5 {verb}{option if k in downloading else ''} {' '.join(request[k])}")
+             for k, verb in verbs if request.get(k) and (k in downloading or not only_download)]
+    changes = [k for k, _line in lines if k not in ("mark_user", "mark_dep")]
+    if len(changes) > 1 and all(k in DO_ACTIONS for k in changes):
+        # one transaction, as Kram runs it: run one after the other, the commands could fail where the whole does
+        # not (installing kram-gtk while kram-qt is installed, which the removal of kram-qt in the same
+        # transaction allows). `dnf5 do` takes several actions; groups and environments are @ids there
+        segments: dict[str, list[str]] = {}
+        for k in changes:
+            action, group = DO_ACTIONS[k]
+            segments.setdefault(action, []).extend(f"@{x}" if group else x for x in request[k])
+        do = "sudo dnf5 do" + option + "".join(f" --action={a} {' '.join(items)}" for a, items in segments.items())
+        lines = [("do", do), *((k, line) for k, line in lines if k not in changes)]
+    return "\n".join(line for _k, line in lines)
+
+
+# request field -> (`dnf5 do --action`, a group or environment): what one `dnf5 do` can carry. Not an install with
+# optional packages: `dnf5 do` has no --with-optional
+DO_ACTIONS = {"install": ("install", False), "upgrade": ("upgrade", False), "reinstall": ("reinstall", False),
+              "downgrade": ("downgrade", False), "remove": ("remove", False),
+              "group_install": ("install", True), "environment_install": ("install", True),
+              "group_upgrade": ("upgrade", True), "environment_upgrade": ("upgrade", True),
+              "group_remove": ("remove", True), "environment_remove": ("remove", True)}
 
 
 MARKINGS_HEADER = "# Kram markings: <action> <name>.<arch> [<version>]"

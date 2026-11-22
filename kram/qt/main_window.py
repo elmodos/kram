@@ -74,7 +74,8 @@ class MainWindow(QMainWindow):
         self.setStatusBar(self.status)
         self.ui = QtUi(self, self.status.showMessage)
         self.details = DetailsTabs()
-        self.browser = b = Browser(self, self.ui, QtScheduler(self), self.details, post)
+        self.browser = b = Browser(self, self.ui, QtScheduler(self), self.details, post,
+                                       front_package="kram-qt")
         self.dnf, self.catalog, self.helper, self.marker = b.dnf, b.catalog, b.helper, b.marker
         self.details_loader = b.details_loader
         self.catalogLoaded = b.catalog_loaded
@@ -246,6 +247,11 @@ class MainWindow(QMainWindow):
         self._save_settings()
         self.browser.shutdown()
         super().closeEvent(event)
+
+    def quit(self) -> None:
+        """BrowserView: a transaction removed this front end."""
+        if self.close():
+            QApplication.quit()
 
     # ---------------------------------------------------------------- BrowserView: the package list
 

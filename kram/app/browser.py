@@ -38,7 +38,7 @@ from .doc import Doc
 from .marking import Marker, group_menu
 from .markings import ask_markings_file, save_markings
 from .package_list import PackageList, Sort
-from .ports import OK, Button, Question, Ui
+from .ports import CANCEL, OK, Button, Question, Ui
 from .scheduler import Scheduler
 from .search import SearchController
 from .sidebar import SidebarModel
@@ -121,6 +121,10 @@ class BrowserView(Protocol):
     def show_repos(self, snap: CatalogSnapshot, counts: dict, owners: dict, listed: Counter, installed: Counter,
                    done: Callable[[ReposChoice | None], None]) -> None: ...
 
+    def quit(self) -> None:
+        """Close Kram: a transaction removed the front end it is running."""
+        ...
+
 
 def rpm_path(paths: list[str]) -> str | None:
     """A drop of exactly one local .rpm file: its path."""
@@ -131,8 +135,12 @@ class Browser:
     """`catalog_loaded(snap)`: after every (re)load. `refreshed()`: the metadata was refreshed (Reload)."""
 
     def __init__(self, view: BrowserView, ui: Ui, scheduler: Scheduler, details: DetailsSink, post: Post,
-                 catalog: Catalog | None = None, dnf: DnfWorker | None = None, helper: HelperClient | None = None):
+                 catalog: Catalog | None = None, dnf: DnfWorker | None = None, helper: HelperClient | None = None,
+                 front_package: str = ""):
+        """`front_package`: the package of the running front end (kram-qt, kram-gtk); Kram closes after a
+        transaction removes it, since its code is gone."""
         self.view, self.ui, self._post = view, ui, post
+        self.front_package = front_package
         self.dnf = dnf or DnfWorker(post)
         self.catalog = catalog or Catalog()
         self.helper = helper or HelperClient(post)
@@ -651,7 +659,10 @@ class Browser:
                             lambda _e: self._on_preview(preview, request, marked, False, keys))
             return
         if not preview.ok:
-            self._cannot_apply(preview, request, marked, can_skip)
+            if marked and not request.get("revert"):
+                self._check_conflicts(preview, request, keys)
+            else:
+                self._cannot_apply(preview, request, marked, can_skip)
             return
 
         def resolve(req, done, failed):
@@ -668,10 +679,70 @@ class Browser:
                     # the marks added since the request was built stay; a failed run keeps all of them, and the
                     # reload drops those that no longer apply
                     self.marker.unmark([r for r in self.snapshot.rows if r.key in keys])
+                if result is not None and self._removes_front_end(final):
+                    self._front_end_removed()
+                    return
                 # even after a failure: part of the change may have happened
                 self.reload()
             self.run_helper(final, _("Applying changes"), ran)
         self.view.review_changes(preview, request, self.snapshot.basearch, resolve, reviewed)
+
+    def _check_conflicts(self, preview: TransactionPreview, request: dict, keys: frozenset) -> None:
+        """The marked changes do not resolve: if installed packages that conflict with them are all that stands in
+        the way, offer to mark those for removal too, as Synaptic does, and review again; else say why it fails."""
+        self._reviewing = True
+        self.update_actions()
+
+        def found(conflicting: list[tuple[str, str]]) -> None:
+            self._reviewing = False
+            self.update_status()
+            self.update_actions()
+            rows = {r.key: r for r in self.snapshot.rows} if self.snapshot else {}
+            marks = self.packages.marks
+            if frozenset(marks.keys()) != keys:
+                return  # the marks changed meanwhile: the next Apply resolves them afresh
+            extra = [rows[k] for k in conflicting if k in rows and k not in marks]
+            if not extra:
+                self._cannot_apply(preview, request, True, None)
+                return
+            info = ", ".join(sorted(r.name for r in extra))
+            if any(r.name == self.front_package for r in extra):
+                info += "\n\n" + _("This removes the front end of Kram you are using ({package}). Kram closes after "
+                                    "the changes are applied; start it again.").format(package=self.front_package)
+            question = Question(
+                _("Conflicting packages"),
+                ngettext("{n} installed package conflicts with the marked changes and has to be removed for them:",
+                         "{n} installed packages conflict with the marked changes and have to be removed for them:",
+                         len(extra)).format(n=len(extra)),
+                (CANCEL, Button("mark", _("Mark for Removal"), "accept")), informative=info,
+                details="\n".join(preview.problems), default="mark", icon="warning")
+
+            def answered(answer: str | None) -> None:
+                if answer != "mark" or frozenset(marks.keys()) != keys:
+                    return
+                for r in extra:
+                    marks.set(r, Action.REMOVE)
+                self.marker.changed.emit([r.key for r in extra])
+                self.apply()  # the review of everything, conflicting removals included
+            self.ui.ask(question, answered)
+
+        def failed(_e: BaseException) -> None:
+            self._reviewing = False
+            self.update_status()
+            self.update_actions()
+            self._cannot_apply(preview, request, True, None)
+        self.dnf.submit(lambda: self.catalog.conflict_removals(request), found, failed)
+
+    def _removes_front_end(self, request: dict) -> bool:
+        package = self.front_package
+        return bool(package) and any(s == package or s.startswith(package + ".") for s in request.get("remove", ()))
+
+    def _front_end_removed(self) -> None:
+        """The transaction removed the running front end: its code is gone, so Kram does not reload but closes."""
+        question = Question("Kram", _("The changes are applied. They removed the front end of Kram you are using "
+                                      "({package}), so Kram closes now. Start it again.").format(
+                                package=self.front_package), (OK,), icon="info")
+        self.ui.ask(question, lambda _answer: self.view.quit())
 
     def _cannot_apply(self, preview: TransactionPreview, request: dict, marked: bool, can_skip: bool | None) -> None:
         info = preview.problems[0][:500]

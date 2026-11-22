@@ -37,6 +37,17 @@ def window(app, monkeypatch):
     win.dnf.shutdown()
 
 
+@pytest.mark.feature(Feature.DIALOG_APPLY_CONFLICTS, front="qt")
+def test_the_qt_window_names_its_package_and_closes_when_it_is_removed(window, monkeypatch):
+    """The offer itself is the Browser's (tests/test_browser.py); the window says which package it is and closes."""
+    quits = []
+    monkeypatch.setattr(main_window.QApplication, "quit", lambda: quits.append(1))
+    assert window.browser.front_package == "kram-qt"
+    window.show()
+    window.quit()
+    assert not window.isVisible() and quits == [1]
+
+
 class FakeClient(QObject):
     event = Signal(dict)
     failed = Signal(str)

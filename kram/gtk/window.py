@@ -69,7 +69,8 @@ class MainWindow(Adw.ApplicationWindow):
         self.ui = GtkUi(self, self.status.message)
         self.details = DetailsView(self.ui)
         self.scheduler = GtkScheduler()
-        self.browser = b = Browser(self, self.ui, self.scheduler, self.details, post)
+        self.browser = b = Browser(self, self.ui, self.scheduler, self.details, post,
+                                       front_package="kram-gtk")
         self.dnf, self.catalog, self.helper, self.marker = b.dnf, b.catalog, b.helper, b.marker
         self.custom_filters = b.custom_filters = CustomFilters(b.sidebar, self.catalog, self.dnf,
                                                                lambda: b.snapshot, b.ui, self._edit_filters)
@@ -248,6 +249,10 @@ class MainWindow(Adw.ApplicationWindow):
         """D6, D12: the classic menu bar is a setting; while it is shown the hamburger button is not."""
         self.menu_bar.set_visible(on)
         self.menu_button.set_visible(not on)
+
+    def quit(self) -> None:
+        """BrowserView: a transaction removed this front end."""
+        self.close()
 
     def _close_request(self, _window) -> bool:
         if self._closing:

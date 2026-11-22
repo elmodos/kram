@@ -24,6 +24,13 @@ same instead of opening the menu, as in Synaptic.
 The markings can be saved to a file and read back later (File menu), for example to set up a second
 computer the same way.
 
+When a package you mark for installation conflicts with an installed one, *Apply* says which installed packages
+stand in the way and offers to mark them for removal, as Synaptic does, and then shows the review of both. That
+is what `dnf swap` does: switching `ffmpeg-free` for `ffmpeg` from RPM Fusion, or Kram's own Qt front end for
+the GTK one (`kram-qt` for `kram-gtk`). Kram offers it only when removing them is all it takes, not when dnf
+would also have to swap or downgrade other packages. When the removal takes the front end of Kram you are using,
+Kram says so before, and closes after the changes are applied; start it again.
+
 ## Reviewing the transaction
 
 ![The Apply changes window with four upgrades, the sizes, and the equivalent dnf5

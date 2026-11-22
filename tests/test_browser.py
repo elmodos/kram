@@ -138,6 +138,7 @@ def test_changes_the_version_lock_excludes_offer_the_locked_packages():
     b.sidebar.select = lambda v, e: selected.append(e)
     b.apply()
     jobs.run(TransactionPreview([], ["nothing provides x"], 0, 0, versionlock=True))
+    jobs.run([])  # no conflicting installed packages to offer
     question = ui.calls[0][1]
     assert question.icon == "warning" and [btn.id for btn in question.buttons] == ["locked", "ok"]
     assert "version lock excludes" in question.informative and question.details == "nothing provides x"
@@ -156,6 +157,69 @@ def test_an_undo_that_cannot_be_done_whole_offers_what_is_possible():
     fn, _done, _failed = jobs.jobs[0]
     b.catalog.resolve = lambda req, sizes=True: SimpleNamespace(req=req)
     assert fn().req == {**request, "skip_unavailable": True}
+
+
+def conflicting(answers=(), front_package=""):
+    """fish is marked for installation and does not resolve; vim, installed, is what conflicts with it."""
+    b, view, ui, jobs = browser(answers)
+    b.front_package = front_package
+    b.packages.marks.set(ROWS[0], Action.INSTALL)
+    b.apply()
+    jobs.run(TransactionPreview([], ["fish conflicts with vim"], 0, 0))
+    fn, _done, _failed = jobs.jobs[0]
+    asked = []
+    b.catalog.conflict_removals = lambda req: asked.append(req) or [ROWS[1].key]
+    jobs.run()
+    assert asked == [{"op": "transaction", "install": ["fish.x86_64"]}]
+    return b, view, ui, jobs
+
+
+def test_conflicting_installed_packages_are_offered_for_removal_and_reviewed():
+    b, view, ui, jobs = conflicting(answers=["mark"])
+    question = ui.calls[0][1]
+    assert question.title == "Conflicting packages" and "1 installed package conflicts" in question.text
+    assert question.informative == "vim" and question.details == "fish conflicts with vim"
+    assert [btn.id for btn in question.buttons] == ["cancel", "mark"] and question.default == "mark"
+    assert b.packages.marks.get(ROWS[1].key).action is Action.REMOVE
+    assert len(jobs.jobs) == 1 and b.busy()  # the review of both changes is resolving
+    b.catalog.resolve = lambda req, sizes=True: SimpleNamespace(req=req)
+    assert jobs.jobs[0][0]().req == {"op": "transaction", "install": ["fish.x86_64"], "remove": ["vim.x86_64"]}
+
+
+def test_declining_the_conflicting_removals_changes_nothing():
+    b, _view, ui, jobs = conflicting(answers=["cancel"])
+    assert ui.kinds() == ["ask"] and [k for k, _m in b.packages.marks.items()] == [ROWS[0].key]
+    assert not jobs.jobs and not b.busy()
+
+
+def test_without_conflicting_packages_it_says_why_it_cannot_apply():
+    b, _view, ui, jobs = browser(answers=["ok"])
+    b.packages.marks.set(ROWS[0], Action.INSTALL)
+    b.apply()
+    jobs.run(TransactionPreview([], ["nothing provides libfoo"], 0, 0))
+    jobs.run([])
+    question = ui.calls[0][1]
+    assert question.title == "Cannot apply changes" and question.details == "nothing provides libfoo"
+
+
+def test_marks_changed_while_looking_for_conflicts_drop_the_offer():
+    b, view, ui, jobs = browser()
+    b.packages.marks.set(ROWS[0], Action.INSTALL)
+    b.apply()
+    jobs.run(TransactionPreview([], ["fish conflicts with vim"], 0, 0))
+    b.packages.marks.unmark(ROWS[0].key)
+    jobs.run([ROWS[1].key])
+    assert ui.calls == [] and not b.busy()
+
+
+def test_removing_the_running_front_end_closes_kram_instead_of_reloading():
+    b, view, ui, jobs = conflicting(answers=["mark", "ok"], front_package="vim")
+    assert "front end of Kram you are using (vim)" in ui.calls[0][1].informative
+    b.reload = lambda: view.calls.append(("reload",))
+    view.review = {"op": "transaction", "install": ["fish.x86_64"], "remove": ["vim.x86_64"]}
+    jobs.run(TransactionPreview([], [], 0, 0))
+    assert "Kram closes now" in ui.calls[1][1].text
+    assert views(view, "quit") == [("quit",)] and views(view, "reload") == [] and not len(b.packages.marks)
 
 
 def test_quitting_with_marks_asks():

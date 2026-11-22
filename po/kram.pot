@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kram\n"
 "Report-Msgid-Bugs-To: https://github.com/elmodos/kram/issues\n"
-"POT-Creation-Date: 2026-11-21 21:40+0000\n"
+"POT-Creation-Date: 2026-11-22 17:47+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -77,7 +77,8 @@ msgid ""
 "does"
 msgstr ""
 
-#: kram/app/actions.py:70 kram/qt/apply_dialog.py:218
+#: kram/app/actions.py:70 kram/gtk/dialogs/apply.py:172
+#: kram/qt/apply_dialog.py:218
 msgid "Apply"
 msgstr ""
 
@@ -101,7 +102,8 @@ msgstr ""
 msgid "Enable or disable software repositories"
 msgstr ""
 
-#: kram/app/actions.py:75 kram/app/empty_list.py:53 kram/qt/repos_dialog.py:49
+#: kram/app/actions.py:75 kram/app/empty_list.py:53
+#: kram/gtk/dialogs/repos.py:25 kram/qt/repos_dialog.py:49
 msgid "Repositories"
 msgstr ""
 
@@ -201,7 +203,7 @@ msgstr ""
 msgid "Quit"
 msgstr ""
 
-#: kram/app/actions.py:101 kram/qt/main_window.py:386
+#: kram/app/actions.py:101 kram/qt/main_window.py:399
 msgid "About Kram"
 msgstr ""
 
@@ -225,7 +227,7 @@ msgstr ""
 msgid "Mark for Reinstallation"
 msgstr ""
 
-#: kram/app/actions.py:109
+#: kram/app/actions.py:109 kram/app/browser.py:717
 msgid "Mark for Removal"
 msgstr ""
 
@@ -515,7 +517,7 @@ msgid_plural "+{size}, {n} packages"
 msgstr[0] ""
 msgstr[1] ""
 
-#: kram/app/apply_review.py:321 kram/app/browser.py:625 kram/app/install.py:303
+#: kram/app/apply_review.py:321 kram/app/browser.py:633 kram/app/install.py:303
 #: kram/app/install.py:337 kram/app/install.py:397
 msgid "Resolving dependencies…"
 msgstr ""
@@ -524,7 +526,7 @@ msgstr ""
 msgid "These choices cannot be carried out:"
 msgstr ""
 
-#: kram/app/apply_review.py:334 kram/app/browser.py:634 kram/app/install.py:384
+#: kram/app/apply_review.py:334 kram/app/browser.py:642 kram/app/install.py:384
 #: kram/app/install.py:418
 #, python-brace-format
 msgid ""
@@ -539,22 +541,22 @@ msgid ""
 "Lock Version: upgrades then leave it out until it is unlocked."
 msgstr ""
 
-#: kram/app/browser.py:210
+#: kram/app/browser.py:218
 #, python-brace-format
 msgid "{n} marked change has not been applied. Quit anyway?"
 msgid_plural "{n} marked changes have not been applied. Quit anyway?"
 msgstr[0] ""
 msgstr[1] ""
 
-#: kram/app/browser.py:223 kram/app/install.py:300
+#: kram/app/browser.py:231 kram/app/install.py:300
 msgid "Loading metadata…"
 msgstr ""
 
-#: kram/app/browser.py:233
+#: kram/app/browser.py:241
 msgid "Waiting for another package manager to finish…"
 msgstr ""
 
-#: kram/app/browser.py:269 kram/app/install.py:345
+#: kram/app/browser.py:277 kram/app/install.py:345
 #, python-brace-format
 msgid ""
 "Could not load the package catalog:\n"
@@ -562,62 +564,62 @@ msgid ""
 "{error}"
 msgstr ""
 
-#: kram/app/browser.py:337
+#: kram/app/browser.py:345
 #, python-brace-format
 msgid ""
 "Searching “{text}” ({mode}); the first search also indexes what packages "
 "provide…"
 msgstr ""
 
-#: kram/app/browser.py:340
+#: kram/app/browser.py:348
 #, python-brace-format
 msgid "Searching “{text}” ({mode})…"
 msgstr ""
 
-#: kram/app/browser.py:357 kram/app/copr.py:158
+#: kram/app/browser.py:365 kram/app/copr.py:158
 #, python-brace-format
 msgid "Search failed: {error}"
 msgstr ""
 
-#: kram/app/browser.py:449
+#: kram/app/browser.py:457
 #, python-brace-format
 msgid "Nothing provides “{what}”"
 msgstr ""
 
-#: kram/app/browser.py:451
+#: kram/app/browser.py:459
 #, python-brace-format
 msgid "Could not look up “{what}”: {error}"
 msgstr ""
 
-#: kram/app/browser.py:465
+#: kram/app/browser.py:473
 #, python-brace-format
 msgid "Package {name} not found in the catalog"
 msgstr ""
 
-#: kram/app/browser.py:494
+#: kram/app/browser.py:502
 msgid "Refresh Metadata"
 msgstr ""
 
-#: kram/app/browser.py:501
+#: kram/app/browser.py:509
 msgid "Remove from History"
 msgstr ""
 
-#: kram/app/browser.py:503
+#: kram/app/browser.py:511
 msgid "Clear Search History"
 msgstr ""
 
-#: kram/app/browser.py:550
+#: kram/app/browser.py:558
 #, python-brace-format
 msgid "{n} marking saved to {path}"
 msgid_plural "{n} markings saved to {path}"
 msgstr[0] ""
 msgstr[1] ""
 
-#: kram/app/browser.py:558
+#: kram/app/browser.py:566
 msgid "Export List as CSV"
 msgstr ""
 
-#: kram/app/browser.py:569 kram/app/markings.py:35
+#: kram/app/browser.py:577 kram/app/markings.py:35
 #, python-brace-format
 msgid ""
 "Could not save {path}:\n"
@@ -625,18 +627,18 @@ msgid ""
 "{error}"
 msgstr ""
 
-#: kram/app/browser.py:572
+#: kram/app/browser.py:580
 #, python-brace-format
 msgid "{n} package exported to {path}"
 msgid_plural "{n} packages exported to {path}"
 msgstr[0] ""
 msgstr[1] ""
 
-#: kram/app/browser.py:575
+#: kram/app/browser.py:583
 msgid "CSV files (*.csv);;All files (*)"
 msgstr ""
 
-#: kram/app/browser.py:594
+#: kram/app/browser.py:602
 #, python-brace-format
 msgid ""
 "{n} upgrade or downgrade unmarked: the version lock keeps the installed "
@@ -647,69 +649,98 @@ msgid_plural ""
 msgstr[0] ""
 msgstr[1] ""
 
-#: kram/app/browser.py:597
+#: kram/app/browser.py:605
 #, python-brace-format
 msgid "Locking the version of {n} package"
 msgid_plural "Locking the versions of {n} packages"
 msgstr[0] ""
 msgstr[1] ""
 
-#: kram/app/browser.py:599
+#: kram/app/browser.py:607
 #, python-brace-format
 msgid "Unlocking the version of {n} package"
 msgid_plural "Unlocking the versions of {n} packages"
 msgstr[0] ""
 msgstr[1] ""
 
-#: kram/app/browser.py:673
+#: kram/app/browser.py:687
 msgid "Applying changes"
 msgstr ""
 
-#: kram/app/browser.py:680
+#: kram/app/browser.py:710
+#, python-brace-format
+msgid ""
+"This removes the front end of Kram you are using ({package}). Kram closes "
+"after the changes are applied; start it again."
+msgstr ""
+
+#: kram/app/browser.py:713
+msgid "Conflicting packages"
+msgstr ""
+
+#: kram/app/browser.py:714
+#, python-brace-format
+msgid ""
+"{n} installed package conflicts with the marked changes and has to be "
+"removed for them:"
+msgid_plural ""
+"{n} installed packages conflict with the marked changes and have to be "
+"removed for them:"
+msgstr[0] ""
+msgstr[1] ""
+
+#: kram/app/browser.py:742
+#, python-brace-format
+msgid ""
+"The changes are applied. They removed the front end of Kram you are using "
+"({package}), so Kram closes now. Start it again."
+msgstr ""
+
+#: kram/app/browser.py:751
 msgid ""
 "Undoing the whole transaction needs versions the repositories no longer "
 "have. What is still possible can be undone without them."
 msgstr ""
 
-#: kram/app/browser.py:682
+#: kram/app/browser.py:753
 msgid "Undo What Is Possible…"
 msgstr ""
 
-#: kram/app/browser.py:684
+#: kram/app/browser.py:755
 msgid ""
 "They need a version the version lock excludes. Unlock the package (Package → "
 "Unlock Version) or unmark the change."
 msgstr ""
 
-#: kram/app/browser.py:686
+#: kram/app/browser.py:757
 msgid "Show Locked Packages"
 msgstr ""
 
-#: kram/app/browser.py:687
+#: kram/app/browser.py:758
 msgid "Cannot apply changes"
 msgstr ""
 
-#: kram/app/browser.py:688
+#: kram/app/browser.py:759
 msgid "The marked changes cannot be carried out. Unmark or change them."
 msgstr ""
 
-#: kram/app/browser.py:689
+#: kram/app/browser.py:760
 msgid "This change cannot be carried out."
 msgstr ""
 
-#: kram/app/browser.py:730 kram/app/browser.py:735
+#: kram/app/browser.py:801 kram/app/browser.py:806
 msgid "Refreshing metadata"
 msgstr ""
 
-#: kram/app/browser.py:741
+#: kram/app/browser.py:812
 msgid "Downloading metadata again"
 msgstr ""
 
-#: kram/app/browser.py:743
+#: kram/app/browser.py:814
 msgid "Cleaning the package cache"
 msgstr ""
 
-#: kram/app/browser.py:752
+#: kram/app/browser.py:823
 #, python-brace-format
 msgid ""
 "Could not read the repositories:\n"
@@ -717,31 +748,31 @@ msgid ""
 "{error}"
 msgstr ""
 
-#: kram/app/browser.py:771
+#: kram/app/browser.py:842
 #, python-brace-format
 msgid "Removing {n} repository"
 msgid_plural "Removing {n} repositories"
 msgstr[0] ""
 msgstr[1] ""
 
-#: kram/app/browser.py:773
+#: kram/app/browser.py:844
 msgid "Changing repositories"
 msgstr ""
 
-#: kram/app/browser.py:789 kram/app/browser.py:819
+#: kram/app/browser.py:860 kram/app/browser.py:890
 #, python-brace-format
 msgid "Undo Transaction {id}"
 msgstr ""
 
-#: kram/app/browser.py:790
+#: kram/app/browser.py:861
 msgid "The groups this transaction changed could not be read."
 msgstr ""
 
-#: kram/app/browser.py:804
+#: kram/app/browser.py:875
 msgid "cannot be marked"
 msgstr ""
 
-#: kram/app/browser.py:815
+#: kram/app/browser.py:886
 #, python-brace-format
 msgid ""
 "Could not read what the transaction changed:\n"
@@ -749,39 +780,39 @@ msgid ""
 "{error}"
 msgstr ""
 
-#: kram/app/browser.py:815
+#: kram/app/browser.py:886
 msgid "Undo Transaction"
 msgstr ""
 
-#: kram/app/browser.py:820
+#: kram/app/browser.py:891
 #, python-brace-format
 msgid "{n} change marked to undo transaction {id}."
 msgid_plural "{n} changes marked to undo transaction {id}."
 msgstr[0] ""
 msgstr[1] ""
 
-#: kram/app/browser.py:822
+#: kram/app/browser.py:893
 #, python-brace-format
 msgid "{package}: installs {version}, {old} is no longer in the repositories"
 msgstr ""
 
-#: kram/app/browser.py:827
+#: kram/app/browser.py:898
 msgid "Review them, then apply."
 msgstr ""
 
-#: kram/app/browser.py:830
+#: kram/app/browser.py:901
 #, python-brace-format
 msgid "Nothing of transaction {id} can be undone."
 msgstr ""
 
-#: kram/app/browser.py:834
+#: kram/app/browser.py:905
 #, python-brace-format
 msgid "{n} package cannot be undone:"
 msgid_plural "{n} packages cannot be undone:"
 msgstr[0] ""
 msgstr[1] ""
 
-#: kram/app/browser.py:838
+#: kram/app/browser.py:909
 #, python-brace-format
 msgid "{n} package comes back in another version:"
 msgid_plural "{n} packages come back in another version:"
@@ -864,7 +895,7 @@ msgstr ""
 msgid "Could not count the caches: {error}"
 msgstr ""
 
-#: kram/app/cache.py:138 kram/qt/file_list.py:302
+#: kram/app/cache.py:138 kram/gtk/files.py:175 kram/qt/file_list.py:302
 #, python-brace-format
 msgid "{n} file"
 msgid_plural "{n} files"
@@ -883,7 +914,8 @@ msgid ""
 "the available packages disappear from Kram until a Reload succeeds."
 msgstr ""
 
-#: kram/app/cache.py:162 kram/qt/cache_dialog.py:89
+#: kram/app/cache.py:162 kram/gtk/dialogs/cache.py:54
+#: kram/qt/cache_dialog.py:89
 msgid "Cleanup"
 msgstr ""
 
@@ -928,7 +960,8 @@ msgstr ""
 msgid "Only root can read it. In a terminal: {command}"
 msgstr ""
 
-#: kram/app/cache.py:204 kram/qt/cache_dialog.py:265
+#: kram/app/cache.py:204 kram/gtk/dialogs/cache.py:114
+#: kram/gtk/dialogs/cache.py:175 kram/qt/cache_dialog.py:265
 #: kram/qt/cache_dialog.py:351
 msgid "Compare"
 msgstr ""
@@ -975,7 +1008,8 @@ msgstr[1] ""
 msgid "Delete leftover files"
 msgstr ""
 
-#: kram/app/cache.py:238 kram/qt/filters_dialog.py:143
+#: kram/app/cache.py:238 kram/gtk/dialogs/filters.py:149
+#: kram/qt/filters_dialog.py:143
 msgid "Delete"
 msgstr ""
 
@@ -992,17 +1026,20 @@ msgid "Latest version"
 msgstr ""
 
 #: kram/app/columns.py:25 kram/app/details.py:92 kram/app/install.py:148
+#: kram/gtk/dialogs/apply.py:68 kram/gtk/dialogs/history.py:85
 #: kram/qt/apply_dialog.py:52 kram/qt/history_dialog.py:63
 msgid "Package"
 msgstr ""
 
-#: kram/app/columns.py:25 kram/qt/history_dialog.py:63
+#: kram/app/columns.py:25 kram/gtk/dialogs/history.py:88
+#: kram/qt/history_dialog.py:63
 msgid "Reason"
 msgstr ""
 
 #: kram/app/columns.py:25 kram/core/custom_filters.py:54
-#: kram/qt/apply_dialog.py:52 kram/qt/details.py:56
-#: kram/qt/history_dialog.py:63
+#: kram/gtk/details.py:160 kram/gtk/dialogs/apply.py:72
+#: kram/gtk/dialogs/history.py:87 kram/qt/apply_dialog.py:52
+#: kram/qt/details.py:56 kram/qt/history_dialog.py:63
 msgid "Repository"
 msgstr ""
 
@@ -1028,7 +1065,8 @@ msgid "Update type"
 msgstr ""
 
 #: kram/app/columns.py:28 kram/app/details.py:93 kram/app/sidebar.py:31
-#: kram/core/custom_filters.py:53 kram/qt/repos_dialog.py:66
+#: kram/core/custom_filters.py:53 kram/gtk/dialogs/repos.py:143
+#: kram/qt/repos_dialog.py:66
 msgid "Origin"
 msgstr ""
 
@@ -1174,7 +1212,8 @@ msgstr[1] ""
 msgid "Remove"
 msgstr ""
 
-#: kram/app/copr.py:118 kram/app/repos.py:153 kram/qt/copr_dialog.py:67
+#: kram/app/copr.py:118 kram/app/repos.py:153 kram/gtk/dialogs/copr.py:60
+#: kram/gtk/dialogs/repos.py:61 kram/qt/copr_dialog.py:67
 #: kram/qt/repos_dialog.py:116
 msgid "Show packages"
 msgstr ""
@@ -1237,11 +1276,13 @@ msgid ""
 "{project} has no builds for Fedora {release} ({arch}). Enable it anyway?"
 msgstr ""
 
-#: kram/app/custom_filters.py:120 kram/qt/filters_dialog.py:142
+#: kram/app/custom_filters.py:120 kram/gtk/dialogs/filters.py:148
+#: kram/qt/filters_dialog.py:142
 msgid "New filter"
 msgstr ""
 
-#: kram/app/custom_filters.py:129 kram/qt/filters_dialog.py:126
+#: kram/app/custom_filters.py:129 kram/gtk/dialogs/filters.py:125
+#: kram/gtk/dialogs/filters.py:283 kram/qt/filters_dialog.py:126
 #: kram/qt/filters_dialog.py:275
 msgid "Custom Filters"
 msgstr ""
@@ -1263,7 +1304,8 @@ msgstr ""
 msgid "Advisories"
 msgstr ""
 
-#: kram/app/details.py:27 kram/qt/copr_dialog.py:92
+#: kram/app/details.py:27 kram/gtk/dialogs/copr.py:88
+#: kram/gtk/dialogs/install.py:91 kram/qt/copr_dialog.py:92
 #: kram/qt/install_dialog.py:112
 msgid "Description"
 msgstr ""
@@ -1272,11 +1314,13 @@ msgstr ""
 msgid "General"
 msgstr ""
 
-#: kram/app/details.py:28 kram/qt/install_dialog.py:113
+#: kram/app/details.py:28 kram/gtk/dialogs/install.py:93
+#: kram/qt/install_dialog.py:113
 msgid "Dependencies"
 msgstr ""
 
-#: kram/app/details.py:28 kram/qt/install_dialog.py:113
+#: kram/app/details.py:28 kram/gtk/dialogs/install.py:94
+#: kram/qt/install_dialog.py:113
 msgid "Files"
 msgstr ""
 
@@ -1284,7 +1328,8 @@ msgstr ""
 msgid "Versions"
 msgstr ""
 
-#: kram/app/details.py:29 kram/qt/install_dialog.py:114
+#: kram/app/details.py:29 kram/gtk/dialogs/install.py:95
+#: kram/qt/install_dialog.py:114
 msgid "Changelog"
 msgstr ""
 
@@ -1672,7 +1717,8 @@ msgid ""
 "before it runs."
 msgstr ""
 
-#: kram/app/history.py:309 kram/qt/history_dialog.py:72
+#: kram/app/history.py:309 kram/gtk/dialogs/history.py:46
+#: kram/qt/history_dialog.py:72
 msgid "Mark Changes to Undo"
 msgstr ""
 
@@ -1688,7 +1734,8 @@ msgstr ""
 msgid "Unknown origin"
 msgstr ""
 
-#: kram/app/install.py:44 kram/qt/install_dialog.py:148
+#: kram/app/install.py:44 kram/gtk/dialogs/install.py:52
+#: kram/qt/install_dialog.py:148
 msgid "Install"
 msgstr ""
 
@@ -1827,7 +1874,8 @@ msgid_plural "{n} files could not be checked: no permission to read them."
 msgstr[0] ""
 msgstr[1] ""
 
-#: kram/app/install.py:148 kram/core/search.py:36 kram/qt/repos_dialog.py:67
+#: kram/app/install.py:148 kram/core/search.py:36 kram/gtk/dialogs/repos.py:144
+#: kram/qt/repos_dialog.py:67
 msgid "File"
 msgstr ""
 
@@ -2142,7 +2190,8 @@ msgid ""
 "Reload."
 msgstr ""
 
-#: kram/app/notifier.py:100 kram/qt/notifier_dialog.py:122
+#: kram/app/notifier.py:100 kram/gtk/dialogs/notifier.py:70
+#: kram/qt/notifier_dialog.py:122
 msgid "Update Notifications"
 msgstr ""
 
@@ -2762,7 +2811,7 @@ msgid "PackageKit is working right now. Try again when it has finished."
 msgstr ""
 
 #: kram/core/custom_filters.py:48 kram/core/search.py:32
-#: kram/qt/repos_dialog.py:66
+#: kram/gtk/dialogs/repos.py:140 kram/qt/repos_dialog.py:66
 msgid "Name"
 msgstr ""
 
@@ -2875,7 +2924,8 @@ msgstr ""
 msgid "Unknown (not recorded)"
 msgstr ""
 
-#: kram/core/filters.py:83 kram/qt/copr_dialog.py:51
+#: kram/core/filters.py:83 kram/gtk/dialogs/copr.py:51
+#: kram/qt/copr_dialog.py:51
 msgid "Installed"
 msgstr ""
 
@@ -3000,6 +3050,425 @@ msgctxt "search mode"
 msgid "Description"
 msgstr ""
 
+#: kram/gtk/details.py:159 kram/gtk/dialogs/apply.py:70
+#: kram/gtk/dialogs/history.py:86 kram/qt/apply_dialog.py:52
+#: kram/qt/details.py:56 kram/qt/history_dialog.py:63
+msgid "Version"
+msgstr ""
+
+#: kram/gtk/details.py:161 kram/qt/details.py:56
+msgid "State"
+msgstr ""
+
+#: kram/gtk/dialogs/apply.py:73 kram/qt/apply_dialog.py:52
+msgid "Size"
+msgstr ""
+
+#: kram/gtk/dialogs/apply.py:91 kram/qt/apply_dialog.py:101
+msgid "Recommended packages."
+msgstr ""
+
+#: kram/gtk/dialogs/apply.py:92 kram/qt/apply_dialog.py:102
+msgid ""
+"Not required, but suggested by the packages being installed. Uncheck what "
+"you do not want."
+msgstr ""
+
+#: kram/gtk/dialogs/apply.py:128 kram/qt/apply_dialog.py:106
+msgid "Recommended package"
+msgstr ""
+
+#: kram/gtk/dialogs/apply.py:129 kram/qt/apply_dialog.py:106
+msgid "Recommended by"
+msgstr ""
+
+#: kram/gtk/dialogs/apply.py:130 kram/qt/apply_dialog.py:106
+msgid "Adds"
+msgstr ""
+
+#: kram/gtk/dialogs/apply.py:163 kram/gtk/dialogs/repos.py:34
+#: kram/qt/apply_dialog.py:156 kram/qt/repos_dialog.py:130
+msgid "Apply changes"
+msgstr ""
+
+#: kram/gtk/dialogs/apply.py:179 kram/qt/apply_dialog.py:161
+msgid "The following changes will be made."
+msgstr ""
+
+#: kram/gtk/dialogs/apply.py:180 kram/qt/apply_dialog.py:161
+msgid "Review the list before applying."
+msgstr ""
+
+#: kram/gtk/dialogs/apply.py:211 kram/gtk/dialogs/install.py:117
+#: kram/qt/apply_dialog.py:209 kram/qt/install_dialog.py:139
+msgid "Equivalent command"
+msgstr ""
+
+#: kram/gtk/dialogs/apply.py:218 kram/qt/apply_dialog.py:213
+msgid "Download packages only"
+msgstr ""
+
+#: kram/gtk/dialogs/cache.py:75 kram/qt/cache_dialog.py:217
+msgid "Leftover configuration files"
+msgstr ""
+
+#: kram/gtk/dialogs/cache.py:76 kram/qt/cache_dialog.py:219
+msgid ""
+"Copies rpm keeps when you had changed a package's configuration file: your "
+"earlier version (.rpmsave) or the package's new default it did not apply "
+"(.rpmnew)."
+msgstr ""
+
+#: kram/gtk/dialogs/cache.py:79 kram/qt/cache_dialog.py:229
+msgid "Search All Folders…"
+msgstr ""
+
+#: kram/gtk/dialogs/cache.py:81 kram/qt/cache_dialog.py:230
+msgid "Also search the folders only root can read"
+msgstr ""
+
+#: kram/gtk/dialogs/cache.py:83 kram/qt/cache_dialog.py:232
+msgid "Delete Unused…"
+msgstr ""
+
+#: kram/gtk/dialogs/cache.py:85 kram/qt/cache_dialog.py:233
+msgid "Delete the copies of files that no longer exist"
+msgstr ""
+
+#: kram/gtk/dialogs/cache.py:111 kram/gtk/dialogs/notifier.py:57
+#: kram/gtk/dialogs/repos.py:200 kram/gtk/files.py:124
+#: kram/qt/cache_dialog.py:255 kram/qt/file_list.py:324
+#: kram/qt/notifier_dialog.py:104 kram/qt/repos_dialog.py:178
+msgid "Show in File Manager"
+msgstr ""
+
+#: kram/gtk/dialogs/cache.py:117 kram/qt/cache_dialog.py:269
+msgid "Delete…"
+msgstr ""
+
+#: kram/gtk/dialogs/cache.py:139 kram/qt/cache_dialog.py:162
+msgid "Open in the file manager"
+msgstr ""
+
+#: kram/gtk/dialogs/cache.py:182 kram/qt/cache_dialog.py:354
+#, python-brace-format
+msgid ""
+"Lines with “-” are in the current file {current}; lines with “+” only in "
+"{path}."
+msgstr ""
+
+#: kram/gtk/dialogs/copr.py:30 kram/qt/copr_dialog.py:44
+msgid "COPR repositories"
+msgstr ""
+
+#: kram/gtk/dialogs/copr.py:37 kram/qt/copr_dialog.py:111
+msgid "Enable selected"
+msgstr ""
+
+#: kram/gtk/dialogs/copr.py:42 kram/qt/copr_dialog.py:49
+msgid "Enabled projects"
+msgstr ""
+
+#: kram/gtk/dialogs/copr.py:47 kram/gtk/dialogs/repos.py:138
+#: kram/qt/copr_dialog.py:51 kram/qt/repos_dialog.py:66
+msgid "Enabled"
+msgstr ""
+
+#: kram/gtk/dialogs/copr.py:48 kram/gtk/dialogs/copr.py:87
+#: kram/qt/copr_dialog.py:51 kram/qt/copr_dialog.py:92
+msgid "Project"
+msgstr ""
+
+#: kram/gtk/dialogs/copr.py:49 kram/qt/copr_dialog.py:51
+msgid "Hub"
+msgstr ""
+
+#: kram/gtk/dialogs/copr.py:50 kram/gtk/dialogs/repos.py:141
+#: kram/qt/copr_dialog.py:51 kram/qt/repos_dialog.py:66
+msgid "Packages"
+msgstr ""
+
+#: kram/gtk/dialogs/copr.py:57 kram/qt/copr_dialog.py:64
+msgid "Enable"
+msgstr ""
+
+#: kram/gtk/dialogs/copr.py:58 kram/qt/copr_dialog.py:65
+msgid "Disable"
+msgstr ""
+
+#: kram/gtk/dialogs/copr.py:59 kram/gtk/dialogs/repos.py:64
+#: kram/qt/copr_dialog.py:66 kram/qt/repos_dialog.py:120
+msgid "Remove…"
+msgstr ""
+
+#: kram/gtk/dialogs/copr.py:69 kram/qt/copr_dialog.py:78
+msgid "Add a project"
+msgstr ""
+
+#: kram/gtk/dialogs/copr.py:73 kram/qt/copr_dialog.py:81
+msgid "owner/project, or words to search for"
+msgstr ""
+
+#: kram/gtk/dialogs/copr.py:77 kram/qt/copr_dialog.py:86
+msgid "Search Copr"
+msgstr ""
+
+#: kram/gtk/dialogs/copr.py:90 kram/qt/copr_dialog.py:92
+msgid "Builds for this system"
+msgstr ""
+
+#: kram/gtk/dialogs/copr.py:95 kram/qt/copr_dialog.py:106
+msgid ""
+"COPR projects are built by community members and are not reviewed by Fedora."
+msgstr ""
+
+#: kram/gtk/dialogs/filters.py:34 kram/qt/filters_dialog.py:61
+msgid "Remove this condition"
+msgstr ""
+
+#: kram/gtk/dialogs/filters.py:147 kram/qt/filters_dialog.py:141
+msgid "New"
+msgstr ""
+
+#: kram/gtk/dialogs/filters.py:157 kram/qt/filters_dialog.py:156
+msgid "Name:"
+msgstr ""
+
+#: kram/gtk/dialogs/filters.py:161 kram/qt/filters_dialog.py:161
+msgid "Show packages that match:"
+msgstr ""
+
+#: kram/gtk/dialogs/filters.py:162 kram/qt/filters_dialog.py:158
+msgid "all conditions"
+msgstr ""
+
+#: kram/gtk/dialogs/filters.py:162 kram/qt/filters_dialog.py:159
+msgid "any condition"
+msgstr ""
+
+#: kram/gtk/dialogs/filters.py:171 kram/qt/filters_dialog.py:172
+msgid "Add condition"
+msgstr ""
+
+#: kram/gtk/dialogs/history.py:33 kram/qt/history_dialog.py:45
+msgid "Transaction History"
+msgstr ""
+
+#: kram/gtk/dialogs/history.py:57 kram/qt/history_dialog.py:53
+msgid "Filter by package name"
+msgstr ""
+
+#: kram/gtk/dialogs/history.py:72 kram/gtk/dialogs/repos.py:139
+#: kram/qt/history_dialog.py:61 kram/qt/repos_dialog.py:66
+msgid "ID"
+msgstr ""
+
+#: kram/gtk/dialogs/history.py:73 kram/qt/history_dialog.py:61
+msgid "Date"
+msgstr ""
+
+#: kram/gtk/dialogs/history.py:74 kram/qt/history_dialog.py:61
+msgid "Changes"
+msgstr ""
+
+#: kram/gtk/dialogs/history.py:75 kram/qt/history_dialog.py:61
+msgid "User"
+msgstr ""
+
+#: kram/gtk/dialogs/history.py:76 kram/qt/history_dialog.py:61
+msgid "Command"
+msgstr ""
+
+#: kram/gtk/dialogs/history.py:81 kram/qt/history_dialog.py:65
+msgid ""
+"Double-click a package to close the history and show the package in the list"
+msgstr ""
+
+#: kram/gtk/dialogs/history.py:84 kram/qt/history_dialog.py:63
+msgid "Action"
+msgstr ""
+
+#: kram/gtk/dialogs/install.py:47 kram/gtk/dialogs/install.py:241
+#: kram/gtk/dialogs/install.py:262 kram/qt/install_dialog.py:62
+msgid "Install Package File"
+msgstr ""
+
+#: kram/gtk/dialogs/install.py:81 kram/qt/install_dialog.py:103
+msgid "What installing it changes"
+msgstr ""
+
+#: kram/gtk/dialogs/install.py:92 kram/gtk/dialogs/progress.py:50
+#: kram/gtk/ui_port.py:32 kram/qt/install_dialog.py:112
+#: kram/qt/progress_dialog.py:57
+msgid "Details"
+msgstr ""
+
+#: kram/gtk/dialogs/install.py:96 kram/qt/install_dialog.py:114
+msgid "Scripts"
+msgstr ""
+
+#: kram/gtk/dialogs/notifier.py:77 kram/qt/notifier_dialog.py:130
+msgid ""
+"The icon is there only while updates are available. Kram downloads nothing "
+"in the background: Fedora's own service refreshes the package information, "
+"Kram only reads it, at login, hourly and after every installation."
+msgstr ""
+
+#: kram/gtk/dialogs/notifier.py:81 kram/qt/notifier_dialog.py:127
+msgid "Show an icon in the system tray when updates are available"
+msgstr ""
+
+#: kram/gtk/dialogs/notifier.py:88 kram/qt/notifier_dialog.py:135
+msgid ""
+"This session has no system tray for such icons (GNOME without the "
+"AppIndicator extension, LXDE), so the icon cannot appear."
+msgstr ""
+
+#: kram/gtk/dialogs/notifier.py:101 kram/qt/notifier_dialog.py:157
+msgid "Fedora's update check"
+msgstr ""
+
+#: kram/gtk/dialogs/notifier.py:107 kram/qt/notifier_dialog.py:166
+msgid "Turn On Fedora's Update Check…"
+msgstr ""
+
+#: kram/gtk/dialogs/notifier.py:108 kram/qt/notifier_dialog.py:167
+msgid "Asks for your password"
+msgstr ""
+
+#: kram/gtk/dialogs/notifier.py:115 kram/qt/notifier_dialog.py:176
+msgid "Other update notifiers"
+msgstr ""
+
+#: kram/gtk/dialogs/progress.py:38 kram/qt/progress_dialog.py:42
+msgid "Download"
+msgstr ""
+
+#: kram/gtk/dialogs/progress.py:40 kram/qt/progress_dialog.py:44
+msgid "Installation"
+msgstr ""
+
+#: kram/gtk/dialogs/progress.py:57 kram/qt/progress_dialog.py:61
+msgid "Close when finished successfully"
+msgstr ""
+
+#: kram/gtk/dialogs/repos.py:40 kram/qt/repos_dialog.py:56
+msgid "Filter…"
+msgstr ""
+
+#: kram/gtk/dialogs/repos.py:43 kram/qt/repos_dialog.py:60
+msgid "Show debuginfo and source repositories"
+msgstr ""
+
+#: kram/gtk/dialogs/repos.py:142 kram/qt/repos_dialog.py:66
+msgid "Priority"
+msgstr ""
+
+#: kram/gtk/dialogs/repos.py:194 kram/qt/repos_dialog.py:186
+msgid "Show Packages"
+msgstr ""
+
+#: kram/gtk/dialogs/repos.py:195 kram/qt/repos_dialog.py:189
+msgid "Remove Repository…"
+msgstr ""
+
+#: kram/gtk/dialogs/repos.py:199 kram/gtk/files.py:123 kram/qt/file_list.py:237
+#: kram/qt/repos_dialog.py:177
+msgid "Copy Path"
+msgstr ""
+
+#: kram/gtk/dialogs/upgrade.py:28 kram/qt/upgrade_dialog.py:71
+msgid "COPR projects: checking…"
+msgstr ""
+
+#: kram/gtk/dialogs/upgrade.py:36 kram/qt/upgrade_dialog.py:45
+#, python-brace-format
+msgid "Fedora {version} is available"
+msgstr ""
+
+#: kram/gtk/dialogs/upgrade.py:44 kram/qt/upgrade_dialog.py:51
+msgid "Check"
+msgstr ""
+
+#: kram/gtk/dialogs/upgrade.py:71 kram/qt/upgrade_dialog.py:91
+msgid "Release notes"
+msgstr ""
+
+#: kram/gtk/dialogs/upgrade.py:73 kram/qt/upgrade_dialog.py:94
+msgid "Upgrade guide"
+msgstr ""
+
+#: kram/gtk/dialogs/upgrade.py:80 kram/qt/upgrade_dialog.py:100
+#, python-brace-format
+msgid "Open {program}"
+msgstr ""
+
+#: kram/gtk/files.py:76 kram/qt/file_list.py:199
+msgid "Filter files: text, or a pattern like *.so"
+msgstr ""
+
+#: kram/gtk/files.py:85 kram/qt/file_list.py:208
+msgid "Show the files in their folders"
+msgstr ""
+
+#: kram/gtk/files.py:86 kram/qt/file_list.py:205
+msgid "Tree"
+msgstr ""
+
+#: kram/gtk/files.py:88 kram/qt/file_list.py:212
+msgid "Show the full path of every file, one per line"
+msgstr ""
+
+#: kram/gtk/files.py:89 kram/qt/file_list.py:209
+msgid "List"
+msgstr ""
+
+#: kram/gtk/files.py:96 kram/qt/file_list.py:219
+msgid "Not installed: repository metadata lists only some of the files."
+msgstr ""
+
+#: kram/gtk/files.py:177 kram/qt/file_list.py:304
+#, python-brace-format
+msgid "{shown} of {n} file"
+msgid_plural "{shown} of {n} files"
+msgstr[0] ""
+msgstr[1] ""
+
+#: kram/gtk/search.py:9 kram/qt/search_bar.py:27
+msgid ""
+"Name / Name + summary / Description: instant ranked search.\n"
+"Provides: packages providing a capability (libvulkan.so.1, "
+"python3dist(requests), webbrowser).\n"
+"File: owner of a file (/usr/bin/7z or just 7z; only the main files for "
+"packages not installed).\n"
+"\n"
+"Several words: all must match. ^start, end$, * and ? are wildcards."
+msgstr ""
+
+#: kram/gtk/search.py:24 kram/qt/search_bar.py:34
+msgid "Search (Ctrl+F)"
+msgstr ""
+
+#: kram/gtk/search.py:52 kram/qt/search_bar.py:67
+msgid "The list is filtered by the search text"
+msgstr ""
+
+#: kram/gtk/window.py:97 kram/qt/main_window.py:70
+msgid "Package Manager"
+msgstr ""
+
+#: kram/gtk/window.py:432 kram/qt/main_window.py:514
+msgid "Open Package File"
+msgstr ""
+
+#: kram/gtk/window.py:433 kram/qt/main_window.py:515
+msgid "RPM packages (*.rpm)"
+msgstr ""
+
+#: kram/gtk/window.py:506 kram/qt/main_window.py:401
+msgid "A Synaptic-style package manager for Fedora."
+msgstr ""
+
 #: kram/ipc/client.py:67
 msgid "Could not start pkexec. Is polkit installed?"
 msgstr ""
@@ -3038,425 +3507,20 @@ msgid_plural "The package information is {days} days old"
 msgstr[0] ""
 msgstr[1] ""
 
-#: kram/qt/apply_dialog.py:52
-msgid "Size"
-msgstr ""
-
-#: kram/qt/apply_dialog.py:52 kram/qt/details.py:56
-#: kram/qt/history_dialog.py:63
-msgid "Version"
-msgstr ""
-
-#: kram/qt/apply_dialog.py:101
-msgid "Recommended packages."
-msgstr ""
-
-#: kram/qt/apply_dialog.py:102
-msgid ""
-"Not required, but suggested by the packages being installed. Uncheck what "
-"you do not want."
-msgstr ""
-
-#: kram/qt/apply_dialog.py:106
-msgid "Adds"
-msgstr ""
-
-#: kram/qt/apply_dialog.py:106
-msgid "Recommended by"
-msgstr ""
-
-#: kram/qt/apply_dialog.py:106
-msgid "Recommended package"
-msgstr ""
-
-#: kram/qt/apply_dialog.py:156 kram/qt/repos_dialog.py:130
-msgid "Apply changes"
-msgstr ""
-
-#: kram/qt/apply_dialog.py:161
-msgid "Review the list before applying."
-msgstr ""
-
-#: kram/qt/apply_dialog.py:161
-msgid "The following changes will be made."
-msgstr ""
-
-#: kram/qt/apply_dialog.py:209 kram/qt/install_dialog.py:139
-msgid "Equivalent command"
-msgstr ""
-
-#: kram/qt/apply_dialog.py:213
-msgid "Download packages only"
-msgstr ""
-
-#: kram/qt/cache_dialog.py:162
-msgid "Open in the file manager"
-msgstr ""
-
-#: kram/qt/cache_dialog.py:217
-msgid "Leftover configuration files"
-msgstr ""
-
-#: kram/qt/cache_dialog.py:219
-msgid ""
-"Copies rpm keeps when you had changed a package's configuration file: your "
-"earlier version (.rpmsave) or the package's new default it did not apply "
-"(.rpmnew)."
-msgstr ""
-
-#: kram/qt/cache_dialog.py:229
-msgid "Search All Folders…"
-msgstr ""
-
-#: kram/qt/cache_dialog.py:230
-msgid "Also search the folders only root can read"
-msgstr ""
-
-#: kram/qt/cache_dialog.py:232
-msgid "Delete Unused…"
-msgstr ""
-
-#: kram/qt/cache_dialog.py:233
-msgid "Delete the copies of files that no longer exist"
-msgstr ""
-
-#: kram/qt/cache_dialog.py:255 kram/qt/file_list.py:324
-#: kram/qt/notifier_dialog.py:104 kram/qt/repos_dialog.py:178
-msgid "Show in File Manager"
-msgstr ""
-
-#: kram/qt/cache_dialog.py:269
-msgid "Delete…"
-msgstr ""
-
-#: kram/qt/cache_dialog.py:354
-#, python-brace-format
-msgid ""
-"Lines with “-” are in the current file {current}; lines with “+” only in "
-"{path}."
-msgstr ""
-
-#: kram/qt/copr_dialog.py:44
-msgid "COPR repositories"
-msgstr ""
-
-#: kram/qt/copr_dialog.py:49
-msgid "Enabled projects"
-msgstr ""
-
-#: kram/qt/copr_dialog.py:51 kram/qt/repos_dialog.py:66
-msgid "Enabled"
-msgstr ""
-
-#: kram/qt/copr_dialog.py:51
-msgid "Hub"
-msgstr ""
-
-#: kram/qt/copr_dialog.py:51 kram/qt/repos_dialog.py:66
-msgid "Packages"
-msgstr ""
-
-#: kram/qt/copr_dialog.py:51 kram/qt/copr_dialog.py:92
-msgid "Project"
-msgstr ""
-
-#: kram/qt/copr_dialog.py:64
-msgid "Enable"
-msgstr ""
-
-#: kram/qt/copr_dialog.py:65
-msgid "Disable"
-msgstr ""
-
-#: kram/qt/copr_dialog.py:66 kram/qt/repos_dialog.py:120
-msgid "Remove…"
-msgstr ""
-
-#: kram/qt/copr_dialog.py:78
-msgid "Add a project"
-msgstr ""
-
-#: kram/qt/copr_dialog.py:81
-msgid "owner/project, or words to search for"
-msgstr ""
-
-#: kram/qt/copr_dialog.py:86
-msgid "Search Copr"
-msgstr ""
-
-#: kram/qt/copr_dialog.py:92
-msgid "Builds for this system"
-msgstr ""
-
-#: kram/qt/copr_dialog.py:106
-msgid ""
-"COPR projects are built by community members and are not reviewed by Fedora."
-msgstr ""
-
-#: kram/qt/copr_dialog.py:111
-msgid "Enable selected"
-msgstr ""
-
-#: kram/qt/details.py:56
-msgid "State"
-msgstr ""
-
-#: kram/qt/file_list.py:199
-msgid "Filter files: text, or a pattern like *.so"
-msgstr ""
-
-#: kram/qt/file_list.py:205
-msgid "Tree"
-msgstr ""
-
-#: kram/qt/file_list.py:208
-msgid "Show the files in their folders"
-msgstr ""
-
-#: kram/qt/file_list.py:209
-msgid "List"
-msgstr ""
-
-#: kram/qt/file_list.py:212
-msgid "Show the full path of every file, one per line"
-msgstr ""
-
-#: kram/qt/file_list.py:219
-msgid "Not installed: repository metadata lists only some of the files."
-msgstr ""
-
-#: kram/qt/file_list.py:237 kram/qt/repos_dialog.py:177
-msgid "Copy Path"
-msgstr ""
-
-#: kram/qt/file_list.py:304
-#, python-brace-format
-msgid "{shown} of {n} file"
-msgid_plural "{shown} of {n} files"
-msgstr[0] ""
-msgstr[1] ""
-
-#: kram/qt/filters_dialog.py:61
-msgid "Remove this condition"
-msgstr ""
-
-#: kram/qt/filters_dialog.py:141
-msgid "New"
-msgstr ""
-
-#: kram/qt/filters_dialog.py:156
-msgid "Name:"
-msgstr ""
-
-#: kram/qt/filters_dialog.py:158
-msgid "all conditions"
-msgstr ""
-
-#: kram/qt/filters_dialog.py:159
-msgid "any condition"
-msgstr ""
-
-#: kram/qt/filters_dialog.py:161
-msgid "Show packages that match:"
-msgstr ""
-
-#: kram/qt/filters_dialog.py:172
-msgid "Add condition"
-msgstr ""
-
-#: kram/qt/history_dialog.py:45
-msgid "Transaction History"
-msgstr ""
-
-#: kram/qt/history_dialog.py:53
-msgid "Filter by package name"
-msgstr ""
-
-#: kram/qt/history_dialog.py:61
-msgid "Changes"
-msgstr ""
-
-#: kram/qt/history_dialog.py:61
-msgid "Command"
-msgstr ""
-
-#: kram/qt/history_dialog.py:61
-msgid "Date"
-msgstr ""
-
-#: kram/qt/history_dialog.py:61 kram/qt/repos_dialog.py:66
-msgid "ID"
-msgstr ""
-
-#: kram/qt/history_dialog.py:61
-msgid "User"
-msgstr ""
-
-#: kram/qt/history_dialog.py:63
-msgid "Action"
-msgstr ""
-
-#: kram/qt/history_dialog.py:65
-msgid ""
-"Double-click a package to close the history and show the package in the list"
-msgstr ""
-
-#: kram/qt/install_dialog.py:62
-msgid "Install Package File"
-msgstr ""
-
-#: kram/qt/install_dialog.py:103
-msgid "What installing it changes"
-msgstr ""
-
-#: kram/qt/install_dialog.py:112 kram/qt/progress_dialog.py:57
-msgid "Details"
-msgstr ""
-
-#: kram/qt/install_dialog.py:114
-msgid "Scripts"
-msgstr ""
-
-#: kram/qt/main_window.py:63
-msgid "Package Manager"
-msgstr ""
-
-#: kram/qt/main_window.py:387
-msgid "A Synaptic-style package manager for Fedora."
-msgstr ""
-
-#: kram/qt/main_window.py:389
+#: kram/qt/main_window.py:403
 msgid "Released under the MIT License."
 msgstr ""
 
-#: kram/qt/main_window.py:392
+#: kram/qt/main_window.py:406
 msgid "What's New"
-msgstr ""
-
-#: kram/qt/main_window.py:500
-msgid "Open Package File"
-msgstr ""
-
-#: kram/qt/main_window.py:501
-msgid "RPM packages (*.rpm)"
-msgstr ""
-
-#: kram/qt/notifier_dialog.py:127
-msgid "Show an icon in the system tray when updates are available"
-msgstr ""
-
-#: kram/qt/notifier_dialog.py:130
-msgid ""
-"The icon is there only while updates are available. Kram downloads nothing "
-"in the background: Fedora's own service refreshes the package information, "
-"Kram only reads it, at login, hourly and after every installation."
-msgstr ""
-
-#: kram/qt/notifier_dialog.py:135
-msgid ""
-"This session has no system tray for such icons (GNOME without the "
-"AppIndicator extension, LXDE), so the icon cannot appear."
-msgstr ""
-
-#: kram/qt/notifier_dialog.py:157
-msgid "Fedora's update check"
-msgstr ""
-
-#: kram/qt/notifier_dialog.py:166
-msgid "Turn On Fedora's Update Check…"
-msgstr ""
-
-#: kram/qt/notifier_dialog.py:167
-msgid "Asks for your password"
-msgstr ""
-
-#: kram/qt/notifier_dialog.py:176
-msgid "Other update notifiers"
-msgstr ""
-
-#: kram/qt/progress_dialog.py:42
-msgid "Download"
-msgstr ""
-
-#: kram/qt/progress_dialog.py:44
-msgid "Installation"
-msgstr ""
-
-#: kram/qt/progress_dialog.py:61
-msgid "Close when finished successfully"
-msgstr ""
-
-#: kram/qt/repos_dialog.py:56
-msgid "Filter…"
-msgstr ""
-
-#: kram/qt/repos_dialog.py:60
-msgid "Show debuginfo and source repositories"
-msgstr ""
-
-#: kram/qt/repos_dialog.py:66
-msgid "Priority"
-msgstr ""
-
-#: kram/qt/repos_dialog.py:186
-msgid "Show Packages"
-msgstr ""
-
-#: kram/qt/repos_dialog.py:189
-msgid "Remove Repository…"
-msgstr ""
-
-#: kram/qt/search_bar.py:27
-msgid ""
-"Name / Name + summary / Description: instant ranked search.\n"
-"Provides: packages providing a capability (libvulkan.so.1, "
-"python3dist(requests), webbrowser).\n"
-"File: owner of a file (/usr/bin/7z or just 7z; only the main files for "
-"packages not installed).\n"
-"\n"
-"Several words: all must match. ^start, end$, * and ? are wildcards."
-msgstr ""
-
-#: kram/qt/search_bar.py:34
-msgid "Search (Ctrl+F)"
-msgstr ""
-
-#: kram/qt/search_bar.py:67
-msgid "The list is filtered by the search text"
 msgstr ""
 
 #: kram/qt/toolbar.py:25
 msgid "Main toolbar"
 msgstr ""
 
-#: kram/qt/upgrade_dialog.py:45
-#, python-brace-format
-msgid "Fedora {version} is available"
-msgstr ""
-
-#: kram/qt/upgrade_dialog.py:51
-msgid "Check"
-msgstr ""
-
 #: kram/qt/upgrade_dialog.py:55
 msgid "Cancel"
-msgstr ""
-
-#: kram/qt/upgrade_dialog.py:71
-msgid "COPR projects: checking…"
-msgstr ""
-
-#: kram/qt/upgrade_dialog.py:91
-msgid "Release notes"
-msgstr ""
-
-#: kram/qt/upgrade_dialog.py:94
-msgid "Upgrade guide"
-msgstr ""
-
-#: kram/qt/upgrade_dialog.py:100
-#, python-brace-format
-msgid "Open {program}"
 msgstr ""
 
 #: kram/qt/whats_new.py:13

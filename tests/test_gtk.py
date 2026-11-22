@@ -186,8 +186,8 @@ def test_the_main_window_shows_the_catalog(monkeypatch):
     catalog = SimpleNamespace(load=lambda *a, **k: snap, blocked_upgrades=lambda: {},
                               details=lambda key: (_ for _ in ()).throw(LookupError(key)))
     monkeypatch.setattr(window_module, "Browser",
-                        lambda view, ui, scheduler, details, post: Browser(view, ui, scheduler, details, post,
-                                                                           catalog=catalog))
+                        lambda view, ui, scheduler, details, post, **kw: Browser(view, ui, scheduler, details, post,
+                                                                                 catalog=catalog, **kw))
     from kram.gtk.app import KramApplication
     app = KramApplication()
     app.register(None)
@@ -208,6 +208,30 @@ def test_the_main_window_shows_the_catalog(monkeypatch):
     assert win.menu_button.get_visible()
     win.close()
     spin(seconds=0.3)
+
+
+@pytest.mark.feature(Feature.DIALOG_APPLY_CONFLICTS, front="gtk")
+def test_the_gtk_window_names_its_package_and_closes_when_it_is_removed(monkeypatch):
+    """The offer itself is the Browser's (tests/test_browser.py); the window says which package it is and closes."""
+    import kram.gtk.window as window_module
+    from kram.app.browser import Browser
+    snap = CatalogSnapshot(rows(3), 1, 0, 0.1)
+    catalog = SimpleNamespace(load=lambda *a, **k: snap, blocked_upgrades=lambda: {},
+                              details=lambda key: (_ for _ in ()).throw(LookupError(key)))
+    monkeypatch.setattr(window_module, "Browser",
+                        lambda view, ui, scheduler, details, post, **kw: Browser(view, ui, scheduler, details, post,
+                                                                                 catalog=catalog, **kw))
+    from kram.gtk.app import KramApplication
+    app = KramApplication()
+    app.register(None)
+    from kram.gtk.window import MainWindow
+    win = MainWindow(app)
+    win.present()
+    spin(lambda: win.browser.snapshot is not None, 5)
+    assert win.browser.front_package == "kram-gtk"
+    win.quit()
+    spin(lambda: not win.get_visible(), 3)
+    assert not win.get_visible()
 
 
 def _review_preview(with_kvm: bool = True):
@@ -885,8 +909,8 @@ def test_an_rpm_dropped_on_the_window_opens_the_installer(monkeypatch):
     catalog = SimpleNamespace(load=lambda *a, **k: snap, blocked_upgrades=lambda: {},
                               details=lambda key: (_ for _ in ()).throw(LookupError(key)))
     monkeypatch.setattr(window_module, "Browser",
-                        lambda view, ui, scheduler, details, post: Browser(view, ui, scheduler, details, post,
-                                                                           catalog=catalog))
+                        lambda view, ui, scheduler, details, post, **kw: Browser(view, ui, scheduler, details, post,
+                                                                                 catalog=catalog, **kw))
     app = KramApplication()
     app.register(None)
     win = MainWindow(app)
