@@ -3,11 +3,12 @@
 This is the source of truth for the parity of the Qt and GTK front ends. A feature is added here when it is built, with
 its description and both front ends' support. Every test that proves a SUPPORTED entry is marked
 `@pytest.mark.feature(Feature.X, front="qt" | "gtk")`; tests/test_parity.py reads the marks from the sources.
-NOT_IMPLEMENTED fails the run; PARTIAL and NOT_INTENDED need a note. Names are sorted and grouped by their prefix
+PLANNED and NOT_IMPLEMENTED fail the run for a released front end (FRONTS_RELEASED); PARTIAL and NOT_INTENDED
+need a note. docs/PARITY.md explains the statuses and the release rule. Names are sorted and grouped by their prefix
 (the scope): APPLY_ and DIALOG_ for dialogs, DETAILS_ for the detail tabs, LIST_ for the package list, and so on.
 
-No toolkit is imported here: the tables are plain data, so the toolkit-free layer can hold them. Generated and checked
-by tests/test_parity.py: keep the order and the layout.
+No toolkit is imported here: the tables are plain data, so the toolkit-free layer can hold them. Checked by
+tests/test_parity.py: keep the order and the layout. docs/PARITY.md explains the statuses and how to add a feature.
 """
 from enum import Enum
 
@@ -134,7 +135,8 @@ class Feature(Enum):
 
 
 class Support(Enum):
-    NOT_IMPLEMENTED = "not_implemented"  # breaks parity: the test run fails
+    PLANNED = "planned"                  # a front end in development: not built yet, allowed until it is released
+    NOT_IMPLEMENTED = "not_implemented"  # breaks parity once the front end is released
     SUPPORTED = "supported"              # proved by marked tests
     PARTIAL = "partial"                  # works, but not all of it is proved; the note says what
     NOT_INTENDED = "not_intended"        # deliberately absent or different; the note says why
@@ -511,4 +513,129 @@ GTK: dict[Feature, Entry] = {
     Feature.WINDOW_STATUS_BAR: Entry(Support.SUPPORTED),
 }
 
-FRONTS: dict[str, dict[Feature, Entry]] = {"qt": QT, "gtk": GTK}
+# the terminal front end, in development: PLANNED until built; see docs/PARITY.md
+TUI: dict[Feature, Entry] = {
+    Feature.DETAILS_ADVISORIES_TAB: Entry(Support.PLANNED),
+    Feature.DETAILS_BLOCKED_REASON: Entry(Support.PLANNED),
+    Feature.DETAILS_CHANGELOG: Entry(Support.PLANNED),
+    Feature.DETAILS_DESCRIPTION: Entry(Support.PLANNED),
+    Feature.DETAILS_FILES_COPY_PATH: Entry(Support.PLANNED),
+    Feature.DETAILS_FILES_FILTER: Entry(Support.PLANNED),
+    Feature.DETAILS_FILES_LIST: Entry(Support.PLANNED),
+    Feature.DETAILS_FILES_SHOW_IN_FM: Entry(Support.PLANNED),
+    Feature.DETAILS_FILES_TREE: Entry(Support.PLANNED),
+    Feature.DETAILS_LINKS: Entry(Support.PLANNED),
+    Feature.DETAILS_REMEMBER_TAB: Entry(Support.PLANNED),
+    Feature.DETAILS_TABS: Entry(Support.PLANNED),
+    Feature.DETAILS_VERSIONS: Entry(Support.PLANNED),
+    Feature.DIALOG_ABOUT_TOOLKIT: Entry(Support.PLANNED),
+    Feature.DIALOG_APPLY: Entry(Support.PLANNED),
+    Feature.DIALOG_APPLY_CANNOT_APPLY: Entry(Support.PLANNED),
+    Feature.DIALOG_APPLY_COMMAND: Entry(Support.PLANNED),
+    Feature.DIALOG_APPLY_DOWNLOAD_ONLY: Entry(Support.PLANNED),
+    Feature.DIALOG_APPLY_FREE_SPACE: Entry(Support.PLANNED),
+    Feature.DIALOG_APPLY_RECOMMENDATIONS: Entry(Support.PLANNED),
+    Feature.DIALOG_APPLY_SKIPPED: Entry(Support.PLANNED),
+    Feature.DIALOG_CLEANUP: Entry(Support.PLANNED),
+    Feature.DIALOG_CLEANUP_CACHES: Entry(Support.PLANNED),
+    Feature.DIALOG_CLEANUP_COMPARE: Entry(Support.PLANNED),
+    Feature.DIALOG_CLEANUP_DELETE_UNUSED: Entry(Support.PLANNED),
+    Feature.DIALOG_CLEANUP_LEFTOVERS: Entry(Support.PLANNED),
+    Feature.DIALOG_CLEANUP_SEARCH_ALL: Entry(Support.PLANNED),
+    Feature.DIALOG_COPR: Entry(Support.PLANNED),
+    Feature.DIALOG_COPR_ENABLE_FROM_SEARCH: Entry(Support.PLANNED),
+    Feature.DIALOG_COPR_NO_BUILD_QUESTION: Entry(Support.PLANNED),
+    Feature.DIALOG_COPR_PACKAGES: Entry(Support.PLANNED),
+    Feature.DIALOG_COPR_REMOVE_QUESTION: Entry(Support.PLANNED),
+    Feature.DIALOG_CUSTOM_FILTERS: Entry(Support.PLANNED),
+    Feature.DIALOG_CUSTOM_FILTERS_COUNT: Entry(Support.PLANNED),
+    Feature.DIALOG_CUSTOM_FILTERS_MATCH: Entry(Support.PLANNED),
+    Feature.DIALOG_CUSTOM_FILTERS_NEW_FROM_VIEW: Entry(Support.PLANNED),
+    Feature.DIALOG_HISTORY: Entry(Support.PLANNED),
+    Feature.DIALOG_HISTORY_FILTER: Entry(Support.PLANNED),
+    Feature.DIALOG_HISTORY_OPEN_PACKAGE: Entry(Support.PLANNED),
+    Feature.DIALOG_HISTORY_UNDO: Entry(Support.PLANNED),
+    Feature.DIALOG_INSTALL_FILE: Entry(Support.PLANNED),
+    Feature.DIALOG_INSTALL_FILE_CHECK: Entry(Support.PLANNED),
+    Feature.DIALOG_INSTALL_FILE_COMMAND: Entry(Support.PLANNED),
+    Feature.DIALOG_INSTALL_FILE_RECOMMENDATIONS: Entry(Support.PLANNED),
+    Feature.DIALOG_NOTIFICATIONS: Entry(Support.PLANNED),
+    Feature.DIALOG_NOTIFICATIONS_FEDORA_TIMER: Entry(Support.PLANNED),
+    Feature.DIALOG_NOTIFICATIONS_STALE_DAYS: Entry(Support.PLANNED),
+    Feature.DIALOG_PROGRESS: Entry(Support.PLANNED),
+    Feature.DIALOG_PROGRESS_AUTO_CLOSE: Entry(Support.PLANNED),
+    Feature.DIALOG_PROGRESS_CLOSE_LOCK: Entry(Support.PLANNED),
+    Feature.DIALOG_PROGRESS_KEY_QUESTION: Entry(Support.PLANNED),
+    Feature.DIALOG_PROGRESS_LOG: Entry(Support.PLANNED),
+    Feature.DIALOG_REPOSITORIES: Entry(Support.PLANNED),
+    Feature.DIALOG_REPOSITORIES_FILTER: Entry(Support.PLANNED),
+    Feature.DIALOG_REPOSITORIES_REMOVE: Entry(Support.PLANNED),
+    Feature.DIALOG_REPOSITORIES_SHOW_AUX: Entry(Support.PLANNED),
+    Feature.DIALOG_WHATS_NEW: Entry(Support.PLANNED),
+    Feature.ICON_NON_PIXELATED: Entry(Support.NOT_INTENDED, 'a terminal draws no painted icons'),
+    Feature.INSTALL_FILE_ARGUMENT: Entry(Support.PLANNED),
+    Feature.INSTALL_FILE_DROP: Entry(Support.PLANNED),
+    Feature.INSTALL_FILE_OPEN_MENU: Entry(Support.PLANNED),
+    Feature.INSTANCE_ACTIVATION_TOKEN: Entry(Support.PLANNED),
+    Feature.INSTANCE_TRAY: Entry(Support.PLANNED),
+    Feature.LIST_COLUMNS: Entry(Support.PLANNED),
+    Feature.LIST_CONTEXT_MENU: Entry(Support.PLANNED),
+    Feature.LIST_DOUBLE_CLICK_MARK: Entry(Support.PLANNED),
+    Feature.LIST_EMPTY_EXPLANATION: Entry(Support.PLANNED),
+    Feature.LIST_LOCK_PADLOCK: Entry(Support.PLANNED),
+    Feature.LIST_MULTI_SELECT: Entry(Support.PLANNED),
+    Feature.LIST_ROW_TINT: Entry(Support.PLANNED),
+    Feature.LIST_SORT: Entry(Support.PLANNED),
+    Feature.LIST_STATUS_CLICK: Entry(Support.PLANNED),
+    Feature.MARKINGS_CSV_EXPORT: Entry(Support.PLANNED),
+    Feature.MARKINGS_FILE: Entry(Support.PLANNED),
+    Feature.MARK_APPLY_BUTTON: Entry(Support.PLANNED),
+    Feature.MARK_INSTALL_REMOVE: Entry(Support.PLANNED),
+    Feature.MARK_UNMARK_ALL: Entry(Support.PLANNED),
+    Feature.MARK_UNMARK_ONE: Entry(Support.PLANNED),
+    Feature.MARK_UNNEEDED: Entry(Support.PLANNED),
+    Feature.MARK_UPGRADE_ALL: Entry(Support.PLANNED),
+    Feature.MARK_UPGRADE_BY_ADVISORY: Entry(Support.PLANNED),
+    Feature.MARK_UPGRADE_SPLIT_BUTTON: Entry(Support.PLANNED),
+    Feature.MENU_ACCELERATORS: Entry(Support.PLANNED),
+    Feature.MENU_BAR: Entry(Support.PLANNED),
+    Feature.MENU_DOWNGRADE_SUBMENU: Entry(Support.PLANNED),
+    Feature.MENU_HAMBURGER: Entry(Support.NOT_INTENDED, 'the hamburger is a GTK header bar button'),
+    Feature.MENU_ICONS: Entry(Support.NOT_INTENDED, 'a terminal menu has no icons'),
+    Feature.MENU_PACKAGE: Entry(Support.PLANNED),
+    Feature.MENU_SIDEBAR: Entry(Support.PLANNED),
+    Feature.RELEASE_BUTTON: Entry(Support.PLANNED),
+    Feature.RELEASE_DIALOG: Entry(Support.PLANNED),
+    Feature.RELEASE_WATCH: Entry(Support.PLANNED),
+    Feature.SEARCH_BAR: Entry(Support.PLANNED),
+    Feature.SEARCH_FILTER_WHILE_TYPING: Entry(Support.PLANNED),
+    Feature.SEARCH_MODES: Entry(Support.PLANNED),
+    Feature.SETTINGS_MENU_BAR: Entry(Support.NOT_INTENDED, "the menu bar setting is GTK's"),
+    Feature.SETTINGS_REGISTRY: Entry(Support.PLANNED),
+    Feature.SETTINGS_STATUS_CLICK: Entry(Support.PLANNED),
+    Feature.SETTINGS_TOOLBAR_STYLE: Entry(Support.NOT_INTENDED, "Qt's toolbar style"),
+    Feature.SETTINGS_WATCH_RELEASES: Entry(Support.PLANNED),
+    Feature.SIDEBAR_COUNTS: Entry(Support.PLANNED),
+    Feature.SIDEBAR_CUSTOM_FILTER_EDIT: Entry(Support.PLANNED),
+    Feature.SIDEBAR_CUSTOM_FILTER_MENU: Entry(Support.PLANNED),
+    Feature.SIDEBAR_ENVIRONMENTS_TREE: Entry(Support.PLANNED),
+    Feature.SIDEBAR_GROUP_CHANGE: Entry(Support.PLANNED),
+    Feature.SIDEBAR_SECTION_ICONS: Entry(Support.NOT_INTENDED, 'a terminal draws no icons on its section buttons'),
+    Feature.SIDEBAR_VIEWS: Entry(Support.PLANNED),
+    Feature.SYSTEM_FILE_MANAGER: Entry(Support.PLANNED),
+    Feature.SYSTEM_POLKIT: Entry(Support.PLANNED),
+    Feature.SYSTEM_THEME_FOLLOWS_DESKTOP: Entry(Support.NOT_INTENDED, 'a terminal takes its colours from the terminal emulator'),
+    Feature.SYSTEM_WEB_LINKS: Entry(Support.PLANNED),
+    Feature.TRANSLATIONS_CATALOGS: Entry(Support.PLANNED),
+    Feature.WINDOW_CLOSE_PENDING: Entry(Support.PLANNED),
+    Feature.WINDOW_FRACTIONAL_SCALE: Entry(Support.NOT_INTENDED, 'a terminal has no screen scale'),
+    Feature.WINDOW_HEADER_BUTTONS: Entry(Support.PLANNED),
+    Feature.WINDOW_KEYBOARD_ONLY: Entry(Support.PLANNED),
+    Feature.WINDOW_PANES_SAVED: Entry(Support.PLANNED),
+    Feature.WINDOW_STATUS_BAR: Entry(Support.PLANNED),
+}
+
+# the front ends that are released: any PLANNED or NOT_IMPLEMENTED entry in them fails the test run
+FRONTS_RELEASED: frozenset[str] = frozenset({"qt", "gtk"})
+
+FRONTS: dict[str, dict[Feature, Entry]] = {"qt": QT, "gtk": GTK, "tui": TUI}

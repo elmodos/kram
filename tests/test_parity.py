@@ -6,7 +6,7 @@ the check is the same on a machine without GTK as in the container."""
 import ast
 from pathlib import Path
 
-from kram.app.parity import FRONTS, Feature, Support
+from kram.app.parity import FRONTS, FRONTS_RELEASED, Feature, Support
 
 TESTS = Path(__file__).resolve().parent
 
@@ -42,10 +42,21 @@ def test_every_feature_is_listed_for_every_front_end():
                                            f"unknown {sorted(f.value for f in set(table) - set(Feature))}"
 
 
-def test_nothing_is_not_implemented():
-    missing = [(front, f.value) for front, table in FRONTS.items() for f, e in table.items()
-               if e.support is Support.NOT_IMPLEMENTED]
-    assert not missing, f"features that break parity: {missing}"
+def test_a_released_front_end_has_no_planned_or_missing_feature():
+    """Released front ends are complete: nothing PLANNED and nothing NOT_IMPLEMENTED (kram.app.parity)."""
+    broken = [(front, f.value, e.support.name) for front in FRONTS_RELEASED for f, e in FRONTS[front].items()
+              if e.support in (Support.PLANNED, Support.NOT_IMPLEMENTED)]
+    assert not broken, f"released front ends with features still to do: {broken}"
+
+
+def test_a_front_end_in_development_is_listed_as_planned_or_not_intended():
+    """A front end not released yet may have PLANNED features, but each one is either planned or deliberately absent."""
+    for front, table in FRONTS.items():
+        if front in FRONTS_RELEASED:
+            continue
+        odd = [f.value for f, e in table.items() if e.support not in (Support.PLANNED, Support.NOT_INTENDED,
+                                                                        Support.PARTIAL, Support.SUPPORTED)]
+        assert not odd, f"{front}: {odd}"
 
 
 def test_what_is_partial_or_not_intended_says_why():
