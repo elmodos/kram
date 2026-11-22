@@ -502,7 +502,7 @@ class MainWindow(Adw.ApplicationWindow):
         self._popup(self.acts.dynamic_menu(items, "sidebar"), widget, x, y)
 
     def about(self) -> None:
-        about = Adw.AboutDialog(application_name="Kram", application_icon=self.get_application().get_application_id(),
+        about = Adw.AboutDialog(application_name="Kram (GTK)", application_icon=self.get_application().get_application_id(),
                                 version=__version__, website=HOMEPAGE, issue_url=f"{HOMEPAGE}/issues",
                                 comments=f"{_('A Synaptic-style package manager for Fedora.')}\n\n{toolkit_versions()}",
                                 copyright="© 2026 Modo Ltunzher", license_type=Gtk.License.MIT_X11)
