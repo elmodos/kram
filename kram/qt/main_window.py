@@ -3,7 +3,8 @@ state and the flows; this builds the widgets, wires them to it and shows its dia
 from collections.abc import Callable
 from pathlib import Path
 
-from PySide6.QtCore import QSettings, QStandardPaths, Qt
+from PySide6 import __version__ as pyside_version
+from PySide6.QtCore import QSettings, QStandardPaths, Qt, qVersion
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QApplication,
@@ -55,6 +56,12 @@ FILES_VIEW_KEY = "details/files-view"  # "tree" or "list"
 
 def _order(descending: bool) -> Qt.SortOrder:
     return Qt.SortOrder.DescendingOrder if descending else Qt.SortOrder.AscendingOrder
+
+
+
+def toolkit_versions() -> str:
+    """The toolkit this front end runs on, for About: Qt's and PySide6's versions."""
+    return f"Qt {qVersion()}, PySide6 {pyside_version}"
 
 
 class MainWindow(QMainWindow):
@@ -384,7 +391,8 @@ class MainWindow(QMainWindow):
 
     def about(self):
         box = QMessageBox(QMessageBox.Icon.NoIcon, _("About Kram"),
-                          f"<h3>Kram {__version__}</h3><p>{_('A Synaptic-style package manager for Fedora.')}</p>"
+                          f"<h3>Kram · Qt {__version__}</h3><p>{toolkit_versions()}</p>"
+                          f"<p>{_('A Synaptic-style package manager for Fedora.')}</p>"
                           f"<p><a href='{HOMEPAGE}'>{HOMEPAGE}</a></p>"
                           f"<p>Copyright © 2026 Modo Ltunzher<br>{_('Released under the MIT License.')}</p>",
                           QMessageBox.StandardButton.Close, self)

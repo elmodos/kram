@@ -4,6 +4,8 @@ import os
 
 import pytest
 
+from kram.app.parity import Feature  # noqa: E402  (the feature marks of the parity tests)
+
 pytest.importorskip("PySide6.QtWidgets")
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
@@ -35,6 +37,7 @@ def test_the_column_is_never_narrower_than_the_view(app):
     assert tree.header().sectionSize(0) > tree.viewport().width() and tree.horizontalScrollBar().maximum() > 0
 
 
+@pytest.mark.feature(Feature.SIDEBAR_VIEWS, front="qt")
 def test_an_empty_entry_goes_once_the_selection_leaves_it(app):
     """Kept while selected, as a restored selection; hidden again when another entry is picked."""
     from kram.core.model import CatalogSnapshot

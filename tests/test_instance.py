@@ -4,6 +4,8 @@ from types import SimpleNamespace
 
 import pytest
 
+from kram.app.parity import Feature  # noqa: E402  (the feature marks of the parity tests)
+
 pytest.importorskip("PySide6.QtDBus")
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
@@ -45,6 +47,7 @@ def test_upgradable_while_loading_is_selected_after_the_load():
     assert window.browser._restore_filter == ("status", "status:upgradable") and calls == []
 
 
+@pytest.mark.feature(Feature.INSTANCE_TRAY, front="qt")
 def test_upgradable_when_loaded_selects_it_now():
     calls, window = _window(loaded=True)
     window.show_view(instance.UPGRADABLE)

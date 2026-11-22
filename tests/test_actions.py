@@ -17,6 +17,7 @@ from kram.app.actions import (
     menu_bar,
     walk,
 )
+from kram.app.parity import Feature  # noqa: E402  (the feature marks of the parity tests)
 from kram.core.marks import Action, MarkSet
 from kram.core.model import Origin, PkgRow, Status
 
@@ -41,6 +42,7 @@ def test_every_action_has_a_unique_id_and_every_menu_entry_exists():
     assert used <= set(ids)
 
 
+@pytest.mark.feature(Feature.MARK_INSTALL_REMOVE, front="qt")
 def test_marks_follow_the_selection_and_stop_while_busy():
     enabled = state([ROWS["new"]]).enabled
     assert enabled[mark_id(Action.INSTALL)] and not enabled[mark_id(Action.REMOVE)]
@@ -55,6 +57,7 @@ def test_downgrade_needs_one_installed_package():
     assert not state([ROWS["old"]], busy=True).enabled["downgrade"]
 
 
+@pytest.mark.feature(Feature.MARK_UNMARK_ALL, front="qt")
 def test_unmark_apply_and_save_need_marks():
     marks = MarkSet()
     marks.set(ROWS["new"], Action.INSTALL)
@@ -101,6 +104,7 @@ def test_why_blocked_shows_only_for_one_blocked_row():
     assert not state([ROWS["old"], ROWS["same"]], blocked=blocked).visible["why_blocked"]
 
 
+@pytest.mark.feature(Feature.MENU_DOWNGRADE_SUBMENU, front="qt")
 def test_downgrade_items():
     version = lambda evr, installed=False: SimpleNamespace(evr=evr, installed=installed, locked_out=False,  # noqa: E731
                                                            repo_id="fedora")
@@ -129,6 +133,8 @@ def test_preferences_round_trip_and_announce_changes():
         preferences.changed.disconnect(seen.append)
 
 
+@pytest.mark.feature(Feature.SETTINGS_REGISTRY, front="qt")
+@pytest.mark.feature(Feature.SETTINGS_TOOLBAR_STYLE, front="qt")
 def test_each_toolkit_has_its_own_settings():
     qt = {p.key for p in preferences.prefs_for("qt")}
     gtk = {p.key for p in preferences.prefs_for("gtk")}
@@ -189,6 +195,7 @@ def test_the_qt_menus_are_those_of_0_11_3(window):
     assert [[a.text(), [s.toString() for s in a.shortcuts()]] for a in window.actions()] == recorded[3]
 
 
+@pytest.mark.feature(Feature.MENU_BAR, front="qt")
 def test_the_qt_menu_bar_is_the_data(window):
     from kram.qt.actions import TOOLKIT
     defs = {d.id: d for d in action_defs()}

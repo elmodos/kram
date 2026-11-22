@@ -3,7 +3,10 @@ import json
 from collections import Counter
 from types import SimpleNamespace
 
+import pytest
+
 from kram.app import copr as copr_app
+from kram.app.parity import Feature
 from kram.app.ports import RecordingUi
 from kram.core import net
 from kram.core.model import Origin, RepoInfo
@@ -55,6 +58,7 @@ def test_the_table_and_the_buttons():
     assert c.buttons(None, None, "owner/project").add
 
 
+@pytest.mark.feature(Feature.DIALOG_COPR_REMOVE_QUESTION, front="qt")
 def test_removing_asks_and_can_show_the_packages_instead():
     c, view, ui, helper, shown = projects(answers=["show", "remove"])
     c.remove(view.projects[0])
@@ -63,6 +67,7 @@ def test_removing_asks_and_can_show_the_packages_instead():
     assert helper == [({"op": "copr", "action": "remove", "project": "elmodos/Kram"}, "Removing elmodos/Kram")]
 
 
+@pytest.mark.feature(Feature.DIALOG_COPR_NO_BUILD_QUESTION, front="qt")
 def test_search_marks_the_enabled_project_and_missing_builds(monkeypatch):
     payload = {"items": [{"full_name": "elmodos/Kram", "description": "d", "chroot_repos": {"fedora-45-x86_64": ""}},
                          {"full_name": "a/old", "description": "", "chroot_repos": {"fedora-43-x86_64": ""}}]}

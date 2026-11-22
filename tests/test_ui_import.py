@@ -5,6 +5,8 @@ import pkgutil
 
 import pytest
 
+from kram.app.parity import Feature  # noqa: E402  (the feature marks of the parity tests)
+
 pytest.importorskip("PySide6.QtWidgets")
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
@@ -103,6 +105,7 @@ def test_apply_dialog_unchecks_a_recommendation(app):
 
 
 
+@pytest.mark.feature(Feature.DIALOG_APPLY_SKIPPED, front="qt")
 def test_apply_dialog_shows_the_skipped_changes(app):
     from kram.core.model import PreviewItem, TransactionPreview
     from kram.qt.apply_dialog import ApplyDialog
@@ -145,6 +148,8 @@ def test_apply_dialog_explains_a_group_whose_packages_are_in_place(app):
     dlg = ApplyDialog(TransactionPreview([item], [], 100, 0, groups=[group]), request)
     assert dlg.note.isHidden()  # packages to show: nothing to explain
 
+@pytest.mark.feature(Feature.DIALOG_INSTALL_FILE, front="qt")
+@pytest.mark.feature(Feature.DIALOG_INSTALL_FILE_COMMAND, front="qt")
 def test_install_dialog(app, monkeypatch):
     import time
 
@@ -226,6 +231,7 @@ def test_install_dialog(app, monkeypatch):
     assert dlg.result() == install_dialog.QDialog.Accepted and dlg.changed_system and calls[-1] == ("forget",)
 
 
+@pytest.mark.feature(Feature.DIALOG_PROGRESS, front="qt")
 def test_progress_counts_packages_not_rpm_steps(app):
     """A reinstall is two rpm steps (install the copy, erase the old one): one package, and no "Removing"."""
     from types import SimpleNamespace
@@ -254,6 +260,7 @@ def test_progress_counts_packages_not_rpm_steps(app):
     assert dlg.rpm_bar.value() == dlg.rpm_bar.maximum()
 
 
+@pytest.mark.feature(Feature.DIALOG_WHATS_NEW, front="qt")
 def test_whats_new_dialog(app):
     import kram
     from kram.core.releases import Release

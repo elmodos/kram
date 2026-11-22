@@ -5,6 +5,7 @@ import pytest
 
 from kram.app import empty_list
 from kram.app.empty_list import ALL, DESCRIPTIONS, RELOAD, REPOS, EmptyList
+from kram.app.parity import Feature
 from kram.qt.doc_html import to_html
 
 
@@ -74,6 +75,7 @@ def test_f5_reloads_too(window):
     assert QKeySequence("F5") in window.acts.reload.shortcuts()
 
 
+@pytest.mark.feature(Feature.LIST_EMPTY_EXPLANATION, front="qt")
 def test_the_empty_list_explains_and_its_link_shows_the_results(window, monkeypatch):
     from kram.core.filters import FilterEntry
     from kram.core.model import CatalogSnapshot, Origin, PkgRow, Status

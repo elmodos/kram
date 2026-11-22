@@ -3,6 +3,8 @@ import os
 
 import pytest
 
+from kram.app.parity import Feature  # noqa: E402  (the feature marks of the parity tests)
+
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from PySide6.QtGui import QPalette  # noqa: E402
@@ -12,6 +14,7 @@ from kram.qt import theme  # noqa: E402
 
 
 @pytest.mark.parametrize("desktop", ["GNOME", "ubuntu:GNOME", "GNOME-Classic:GNOME"])
+@pytest.mark.feature(Feature.SYSTEM_THEME_FOLLOWS_DESKTOP, front="qt")
 def test_gnome_sessions_are_followed(desktop):
     assert theme.wanted({"XDG_CURRENT_DESKTOP": desktop})
 

@@ -1,6 +1,7 @@
 # A GTK front end for Kram — implementation plan
 
-Status: **phase 1 done** (2026-11-21): the logic extraction (P1.0–P1.15) and the rename to `kram/qt` (P1.16) are merged
+Status: **phase 2 under way** (2026-11-22) on branch `feature/gtk`: spikes S1–S9 done (§14); `kram/gtk` has the
+main window and every dialog over `kram/app` (§7.4 steps 2–6); polish and packaging are next (§16). **Phase 1 done** (2026-11-21): the logic extraction (P1.0–P1.15) and the rename to `kram/qt` (P1.16) are merged
 into `main` (P1.17), without a release of its own: they ship with the next release, see §15. Phase 2 (the GTK front
 end) is wanted, its look is settled from a mockup, and it starts after that merge and
 the spikes in §7.1, on a branch of its own until full parity. Short summary in `docs/PLAN.md` §10, "A GTK front end
@@ -664,7 +665,16 @@ If step 2 or 3 cannot be made reliable: name the packages **`kram` (Qt) + `kram-
 `Obsoletes` needed, `kram` simply becomes the Qt front end), and record why in §14.
 
 `%check` runs the toolkit-free tests plus the installed front end's (S8 for GTK). `.copr/Makefile` needs no change
-(one SRPM). `scripts/rpm_check.sh` checks each front end in turn, and that `kram-gtk` pulls in no Qt and `kram-qt` no
+(one SRPM). **Versions of the packages.** All of them come from one spec and one SRPM (`packaging/kram.spec`), so `kram-common`,
+`kram-qt` and `kram-gtk` always carry the same `%{version}-%{release}`, and their `Requires` pin each other with `=`.
+A fix in one front end therefore gives the other front end a new version too, with the same files: a rebuild, which
+`dnf upgrade` downloads (the packages are small). That is already how Kram works: every commit on `main` is a
+snapshot of the whole package (`.copr/Makefile`). Separate versions per front end would need separate specs and
+looser pins (`>=`); the front ends share `kram/core`, `kram/app` and the helper, so one version is the simpler truth.
+Decided 2026-11-22: keep one version. **Revisit** if a front end needs a release of its own (then split the spec
+and loosen the pins).
+
+`scripts/rpm_check.sh` checks each front end in turn, and that `kram-gtk` pulls in no Qt and `kram-qt` no
 GTK 4 (`dnf repoquery --requires --resolve`).
 
 ---
@@ -710,13 +720,34 @@ Answered by the author on 2026-11-21; the answers are decisions D8–D13 in §1.
 - Q5 Hamburger while the menu bar is shown → hidden (D12).
 - Q6 Releases → phase 1 as one release (later: merged into `main`, shipped with the next release); GTK on a branch until full parity, released with the package split (D13).
 
+- Q7 (open, 2026-11-22) Painted status icons exist twice: the drawings in `kram/gtk/icons.py` (cairo) and
+  `kram/qt/icons.py` (QPainter), ported by hand. Shapes and colours come from `kram/app/icons.py`, which both share.
+  A change to a drawing must be made in both until the drawings move into one neutral description that each front
+  end renders. Leave it as it is for now, or make that move before the GTK release?
+
 New questions go here, with the date, until the author answers them.
 
 ---
 
 ## 14. Spike results
 
-(Empty. Fill in as S1–S9 are done: numbers, machine, versions of GTK / libadwaita / PyGObject, decisions taken.)
+Done 2026-11-22 on branch `feature/gtk`, scripts in `scripts/spikes/` (`common.py` loads a pickled snapshot from
+`KRAM_SPIKE_SNAPSHOT`, else the real catalog read-only, else made-up rows). Machine: Intel Core Ultra 5 125U, 30 GB,
+Fedora 45, KDE Plasma (Wayland), GTK 4.24.1, libadwaita 1.10.0, PyGObject 3.58.1, Python 3.15.2; the real catalog
+had 68,290 rows. Fedora 44 has GTK 4.22.5 and libadwaita 1.9.4 (`Adw.ToggleGroup` needs 1.7).
+
+| Spike | Result | Decision |
+|---|---|---|
+| S1 | A Python `Gio.ListModel` making items on demand: **~300 ms per reset**: GTK calls `get_item` for every added item of an `items_changed` (68,495 calls into Python), to find widgets it can keep. A `Gio.ListStore` refilled with new items: also ~300 ms (the Python items), and GTK tears down every cell widget when it finds none of the old items. **Fixed position items** in a `Gio.ListStore` (items stand for positions, not packages; a reset only adds or removes items at the end; the bound cells are drawn again from `PackageList`): **1–11 ms** for the store change, 16–50 ms per reset with PackageList's own sort. Re-sort by summary ~55–70 ms (the Python sort is ~45 ms of it, the same in Qt). Scrolling: 3 rows a frame, 0 frames over 33 ms; half a page a frame (a flung scrollbar), median 16.7 ms, p95 ~33 ms. Memory ~270 MB RSS with the catalog (160 MB of it the catalog). One case stays slow: from a list shorter than the screen to all rows **~90–140 ms**: GTK drops the widgets of the missing rows and builds ~1,600 cell widgets again (~70 ms of it GTK's own: a `Gtk.BuilderListItemFactory` with no Python costs the same). | `kram/gtk/package_list.py` uses fixed position items. To do: the same run on the X220 (`python3 scripts/spikes/s1_column_view.py positions`) |
+| S2 | Each column gets a `Gtk.CustomSorter` with no function, never asked to compare (no `Gtk.SortListModel`); the view's `ColumnViewSorter` "changed" → `PackageList.sort`. A header click keeps the old column as a secondary sort that still shows its arrow, so the view re-sets the indicator to the one column; `sort_by_column(None)` clears it for ranked results. | as described |
+| S3 | Tint: a CSS class per action on each cell's own box, which takes the cell's padding (cells get `padding: 0`) so the tint fills the row without gaps, `background-image: image(rgba(…))` from `MARK_BACKGROUND`, so Adwaita's hover and selection colours still show through; the same translucent colours read well in both themes. `data-table` rows already have a hover highlight. Per-cell tooltips: `set_tooltip_text` at bind. First tried on the row widget (the cell's grandparent): changing its classes during a bind inside `items_changed` makes GTK abort (`gtk_accessible_update_state` criticals) when an empty, realized list fills. | as described; no dark variant of the colours needed |
+| S4 | A `Gtk.GestureClick` per cell: status cell → menu at the cell; right click → keeps a multi-selection when the row is in it, else selects the row; double click → the view's `activate`. `Gtk.PopoverMenu` from a `Gio.Menu`. Wired and checked programmatically; **to check by hand** (`s2_s4_list.py OUT --stay`): clicks, right-click on a multi-selection. | |
+| S5 | One `Gtk.ListView` (`navigation-sidebar`) over a `Gtk.TreeListModel` for every view: flat views are entries without children, Origin's repositories are children always unfolded with no arrow (`hide-expander`), Environments fold. Vertical homogeneous `Adw.ToggleGroup` below; all six icons exist in Adwaita. | `kram/gtk/sidebar.py` |
+| S6 | `kernel-core`: 16,083 provides, 1,000 shown. One wrapping label per section: **~2 s** to the first frame. 50-line labels without wrapping: **~60 ms**; the doc is built in 3 ms. Section lines do not wrap (a long dependency scrolls sideways). | `kram/gtk/doc_view.py` |
+| S7 | A cairo node per icon could not be snapped to the screen's pixels (its CTM is not the screen's grid). Instead each icon is drawn once per screen scale into a texture of exactly that many pixels and placed with the NEAREST filter, as Qt caches pixmaps; the window tells `kram.gtk.icons.set_scale`. Side by side with Qt at 100/125/150/200 %, light and dark: the same pixels, crisp 1 px borders (`s7_icons.py`). Glyphs need grey antialiasing (subpixel fringes otherwise). | `kram/gtk/icons.py`. To do: a look at a real 125 %/150 % screen |
+| S8 | In a Fedora 44 container: `GDK_BACKEND=broadway` with `gtk4-broadwayd` (in `gtk4` itself, no GL) works and is the cleanest; `xvfb-run` and `weston --backend=headless` work too (software Vulkan, noisy warnings); `mutter --headless` needs a session bus. | GTK tests under broadway; `%check` in mock still to try with the packaging (§10) |
+| S9 | `Adw.Application(application_id=APP_ID, HANDLES_COMMAND_LINE)`; `Activate(view, token)` exported at `/` from `do_dbus_register`. A second `kram --upgradable` hands its command line to the first (GApplication's own remote activation, `XDG_ACTIVATION_TOKEN` arrives as the platform data's `activation-token`) and exits 0; a `gdbus` call of Activate reaches the window, which calls `set_startup_id(token)` before `present()`. **To check by hand**: a real tray click focusing the window on Plasma and GNOME (`s9_instance.py --id io.github.elmodos.Kram` with no Kram running). | `kram/gtk/app.py` |
+
 
 ---
 
@@ -761,3 +792,71 @@ with a real dnf cache:
 - The Qt behaviour is unchanged as far as the tests and the container runs can tell (the menus, the detail HTML and
   the install dialog's text were compared with 0.11.3 or with the code before the move); the author's own run of
   the branch was the last check before the merge.
+
+---
+
+## 16. Phase 2 progress
+
+On `feature/gtk`. Run from a checkout with `python3 -m kram.gtk`. GTK tests: `tests/test_gtk.py`, skipped without
+GTK 4 and libadwaita ≥ 1.7; without a display the module starts `gtk4-broadwayd` for itself (S8). The local
+`kram-test:44` image has `gtk4 libadwaita` since 2026-11-22 (a layer over the old one, kept as
+`kram-test:44-pre-gtk`), so a plain `python3 -m pytest -q` there runs them.
+
+**Skeleton (§7.4 step 2), 2026-11-22.** `kram/gtk`: `app.py` (Adw.Application, single instance and the tray's
+Activate, S9), `loop.py` (`post`, `GtkScheduler`), `ui_port.py` (`GtkUi`: Adw.AlertDialog, Gtk.FileDialog,
+launchers, clipboard; `GioBus`), `actions.py` (Gio actions, accelerators, the table's ShortcutController, Gio
+menus from `kram.app.actions`, the preference actions from the registry), `window.py` (the BrowserView: header
+bar, optional menu bar (D6/D12), panes, empty-list overlay, status bar, context menus), `package_list.py` (S1–S4),
+`sidebar.py` (S5), `doc_view.py` (S6), `icons.py` (S7), `details.py` (Adw.ViewSwitcher tabs), `search.py`,
+`status_bar.py`. The catalog loads, the list shows, sorting, the sidebar views, search, details and marking work.
+
+**Dialogs (§7.4 steps 3–6), 2026-11-22.** `kram/gtk/dialogs/`: `common.py` (trees and tables over
+`Gtk.ColumnView`, read-only text, the dialog frame), `apply.py` (Apply review), `progress.py` (the helper's
+progress: no closing mid-transaction), `notifier.py` and `cache.py` (preferences dialogs; Cleanup's Compare
+view), `repos.py`, `copr.py`, `filters.py` (Custom Filters), `history.py` (a window of its own, not modal),
+`install.py` (the installer as a dialog, or as the only window of `kram file.rpm`), `upgrade.py` (the "Fedora N"
+button's check). Also: What's New as libadwaita's own page of the About dialog (`release_notes`), the Files tab
+(`gtk/files.py`: tree or list, filter, Copy Path, Show in File Manager), the Versions table, the column titles'
+menu to show or hide columns and the saved column state (`gtk/columns`), the drop of an .rpm, markings files and
+the CSV export (the existing `Browser` flows). Every action of the menus now does what it does in Qt; the "not
+yet" placeholder is gone.
+
+How it was checked: `tests/test_gtk.py` (one or more tests per dialog, over fakes), and a run over the real
+catalog on the author's machine (Fedora 45, KDE) with a throwaway configuration (`XDG_CONFIG_HOME`), screenshots
+of every dialog but Install and Fedora N; Apply was opened to the review only. Checked by the author by hand: a
+real transaction through the progress dialog, the installer with a real .rpm file, HiDPI (125 %). **Not checked
+yet**: the Fedora N dialog with a real new release (rare; to be checked later), GNOME itself, keyboard-only use beyond
+Tab.
+
+Translations: every string of the GTK front end is in the catalogs and translated in all 12 (the new strings reuse
+the msgids of the Qt front end; `test_po_compiles_and_is_complete` checks it). An earlier version of this section
+said they were not; that was out of date.
+
+Keyboard: Tab leaves the package table for the next widget, as in any form (the list's own focus would walk its
+70 000 rows; GTK's list has no setting for that, so `PackageListView._tab_out` moves the focus in the widget tree).
+
+Things noticed on the way:
+
+- `Adw.ToolbarView` is final (no subclass): `InstallPage` is a box that holds one.
+- A `Gio.ListStore.splice` that puts the same object back does not bind its row again: the history puts a new
+  item in to show a row's counts.
+- A view's "current" setter must tell the logic as a click would (`History` expects that from Qt's
+  `setCurrentItem`); only a refill or a filter change of the same row is silent.
+- Painted icons are cairo nodes again, not textures (2026-11-22): a texture drawn for an integer scale and
+  resampled at 125 % came out stretched and pixelated. §14 S7 describes the texture approach that was replaced.
+- A hidden `Adw.Window` keeps the application running: the main window destroys the history window on close.
+- `kram file.rpm` runs a `NON_UNIQUE` application of its own, as Qt does, instead of going to the open Kram.
+- The test run ends with a GLib-CRITICAL `g_main_context_pop_thread_default` at interpreter exit (PyGObject's
+  asyncio policy); it was there before the dialogs and does not fail anything.
+
+Still to do (§7.4 steps 7–8): both themes and GNOME itself, scaling, keyboard-only use, translations, screenshots;
+the package split and README. Things to settle:
+
+- New GTK-only strings: none so far beyond GTK's own ("gtk40": alert and dialog buttons); every label of the
+  dialogs is an msgid the Qt front end already has. Every new msgid must go into all 12 catalogs before the tests pass
+  (§11), so they will be added in batches.
+- Adwaita has no funnel icon: while the search filters, the field gets an accent outline and a tooltip instead.
+- The advisories tab shows libadwaita's attention dot, not the advisory's colour dot (view switcher pages take
+  theme icon names only).
+- Painted icons in menus (Why It Cannot Be Upgraded's cross, the dynamic items' icons): GTK popover menus show no
+  icons for ordinary items; left out.

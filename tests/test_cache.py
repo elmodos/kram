@@ -6,6 +6,8 @@ import shutil
 
 import pytest
 
+from kram.app.parity import Feature  # noqa: E402  (the feature marks of the parity tests)
+
 pytest.importorskip("libdnf5")
 
 from kram.app import cache as app_cache
@@ -99,6 +101,8 @@ def test_packagekit_transaction(packagekit, monkeypatch, owned, transactions, ex
     assert len(calls) == (2 if owned == "b true" else 1)
 
 
+@pytest.mark.feature(Feature.DIALOG_CLEANUP, front="qt")
+@pytest.mark.feature(Feature.DIALOG_CLEANUP_CACHES, front="qt")
 def test_dialog_shows_the_report(monkeypatch):
     pytest.importorskip("PySide6.QtWidgets")
     os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
@@ -288,6 +292,7 @@ REPORT = leftovers.LeftoverReport([
 ], 3)
 
 
+@pytest.mark.feature(Feature.DIALOG_CLEANUP_LEFTOVERS, front="qt")
 def test_dialog_lists_the_leftovers(monkeypatch):
     _module, dlg = leftover_dialog(monkeypatch, REPORT, lambda _r, _t: None)
     assert "3 files found. 3 folders only root can read were not searched." == dlg.leftovers_status.text()
@@ -302,6 +307,7 @@ def test_dialog_without_leftovers(monkeypatch):
     assert dlg.search_root_btn.isHidden() and not dlg.delete_unused_btn.isEnabled()
 
 
+@pytest.mark.feature(Feature.DIALOG_CLEANUP_DELETE_UNUSED, front="qt")
 def test_delete_unused_asks_then_runs_the_helper(monkeypatch):
     requests = []
     _module, dlg = leftover_dialog(monkeypatch, REPORT, lambda r, _t: requests.append(r) or {"ok": True})
@@ -314,6 +320,7 @@ def test_delete_unused_asks_then_runs_the_helper(monkeypatch):
     assert not dlg.delete_unused_btn.isEnabled()
 
 
+@pytest.mark.feature(Feature.DIALOG_CLEANUP_SEARCH_ALL, front="qt")
 def test_search_as_root_replaces_the_list(monkeypatch):
     found = [{"path": "/etc/firewalld/firewalld.conf.rpmnew", "size": 1, "mtime": 0, "current": True}]
     module, dlg = leftover_dialog(monkeypatch, REPORT, lambda r, _t: {"ok": True, "files": found, "unreadable": 0})

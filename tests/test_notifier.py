@@ -8,6 +8,7 @@ from types import SimpleNamespace
 import pytest
 
 from kram import notifier
+from kram.app.parity import Feature  # noqa: E402  (the feature marks of the parity tests)
 from kram.app.ports import FakeBus
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -27,6 +28,7 @@ def test_state_round_trip(home):
     assert notifier.state_file() == home / "cache" / "kram" / "update-check.json"
 
 
+@pytest.mark.feature(Feature.DIALOG_NOTIFICATIONS_STALE_DAYS, front="qt")
 def test_stale_days_from_kram_settings(home):
     assert notifier.stale_days() == notifier.STALE_DAYS_DEFAULT
     conf = home / "config" / "kram" / "kram.conf"
@@ -160,6 +162,7 @@ def test_recheck_only_when_the_checker_is_on(monkeypatch, enabled):
     assert (started in calls) is enabled  # never shows the icon of a checker the user turned off
 
 
+@pytest.mark.feature(Feature.DIALOG_NOTIFICATIONS, front="qt")
 def test_notifier_dialog(monkeypatch, autostart):
     pytest.importorskip("PySide6.QtWidgets")
     import os

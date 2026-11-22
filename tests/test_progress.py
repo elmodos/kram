@@ -2,6 +2,9 @@
 from datetime import datetime
 from types import SimpleNamespace
 
+import pytest
+
+from kram.app.parity import Feature
 from kram.app.ports import RecordingUi
 from kram.app.progress import BUSY_BAR, Bar, Progress, Stage, shows_download, shows_rpm
 from kram.core.mainloop import Signal
@@ -50,6 +53,7 @@ def test_a_refused_request_connects_nothing():
     assert view.done == []
 
 
+@pytest.mark.feature(Feature.DIALOG_PROGRESS_KEY_QUESTION, front="qt")
 def test_the_key_question_is_asked_and_answered():
     p, client, view, ui, answered = progress(answers=["yes"])
     p.start()

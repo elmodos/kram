@@ -2,7 +2,10 @@
 import json
 from types import SimpleNamespace
 
+import pytest
+
 from kram.app.custom_filters import PREFIX, SETTINGS_KEY, CustomFilters
+from kram.app.parity import Feature
 from kram.app.ports import RecordingUi
 from kram.core.custom_filters import Condition, CustomFilter, Field, Op
 from kram.core.filters import FilterEntry
@@ -50,6 +53,7 @@ def test_an_accepted_edit_is_saved_and_shown_a_cancelled_one_changes_nothing():
     assert sidebar.custom == [VIM]
 
 
+@pytest.mark.feature(Feature.SIDEBAR_CUSTOM_FILTER_EDIT, front="qt")
 def test_double_clicking_a_custom_filter_edits_it():
     cf, _sidebar, _ui, opened = filters()
     cf.activated(FilterEntry("status:all", "All", None))
@@ -66,6 +70,7 @@ def test_deleting_asks_first():
     assert sidebar.custom == [] and sidebar.calls == [("view", "status")]
 
 
+@pytest.mark.feature(Feature.DIALOG_CUSTOM_FILTERS_NEW_FROM_VIEW, front="qt")
 def test_a_new_filter_from_a_search_is_named_after_it():
     cf, _sidebar, _ui, opened = filters(entry_id="status:all")
     cf.new_from_view(FilterEntry("status:all", "All", None), "vim", Mode.NAME)
@@ -73,6 +78,7 @@ def test_a_new_filter_from_a_search_is_named_after_it():
     assert new.name == "“vim”" and new.conditions == [Condition(Field.NAME, Op.CONTAINS, "vim")]
 
 
+@pytest.mark.feature(Feature.SIDEBAR_CUSTOM_FILTER_MENU, front="qt")
 def test_menu_items_only_for_custom_filters():
     cf, *_ = filters()
     assert cf.menu_items(FilterEntry("status:all", "All", None)) == []

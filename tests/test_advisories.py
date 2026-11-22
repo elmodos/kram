@@ -3,6 +3,7 @@ import os
 
 import pytest
 
+from kram.app.parity import Feature
 from kram.core.custom_filters import UPDATE_SECURITY_HIGH, Condition, CustomFilter, Field, Op, conditions_for_view
 from kram.core.filters import (
     UPGRADES_FIXES,
@@ -69,6 +70,7 @@ def test_row_advisory_is_the_first():
     assert ROWS[6].advisory is None
 
 
+@pytest.mark.feature(Feature.MARK_UPGRADE_BY_ADVISORY, front="qt")
 def test_upgrades_by_kind():
     kinds = {kind: [r.name for r in rows] for kind, rows in upgrades_by_kind(ROWS).items()}
     assert kinds == {
@@ -78,6 +80,7 @@ def test_upgrades_by_kind():
     }
 
 
+@pytest.mark.feature(Feature.SIDEBAR_COUNTS, front="qt")
 def test_sidebar_counts():
     counts = {e.id: e.count for e in status_filters(SNAP)}
     assert counts["status:security"] == 3
@@ -154,6 +157,7 @@ def test_column_and_tooltip(model):
     assert not model.data(model.index(6, COL_CANDIDATE), Qt.ItemDataRole.DecorationRole).isNull()
 
 
+@pytest.mark.feature(Feature.DETAILS_ADVISORIES_TAB, front="qt")
 def test_details_tab_comes_and_goes(model):
     from kram.qt.details import DetailsTabs
     tabs = DetailsTabs()

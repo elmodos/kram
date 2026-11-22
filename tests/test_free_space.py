@@ -5,6 +5,7 @@ from types import SimpleNamespace
 
 import pytest
 
+from kram.app.parity import Feature  # noqa: E402  (the feature marks of the parity tests)
 from kram.core.model import PreviewItem, TransactionPreview
 from kram.helper import kram_helper
 from kram.helper.kram_helper import human_size, mount_point, space_shortfall
@@ -56,6 +57,8 @@ def test_sizes_read_as_in_the_gui():
         assert human_size(n) == gui_size(n)
 
 
+@pytest.mark.feature(Feature.DIALOG_APPLY, front="qt")
+@pytest.mark.feature(Feature.DIALOG_APPLY_FREE_SPACE, front="qt")
 def test_review_keeps_apply_off_without_space_but_allows_a_download_that_fits(disks):
     pytest.importorskip("PySide6.QtWidgets")
     os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")

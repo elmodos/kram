@@ -1,6 +1,9 @@
 """kram.app.apply_review without a toolkit: the review's texts, the recommendations and the request it gives back."""
+import pytest
+
 from kram.app.apply_review import ApplyReview, change_sections, size_line
 from kram.app.doc import Bold
+from kram.app.parity import Feature
 from kram.core.model import PreviewItem, Recommendation, TransactionPreview
 
 
@@ -32,6 +35,7 @@ def test_sections_and_the_size_line():
     assert line[0] == "To download: " and isinstance(line[1], Bold)
 
 
+@pytest.mark.feature(Feature.DIALOG_APPLY_RECOMMENDATIONS, front="qt")
 def test_unchecking_a_recommendation_resolves_again_and_a_late_answer_is_dropped():
     view, waiting = View(), []
     review = ApplyReview(preview(), {"op": "transaction"}, "x86_64", view,
@@ -54,6 +58,8 @@ def test_unchecking_a_recommendation_resolves_again_and_a_late_answer_is_dropped
     assert view.last("set_resolving") == ("set_resolving", False)
 
 
+@pytest.mark.feature(Feature.DIALOG_APPLY_COMMAND, front="qt")
+@pytest.mark.feature(Feature.DIALOG_APPLY_DOWNLOAD_ONLY, front="qt")
 def test_download_only_is_in_the_command_and_the_result():
     view = View()
     review = ApplyReview(preview(), {"op": "transaction", "install": ["virt-manager.noarch"]}, "x86_64", view)

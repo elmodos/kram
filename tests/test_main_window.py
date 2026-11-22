@@ -5,6 +5,8 @@ from urllib.parse import urlsplit
 
 import pytest
 
+from kram.app.parity import Feature  # noqa: E402  (the feature marks of the parity tests)
+
 pytest.importorskip("libdnf5")
 pytest.importorskip("PySide6.QtWidgets")
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
@@ -111,6 +113,7 @@ def button(window):
     return window.releases.act_upgrade.isVisible(), window.releases.act_upgrade.text()
 
 
+@pytest.mark.feature(Feature.RELEASE_BUTTON, front="qt")
 def test_new_release_shows_the_button(fedora):
     fedora.show()
     assert not fedora.releases.act_upgrade.isVisible()
@@ -195,6 +198,7 @@ def test_helper_messages_of_kram_are_translated_and_dnf_text_is_kept(app, monkey
     assert "Keine Pakete zum Entfernen" in dlg.log.toPlainText()
 
 
+@pytest.mark.feature(Feature.MARK_UPGRADE_ALL, front="qt")
 def test_mark_upgrades_icon_follows_whether_there_is_anything_to_mark(app, monkeypatch):
     from PySide6.QtGui import QColor, QIcon, QPixmap
 
@@ -220,6 +224,8 @@ def test_mark_upgrades_icon_follows_whether_there_is_anything_to_mark(app, monke
         win.dnf.shutdown()
 
 
+@pytest.mark.feature(Feature.LIST_STATUS_CLICK, front="qt")
+@pytest.mark.feature(Feature.SETTINGS_STATUS_CLICK, front="qt")
 def test_status_icon_click_marks_the_likely_action_only_when_chosen(window, monkeypatch):
     from kram.core.marks import Action
     from kram.core.model import Origin, PkgRow, Status
@@ -255,6 +261,7 @@ def test_status_icon_click_marks_the_likely_action_only_when_chosen(window, monk
     assert marks.get(rows[0].key).action is Action.INSTALL
 
 
+@pytest.mark.feature(Feature.SIDEBAR_GROUP_CHANGE, front="qt")
 def test_groups_are_changed_at_once_from_the_sidebar(window, monkeypatch):
     """A comps group is not marked (the Marked list could not show it): its menu runs the change at once, after the
     review, alone; the package marks stay for a later Apply."""
@@ -294,6 +301,7 @@ def test_groups_are_changed_at_once_from_the_sidebar(window, monkeypatch):
     assert len(window.model.marks) == 1  # fish stays marked
 
 
+@pytest.mark.feature(Feature.SIDEBAR_ENVIRONMENTS_TREE, front="qt")
 def test_environments_are_a_tree(window):
     """The Environments view is a tree: each environment folds its groups, the optional ones in italics; the list
     shows a group's optional packages in italics."""
@@ -403,6 +411,7 @@ def test_the_sidebar_filter_is_not_worked_out_again_for_every_keystroke(window, 
     assert len(calls) == 15
 
 
+@pytest.mark.feature(Feature.DETAILS_TABS, front="qt")
 def test_details_wait_for_the_cursor_to_rest(window, monkeypatch):
     from kram.core.model import Origin, PkgRow, Status
 
@@ -552,6 +561,7 @@ def test_status_entry_and_menu_for_upgrades_that_cannot_be_installed(window):
     assert not window.acts.why_blocked.isVisible()
 
 
+@pytest.mark.feature(Feature.DETAILS_BLOCKED_REASON, front="qt")
 def test_reason_of_a_blocked_upgrade_is_asked_for_once(app):
     """Past MAX_BLOCKED_REASONS the selected row asks for its reason: once, also when the resolver gives none."""
     from kram.app.details import DetailsLoader
@@ -602,6 +612,7 @@ def test_long_dependency_lists_are_cut(app):
     assert f"Provides ({MAX_DEP_ITEMS + 250})" in text and "…and 250 more" in text
     assert f"kmod(m{MAX_DEP_ITEMS - 1}.ko)" in text and f"kmod(m{MAX_DEP_ITEMS}.ko)" not in text
 
+@pytest.mark.feature(Feature.MARK_UNNEEDED, front="qt")
 def test_mark_unneeded_marks_what_autoremove_would_remove(window):
     from kram.core.marks import Action
     from kram.core.model import Origin, PkgRow, Status
@@ -668,6 +679,7 @@ def _marked_window(window, monkeypatch):
     return jobs
 
 
+@pytest.mark.feature(Feature.MARK_APPLY_BUTTON, front="qt")
 def test_apply_twice_before_the_preview_resolves_once(window, monkeypatch):
     jobs = _marked_window(window, monkeypatch)
     window.browser.apply()

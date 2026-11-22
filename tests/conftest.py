@@ -22,3 +22,8 @@ def _collect_garbage():
     """
     yield
     gc.collect()
+
+
+def pytest_configure(config):
+    config.addinivalue_line("markers", 'feature(feature, front): this test proves the feature for the "qt" or "gtk" '
+                                       "front end (kram.app.parity)")

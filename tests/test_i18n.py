@@ -6,6 +6,8 @@ from pathlib import Path
 
 import pytest
 
+from kram.app.parity import Feature
+
 ROOT = Path(__file__).resolve().parent.parent
 PO_DIR = ROOT / "po"
 
@@ -31,6 +33,7 @@ def msgids(pot_text: str) -> set[str]:
     return ids
 
 
+@pytest.mark.feature(Feature.TRANSLATIONS_CATALOGS, front="qt")
 def test_pot_is_up_to_date(tmp_path):
     fresh = tmp_path / "kram.pot"
     sources = sorted(str(p.relative_to(ROOT)) for p in (ROOT / "kram").rglob("*.py") if "helper" not in p.parts)
