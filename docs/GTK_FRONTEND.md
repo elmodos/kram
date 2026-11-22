@@ -665,7 +665,16 @@ If step 2 or 3 cannot be made reliable: name the packages **`kram` (Qt) + `kram-
 `Obsoletes` needed, `kram` simply becomes the Qt front end), and record why in §14.
 
 `%check` runs the toolkit-free tests plus the installed front end's (S8 for GTK). `.copr/Makefile` needs no change
-(one SRPM). `scripts/rpm_check.sh` checks each front end in turn, and that `kram-gtk` pulls in no Qt and `kram-qt` no
+(one SRPM). **Versions of the packages.** All of them come from one spec and one SRPM (`packaging/kram.spec`), so `kram-common`,
+`kram-qt` and `kram-gtk` always carry the same `%{version}-%{release}`, and their `Requires` pin each other with `=`.
+A fix in one front end therefore gives the other front end a new version too, with the same files: a rebuild, which
+`dnf upgrade` downloads (the packages are small). That is already how Kram works: every commit on `main` is a
+snapshot of the whole package (`.copr/Makefile`). Separate versions per front end would need separate specs and
+looser pins (`>=`); the front ends share `kram/core`, `kram/app` and the helper, so one version is the simpler truth.
+Decided 2026-11-22: keep one version. **Revisit** if a front end needs a release of its own (then split the spec
+and loosen the pins).
+
+`scripts/rpm_check.sh` checks each front end in turn, and that `kram-gtk` pulls in no Qt and `kram-qt` no
 GTK 4 (`dnf repoquery --requires --resolve`).
 
 ---
