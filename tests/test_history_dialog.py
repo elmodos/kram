@@ -80,7 +80,8 @@ def test_shows_the_packages_of_the_current_transaction(dialog):
                     ["Upgrade", "vim.x86_64", "9.1-1 → 9.1-2", "updates", "user"]]
 
 
-@pytest.mark.feature(Feature.HISTORY_WINDOW, front="qt")
+@pytest.mark.feature(Feature.DIALOG_HISTORY, front="qt")
+@pytest.mark.feature(Feature.DIALOG_HISTORY_FILTER, front="qt")
 def test_filter_by_package_name(dialog):
     dlg, _catalog = dialog
     dlg.filter.setText("FISH")
@@ -90,6 +91,7 @@ def test_filter_by_package_name(dialog):
     assert dlg.packages.topLevelItem(0).font(1).bold() and not dlg.packages.topLevelItem(2).font(1).bold()
 
 
+@pytest.mark.feature(Feature.DIALOG_HISTORY_UNDO, front="qt")
 def test_undo_needs_a_finished_transaction_and_a_catalog(dialog):
     dlg, _catalog = dialog
     asked = []

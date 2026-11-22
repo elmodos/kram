@@ -1,7 +1,10 @@
 """kram.app.install without a toolkit: the header's lines, the tabs and the button follow what is known so far."""
+import pytest
+
 from kram.app import install
 from kram.app.doc import plain_text
 from kram.app.icons import ERROR, OK, WARN
+from kram.app.parity import Feature
 from kram.core import local_rpm
 from kram.core.local_rpm import LocalRpm, Signature, VerifyResult
 from kram.core.model import LocalTarget, PreviewItem, Requirement, TransactionPreview
@@ -100,6 +103,7 @@ def test_unresolvable_shows_the_solvers_reason_cut_short(monkeypatch):
     assert view.changes[1] == problems and not view.button.visible
 
 
+@pytest.mark.feature(Feature.DIALOG_INSTALL_FILE_CHECK, front="qt")
 def test_a_reinstall_checks_the_installed_files_first(monkeypatch):
     started = []
     monkeypatch.setattr(install.proc, "run", lambda cmd, post, env, done: started.append(done) or object())

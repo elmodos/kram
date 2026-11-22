@@ -14,7 +14,7 @@ from kram.qt import theme  # noqa: E402
 
 
 @pytest.mark.parametrize("desktop", ["GNOME", "ubuntu:GNOME", "GNOME-Classic:GNOME"])
-@pytest.mark.feature(Feature.THEME_FOLLOWS_DESKTOP, front="qt")
+@pytest.mark.feature(Feature.SYSTEM_THEME_FOLLOWS_DESKTOP, front="qt")
 def test_gnome_sessions_are_followed(desktop):
     assert theme.wanted({"XDG_CURRENT_DESKTOP": desktop})
 

@@ -152,7 +152,8 @@ def test_view_with_a_provides_search():
         Condition(Field.PROVIDES, Op.MATCHES, "python3dist(*)")]
 
 
-@pytest.mark.feature(Feature.CUSTOM_FILTERS_DIALOG, front="qt")
+@pytest.mark.feature(Feature.DIALOG_CUSTOM_FILTERS, front="qt")
+@pytest.mark.feature(Feature.DIALOG_CUSTOM_FILTERS_COUNT, front="qt")
 def test_editor_counts_after_the_answer_arrives():
     pytest.importorskip("PySide6.QtWidgets")
     os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")

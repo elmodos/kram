@@ -51,7 +51,7 @@ def test_nothing_listed_is_just_the_header():
     assert n == 0 and lines == []
 
 
-@pytest.mark.feature(Feature.CSV_EXPORT, front="qt")
+@pytest.mark.feature(Feature.MARKINGS_CSV_EXPORT, front="qt")
 def test_the_window_exports_what_it_lists(monkeypatch, tmp_path):
     import os
 

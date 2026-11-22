@@ -47,7 +47,7 @@ def test_upgradable_while_loading_is_selected_after_the_load():
     assert window.browser._restore_filter == ("status", "status:upgradable") and calls == []
 
 
-@pytest.mark.feature(Feature.SINGLE_INSTANCE_TRAY, front="qt")
+@pytest.mark.feature(Feature.INSTANCE_TRAY, front="qt")
 def test_upgradable_when_loaded_selects_it_now():
     calls, window = _window(loaded=True)
     window.show_view(instance.UPGRADABLE)

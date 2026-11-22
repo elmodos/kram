@@ -132,7 +132,7 @@ def rows(widget):
     return out
 
 
-@pytest.mark.feature(Feature.FILES_TAB_TREE, front="qt")
+@pytest.mark.feature(Feature.DETAILS_FILES_TREE, front="qt")
 def test_tree_view_open_to_the_last_file(files):
     files.set_files(["/usr/bin/kram", "/etc/kram.conf"], True)
     assert rows(files) == ["etc", "  kram.conf", "usr", "  bin", "    kram"]
@@ -140,6 +140,7 @@ def test_tree_view_open_to_the_last_file(files):
     assert not files.notice.isVisibleTo(files)
 
 
+@pytest.mark.feature(Feature.DETAILS_FILES_LIST, front="qt")
 def test_list_view_and_back(files):
     files.set_files(["/usr/bin/kram", "/etc/kram.conf"], False)
     assert files.notice.isVisibleTo(files)  # not installed: only some of the files
@@ -149,6 +150,7 @@ def test_list_view_and_back(files):
     assert rows(files) == ["etc", "  kram.conf", "usr", "  bin", "    kram"]
 
 
+@pytest.mark.feature(Feature.DETAILS_FILES_FILTER, front="qt")
 def test_filter_waits_for_the_typing_to_pause(files):
     files.set_files(PATHS, True)
     files.filter.setText("readme")
@@ -168,6 +170,7 @@ def test_not_built_while_hidden(files):
     assert rows(files) == ["usr", "  bin", "    kram"]
 
 
+@pytest.mark.feature(Feature.DETAILS_FILES_COPY_PATH, front="qt")
 def test_copy_paths(files):
     from PySide6.QtGui import QGuiApplication
     files.set_files(["/usr/bin/kram", "/etc/kram.conf"], True)

@@ -42,6 +42,7 @@ def test_every_action_has_a_unique_id_and_every_menu_entry_exists():
     assert used <= set(ids)
 
 
+@pytest.mark.feature(Feature.MARK_INSTALL_REMOVE, front="qt")
 def test_marks_follow_the_selection_and_stop_while_busy():
     enabled = state([ROWS["new"]]).enabled
     assert enabled[mark_id(Action.INSTALL)] and not enabled[mark_id(Action.REMOVE)]
@@ -56,6 +57,7 @@ def test_downgrade_needs_one_installed_package():
     assert not state([ROWS["old"]], busy=True).enabled["downgrade"]
 
 
+@pytest.mark.feature(Feature.MARK_UNMARK_ALL, front="qt")
 def test_unmark_apply_and_save_need_marks():
     marks = MarkSet()
     marks.set(ROWS["new"], Action.INSTALL)
@@ -102,6 +104,7 @@ def test_why_blocked_shows_only_for_one_blocked_row():
     assert not state([ROWS["old"], ROWS["same"]], blocked=blocked).visible["why_blocked"]
 
 
+@pytest.mark.feature(Feature.MENU_DOWNGRADE_SUBMENU, front="qt")
 def test_downgrade_items():
     version = lambda evr, installed=False: SimpleNamespace(evr=evr, installed=installed, locked_out=False,  # noqa: E731
                                                            repo_id="fedora")
@@ -130,8 +133,8 @@ def test_preferences_round_trip_and_announce_changes():
         preferences.changed.disconnect(seen.append)
 
 
-@pytest.mark.feature(Feature.SETTINGS_FROM_REGISTRY, front="qt")
-@pytest.mark.feature(Feature.TOOLBAR_STYLE, front="qt")
+@pytest.mark.feature(Feature.SETTINGS_REGISTRY, front="qt")
+@pytest.mark.feature(Feature.SETTINGS_TOOLBAR_STYLE, front="qt")
 def test_each_toolkit_has_its_own_settings():
     qt = {p.key for p in preferences.prefs_for("qt")}
     gtk = {p.key for p in preferences.prefs_for("gtk")}

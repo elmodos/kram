@@ -57,7 +57,8 @@ def test_sizes_read_as_in_the_gui():
         assert human_size(n) == gui_size(n)
 
 
-@pytest.mark.feature(Feature.APPLY_REVIEW, front="qt")
+@pytest.mark.feature(Feature.DIALOG_APPLY, front="qt")
+@pytest.mark.feature(Feature.DIALOG_APPLY_FREE_SPACE, front="qt")
 def test_review_keeps_apply_off_without_space_but_allows_a_download_that_fits(disks):
     pytest.importorskip("PySide6.QtWidgets")
     os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")

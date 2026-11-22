@@ -66,7 +66,7 @@ def test_remark_replaces_and_unmark():
     assert CUR.key not in m
 
 
-@pytest.mark.feature(Feature.MARKINGS_FILES, front="qt")
+@pytest.mark.feature(Feature.MARKINGS_FILE, front="qt")
 def test_markings_file_roundtrip():
     m = MarkSet()
     m.set(NEW, Action.INSTALL)

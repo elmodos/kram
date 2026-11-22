@@ -56,7 +56,7 @@ def test_rows_are_as_tall_as_the_tree_views(app):
     assert view.rowHeight(0) == view.sizeHintForRow(0) == tree.sizeHintForRow(0)
 
 
-@pytest.mark.feature(Feature.PACKAGE_LIST_COLUMNS, front="qt")
+@pytest.mark.feature(Feature.LIST_COLUMNS, front="qt")
 def test_the_tree_views_saved_columns_still_apply(app):
     model = PackageTableModel()
     model.set_rows(rows(3), "x86_64")
@@ -137,6 +137,7 @@ def test_the_repository_column_names_where_an_installed_package_came_from(app):
     assert cells["bash"].data(Qt.ItemDataRole.ToolTipRole) is None
 
 
+@pytest.mark.feature(Feature.LIST_LOCK_PADLOCK, front="qt")
 def test_a_locked_package_shows_the_padlock_and_the_upgrade_it_holds_back(app):
     from kram.core.marks import Action
     from kram.core.model import Advisory, VersionLock
@@ -183,7 +184,7 @@ def test_the_download_size_column_is_hidden_after_the_installed_size(app):
     assert model.data(model.index(0, 2)) == "vlc"
 
 
-@pytest.mark.feature(Feature.PACKAGE_LIST_COLUMNS, front="qt")
+@pytest.mark.feature(Feature.LIST_COLUMNS, front="qt")
 def test_a_header_state_saved_before_the_download_size_keeps_it_hidden(app, tmp_path):
     from PySide6.QtCore import QSettings
 

@@ -202,7 +202,7 @@ def test_unapplied_changes_come_first(app):
     assert dlg.remove_btn.toolTip() == "Apply or undo the changes first."
 
 
-@pytest.mark.feature(Feature.REPOSITORIES_DIALOG, front="qt")
+@pytest.mark.feature(Feature.DIALOG_REPOSITORIES, front="qt")
 def test_show_packages_closes_with_the_repository(app):
     dlg = actions_dialog(app)
     select(dlg, "code")
@@ -211,6 +211,7 @@ def test_show_packages_closes_with_the_repository(app):
 
 
 @pytest.mark.parametrize("choice", ["remove", "show", "cancel"])
+@pytest.mark.feature(Feature.DIALOG_REPOSITORIES_REMOVE, front="qt")
 def test_removal_names_every_repository_of_the_file(app, choice):
     dlg = actions_dialog(app)
     ui = dlg.repos._ui = RecordingUi([choice])

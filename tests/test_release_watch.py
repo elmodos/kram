@@ -28,6 +28,7 @@ def watcher(monkeypatch, answer):
 
 
 @pytest.mark.feature(Feature.RELEASE_WATCH, front="qt")
+@pytest.mark.feature(Feature.SETTINGS_WATCH_RELEASES, front="qt")
 def test_only_a_watcher_asks_and_the_button_follows(monkeypatch):
     w, asked, changes = watcher(monkeypatch, BODHI)
     preferences.set_value(preferences.WATCH_RELEASES, False)
