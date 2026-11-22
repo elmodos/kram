@@ -635,7 +635,10 @@ The split ships together with the first GTK release (D13): until then `kram` sta
   `kram/i18n.py`, `kram/__init__.py`, translations (`%find_lang`), `/usr/libexec/kram-helper`, the polkit policy,
   the systemd user units **and their scriptlets**, the tray icons, `/var/cache/kram`, the release notes for What's New (a
   copy of the metainfo), the app icon. Requires: python3-libdnf5,
-  python3-rpm, polkit, dnf5-plugins, hicolor-icon-theme, python3-gobject-base (tray). **No dependency on a front
+  python3-rpm, polkit, dnf5-plugins, hicolor-icon-theme, python3-gobject-base (tray). `Conflicts: kram < 0.12.0`:
+  the single package has the same files, and without it `dnf install kram-gtk` over it passed the solver and failed
+  in rpm on the file conflicts (seen on the author's machine with 0.12.0; S10 checks it since); the way from it to
+  GTK is `dnf swap kram kram-gtk`. **No dependency on a front
   end**: each front end requires `kram-common`, never the other way round, so a new front end (`kram-tui`) needs no
   change to `kram-common`. Nobody installs `kram-common` by hand: `dnf install kram` brings `kram-qt` and with it
   `kram-common`, `dnf install kram-gtk` the same with GTK (decided 2026-11-22).

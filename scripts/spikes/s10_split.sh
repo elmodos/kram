@@ -128,6 +128,20 @@ dnf5 -q -y --refresh distro-sync >/dev/null 2>&1 || fail "distro-sync"
 check_split "distro-sync"
 launcher distro-sync qt
 
+echo "### kram-gtk over the old kram: the solver refuses (not rpm), dnf swap kram kram-gtk works"
+fresh_old
+if dnf5 -y --refresh install kram-gtk > /tmp/gtk-over-old.log 2>&1; then cat /tmp/gtk-over-old.log; fail "kram-gtk installed next to the old kram"; fi
+grep -qi "conflict" /tmp/gtk-over-old.log || { cat /tmp/gtk-over-old.log; fail "kram-gtk over the old kram: not a solver conflict"; }
+grep -i "rpm transaction failed\|file .* conflicts" /tmp/gtk-over-old.log && fail "kram-gtk over the old kram: failed in rpm"
+[ "$(installed)" = "kram " ] || fail "after the refused install: $(installed)"
+echo "install kram-gtk over the old kram: refused by the solver ($(grep -m1 -io "conflicts with [^ ]*" /tmp/gtk-over-old.log))"
+dnf5 -q -y swap kram kram-gtk >/dev/null 2>&1 || fail "swap kram kram-gtk"
+[ "$(installed)" = "kram-common kram-gtk " ] || fail "swap kram kram-gtk: $(installed)"
+enabled | grep -qv ': enabled$' && fail "swap kram kram-gtk: units $(enabled)"
+echo "swap kram kram-gtk: installed $(installed); units enabled"
+launcher "swap kram kram-gtk" gtk
+dnf5 -q -y swap kram-gtk kram-qt >/dev/null 2>&1 || fail "back to qt"
+
 echo "### dnf swap kram-qt kram-gtk, and back"
 dnf5 -q -y swap kram-qt kram-gtk >/dev/null 2>&1 || fail "swap to gtk"
 [ "$(installed)" = "kram-common kram-gtk " ] || fail "swap to gtk: $(installed)"

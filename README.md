@@ -92,7 +92,8 @@ sudo dnf swap kram-qt kram-gtk   # Qt → GTK
 sudo dnf swap kram-gtk kram-qt   # GTK → Qt
 ```
 
-Kram 0.11 and older was a single `kram` package; `dnf upgrade` replaces it with `kram-qt`.
+Kram 0.11 and older was a single `kram` package; `dnf upgrade` replaces it with `kram-qt`. To go from it straight
+to GTK: `sudo dnf swap kram kram-gtk`.
 
 To build the RPM yourself, or to run Kram from a checkout, see
 [CONTRIBUTING.md](CONTRIBUTING.md).

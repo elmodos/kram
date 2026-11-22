@@ -52,6 +52,9 @@ Requires:       dnf5-plugins
 Requires:       hicolor-icon-theme
 # the tray update checker's icon: a StatusNotifierItem over Gio D-Bus, lighter than Qt
 Requires:       python3-gobject-base
+# the single kram package before the split has the same files: without this, "dnf install kram-gtk" over it passed
+# the solver and failed in rpm on the file conflicts. kram-qt replaces it (Obsoletes); for GTK, dnf swap kram kram-gtk
+Conflicts:      kram < %{split_version}
 
 %description    common %_description
 
