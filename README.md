@@ -15,12 +15,14 @@ search that works, and nothing happens until you press **Apply**.
 Built on libdnf5 (the same library as `dnf5`), with two front ends to choose from: Qt 6 for KDE Plasma and other
 Qt desktops, GTK 4 and libadwaita for GNOME.
 
+**Qt front end** (KDE, Xfce and other desktops):
+
 ![Kram's main window in Qt: every package with its status, origin, versions, size and repository, filters on the
 left, the selected package's details below](docs/screenshots/main.png)
-*The Qt front end (KDE, Xfce and other desktops).*
+
+**GTK 4 front end** (GNOME):
 
 ![Kram's main window in GTK 4 and libadwaita, the same package list with filters and details](docs/screenshots/main-gtk.png)
-*The GTK 4 front end (GNOME).*
 
 | Review before applying | Check a downloaded .rpm | Ready for the next Fedora? |
 |---|---|---|
