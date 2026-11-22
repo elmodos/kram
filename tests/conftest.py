@@ -27,3 +27,24 @@ def _collect_garbage():
 def pytest_configure(config):
     config.addinivalue_line("markers", 'feature(feature, front): this test proves the feature for the "qt" or "gtk" '
                                        "front end (kram.app.parity)")
+
+
+def pytest_sessionfinish(session, exitstatus):
+    """Delete the Qt windows and dialogs the tests left behind before the interpreter exits.
+
+    Tests create dialogs without a parent; left to PySide6's own cleanup at exit, PySide6 6.12 with Python 3.15
+    deletes them in the wrong order and segfaults after a passing run (the COPR rawhide build of 0.12.0).
+    """
+    import sys
+    if "PySide6.QtWidgets" not in sys.modules:
+        return
+    import shiboken6
+    from PySide6.QtWidgets import QApplication
+    app = QApplication.instance()
+    if app is None:
+        return
+    # only the windows without a parent: a dialog with one is a top-level widget too, and goes with its parent
+    for widget in [w for w in app.topLevelWidgets() if w.parentWidget() is None]:
+        if shiboken6.isValid(widget):
+            shiboken6.delete(widget)
+    gc.collect()
