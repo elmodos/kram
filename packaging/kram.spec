@@ -1,5 +1,5 @@
 %global appid io.github.elmodos.Kram
-%global base_version 0.12.0
+%global base_version 0.12.1
 # the first version that is split into kram-common + kram-qt + kram-gtk; the single kram package before it is
 # obsoleted by kram-qt
 %global split_version 0.12.0
@@ -270,6 +270,10 @@ rm -f "$state"
 %{python3_sitelib}/kram/gtk/
 
 %changelog
+* Sun Nov 22 2026 Modo Ltunzher <offnormal@gmail.com> - 0.12.1-1
+- Fedora Rawhide: the packages build again (the test run crashed on exit)
+- Packaging: installing kram-gtk over Kram 0.11 explains the conflict instead of failing in rpm; use dnf swap kram kram-gtk
+
 * Sun Nov 22 2026 Modo Ltunzher <offnormal@gmail.com> - 0.12.0-1
 - GNOME: a GTK 4 and libadwaita front end, kram-gtk, with the package list, menus, preferences and every dialog of the Qt one
 - Switching front ends: dnf swap kram-qt kram-gtk, and back; the settings and the tray icon stay as they are
