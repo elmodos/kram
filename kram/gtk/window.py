@@ -111,10 +111,11 @@ class MainWindow(Adw.ApplicationWindow):
         self.menu_button = Gtk.MenuButton(icon_name="open-menu-symbolic", menu_model=self.acts.main_menu(),
                                           primary=True)
         header.pack_end(self.menu_button)
-        for action_id, icon in (("copr", "application-x-addon-symbolic"), ("repos", "preferences-system-symbolic")):
-            header.pack_end(Gtk.Button(icon_name=icon, action_name=f"win.{action_name(action_id)}",
-                                       tooltip_text=self.acts.defs[action_id].label))
         header.pack_end(self.search)
+        # after Apply, in the Qt toolbar's order: repositories, COPR, then the Fedora release button
+        for action_id, icon in (("repos", "preferences-system-symbolic"), ("copr", "application-x-addon-symbolic")):
+            header.pack_start(Gtk.Button(icon_name=icon, action_name=f"win.{action_name(action_id)}",
+                                         tooltip_text=self.acts.defs[action_id].label))
         first, fallback = RELEASE_ICONS
         self.upgrade_button = Gtk.Button(action_name="win.upgrade", child=Adw.ButtonContent(
             label="Fedora", icon_name=icons.first_themed((first, fallback)) or "software-update-available-symbolic"))
