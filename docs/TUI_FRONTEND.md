@@ -1,6 +1,7 @@
 # A terminal front end for Kram (`kram-tui`) — concept
 
-Status: **concept and spikes** (2026-11-23) on branch `feature/tui`. Two throwaway spikes show every layout and
+Status: **concept and spikes** (2026-11-23) on branch `feature/tui`. The binding description for implementation
+is `docs/TUI_SPEC.md`; this document keeps the reasons and the spike results. Two throwaway spikes show every layout and
 dialog described here over the real catalog (70,235 rows of Fedora 44): `scripts/spikes/t1_tui.py` (the window)
 and `scripts/spikes/t2_dialogs.py` (the dialogs that need root). Nothing of `kram/tui` exists yet; nothing is
 released.
@@ -36,6 +37,10 @@ terminal, the way aptitude sits next to Synaptic on Debian.
 | T15 | **Root in a terminal has three paths**: Kram runs as root; a desktop polkit agent; polkit's text agent on the terminal while Kram steps aside (§8). | 2026-11-23 |
 | T16 | **No colour is hard-coded.** Every colour is a role (§9a) taken from the scheme. The default scheme is the terminal's own 16 colours with its own background and text, so the terminal's light or dark mode shows at once, with no restart; 16-colour schemes of our own and Textual's high-colour themes are a choice in the menu, applied at once. | 2026-11-23 |
 | T17 | **Progress bars are as wide as their dialog.** | 2026-11-23 |
+| T18 | **Box drawing with square corners**: a panel has a single line (`┌─┐`), a modal window a double one (`╔═╗`). No rounded corners. | 2026-11-24 |
+| T19 | **In 16 colours nothing is blended**: modal screens are `transparent` (the window stays in sight under them; `$background 0%` stays opaque in ANSI mode), the footer, text fields and checkboxes take plain theme colours. Inactive frames in high colour are the text colour at 30%, as the theme's own border colour vanishes on dark themes. | 2026-11-24 |
+| T20 | **The Summary column takes the room left** (at least 20), so a wide terminal does not scroll sideways for it. Scrollbars and dialog table headers are quiet. | 2026-11-24 |
+| T21 | **One checkbox look**, `[x] Label`, our own widget: Textual's `Checkbox` and `SelectionList` look different from each other and from the repositories table. | 2026-11-24 |
 
 Non-goals: mouse-first use (the mouse works where Textual gives it for free, nothing is designed for it); a second
 toolkit-free layer (the TUI uses `kram/app` as the GTK front end does); features the GUIs do not have.
