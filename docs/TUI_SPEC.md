@@ -512,26 +512,41 @@ focused; `Esc` is the cancel answer when there is one.
 11.1 The helper (`kram/helper/kram_helper.py`) runs as root for the session, started once, as in the GUIs.
 
 11.2 **Kram runs as root** (euid 0): the helper starts without pkexec. The top line shows the `ROOT` badge and
-"changes need no password". Settings are read from the invoking user's config when `SUDO_USER` is set and `$HOME`
-is still theirs (plain `sudo`); under `sudo -i` they are root's. No warning dialog.
+"changes need no password". No warning dialog. On Fedora `sudo` sets `HOME=/root` with and without `-i` (spike T3),
+so `sudo kram-tui` would see root's settings. With `SUDO_USER` set, Kram reads the invoking user's settings (from
+their home, `pwd.getpwnam`) and **writes none**: a file written as root into the user's home would end up root's.
+Changes made under sudo last for that run; Settings says so in one muted line. (Proposed, see §18.5.)
 
 11.3 **Not root**, at the first request that needs root:
-1. Start pkexec **in a new session, without a controlling terminal** (`start_new_session=True`), so that polkit's
-   text agent cannot write over the screen. With a desktop agent, its window asks; the progress dialog says so
-   (§10.2).
-2. If pkexec ends at once with "No authentication agent found" (exit 127 and that text), there is no agent. Kram
-   shows **Administrator rights**: what needs root, that Kram steps aside and polkit asks in this terminal, that it
-   asks once per session, and that `sudo kram-tui` asks no password. `< Continue >` / `< Cancel >`.
+1. Start pkexec **in a new session, without a controlling terminal** (`start_new_session=True`, stdin
+   `/dev/null`), on a worker thread, so that polkit's text agent cannot write over the screen. With a desktop agent,
+   its window asks. "Waiting for authentication… Your desktop asks for the password in its own window." shows only
+   when pkexec has not answered after 0.3 s: without an agent it fails in 0.02–0.07 s (spike T3), and a dialog that
+   flashes up and away is noise.
+2. pkexec ends with exit 127 and a message that names the **authentication agent** (polkit 127 says "Error creating
+   textual authentication agent: Error opening current controlling terminal for the process (`/dev/tty`)"; older
+   ones "No authentication agent found"): there is no agent. Kram shows **Administrator rights**: what needs root,
+   that Kram steps aside and polkit asks in this terminal, that it asks once per session, and that `sudo kram-tui`
+   asks no password. `< Continue >` / `< Cancel >`.
 3. On Continue: `App.suspend()` (the terminal is the shell's), one line "Kram needs administrator rights. Kram comes
    back when you have answered.", pkexec on the terminal, then Kram resumes and goes on.
-4. Exit 126 (dismissed) or a wrong password three times: the request is cancelled, a message says so; nothing else
-   changes.
-5. pkexec missing: "Could not start pkexec. Is polkit installed?" (the existing text).
+4. **Ctrl+C at the prompt ends pkexec, not Kram**: while pkexec runs, Kram's SIGINT handler is one that does
+   nothing (a handler, not `SIG_IGN`, which pkexec would inherit across exec). pkexec dies of SIGINT; Kram comes
+   back and says "Authorization was cancelled".
+5. **polkit's text agent takes one password**: a wrong one ends pkexec at once with exit 127 and "Not authorized"
+   (spike T3). Kram comes back with **Not authorized**: `< Try again >` (back to step 3) / `< Cancel >`.
+6. Exit 126 (dismissed in a desktop window): the request is cancelled, a message says so; nothing else changes.
+7. pkexec missing: "Could not start pkexec. Is polkit installed?" (the existing text).
+8. A dialog that follows another starts from the first one's dismissal callback, never right after `dismiss()`:
+   Textual 8 pops a dismissed screen later, and a screen pushed meanwhile lost the focus or the screen froze one run
+   in three (spike T3).
 
 11.4 A second Kram (any front end) with the helper busy gets `BUSY` ("Another operation is still running…").
 
-11.5 To be confirmed by spike T3 before implementation (`docs/TUI_FRONTEND.md` §8): fast failure without an agent,
-the desktop agent still asking with no tty, `App.suspend()` on both Textual versions, SSH and the console.
+11.5 Spike T3 (2026-11-24, `scripts/spikes/t3_root.sh`, `t3_pty.py`) confirmed steps 1–5 and 8 in a Fedora container
+with systemd and polkit 127, a user in `wheel` and a pseudo-terminal as SSH gives one, on Textual 4.0.0 and
+8.1.1: 24 of 24 checks, five runs in a row. Still to check by hand: the desktop agent's window with no terminal
+(KDE, GNOME), and the Linux console.
 
 ## 12. System
 
@@ -689,3 +704,4 @@ N or P here that are PLANNED there change with the note given.
 2. Search stays a modal dialog at the top of the screen; it filters the list behind it while typing (§7.6).
 3. `U` (Mark All Upgrades) and `Z` (Unmark All) stay: both only change marks and can be undone (§6.5).
 4. `q` asks before quitting when marks are not applied (§10.19).
+5. **Open**: under `sudo`, read the invoking user's settings and save nothing (§11.2, proposed), or use root's own?

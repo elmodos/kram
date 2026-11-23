@@ -9,16 +9,25 @@ How the helper gets root in a terminal (docs/TUI_FRONTEND.md):
 - Kram runs as root (sudo kram-tui, a root shell): the helper starts without pkexec; the top bar says ROOT.
 - A desktop session with a polkit agent: pkexec is started in a new session, without a controlling terminal, so
   its password prompt can only be the desktop's window; Kram shows "Waiting for authentication…" meanwhile.
-- No agent (SSH, a virtual console): that pkexec fails at once with "No authentication agent found". Kram says why,
+- No agent (SSH, a virtual console): that pkexec fails at once (exit 127, "Error creating textual authentication
+  agent", spike T3). Kram says why,
   steps aside (Textual's App.suspend: the terminal is the shell's again) and runs pkexec on the terminal, where
   polkit's own text agent asks for the password; then Kram comes back.
 KRAM_SPIKE_AGENT=desktop|tty picks the path here (default: desktop when DISPLAY or WAYLAND_DISPLAY is set);
-KRAM_SPIKE_ROOT=1 plays root, =0 plays a user. KRAM_SPIKE_PKEXEC=1 runs a real `pkexec /usr/bin/true` on the tty path.
+KRAM_SPIKE_ROOT=1 plays root, =0 plays a user.
+
+KRAM_SPIKE_PKEXEC=1 (spike T3) does it for real with `pkexec /usr/bin/true` standing in for the helper: first
+without a terminal (a new session, stdin from /dev/null), on a thread, with "Waiting for authentication…" shown; on
+a failure that names the authentication agent the explanation, then pkexec on the terminal while Kram is suspended. Each pkexec's
+exit code, time and message go to the file KRAM_SPIKE_LOG names (scripts/spikes/t3_root.sh reads it).
 """
 import asyncio
 import os
+import signal
 import subprocess
 import sys
+import threading
+import time
 from collections import Counter
 from pathlib import Path
 
@@ -487,22 +496,98 @@ class KramTui2(t1.KramTui):
         after saying why, on the terminal while Kram steps aside."""
         if is_root():
             then()
+        elif os.environ.get("KRAM_SPIKE_PKEXEC") == "1":
+            self._pkexec_headless(what, then)
         elif agent_kind() == "desktop":
             then(waiting=True)
         else:
             self.push_screen(AuthDialog(what), lambda answer: answer == "continue" and self._tty_auth(then))
 
+    # ---------------------------------------------------------------- root for real (T3)
+
+    def _record(self, line: str) -> None:
+        path = os.environ.get("KRAM_SPIKE_LOG")
+        if path:
+            with open(path, "a") as f:
+                f.write(line + "\n")
+
+    def _pkexec_headless(self, what: str, then) -> None:
+        """pkexec with no controlling terminal: only a desktop agent can ask, and with none it fails at once
+        (0.02–0.07 s in spike T3). "Waiting for authentication…" shows only when pkexec has not answered after
+        0.3 s, so the no-agent path shows no dialog that flashes. When it did show, the next step starts from its
+        dismissal callback, after Textual has really popped it: pushing the next dialog right after dismiss()
+        lost the focus or froze the screen now and then on Textual 8 (spike T3)."""
+        state = {"dialog": None, "done": None}
+
+        def show_waiting() -> None:
+            if state["done"] is None:
+                dialog = ProgressDialog(what, transaction=False)
+                state["dialog"] = dialog
+                self.push_screen(dialog, lambda _r: self._after_headless(what, then, *state["done"]))
+                self.call_after_refresh(dialog.show, "Waiting for authentication…", None,
+                                        "Your desktop asks for the password in its own window.")
+
+        def finished(code: int, err: str, seconds: float) -> None:
+            self._record(f"headless code={code} seconds={seconds:.2f} err={err!r}")
+            state["done"] = (code, err)
+            if state["dialog"] is not None:
+                state["dialog"].dismiss(None)  # its callback goes on
+            else:
+                self._after_headless(what, then, code, err)
+
+        def work() -> None:
+            t0 = time.monotonic()
+            try:
+                p = subprocess.run(["pkexec", "/usr/bin/true"], start_new_session=True, stdin=subprocess.DEVNULL,
+                                   capture_output=True, text=True, timeout=600)
+                code, err = p.returncode, p.stderr.strip()
+            except FileNotFoundError:
+                code, err = -1, "no pkexec"
+            except subprocess.TimeoutExpired:
+                code, err = -2, "timeout"
+            self.call_from_thread(finished, code, err, time.monotonic() - t0)
+
+        self.set_timer(0.3, show_waiting)
+        threading.Thread(target=work, name="spike-pkexec", daemon=True).start()
+
+    def _after_headless(self, what, then, code: int, err: str) -> None:
+        if code == 0:
+            then()
+        # no agent: polkit 127 says "Error creating textual authentication agent: Error opening current controlling
+        # terminal…" (spike T3); older ones "No authentication agent found". Both name the agent; a refused password
+        # says "Not authorized" instead
+        elif code == 127 and "authentication agent" in err:
+            self.push_screen(AuthDialog(what), lambda answer: answer == "continue" and self._tty_auth(then))
+        elif code == 126:
+            self.notify("Authorization was cancelled", timeout=5)
+        else:
+            self.notify(f"pkexec failed ({code}): {err}", severity="error", timeout=8)
+
     def _tty_auth(self, then) -> None:
+        """Kram steps aside: the terminal is the shell's while polkit's text agent asks. Ctrl+C at the prompt must
+        end pkexec, not Kram: while it runs, Kram's own SIGINT handler does nothing (a handler, not SIG_IGN, which
+        pkexec would inherit)."""
+        code = 0
         try:
             with self.suspend():
                 print("Kram needs administrator rights. Kram comes back when you have answered.\n", flush=True)
                 if os.environ.get("KRAM_SPIKE_PKEXEC") == "1":
-                    subprocess.run(["pkexec", "/usr/bin/true"], check=False)
+                    old = signal.signal(signal.SIGINT, lambda *_a: None)
+                    try:
+                        code = subprocess.run(["pkexec", "/usr/bin/true"], check=False).returncode
+                    finally:
+                        signal.signal(signal.SIGINT, old)
+                    self._record(f"tty code={code}")
                 else:
                     input("(spike: pkexec would ask for the password here; press Enter) ")
-        except Exception:  # noqa: BLE001 - no terminal to give back (the headless shots): play it through
-            pass
-        then()
+        except Exception as e:  # noqa: BLE001 - no terminal to give back (the headless shots): play it through
+            self._record(f"tty suspend failed: {e!r}")
+        if code == 0:
+            then()
+        elif code == 126 or code < 0:
+            self.notify("Authorization was cancelled", timeout=5)
+        else:
+            self.notify(f"Not authorized (pkexec {code})", severity="error", timeout=8)
 
     def action_reload(self) -> None:
         self.run_privileged("Reloading the repositories", self._reload)

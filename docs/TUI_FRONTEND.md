@@ -42,6 +42,7 @@ terminal, the way aptitude sits next to Synaptic on Debian.
 | T20 | **The Summary column takes the room left** (at least 20), so a wide terminal does not scroll sideways for it. Scrollbars and dialog table headers are quiet. | 2026-11-24 |
 | T21 | **One checkbox look**, `[x] Label`, our own widget: Textual's `Checkbox` and `SelectionList` look different from each other and from the repositories table. | 2026-11-24 |
 | T22 | **The author's answers** to the spec's open questions: status glyphs as symbols on UTF-8 terminals and letters otherwise; search stays a modal dialog; `U` and `Z` stay; `q` asks when marks are not applied. | 2026-11-24 |
+| T23 | **Root in a terminal as spike T3 found it**: detect "no agent" by exit 127 and the words "authentication agent"; polkit's text agent takes one password, so Kram offers Try again; Kram ignores SIGINT with a handler while pkexec asks; the next dialog starts from the previous one's dismissal callback. | 2026-11-24 |
 
 Non-goals: mouse-first use (the mouse works where Textual gives it for free, nothing is designed for it); a second
 toolkit-free layer (the TUI uses `kram/app` as the GTK front end does); features the GUIs do not have.
@@ -189,15 +190,25 @@ its prompt straight over Textual's screen. Three paths:
 |---|---|
 | As root (`sudo kram-tui`, a root shell) | The helper starts without pkexec. The top line shows a `ROOT` badge: "changes need no password". |
 | In a desktop session with a polkit agent | pkexec is started in a new session (`start_new_session=True`: no controlling terminal), so its prompt can only be the desktop's window. Kram's progress dialog says "Waiting for authentication… Your desktop asks for the password in its own window." |
-| With no agent (SSH, a virtual console) | That pkexec fails at once ("No authentication agent found", exit 127). Kram says why in a dialog (Continue / Cancel), then steps aside with `App.suspend()`: the terminal is the shell's again, Kram prints one line of context, runs pkexec on the terminal, and polkit's text agent asks for the password. Then Kram comes back. |
+| With no agent (SSH, a virtual console) | That pkexec fails at once (exit 127 in 0.02–0.07 s, "Error creating textual authentication agent…", spike T3). Kram says why in a dialog (Continue / Cancel), then steps aside with `App.suspend()`: the terminal is the shell's again, Kram prints one line of context, runs pkexec on the terminal, and polkit's text agent asks for the password. Then Kram comes back. |
 
 The helper stays alive for the session after that, as in the GUIs, so the password is asked once.
 
-**To verify in a spike (T3)** before building on it: that pkexec without a controlling terminal really fails fast
-with no agent instead of hanging; that the desktop agent still shows its window then; that `App.suspend()` hands the
-terminal back cleanly on both Textual versions; and what `sudo kram-tui` means for the user's settings (`$HOME` is
-root's under `sudo -i`, the user's under plain `sudo`). `t2_dialogs.py` has `KRAM_SPIKE_PKEXEC=1` to run a real
-`pkexec /usr/bin/true` on the third path.
+**Spike T3** (2026-11-24, `scripts/spikes/t3_root.sh` drives `t2_dialogs.py` through `t3_pty.py` in a Fedora
+container booted with systemd, polkit 127, a user in `wheel`, a pseudo-terminal as SSH gives one):
+
+| Question | Answer |
+|---|---|
+| pkexec with no terminal and no agent | Fails at once: exit 127 after 0.02–0.07 s, "Error creating textual authentication agent: Error opening current controlling terminal for the process (`/dev/tty`)". Not "No authentication agent found", as the first draft said: detect the words "authentication agent". |
+| The whole path (F5 → explanation → Continue → suspend → password → back) | Works on Textual 4.0.0 and 8.1.1: the alternate screen is left before polkit's prompt and entered again after; the right password goes on with the request. |
+| A wrong password | polkit's text agent takes **one** password, then exit 127 "Not authorized". Kram comes back and must offer to try again. |
+| Ctrl+C at the prompt | Without care it would hit Kram too (same foreground process group). With a do-nothing SIGINT handler in Kram while pkexec runs (not `SIG_IGN`, which pkexec would inherit), pkexec dies (code −2) and Kram comes back. |
+| Screen changes after a worker's answer | Pushing a dialog right after `dismiss()` of another lost the focus or froze the screen about one run in three on Textual 8.1 (4.0 never). Fixed by going on from the dismissal callback, and by not showing "Waiting for authentication…" at all when pkexec answers within 0.3 s. Five clean runs after the fix. |
+| `sudo` | Fedora's sudo sets `HOME=/root` with and without `-i`; `SUDO_USER` is set. `sudo kram-tui` would see root's settings: the spec proposes reading the user's and saving nothing (TUI_SPEC §11.2). |
+| Test-only findings | `polkit.service` cannot set up its systemd sandbox in a rootless container: polkitd is started by hand (it drops to its own user itself). Fedora's `su -c` runs the command without a controlling terminal: the driver uses `su --pty`, as SSH gives a terminal. |
+
+Not checked yet, by hand on a desktop: the desktop agent's window for a pkexec with no terminal (KDE, GNOME), and the
+Linux console.
 
 ## 9. Dialogs
 
