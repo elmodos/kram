@@ -6,9 +6,16 @@ Run it:   python3 scripts/spikes/t1_tui.py            (the app)
 Measure:  python3 scripts/spikes/t1_tui.py bench      (headless; prints timings for a narrow and a wide terminal)
 Shots:    python3 scripts/spikes/t1_tui.py shots DIR  (headless; SVG screenshots of the layouts and edge cases)
 
-Keys: G and D show a panel and focus it, or hide it when it has the focus; Esc goes back to the list. In the sidebar
-[ and ] switch the view, V opens the list of views; in the details [ and ] (or 1-7) switch the tab, T opens the list
-of tabs. In the list ←/→ (h/l) scroll sideways; the status and name columns stay in place when there is room.
+Keys: g and d show a panel and focus it, or hide it when it has the focus; Esc goes back to the list. In the sidebar
+[ and ] switch the view, v opens the list of views; in the details [ and ] (or 1-7) switch the tab, t opens the list
+of tabs. In the list ←/→ (h/l) scroll sideways; the status and name columns stay in place when there is room. / opens
+the search, m (or F9) the menu.
+
+Which key goes where (the "first responder"): Textual hands a key to the focused widget first, then to its parents,
+the screen and the app; a text field takes the printable keys itself. A modal screen (the search, a menu) sits on
+top of the window, but the app's own bindings would still answer under it, so `KramTui.check_action` turns the
+window's keys (WINDOW_ACTIONS) off while a modal screen is up or a text field has the focus. This is the scope
+kram.app.actions already gives its actions ("window" / "table"), applied to the terminal.
 
 The rows come from a pickled CatalogSnapshot when KRAM_SPIKE_SNAPSHOT names one, else from a real
 `Catalog().load()` (read-only), else from made-up rows. Needs python3-textual (Fedora 43/44: 4.0.0, 45: 8.1.x).
@@ -35,9 +42,10 @@ from textual.message import Message  # noqa: E402
 from textual.screen import ModalScreen  # noqa: E402
 from textual.scroll_view import ScrollView  # noqa: E402
 from textual.strip import Strip  # noqa: E402
-from textual.widgets import Footer, OptionList, Static  # noqa: E402
+from textual.widgets import Footer, Input, OptionList, Static  # noqa: E402
 from textual.widgets.option_list import Option  # noqa: E402
 
+from kram.app.actions import action_defs, menu_bar  # noqa: E402
 from kram.app.columns import (  # noqa: E402
     COL_CANDIDATE,
     COL_INSTALLED,
@@ -50,7 +58,7 @@ from kram.app.columns import (  # noqa: E402
 )
 from kram.app.details import TABS, TabChoice, tab_titles  # noqa: E402
 from kram.app.package_list import PackageList  # noqa: E402
-from kram.app.sidebar import VIEWS  # noqa: E402
+from kram.app.sidebar import VIEWS, history_id  # noqa: E402
 from kram.core.filters import (  # noqa: E402
     FilterEntry,
     custom_filter_entries,
@@ -61,6 +69,7 @@ from kram.core.filters import (  # noqa: E402
     visible_entries,
 )
 from kram.core.model import Status  # noqa: E402
+from kram.core.search import MODE_LABELS, Mode, SearchIndex  # noqa: E402
 
 WIDE = 100  # columns: from here on the panels are pinned beside and under the list, below it they slide over it
 TALL = 34   # rows: from here on (in a wide terminal) the sidebar lists every view at its bottom, as the GUIs do
@@ -70,6 +79,21 @@ STATUS_CHAR = {Status.INSTALLED: "■", Status.UPGRADABLE: "▲", Status.NOT_INS
 PANELS = ("side", "details")
 # the GUIs' headers are longer than these columns; a terminal has no room to spare
 SHORT_HEADERS = {COL_INSTALLED: "Installed", COL_CANDIDATE: "Latest", COL_SIZE: "Size"}
+KEY_STYLE = "b #e5a63a"  # a key in a hint: the footer's look, so "[" reads as a key and not as an empty checkbox
+# the window's own keys: off while a modal screen is up or a text field has the focus (see the module's docstring)
+WINDOW_ACTIONS = {"toggle_panel", "search", "menu", "quit", "back_to_list"}
+
+
+def hint(*pairs: tuple[str, str]) -> Text:
+    """Key hints for a panel's bottom border: each key in KEY_STYLE, then what it does; lower case, as the keys are
+    typed (the footer shows them so too). A Text, not markup: Textual's markup has no working escape for "["."""
+    t = Text()
+    for i, (key, label) in enumerate(pairs):
+        if i:
+            t.append("  ")
+        t.append(key, KEY_STYLE)
+        t.append(f" {label}")
+    return t
 
 
 # ---------------------------------------------------------------- data
@@ -112,7 +136,7 @@ def view_entries(snap, view: str, marked) -> list[FilterEntry]:
         return environment_filters(snap)
     if view == "custom":
         return custom_filter_entries(snap, [])
-    return []  # search results: no searches in the spike yet
+    return []  # search results: built by the app from its history
 
 
 PLACEHOLDER = {"search": "No searches yet.\nPress / to search.",
@@ -150,6 +174,7 @@ class PackageTable(ScrollView, can_focus=True):
         self.cursor = 0
         self.marked: set[tuple[str, str]] = set()
         self._inset = 0
+        self.centre = True  # mc's "centre scrolling": the list moves under a cursor that stays mid-screen
         self.columns: list[tuple[int, int, bool]] = []
         self.lines_drawn = 0  # render_line calls and their time, for the bench
         self.render_seconds = 0.0
@@ -252,12 +277,20 @@ class PackageTable(ScrollView, can_focus=True):
         elif self.cursor >= top + self.rows_shown:
             self.scroll_to(y=self.cursor - self.rows_shown + 1, animate=False, force=True)
 
+    def centre_cursor(self) -> None:
+        """Scroll so that the cursor is mid-list; near either end the list stops and the cursor moves on."""
+        top = max(0, min(self.cursor - self.rows_shown // 2, len(self.plist) - self.rows_shown))
+        self.scroll_to(y=top, animate=False, force=True)
+
+    def follow_cursor(self) -> None:
+        self.centre_cursor() if self.centre else self.ensure_visible()
+
     def _go(self, pos: int) -> None:
         n = len(self.plist)
         if not n:
             return
         self.cursor = max(0, min(n - 1, pos))
-        self.ensure_visible()
+        self.follow_cursor()
         self.refresh()
         self.post_message(CursorMoved())
 
@@ -296,7 +329,7 @@ def _fit(text: str, w: int, right: bool) -> str:
 
 class Sidebar(Vertical):
     """One list whose content the view chooses, as in the GUIs. The view's name is the panel's title; [ and ] go to
-    the previous and next view, V lists them all. A wide and tall terminal also lists the views at the bottom."""
+    the previous and next view, v lists them all. A wide and tall terminal also lists the views at the bottom."""
 
     BINDINGS = [
         Binding("left_square_bracket", "view(-1)", "Prev view", show=False),
@@ -322,7 +355,7 @@ class Sidebar(Vertical):
 
 class TabStrip(Static):
     """The details' tabs on one line: all of them when they fit, else only the current one between arrows, with its
-    number, and T for the list."""
+    number, and t for the list."""
 
     def show(self, tabs: list[str], current: str, width: int) -> None:
         titles = tab_titles()
@@ -337,9 +370,9 @@ class TabStrip(Static):
             return
         i = tabs.index(current)
         compact = Text()
-        compact.append("◂ ", "#9a9da3")
+        compact.append("← ", "#9a9da3")
         compact.append(f" {titles[current]} ", "reverse bold")
-        compact.append(" ▸", "#9a9da3")
+        compact.append(" →", "#9a9da3")
         compact.append(f"  {i + 1}/{len(tabs)}", "#9a9da3")
         if "advisories" in tabs and current != "advisories":
             compact.append("  ! advisories", "bold #e5a63a")
@@ -409,6 +442,197 @@ class ChoiceMenu(ModalScreen):
         self.dismiss(None)
 
 
+# ---------------------------------------------------------------- the search
+
+class SearchPopup(ModalScreen):
+    """The search at the top of the screen, over the window, as a command palette: type, Tab changes what is
+    searched, ↓ goes to the earlier searches, Enter searches, Esc closes. The name modes count matches as you type
+    (kram.core.search, the GUIs' own index); Provides and File ask dnf, so only on Enter."""
+
+    BINDINGS = [
+        Binding("escape", "close", "Close"),
+        Binding("tab", "mode(1)", "Mode", priority=True),
+        Binding("shift+tab", "mode(-1)", show=False, priority=True),
+        Binding("down", "history", show=False),
+    ]
+    DEFAULT_CSS = """
+    SearchPopup { align: center top; background: $background 40%; }
+    #search-box { width: 90%; max-width: 84; height: auto; margin-top: 1; padding: 0 1; background: $surface;
+                  border: round $accent; border-title-color: $accent; border-subtitle-color: $accent; }
+    #search-input { border: none; height: 1; padding: 0; background: $surface; }
+    #search-modes, #search-count { height: 1; }
+    #search-count { color: $text-muted; }
+    #search-history { height: auto; max-height: 8; border: none; padding: 0; background: $surface;
+                      border-top: solid #4a4d55; }
+    """
+
+    def __init__(self, app_: "KramTui", mode: int):
+        super().__init__()
+        self.kram, self.mode = app_, mode
+
+    def compose(self) -> ComposeResult:
+        box = Vertical(id="search-box")
+        box.border_title = "Search"
+        box.border_subtitle = hint(("tab", "what"), ("↓", "earlier"), ("enter", "search"), ("esc", "close"))
+        with box:
+            yield Input(placeholder="Package name, or words of its summary", id="search-input")
+            yield Static("", id="search-modes")
+            yield Static("", id="search-count")
+            yield OptionList(*[f"“{t}” — {MODE_LABELS[Mode(m)].lower()}   {c:,}" for t, m, c in self.kram.history],
+                             id="search-history")
+
+    def on_mount(self) -> None:
+        self.query_one("#search-history").display = bool(self.kram.history)
+        self.show_modes()
+        self.query_one(Input).focus()
+
+    def show_modes(self) -> None:
+        """Every mode when they fit, else the current one between arrows, as the details' tabs."""
+        t = Text()
+        for m in Mode:
+            if m:
+                t.append("  ")
+            t.append(f" {MODE_LABELS[m]} ", "reverse bold" if m == self.mode else "#9a9da3")
+        modes = self.query_one("#search-modes", Static)
+        if t.cell_len > modes.size.width > 0:
+            t = Text()
+            t.append("← ", "#9a9da3")
+            t.append(f" {MODE_LABELS[Mode(self.mode)]} ", "reverse bold")
+            t.append(f" →  {self.mode + 1}/{len(Mode)}", "#9a9da3")
+        modes.update(t)
+        self.count()
+
+    def on_resize(self) -> None:
+        self.call_after_refresh(self.show_modes)
+
+    def count(self) -> None:
+        text = self.query_one(Input).value
+        if not text.strip():
+            msg = ""
+        elif Mode(self.mode).local:
+            msg = f"{len(self.kram.index.search(text, Mode(self.mode))):,} packages"
+        else:
+            msg = "dnf looks this up when you press Enter"
+        self.query_one("#search-count", Static).update(msg)
+
+    def on_input_changed(self, _event) -> None:
+        self.count()
+
+    def on_input_submitted(self, event: Input.Submitted) -> None:
+        if event.value.strip():
+            self.dismiss((event.value.strip(), self.mode))
+
+    def on_option_list_option_selected(self, event: OptionList.OptionSelected) -> None:
+        text, mode, _c = self.kram.history[event.option_index]
+        self.dismiss((text, mode))
+
+    def action_mode(self, d: int) -> None:
+        self.mode = (self.mode + d) % len(Mode)
+        self.show_modes()
+
+    def action_history(self) -> None:
+        if self.kram.history:
+            self.query_one("#search-history").focus()
+
+    def action_close(self) -> None:
+        self.dismiss(None)
+
+
+# ---------------------------------------------------------------- the menu
+
+class MenuPopup(ModalScreen):
+    """The menu bar of the GUIs (kram.app.actions.menu_bar) in the middle of the screen: its menus on the left,
+    the chosen one's entries on the right. ↑↓ move, → or Enter opens, ← goes back, Esc closes."""
+
+    BINDINGS = [
+        Binding("escape", "close", "Close"),
+        Binding("left", "column(0)", show=False),
+        Binding("right", "column(1)", show=False),
+    ]
+    DEFAULT_CSS = """
+    MenuPopup { align: center middle; background: $background 50%; }
+    #menu-box { width: auto; height: auto; max-height: 90%; background: $surface;
+                border: round $accent; border-title-color: $accent; border-subtitle-color: $accent; }
+    #menu-titles { width: 14; height: auto; border: none; border-right: solid #4a4d55; padding: 0;
+                   background: $surface; }
+    #menu-items { width: 46; height: auto; border: none; padding: 0; background: $surface; }
+    """
+
+    def __init__(self, app_: "KramTui"):
+        super().__init__()
+        self.kram = app_
+        self.menus = menu_bar()
+        self.labels = {d.id: d for d in action_defs()}
+        self.items: list = []  # the MenuItems shown on the right, None for the "back" line
+        self.stack: list = []  # submenus opened on the right
+
+    def compose(self) -> ComposeResult:
+        box = Horizontal(id="menu-box")
+        box.border_title = "Menu"
+        box.border_subtitle = hint(("enter", "open"), ("←", "back"), ("esc", "close"))
+        with box:
+            yield OptionList(*[m.title.replace("&", "") for m in self.menus], id="menu-titles")
+            yield OptionList(id="menu-items")
+
+    def on_mount(self) -> None:
+        self.show_menu(self.menus[0])
+        self.query_one("#menu-titles").focus()
+
+    def show_menu(self, menu, sub: bool = False) -> None:
+        items = self.query_one("#menu-items", OptionList)
+        items.clear_options()
+        self.items = []
+        if sub:
+            items.add_option(Option(Text("← " + menu.title.replace("&", ""), style="bold")))
+            self.items.append(None)
+        for it in menu.items:
+            self.items.append(it)
+            if it.separator:
+                items.add_option(Option(Text("─" * 44, style="#4a4d55"), disabled=True))
+            elif it.submenu is not None:
+                items.add_option(Option(_menu_line(it.submenu.title.replace("&", ""), "→")))
+            elif it.prefs is not None:
+                mark = "[x]" if self.kram.table.centre else "[ ]"  # a real checkbox here
+                items.add_option(Option(_menu_line(f"{mark} Centre the cursor when scrolling", "")))
+            else:
+                d = self.labels.get(it.action)
+                items.add_option(Option(_menu_line(d.label if d else it.action, d.shortcuts[0] if d and d.shortcuts
+                                                   else "")))
+        items.highlighted = 0
+
+    def on_option_list_option_highlighted(self, event: OptionList.OptionHighlighted) -> None:
+        if event.option_list.id == "menu-titles":
+            self.stack = []
+            self.show_menu(self.menus[event.option_index])
+
+    def on_option_list_option_selected(self, event: OptionList.OptionSelected) -> None:
+        if event.option_list.id == "menu-titles":
+            self.action_column(1)
+            return
+        it = self.items[event.option_index]
+        if it is None:  # back out of a submenu
+            self.stack.pop()
+            self.show_menu(self.stack[-1], sub=True) if self.stack else self.show_menu(
+                self.menus[self.query_one("#menu-titles", OptionList).highlighted])
+        elif it.submenu is not None:
+            self.stack.append(it.submenu)
+            self.show_menu(it.submenu, sub=True)
+        else:
+            self.dismiss("pref:centre" if it.prefs is not None else it.action)
+
+    def action_column(self, i: int) -> None:
+        self.query_one("#menu-items" if i else "#menu-titles").focus()
+
+    def action_close(self) -> None:
+        self.dismiss(None)
+
+
+def _menu_line(label: str, right: str, width: int = 44) -> Text:
+    t = Text(label[:width - len(right) - 1].ljust(width - len(right)))
+    t.append(right, "#9a9da3")
+    return t
+
+
 # ---------------------------------------------------------------- the app
 
 class Body(Horizontal):
@@ -442,6 +666,8 @@ class KramTui(App):
     BINDINGS = [
         Binding("g", "toggle_panel('side')", "Groups"),
         Binding("d", "toggle_panel('details')", "Details"),
+        Binding("slash", "search", "Search"),
+        Binding("m,f9", "menu", "Menu"),
         Binding("escape", "back_to_list", "List", show=False),
         Binding("q", "quit", "Quit"),
     ]
@@ -461,6 +687,8 @@ class KramTui(App):
         self.choice = TabChoice()
         self.tab = "description"
         self.tabs: list[str] = list(TABS)
+        self.history: list[tuple[str, int, int]] = []  # (text, mode, count), newest first, as SidebarModel keeps it
+        self._index: SearchIndex | None = None
 
     def compose(self) -> ComposeResult:
         yield Static("", id="top")
@@ -469,12 +697,12 @@ class KramTui(App):
             with Vertical(id="main"):
                 box = Vertical(id="table-box", classes="panel")
                 box.border_title = "Packages"
-                box.border_subtitle = "Space mark · ←→ scroll"
+                box.border_subtitle = hint(("space", "mark"), ("← →", "scroll"))
                 with box:
                     yield PackageTable(self.plist, id="table")
                 details = Details(id="details", classes="panel")
                 details.border_title = "Details"
-                details.border_subtitle = "[ ] tab · T tabs"
+                details.border_subtitle = hint(("[", "prev"), ("]", "next"), ("t", "tabs"))
                 yield details
         yield Footer()
 
@@ -556,11 +784,72 @@ class KramTui(App):
         self.focus_target(name).focus()
         if name == "details":
             self.table.bottom_inset = self.overlay_inset()
-            self.table.call_after_refresh(self.table.ensure_visible)  # once the list has its new size
+            self.table.call_after_refresh(self.table.follow_cursor)  # once the list has its new size
             self.show_details()
 
     def action_back_to_list(self) -> None:
         self.table.focus()
+
+    # ---------------------------------------------------------------- who gets a key
+
+    def check_action(self, action: str, parameters) -> bool | None:
+        """The window's keys (WINDOW_ACTIONS) belong to the window: not while a modal screen is up (Textual would
+        still give them to the app under it) and not while a text field has the focus (there "g" and "/" are
+        text). False also takes them out of the footer."""
+        if action in WINDOW_ACTIONS:
+            if len(self.screen_stack) > 1 or isinstance(self.focused, Input):
+                return False
+        return True
+
+    # ---------------------------------------------------------------- search and menu
+
+    @property
+    def index(self) -> SearchIndex:
+        if self._index is None:
+            self._index = SearchIndex(self.plist.rows, getattr(self.snap, "descriptions", None))
+        return self._index
+
+    def action_search(self) -> None:
+        mode = self.history[0][1] if self.history else int(Mode.NAME_SUMMARY)
+        self.push_screen(SearchPopup(self, mode), lambda found: found and self.run_search(*found))
+
+    def run_search(self, text: str, mode: int) -> None:
+        if Mode(mode).local:
+            found = self.index.search(text, Mode(mode))
+        else:
+            found = []
+            self.notify(f"{MODE_LABELS[Mode(mode)]}: dnf answers this in the real app", timeout=4)
+        self.history = [(text, mode, len(found))] + [h for h in self.history if h[:2] != (text, mode)]
+        self.selected["search"] = history_id(text, mode)
+        self.entry = FilterEntry(history_id(text, mode), f"“{text}”", lambda _r: True, len(found))
+        self.plist.set_visible(found, ranked=True)  # best match first, as the GUIs show a search
+        self.table.reset()
+        self.update_status()
+        self.set_view("search")
+
+    def action_menu(self) -> None:
+        self.push_screen(MenuPopup(self), lambda action: action and self.run_menu_action(action))
+
+    def run_menu_action(self, action: str) -> None:
+        if action == "quit":
+            self.exit()
+        elif action == "find":
+            self.action_search()
+        elif action == "pref:centre":
+            self.table.centre = not self.table.centre
+            self.table.follow_cursor()
+            self.notify("Centre scrolling " + ("on" if self.table.centre else "off"), timeout=3)
+        elif action == "mark_upgrades":
+            self.table.marked |= {r.key for r in self.plist.rows if r.status is Status.UPGRADABLE}
+            self.table.refresh()
+            self.update_status()
+        elif action == "unmark_all":
+            self.table.marked.clear()
+            self.table.refresh()
+            self.update_status()
+        else:
+            label = next((d.label for d in action_defs() if d.id == action), action)
+            self.notify(f"{label}: not in the spike", timeout=3)
 
     def list_focused(self) -> None:
         """Focus moved to the list (Esc, Tab, a click): a slide-over closes, a pinned panel stays."""
@@ -575,9 +864,11 @@ class KramTui(App):
         self.view = view
         side = self.panel("side")
         label = dict((v, lbl) for v, lbl, _b in VIEWS)[view]
-        side.border_title = f"{label} ▾"
-        side.border_subtitle = "[ ] view · V views"
-        self.entries = view_entries(self.snap, view, self.table.marked)
+        side.border_title = label
+        side.border_subtitle = hint(("[", "prev"), ("]", "next"), ("v", "all"))  # fits the 28 columns
+        self.entries = view_entries(self.snap, view, self.table.marked) if view != "search" else [
+            FilterEntry(history_id(text, mode), f"“{text}” — {MODE_LABELS[Mode(mode)].lower()}", lambda _r: True,
+                        count, query=(text, mode)) for text, mode, count in self.history]
         entries = self.query_one("#entries", OptionList)
         entries.clear_options()
         if not self.entries:
@@ -603,6 +894,9 @@ class KramTui(App):
             self.table.focus()  # the slide-over has done its job
 
     def set_entry(self, entry: FilterEntry) -> None:
+        if entry.query:  # a search of the history: run it again
+            self.run_search(*entry.query)
+            return
         self.selected[self.view] = entry.id
         self.entry = entry
         rows = self.plist.rows
@@ -772,6 +1066,20 @@ async def shots(snap, out: Path) -> None:
         ("20-narrow-to-wide-keeps-panel", N, [*upgradable, "g", W]),
         ("21-wide-to-narrow-hides-panels", W, [*upgradable, N]),
         ("22-tiny-40x12", (40, 12), [*upgradable, "d"]),
+        ("23-centre-scrolling", W, ["down"] * 30),
+        ("24-centre-scrolling-near-end", W, ["end", "up", "up"]),
+        ("25-search-popup", W, ["slash", *"vim"]),
+        ("26-search-g-is-text", W, ["slash", *"vim", "space", "g"]),
+        ("27-search-tab-mode", W, ["slash", *"vim", "tab"]),
+        ("28-search-results", W, ["slash", *"vim", "enter"]),
+        ("29-search-history", W, ["slash", *"vim", "enter", "slash", "down"]),
+        ("30-menu", W, ["m"]),
+        ("31-menu-edit-items", W, ["m", "down", "right"]),
+        ("32-menu-submenu", W, ["m", "down", "right", "enter"]),
+        ("33-menu-g-does-nothing", W, ["m", "g", "d", "slash"]),
+        ("34-menu-settings-centre", W, ["m", "down", "down", "down", "right", "end"]),
+        ("35-narrow-search", N, ["slash", *"kern"]),
+        ("36-narrow-menu", N, ["m", "down", "down", "right"]),
     ]
     for name, size, steps in cases:
         app = KramTui(snap)
@@ -789,8 +1097,9 @@ async def shots(snap, out: Path) -> None:
             app.save_screenshot(filename=f"{name}.svg", path=str(out))
             focused = app.focused.id if app.focused else None
             shown = [n for n in PANELS if not app.panel(n).has_class("hidden")]
-            print(f"{name}: focus={focused} shown={shown} tab={app.tab} tabs={len(app.tabs)} "
-                  f"cursor={app.table.cursor} top={app.table.scroll_offset.y} x={app.table.scroll_offset.x}")
+            print(f"{name}: screens={len(app.screen_stack)} focus={focused} shown={shown} tab={app.tab} "
+                  f"tabs={len(app.tabs)} rows={len(app.plist)} cursor={app.table.cursor} "
+                  f"top={app.table.scroll_offset.y} x={app.table.scroll_offset.x}")
 
 
 def main() -> None:
