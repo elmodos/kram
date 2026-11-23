@@ -1,0 +1,25 @@
+# ruff, the parity check and the whole test suite on every push to main, on each Fedora release Kram is built for in
+# Copr (docs/COPR.md). The steps are scripts/ci_tests.sh, which runs the same locally in a container.
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Fedora ${{ matrix.fedora }}
+    runs-on: ubuntu-latest
+    container: registry.fedoraproject.org/fedora:${{ matrix.fedora }}
+    strategy:
+      fail-fast: false  # a failure on one release says nothing about the others
+      matrix:
+        fedora: ["43", "44", "45", "rawhide"]
+    steps:
+      - uses: actions/checkout@v4
+      - name: ruff, parity, pytest
+        run: bash scripts/ci_tests.sh

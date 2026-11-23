@@ -35,6 +35,13 @@ scripts/container_check.sh # real root transactions in a throwaway Fedora contai
 scripts/rpm_check.sh       # build the RPMs like COPR does, install kram-qt, then kram-gtk, check both, in a container
 ```
 
+Every push to `main` runs ruff, the parity check and the whole suite on Fedora 43, 44, 45 and Rawhide
+(`.github/workflows/tests.yml`). Its steps are `scripts/ci_tests.sh`, which runs the same in a container here:
+
+```sh
+podman run --rm -v "$PWD:/src:Z" -w /src registry.fedoraproject.org/fedora:44 bash scripts/ci_tests.sh
+```
+
 ## Layout
 
 - `kram/core/`, `kram/ipc/`, `kram/helper/` and `kram/notifier/` import no Qt; `kram/core/` is where most
