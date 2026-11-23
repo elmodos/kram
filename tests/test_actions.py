@@ -116,6 +116,8 @@ def test_downgrade_items():
     items[0].run()
     assert chosen == ["0.9-1"]
     assert not downgrade_items(ROWS["old"], SimpleNamespace(versions=[]), chosen.append)[0].enabled
+    # a package that is not installed: GTK builds the submenu with every context menu, and an empty EVR broke it
+    assert not downgrade_items(ROWS["new"], details, chosen.append)[0].enabled
 
 
 def test_preferences_round_trip_and_announce_changes():

@@ -226,6 +226,8 @@ def downgrade_items(row: PkgRow | None, details, choose: Callable[[str], None]) 
     `details` (None while they load). `choose(evr)` marks the downgrade."""
     if row is None or details is None:
         return [DynamicItem(_("(loading…)"), enabled=False)]
+    if not row.installed_evr:  # not installed: nothing to go down from (the submenu is off then)
+        return [DynamicItem(_("No older versions in the repositories"), enabled=False)]
     installed = {v.evr for v in details.versions if v.installed}
     older = [v for v in details.versions if not v.installed and not v.locked_out and v.evr not in installed
              and evr_cmp(v.evr, row.installed_evr) < 0]
