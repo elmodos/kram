@@ -42,10 +42,12 @@ from textual.message import Message  # noqa: E402
 from textual.screen import ModalScreen  # noqa: E402
 from textual.scroll_view import ScrollView  # noqa: E402
 from textual.strip import Strip  # noqa: E402
+from textual.theme import Theme  # noqa: E402
+from textual.widget import Widget  # noqa: E402
 from textual.widgets import Footer, Input, OptionList, Static  # noqa: E402
 from textual.widgets.option_list import Option  # noqa: E402
 
-from kram.app.actions import action_defs, menu_bar  # noqa: E402
+from kram.app.actions import MenuItem, action_defs, menu_bar  # noqa: E402
 from kram.app.columns import (  # noqa: E402
     COL_CANDIDATE,
     COL_INSTALLED,
@@ -79,19 +81,101 @@ STATUS_CHAR = {Status.INSTALLED: "■", Status.UPGRADABLE: "▲", Status.NOT_INS
 PANELS = ("side", "details")
 # the GUIs' headers are longer than these columns; a terminal has no room to spare
 SHORT_HEADERS = {COL_INSTALLED: "Installed", COL_CANDIDATE: "Latest", COL_SIZE: "Size"}
-KEY_STYLE = "b #e5a63a"  # a key in a hint: the footer's look, so "[" reads as a key and not as an empty checkbox
 # the window's own keys: off while a modal screen is up or a text field has the focus (see the module's docstring)
 WINDOW_ACTIONS = {"toggle_panel", "search", "menu", "quit", "back_to_list"}
 
 
+# ---------------------------------------------------------------- colours
+
+class Palette(Widget):
+    """Every colour of the TUI, by role. No colour is written anywhere else: widgets' CSS uses theme variables, and
+    text drawn in Python asks `role(name)`. Two sets of rules: high-colour themes take Textual's theme variables;
+    16-colour schemes (Textual's `App:ansi`) use only what a 16-colour terminal has: its 16 colours, its
+    own foreground and background, bold, dim, reverse. With the "Terminal" scheme those are the terminal's own
+    colours, so the terminal's light or dark mode shows at once, with no restart."""
+
+    ROLES = ("muted", "rule", "key", "current", "header", "cursor", "cursor-blurred", "upgradable", "installed",
+             "marked", "info", "danger", "ok", "badge")
+    COMPONENT_CLASSES = {f"role--{r}" for r in ROLES}
+    DEFAULT_CSS = """
+    Palette { display: none; }
+    Palette > .role--muted { color: $text-muted; }
+    Palette > .role--rule { color: $border-blurred; }
+    Palette > .role--key { color: $accent; text-style: bold; }
+    Palette > .role--current { text-style: reverse bold; }
+    Palette > .role--header { color: $text-muted; text-style: bold; }
+    Palette > .role--cursor { background: $block-cursor-background; color: $block-cursor-foreground;
+                              text-style: $block-cursor-text-style; }
+    Palette > .role--cursor-blurred { background: $block-cursor-blurred-background;
+                                      color: $block-cursor-blurred-foreground; }
+    Palette > .role--upgradable { color: $warning; }
+    Palette > .role--installed { color: $success; }
+    Palette > .role--marked { color: $accent; text-style: bold; }
+    Palette > .role--info { color: $primary; text-style: bold; }
+    Palette > .role--danger { color: $error; text-style: bold; }
+    Palette > .role--ok { color: $success; }
+    Palette > .role--badge { color: $error; text-style: reverse bold; }
+
+
+    App:ansi Palette > .role--muted { color: $foreground; text-style: dim; }
+    App:ansi Palette > .role--header { color: $foreground; text-style: bold dim; }
+    App:ansi Palette > .role--key { color: $warning; text-style: bold; }
+    App:ansi Palette > .role--cursor { background: $background; color: $foreground; text-style: reverse bold; }
+    App:ansi Palette > .role--cursor-blurred { background: $background; color: $foreground; text-style: underline; }
+    """
+
+
+_palette: Palette | None = None
+
+
+def role(name: str) -> Style:
+    """The text style of a colour role (Palette), from the current scheme; plain until the palette has its styles
+    (the window draws its texts again then: KramTui.refresh_colours)."""
+    try:
+        return _palette.get_component_rich_style(f"role--{name}", partial=True)
+    except (AttributeError, KeyError):  # no palette yet, or not styled yet
+        return Style()
+
+
+# 16-colour schemes of our own: only the terminal's 16 colours, by their ANSI names
+ANSI_THEMES = [
+    Theme(name="kram-midnight", primary="ansi_bright_cyan", secondary="ansi_bright_cyan", accent="ansi_bright_yellow",
+          warning="ansi_bright_yellow", error="ansi_bright_red", success="ansi_bright_green",
+          foreground="ansi_bright_white", background="ansi_blue", surface="ansi_blue", panel="ansi_blue",
+          boost="ansi_blue", dark=True,
+          variables={"border": "ansi_bright_cyan", "border-blurred": "ansi_white", "scrollbar": "ansi_cyan",
+                     "footer-background": "ansi_cyan", "footer-foreground": "ansi_black",
+                     "footer-key-foreground": "ansi_bright_white", "input-cursor-text-style": "reverse"}),
+    Theme(name="kram-console", primary="ansi_green", secondary="ansi_cyan", accent="ansi_bright_green",
+          warning="ansi_yellow", error="ansi_red", success="ansi_green", foreground="ansi_white",
+          background="ansi_black", surface="ansi_black", panel="ansi_black", boost="ansi_black", dark=True,
+          variables={"border": "ansi_bright_green", "border-blurred": "ansi_bright_black", "scrollbar": "ansi_green",
+                     "input-cursor-text-style": "reverse"}),
+]
+# (theme, label): what Settings → Colours offers, in its order
+SCHEMES = [
+    ("textual-ansi", "Terminal: 16 colours, follows the terminal"),
+    ("kram-midnight", "Midnight: 16 colours, blue"),
+    ("kram-console", "Console: 16 colours, black"),
+    ("textual-dark", "Textual dark: high colour"),
+    ("textual-light", "Textual light: high colour"),
+    ("nord", "Nord: high colour"),
+    ("gruvbox", "Gruvbox: high colour"),
+    ("solarized-light", "Solarized light: high colour"),
+    ("tokyo-night", "Tokyo Night: high colour"),
+]
+ANSI_SCHEMES = {"textual-ansi", *(t.name for t in ANSI_THEMES)}
+
+
 def hint(*pairs: tuple[str, str]) -> Text:
-    """Key hints for a panel's bottom border: each key in KEY_STYLE, then what it does; lower case, as the keys are
-    typed (the footer shows them so too). A Text, not markup: Textual's markup has no working escape for "["."""
+    """Key hints for a panel's bottom border: each key in the "key" role, then what it does; lower case, as the
+    keys are typed (the footer shows them so too). A Text, not markup: Textual's markup has no working escape for
+    "["."""
     t = Text()
     for i, (key, label) in enumerate(pairs):
         if i:
             t.append("  ")
-        t.append(key, KEY_STYLE)
+        t.append(key, role("key"))
         t.append(f" {label}")
     return t
 
@@ -231,20 +315,20 @@ class PackageTable(ScrollView, can_focus=True):
 
     def _cells(self, pos: int | None) -> tuple[list[Segment], Style]:
         if pos is None:  # the header
-            base = Style(bold=True, color="#9a9da3")
+            base = role("header")
             return [s for col, w, right in self.columns for s in (
                 Segment(_fit(SHORT_HEADERS.get(col, HEADERS[col] if col >= 0 else "S"), w, right), base),
                 Segment(" ", base))], base
         r = self.plist.row(pos)
         marked = r.key in self.marked
-        base = Style(bgcolor="#2f4b73", color="white") if pos == self.cursor and self.has_focus else (
-            Style(bgcolor="#3a3d44") if pos == self.cursor else Style())
+        base = role("cursor") if pos == self.cursor and self.has_focus else (
+            role("cursor-blurred") if pos == self.cursor else Style())
         segs = []
         for col, w, right in self.columns:
             if col == -1:
                 text = "✓" if marked else STATUS_CHAR.get(r.status, " ")
-                style = base + Style(color="#5aa0f0" if marked else "#e5a63a" if r.status is Status.UPGRADABLE
-                                     else "#6fbf73" if r.installed_evr else "#9a9da3")
+                style = base + role("marked" if marked else "upgradable" if r.status is Status.UPGRADABLE
+                                    else "installed" if r.installed_evr else "muted")
             else:
                 text = cell_text(r, col, self.plist.ctx) or ""
                 style = base + Style(bold=col == COL_CANDIDATE and r.status is Status.UPGRADABLE)
@@ -361,21 +445,22 @@ class TabStrip(Static):
         titles = tab_titles()
         full = Text()
         for i, name in enumerate(tabs, 1):
-            style = "reverse bold" if name == current else ("bold #e5a63a" if name == "advisories" else "")
+            style = role("current") if name == current else (role("upgradable") + Style(bold=True)
+                                                              if name == "advisories" else Style())
             if i > 1:
-                full.append(" │ ", "#4a4d55")
+                full.append(" │ ", role("rule"))
             full.append(f" {i} {titles[name]} ", style)
         if full.cell_len <= width:
             self.update(full)
             return
         i = tabs.index(current)
         compact = Text()
-        compact.append("← ", "#9a9da3")
-        compact.append(f" {titles[current]} ", "reverse bold")
-        compact.append(" →", "#9a9da3")
-        compact.append(f"  {i + 1}/{len(tabs)}", "#9a9da3")
+        compact.append("← ", role("muted"))
+        compact.append(f" {titles[current]} ", role("current"))
+        compact.append(" →", role("muted"))
+        compact.append(f"  {i + 1}/{len(tabs)}", role("muted"))
         if "advisories" in tabs and current != "advisories":
-            compact.append("  ! advisories", "bold #e5a63a")
+            compact.append("  ! advisories", role("upgradable") + Style(bold=True))
         self.update(compact)
 
 
@@ -417,7 +502,8 @@ class ChoiceMenu(ModalScreen):
     BINDINGS = [Binding("escape", "close", "Close")]
     DEFAULT_CSS = """
     ChoiceMenu { align: center middle; background: $background 50%; }
-    ChoiceMenu OptionList { width: 30; height: auto; max-height: 80%; border: round $accent;
+    ChoiceMenu OptionList { width: auto; min-width: 30; max-width: 90%; height: auto; max-height: 80%;
+                            border: round $accent;
                             border-title-color: $accent; background: $surface; }
     """
 
@@ -463,7 +549,7 @@ class SearchPopup(ModalScreen):
     #search-modes, #search-count { height: 1; }
     #search-count { color: $text-muted; }
     #search-history { height: auto; max-height: 8; border: none; padding: 0; background: $surface;
-                      border-top: solid #4a4d55; }
+                      border-top: solid $border-blurred; }
     """
 
     def __init__(self, app_: "KramTui", mode: int):
@@ -492,13 +578,13 @@ class SearchPopup(ModalScreen):
         for m in Mode:
             if m:
                 t.append("  ")
-            t.append(f" {MODE_LABELS[m]} ", "reverse bold" if m == self.mode else "#9a9da3")
+            t.append(f" {MODE_LABELS[m]} ", role("current") if m == self.mode else role("muted"))
         modes = self.query_one("#search-modes", Static)
         if t.cell_len > modes.size.width > 0:
             t = Text()
-            t.append("← ", "#9a9da3")
-            t.append(f" {MODE_LABELS[Mode(self.mode)]} ", "reverse bold")
-            t.append(f" →  {self.mode + 1}/{len(Mode)}", "#9a9da3")
+            t.append("← ", role("muted"))
+            t.append(f" {MODE_LABELS[Mode(self.mode)]} ", role("current"))
+            t.append(f" →  {self.mode + 1}/{len(Mode)}", role("muted"))
         modes.update(t)
         self.count()
 
@@ -553,7 +639,7 @@ class MenuPopup(ModalScreen):
     MenuPopup { align: center middle; background: $background 50%; }
     #menu-box { width: auto; height: auto; max-height: 90%; background: $surface;
                 border: round $accent; border-title-color: $accent; border-subtitle-color: $accent; }
-    #menu-titles { width: 14; height: auto; border: none; border-right: solid #4a4d55; padding: 0;
+    #menu-titles { width: 14; height: auto; border: none; border-right: solid $border-blurred; padding: 0;
                    background: $surface; }
     #menu-items { width: 46; height: auto; border: none; padding: 0; background: $surface; }
     """
@@ -588,12 +674,16 @@ class MenuPopup(ModalScreen):
         for it in menu.items:
             self.items.append(it)
             if it.separator:
-                items.add_option(Option(Text("─" * 44, style="#4a4d55"), disabled=True))
+                items.add_option(Option(Text("─" * 44, style=role("rule")), disabled=True))
             elif it.submenu is not None:
                 items.add_option(Option(_menu_line(it.submenu.title.replace("&", ""), "→")))
             elif it.prefs is not None:
                 mark = "[x]" if self.kram.table.centre else "[ ]"  # a real checkbox here
                 items.add_option(Option(_menu_line(f"{mark} Centre the cursor when scrolling", "")))
+                self.items.append(COLOURS_ITEM)  # the TUI's own preference
+                items.add_option(Option(_menu_line("Colours…", "")))
+            elif it is COLOURS_ITEM:
+                pass
             else:
                 d = self.labels.get(it.action)
                 items.add_option(Option(_menu_line(d.label if d else it.action, d.shortcuts[0] if d and d.shortcuts
@@ -627,9 +717,12 @@ class MenuPopup(ModalScreen):
         self.dismiss(None)
 
 
+COLOURS_ITEM = MenuItem(action="colours")
+
+
 def _menu_line(label: str, right: str, width: int = 44) -> Text:
     t = Text(label[:width - len(right) - 1].ljust(width - len(right)))
-    t.append(right, "#9a9da3")
+    t.append(right, role("muted"))
     return t
 
 
@@ -645,13 +738,24 @@ class Body(Horizontal):
 
 class KramTui(App):
     CSS = """
+    /* 16 colours: Textual draws some widgets in colours blended with transparency, which a 16-colour terminal
+       cannot show (the footer's words and a checkbox's label vanished). Plain colours instead. Here in the app's CSS:
+       a widget's DEFAULT_CSS is scoped to that widget. */
+    App:ansi Screen { background: $background; color: $foreground; }
+    App:ansi Footer, App:ansi FooterKey { background: $background; color: $text; }
+    App:ansi FooterKey .footer-key--key { background: $background; color: $warning; text-style: bold; }
+    App:ansi FooterKey .footer-key--description { background: $background; color: $text; }
+    App:ansi Checkbox { border: none; padding: 0; background: $background; color: $foreground; }
+    App:ansi Checkbox > .toggle--button { background: $background; color: $foreground; }
+    App:ansi Checkbox.-on > .toggle--button { color: $success; text-style: bold; }
+    App:ansi Input { background: $background; color: $foreground; }
     #top { height: 1; background: $panel; color: $text; padding: 0 1; }
     #body { height: 1fr; layers: base overlay; }
-    .panel { border: round #4a4d55; border-title-color: #9a9da3; border-subtitle-color: #6b6e75; }
+    .panel { border: round $border-blurred; border-title-color: $text-muted; border-subtitle-color: $text-muted; }
     .panel:focus-within { border: round $accent; border-title-color: $accent; border-subtitle-color: $accent; }
     #side { width: 28; height: 1fr; }
     #entries { height: 1fr; border: none; padding: 0; background: transparent; }
-    #views { height: auto; border-top: solid #4a4d55; color: #9a9da3; display: none; }
+    #views { height: auto; border-top: solid $border-blurred; color: $text-muted; display: none; }
     #body.tall #views { display: block; }
     #main { width: 1fr; }
     #table-box { height: 1fr; }
@@ -691,6 +795,9 @@ class KramTui(App):
         self._index: SearchIndex | None = None
 
     def compose(self) -> ComposeResult:
+        global _palette
+        _palette = Palette()
+        yield _palette
         yield Static("", id="top")
         with Body(id="body"):
             yield Sidebar(id="side", classes="panel")
@@ -707,11 +814,44 @@ class KramTui(App):
         yield Footer()
 
     def on_mount(self) -> None:
+        for theme in ANSI_THEMES:
+            self.register_theme(theme)
+        signal = getattr(self, "theme_changed_signal", None)
+        if signal is not None:  # the command palette's "Change theme" too
+            signal.subscribe(self, lambda _theme: self.scheme_changed())
+        self.set_scheme(os.environ.get("KRAM_SCHEME", "textual-ansi"))
         self.set_view("status")
         self.apply_layout()
         self.table.focus()
         self.update_status()
         self.call_after_refresh(self.show_details)
+
+    # ---------------------------------------------------------------- colours
+
+    def set_scheme(self, name: str) -> None:
+        """A colour scheme (SCHEMES), at once: no restart."""
+        self.theme = name
+        self.scheme_changed()
+
+    def scheme_changed(self) -> None:
+        # Textual turns ANSI colours on only for its own "textual-ansi"; ours are 16-colour schemes as well
+        self.ansi_color = self.theme in ANSI_SCHEMES
+        self.call_after_refresh(self.refresh_colours)
+
+    def refresh_colours(self) -> None:
+        """Draw again everything whose colours were taken from `role` in Python."""
+        self.query_one("#table-box").border_subtitle = hint(("space", "mark"), ("← →", "scroll"))
+        self.query_one("#details").border_subtitle = hint(("[", "prev"), ("]", "next"), ("t", "tabs"))
+        self.set_view(self.view)
+        self.update_status()
+        self.show_details()
+        self.table.refresh()
+
+    def choose_scheme(self) -> None:
+        names = [n for n, _l in SCHEMES]
+        current = names.index(self.theme) if self.theme in names else 0
+        self.push_screen(ChoiceMenu("Colours", [label for _n, label in SCHEMES], current),
+                         lambda i: i is not None and self.set_scheme(names[i]))
 
     @property
     def table(self) -> PackageTable:
@@ -835,6 +975,8 @@ class KramTui(App):
             self.exit()
         elif action == "find":
             self.action_search()
+        elif action == "colours":
+            self.choose_scheme()
         elif action == "pref:centre":
             self.table.centre = not self.table.centre
             self.table.follow_cursor()
@@ -872,7 +1014,8 @@ class KramTui(App):
         entries = self.query_one("#entries", OptionList)
         entries.clear_options()
         if not self.entries:
-            entries.add_option(Option(Text(PLACEHOLDER.get(view, "Nothing here"), style="italic #9a9da3"),
+            entries.add_option(Option(Text(PLACEHOLDER.get(view, "Nothing here"), style=role("muted") + Style(
+                italic=True)),
                                       disabled=True))
         else:
             entries.add_options([Option(_entry_text(e, 26)) for e in self.entries])
@@ -929,7 +1072,7 @@ class KramTui(App):
         if not len(self.plist):
             self.tabs = [t for t in TABS if t != "advisories"]
             strip.show(self.tabs, self.tab if self.tab in self.tabs else "description", details.size.width - 2)
-            doc.update(Text("No package is selected.", style="italic #9a9da3"))
+            doc.update(Text("No package is selected.", style=role("muted") + Style(italic=True)))
             return
         r = self.plist.row(self.table.cursor)
         self.tabs = [t for t in TABS if t != "advisories" or r.advisories]
@@ -944,7 +1087,7 @@ class KramTui(App):
     def tab_text(self, r) -> Text:
         t = Text()
         t.append(f"{r.name} ", "bold")
-        t.append(f"{r.candidate_evr or r.installed_evr}\n", "#9a9da3")
+        t.append(f"{r.candidate_evr or r.installed_evr}\n", role("muted"))
         if self.tab == "description":
             descriptions = getattr(self.snap, "descriptions", None) or []
             i = self.index_of.get(id(r))
@@ -954,15 +1097,15 @@ class KramTui(App):
             for label, value in (("Installed", r.installed_evr or "—"), ("Latest", r.candidate_evr or "—"),
                                  ("Repository", r.repo_id), ("Size", cell_text(r, COL_SIZE, self.plist.ctx)),
                                  ("Origin", r.origin.name.lower())):
-                t.append(f"{label:<12}", "#9a9da3")
+                t.append(f"{label:<12}", role("muted"))
                 t.append(f"{value}\n")
         elif self.tab == "advisories":
             for a in r.advisories:
-                t.append(f"{a.id}  ", "bold #e5a63a")
+                t.append(f"{a.id}  ", role("upgradable") + Style(bold=True))
                 t.append(f"{a.level}  {a.title}\n")
         else:
             t.append(f"({tab_titles()[self.tab]}: read from dnf when the cursor rests, as in the GUIs)",
-                     "italic #9a9da3")
+                     role("muted") + Style(italic=True))
         return t
 
     def update_status(self) -> None:
@@ -978,7 +1121,7 @@ def _entry_text(e: FilterEntry, width: int) -> Text:
     room = width - len(count)
     label = label[:room - 1] + "…" if len(label) > room else label
     t = Text(label.ljust(room), style="bold" if e.bold or e.id.endswith(":all") else "italic" if e.dim else "")
-    t.append(count, "#9a9da3")
+    t.append(count, role("muted"))
     return t
 
 
@@ -1080,6 +1223,12 @@ async def shots(snap, out: Path) -> None:
         ("34-menu-settings-centre", W, ["m", "down", "down", "down", "right", "end"]),
         ("35-narrow-search", N, ["slash", *"kern"]),
         ("36-narrow-menu", N, ["m", "down", "down", "right"]),
+        ("37-scheme-menu", W, ["m", "down", "down", "down", "right", "end", "enter"]),
+        ("38-scheme-midnight", W, [*upgradable, lambda a: a.set_scheme("kram-midnight"), "g"]),
+        ("39-scheme-console", W, [*upgradable, lambda a: a.set_scheme("kram-console")]),
+        ("40-scheme-textual-dark", W, [*upgradable, lambda a: a.set_scheme("textual-dark")]),
+        ("41-scheme-textual-light", W, [*upgradable, lambda a: a.set_scheme("textual-light"), "slash", *"vim"]),
+        ("42-scheme-nord-narrow", N, [*upgradable, lambda a: a.set_scheme("nord"), "d"]),
     ]
     for name, size, steps in cases:
         app = KramTui(snap)

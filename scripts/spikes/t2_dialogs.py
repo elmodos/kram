@@ -44,7 +44,10 @@ DIALOG_CSS = """
 .dialog { width: 90%; max-width: 110; height: auto; max-height: 90%; padding: 0 1; background: $surface;
           border: round $accent; border-title-color: $accent; border-subtitle-color: $accent; }
 .dialog .note { color: $text-muted; }
-.dialog .warning { color: #f08080; text-style: bold; }
+.dialog .warning { color: $error; text-style: bold; }
+/* the bars as wide as the dialog: Textual's own bar is 32 cells */
+.dialog ProgressBar { width: 100%; }
+.dialog ProgressBar Bar { width: 1fr; }
 .dialog .buttons { height: 1; align-horizontal: right; margin-top: 1; }
 .dialog Button { margin-left: 2; }
 """
@@ -63,8 +66,9 @@ def is_root() -> bool:
 
 
 class Button(Static, can_focus=True):
-    """A button one line high, as buttons are in a terminal: Textual's own is three lines and does not fit a narrow
-    one. Focused: reverse in the accent colour; disabled: dimmed and skipped by Tab. Enter or a click presses it."""
+    """A button one line high, drawn `< Apply >` as dialog(1) and whiptail do: Textual's own is three lines high
+    (T14). Only styles a 16-colour terminal has: focused reverse, the default one bold, a dangerous one in the error
+    colour, a disabled one dim and skipped by Tab. Enter, Space or a click presses it."""
 
     class Pressed(Message):
         def __init__(self, button: "Button"):
@@ -73,15 +77,15 @@ class Button(Static, can_focus=True):
 
     BINDINGS = [Binding("enter,space", "press", show=False)]
     DEFAULT_CSS = """
-    Button { width: auto; height: 1; padding: 0 1; background: $panel; color: $text; }
-    Button.-primary { background: $primary-darken-2; }
-    Button.-error { background: #5a2a2a; }
-    Button:focus { background: $accent; color: $background; text-style: bold; }
-    Button.-disabled { color: $text-disabled; background: $panel-darken-1; }
+    Button { width: auto; height: 1; padding: 0; background: $surface; color: $foreground; }
+    Button.-primary { text-style: bold; }
+    Button.-error { color: $error; }
+    Button:focus { text-style: reverse bold; }
+    Button.-disabled { text-style: dim; }
     """
 
     def __init__(self, label: str, id: str, variant: str = "default", disabled: bool = False):
-        super().__init__(label, id=id, classes=f"-{variant}")
+        super().__init__(f"< {label} >", id=id, classes=f"-{variant}")
         self.set_disabled(disabled)
 
     def set_disabled(self, on: bool) -> None:
@@ -141,7 +145,7 @@ class AuthDialog(Dialog):
 class TerminalMock(ModalScreen):
     """What the terminal shows while Kram has stepped aside (for the shots: a suspended app has no screen)."""
 
-    DEFAULT_CSS = "TerminalMock { background: black; padding: 1 2; } TerminalMock Static { color: #d0d0d0; }"
+    DEFAULT_CSS = "TerminalMock { background: $background; padding: 1 2; } TerminalMock Static { color: $foreground; }"
 
     def compose(self) -> ComposeResult:
         user = os.environ.get("USER", "user")
@@ -202,7 +206,7 @@ class ApplyDialog(Dialog):
     DEFAULT_CSS = Dialog.DEFAULT_CSS + """
     #apply-box { height: 90%; }
     #apply-scroll { height: 1fr; }
-    #changes { height: auto; border-top: solid #4a4d55; border-bottom: solid #4a4d55; }
+    #changes { height: auto; border-top: solid $border-blurred; border-bottom: solid $border-blurred; }
     #recs { height: auto; max-height: 6; border: none; padding: 0; background: $surface; }
     #command { color: $text-muted; height: auto; }
     """
@@ -237,12 +241,12 @@ class ApplyDialog(Dialog):
         ends up at (or the one removed) and the size, so that rows do not wrap."""
         narrow = self.app.size.width < t1.WIDE
         t = Text()
-        for title, color, rows in self.sections:
-            t.append(f"{title} ({len(rows)})\n", f"bold {color}")
+        for title, colour, rows in self.sections:
+            t.append(f"{title} ({len(rows)})\n", t1.role(colour))
             for name, old, new, size, reason in rows:
                 t.append(f"  {name[:19]:<20}" if narrow else f"  {name:<28}", "bold" if name in CRITICAL else "")
                 versions = (new or old) if narrow else (f"{old} → {new}" if old and new else old or new)
-                t.append(f"{versions[:16]:<17}" if narrow else f"{versions:<46}", "#9a9da3")
+                t.append(f"{versions[:16]:<17}" if narrow else f"{versions:<46}", t1.role("muted"))
                 t.append(f"{size:>9}" + ("" if narrow else f"  {reason}") + "\n")
         return t
 
@@ -313,7 +317,7 @@ class ReposDialog(Dialog):
         for r in self.shown():
             on = self.changes.get(r.id, r.enabled)
             changed = r.id in self.changes
-            box = Text("[x]" if on else "[ ]", style="bold #e5a63a" if changed else "")
+            box = Text("[x]" if on else "[ ]", style=t1.role("marked") if changed else "")
             age = "—" if r.age_seconds is None else (f"{r.age_seconds // 3600} h" if r.age_seconds < 172800
                                                        else f"{r.age_seconds // 86400} days")
             table.add_row(box, Text(r.id + (" *" if changed else ""), style="bold" if changed else ""),
@@ -388,7 +392,7 @@ class CoprDialog(Dialog):
             if self.projects:
                 yield DataTable(id="copr-projects", cursor_type="row")
             else:
-                yield Static(Text("No COPR projects yet. Search for one below.", style="italic #9a9da3"))
+                yield Static(Text("No COPR projects yet. Search for one below.", style=t1.role("muted")))
             yield Input(placeholder="Search COPR: a project, an owner or a package", id="copr-search")
             yield Static("", id="copr-status", classes="note")
             yield DataTable(id="copr-results", cursor_type="row")
@@ -412,7 +416,8 @@ class CoprDialog(Dialog):
         results.clear()
         found = [r for r in SAMPLE_RESULTS if event.value.lower() in (r[0] + r[1]).lower()] or SAMPLE_RESULTS
         for name, desc, ok, chroot in found:
-            results.add_row(name, Text(("✓ " if ok else "✗ ") + chroot, style="#6fbf73" if ok else "#f08080"), desc)
+            results.add_row(name, Text(("✓ " if ok else "✗ ") + chroot, style=t1.role("ok" if ok else "danger")),
+                            desc)
         self.query_one("#copr-status", Static).update(f"{len(found)} projects (sample results: no network here)")
         self.query_one("#enable", Button).set_disabled(False)
         results.focus()
@@ -440,8 +445,8 @@ class KramTui2(t1.KramTui):
         line.append("Kram", "bold")
         line.append(f"  {label} ({len(self.plist):,})  ·  {len(self.table.marked)} marked  ")
         if is_root():
-            line.append(" ROOT ", "bold reverse #f08080")
-            line.append("  changes need no password", "#9a9da3")
+            line.append(" ROOT ", t1.role("badge"))
+            line.append("  changes need no password", t1.role("muted"))
         top.update(line)
 
     # ---------------------------------------------------------------- root
@@ -491,8 +496,8 @@ class KramTui2(t1.KramTui):
                 for r in rows if not r.installed_evr]
         rem = [(r.name, r.installed_evr, "", "-" + human_size(r.size), "user")
                for r in rows if r.installed_evr and r.status is not Status.UPGRADABLE]
-        sections = [s for s in (("To be installed", "#6fbf73", inst), ("To be upgraded", "#5aa0f0", up),
-                                ("To be removed", "#f08080", rem)) if s[2]]
+        sections = [s for s in (("To be installed", "ok", inst), ("To be upgraded", "info", up),
+                                ("To be removed", "danger", rem)) if s[2]]
         download = sum(r.download_size or 0 for r in rows if r.status is Status.UPGRADABLE or not r.installed_evr)
         summary = Text()
         summary.append(", ".join(f"{len(s[2])} {s[0].split()[-1]}" for s in sections), "bold")
@@ -576,9 +581,12 @@ async def shots(snap, out: Path) -> None:
         ("14-copr", W, {}, [lambda a: a.run_menu_action("copr")]),
         ("15-copr-results", W, {}, [lambda a: a.run_menu_action("copr"), *"kram", "enter"]),
         ("16-copr-narrow", N, {}, [lambda a: a.run_menu_action("copr"), *"kram", "enter"]),
+        ("17-apply-midnight", W, {"KRAM_SCHEME": "kram-midnight"}, [mark, "a"]),
+        ("18-apply-textual-light", W, {"KRAM_SCHEME": "textual-light"}, [mark, "a"]),
+        ("19-progress-console", W, {"KRAM_SCHEME": "kram-console", "KRAM_SPIKE_ROOT": "1"}, ["f5"]),
     ]
     for name, size, env, steps in cases:
-        saved = {k: os.environ.get(k) for k in ("KRAM_SPIKE_ROOT", "KRAM_SPIKE_AGENT")}
+        saved = {k: os.environ.get(k) for k in ("KRAM_SPIKE_ROOT", "KRAM_SPIKE_AGENT", "KRAM_SCHEME")}
         os.environ.update({"KRAM_SPIKE_AGENT": "desktop", "KRAM_SPIKE_ROOT": "0", **env})
         app = KramTui2(snap)
         async with app.run_test(size=size) as pilot:

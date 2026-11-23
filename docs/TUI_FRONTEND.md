@@ -34,6 +34,8 @@ terminal, the way aptitude sits next to Synaptic on Debian.
 | T13 | **No UI library of our own for modality**: Textual's screen stack and focus chain are the responder chain; one rule on top decides which keys belong to the window (§7). | 2026-11-23 |
 | T14 | **Buttons are one line high**, our own widget. Textual's `Button` is three lines high: ugly in a terminal, and it does not fit a narrow one. Never use it. | 2026-11-23 |
 | T15 | **Root in a terminal has three paths**: Kram runs as root; a desktop polkit agent; polkit's text agent on the terminal while Kram steps aside (§8). | 2026-11-23 |
+| T16 | **No colour is hard-coded.** Every colour is a role (§9a) taken from the scheme. The default scheme is the terminal's own 16 colours with its own background and text, so the terminal's light or dark mode shows at once, with no restart; 16-colour schemes of our own and Textual's high-colour themes are a choice in the menu, applied at once. | 2026-11-23 |
+| T17 | **Progress bars are as wide as their dialog.** | 2026-11-23 |
 
 Non-goals: mouse-first use (the mouse works where Textual gives it for free, nothing is designed for it); a second
 toolkit-free layer (the TUI uses `kram/app` as the GTK front end does); features the GUIs do not have.
@@ -194,15 +196,43 @@ root's under `sudo -i`, the user's under plain `sudo`). `t2_dialogs.py` has `KRA
 ## 9. Dialogs
 
 All dialogs are modal screens with a rounded accent border, its title at the top and its key hints at the bottom,
-one-line buttons on the right (T14), the default button focused. They draw what the existing presenters of
+one-line buttons on the right (T14), the default button focused. A button reads `< Apply >`, as in dialog(1) and
+whiptail, and uses only what 16 colours have: focused in reverse, the default one bold, a dangerous one in the
+error colour, a disabled one dim and skipped by `Tab`. They draw what the existing presenters of
 `kram/app` say, through the same view protocols as the GUIs.
 
 | Dialog | Presenter | In the terminal |
 |---|---|---|
-| Progress (reload, apply, COPR, repositories) | `kram.app.progress.Progress` → `ProgressView` | The stage line in bold, a download bar, for a transaction a package bar, the last lines of the log. No Close button while it runs (`Esc stop` until the transaction starts); `Enter close` when done. |
+| Progress (reload, apply, COPR, repositories) | `kram.app.progress.Progress` → `ProgressView` | The stage line in bold, a download bar as wide as the dialog (T17), for a transaction a package bar, the last lines of the log. No Close button while it runs (`Esc stop` until the transaction starts); `Enter close` when done. |
 | Apply changes | `kram.app.apply_review.ApplyReview` → `ApplyReviewView` | Summary line (counts, download, free space); the loud warning in red (`removal_warning`, e.g. essential packages); the changes by kind in their colours; recommended packages as a checkbox list ("untick to leave them out"); `Download only`; the `dnf5` command. Everything between the summary and the buttons scrolls as one: a list of its own got no lines at all in a narrow terminal. Narrow rows show only name, resulting version and size. `Ctrl+A` applies. |
 | Repositories | `kram.app.repos.Repos` → `ReposView` | A filter line; the table with a real checkbox per repository (`Space`), changes not applied yet in bold with `*` and listed under the table; debug and source repositories hidden until `Ctrl+D`; buttons Packages, Mirrors…, Remove file…, Apply. Applying needs root (§8). Closing with changes not applied asks first (not in the spike). |
 | COPR | `kram.app.copr.CoprProjects` → `CoprView` | The projects on this system (or "No COPR projects yet. Search for one below."), the search line, the results with "Builds for this system" (`✓ fedora-45-x86_64` in green, `✗ fedora-42-x86_64` in red: such a project cannot be enabled), Disable / Remove… / Enable (`Ctrl+E`). |
+
+## 9a. Colours
+
+**Roles, not colours.** One hidden widget (`Palette` in `t1_tui.py`) holds every colour of the TUI as a component
+class per role: `muted`, `rule`, `key`, `current`, `header`, `cursor`, `cursor-blurred`, `upgradable`,
+`installed`, `marked`, `info`, `danger`, `ok`, `badge`. Text drawn in Python asks `role(name)`; widgets' CSS uses
+theme variables (`$accent`, `$border-blurred`, `$text-muted`, …). No hex value appears anywhere else. A changed
+scheme draws again everything that took a role (`refresh_colours`).
+
+**Two sets of rules.** High-colour themes use Textual's theme variables as they are. 16-colour schemes (Textual's
+`App:ansi`) use only what a 16-colour terminal has: its 16 colours by name, its own foreground and background,
+bold, dim, reverse, underline. Muted text is `dim`, the list's cursor is `reverse`, the unfocused cursor
+`underline`; nothing is blended with transparency, which a 16-colour terminal cannot show.
+
+**Schemes** (Settings → Colours…, applied at once; Textual's command palette changes them too):
+
+| Scheme | Kind | |
+|---|---|---|
+| Terminal (default) | 16 colours | Textual's `textual-ansi`: the terminal's own palette, background and text. Light and dark follow the terminal, with no restart. |
+| Midnight | 16 colours | Ours: the blue of mc and Norton Commander. |
+| Console | 16 colours | Ours: black, green accents. |
+| Textual dark, Textual light, Nord, Gruvbox, Solarized light, Tokyo Night | high colour | Textual's themes; they look the same in every terminal. |
+
+A 16-colour scheme of our own is a `textual.theme.Theme` whose colours are all ANSI names (`ansi_blue`,
+`ansi_bright_yellow`, …). Textual turns ANSI output on only for its own `textual-ansi`; Kram sets `ansi_color` for
+its own 16-colour schemes too.
 
 ## 10. What Textual does differently (found in the spikes)
 
@@ -214,8 +244,17 @@ one-line buttons on the right (T14), the default button focused. They draw what 
 - **`Button` is three lines high** and a one-line one loses its label: hence our own (T14).
 - **`DataTable` keeps every cell**: fine for the repositories (dozens of rows), not for packages (T4).
 - **A suspended app cannot be screenshot**: the shots show what the terminal looks like then with a stand-in screen.
+- **A widget's `DEFAULT_CSS` is scoped to that widget**: a rule like `App:ansi Screen { … }` there never matches.
+  Rules for other widgets belong in the app's `CSS`.
+- **Colours blended with transparency vanish with 16 colours** (the footer's words, a checkbox's label): in
+  `App:ansi` those widgets get plain theme colours.
+- **The SVG screenshots draw the terminal's default text colour as invisible** where it is set explicitly (the
+  footer's words in the Terminal scheme). In a terminal it is right (`default on default`, checked).
 
 ## 11. Spike results
+
+The colour schemes: 6 more cases in `t1_tui.py shots` (37–42) and 3 in `t2_dialogs.py shots` (17–19); every
+case is the same on both Textual versions.
 
 Machine: Intel Core Ultra 5 125U; containers with Fedora 44 (Textual 4.0.0, Python 3.14) and Fedora 45 (Textual
 8.1.1, Python 3.15), the Fedora 44 catalog pickled (70,235 rows). CPU time per step from `t1_tui.py bench` (the
