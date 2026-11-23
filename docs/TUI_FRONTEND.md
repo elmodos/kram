@@ -41,6 +41,7 @@ terminal, the way aptitude sits next to Synaptic on Debian.
 | T19 | **In 16 colours nothing is blended**: modal screens are `transparent` (the window stays in sight under them; `$background 0%` stays opaque in ANSI mode), the footer, text fields and checkboxes take plain theme colours. Inactive frames in high colour are the text colour at 30%, as the theme's own border colour vanishes on dark themes. | 2026-11-24 |
 | T20 | **The Summary column takes the room left** (at least 20), so a wide terminal does not scroll sideways for it. Scrollbars and dialog table headers are quiet. | 2026-11-24 |
 | T21 | **One checkbox look**, `[x] Label`, our own widget: Textual's `Checkbox` and `SelectionList` look different from each other and from the repositories table. | 2026-11-24 |
+| T22 | **The author's answers** to the spec's open questions: status glyphs as symbols on UTF-8 terminals and letters otherwise; search stays a modal dialog; `U` and `Z` stay; `q` asks when marks are not applied. | 2026-11-24 |
 
 Non-goals: mouse-first use (the mouse works where Textual gives it for free, nothing is designed for it); a second
 toolkit-free layer (the TUI uses `kram/app` as the GTK front end does); features the GUIs do not have.
@@ -287,9 +288,6 @@ the focus, panels, cursor and scroll of every case are printed and were the same
 
 ## 13. Open questions and not done
 
-- Status glyphs: keep `▲ ■ □ ◆ ◇ ▼`, or ASCII letters as aptitude (`i`, `u`, `p`, …)?
-- Search as a modal popup (now) or a line above the list that filters while typing, as the GUIs' search field
-  (the key rule of §7 already covers a text field in the window)?
 - Folding the Environments tree; the real Dependencies, Files and Changelog tabs (from `DetailsLoader`); marks
   through `MarkSet` with their actions (install, remove, …) instead of the spike's plain set; sorting by column;
   mouse.

@@ -85,7 +85,8 @@ the blurred cursor colour (high colour) when it has not.
 | Separator | `─` lines in the rule colour, `│` between tabs | |
 
 4.4 **Glyphs.** Arrows are the classic ones: `← → ↑ ↓` (T10); never `◂ ▸ ▾ ▴`. Ellipsis `…` cuts text. The status
-column uses the glyphs of §7.3.4. A setting chooses letters instead (§13).
+column uses the glyphs of §7.3.4 when the terminal speaks UTF-8, and letters when it does not (§9.6); a setting
+chooses letters on a UTF-8 terminal too (§13).
 
 4.5 **Key hints.** Lower case, as the key is typed; the key in the key role (bold), then one word: `[ prev  ] next
 v all`. Keys are named as Textual names them on screen: `enter`, `esc`, `tab`, `space`, `ctrl+a`, `f5`, `← →`.
@@ -231,7 +232,8 @@ Summary takes the room left, at least 20 (T20). Headers are the short ones (`Ins
 7.3.3 When the columns do not fit, the list scrolls sideways (`← →`); `S` and Package stay in place if they take at
 most half the width. A horizontal scrollbar shows only then.
 
-7.3.4 Status glyphs (first cell) and flags (second cell):
+7.3.4 Status glyphs (first cell) and flags (second cell). The Glyph column on a UTF-8 terminal, the Letter column
+on one that is not (`LANG=C`, the Linux console without a Unicode font) or when the setting asks for letters:
 
 | State | Glyph | Letter (setting) | Colour role |
 |---|---|---|---|
@@ -303,7 +305,8 @@ place).
 
 ### 7.6 Search (`SEARCH_*`)
 
-7.6.1 `/` opens the search popup at the top of the screen (T12): a text line, the modes of `kram.core.search`
+7.6.1 `/` opens the search as a modal dialog at the top of the screen (T12, confirmed 2026-11-24: a dialog, not a
+line over the list): a text line, the modes of `kram.core.search`
 (`Tab`/`Shift+Tab`, compact form when narrow), a status line, the earlier searches under it (`↓`).
 
 7.6.2 The list behind the popup filters while the text is typed (`SEARCH_FILTER_WHILE_TYPING`), for the name
@@ -496,7 +499,8 @@ preview); `Enter` keeps, `Esc` goes back.
 10.18 **Columns**: `[x]` per hideable column, `alt+↑ ↓` reorders, `< >` on a row narrows / widens; saved.
 
 10.19 **Quit**: only when something is pending or running (`WINDOW_CLOSE_PENDING`): marks not applied ("Quit and
-lose 16 marks?"), a transaction running (quitting is refused, as in the GUIs).
+lose 16 marks?", `< Quit >` / `< Cancel >`, Cancel focused; confirmed 2026-11-24), a transaction running (quitting
+is refused, as in the GUIs). With nothing pending `q` quits at once.
 
 10.20 **Keys** (`?`): the keys of the focused scope and the window, two columns, from the bindings themselves.
 
@@ -549,8 +553,7 @@ from changing the system at once.
 13.1 Shared settings come from the registry `kram/app/preferences.py` and `kram/core/settings.py` (the same file as
 the GUIs). A setting with a toolkit other than "tui" is ignored.
 
-13.2 TUI settings (toolkit "tui"): colour scheme (default Terminal); centre scrolling (on); status glyphs (symbols
-/ letters); sidebar width (28); details height (12); pinned panels (both); columns (order, shown, widths); progress
+13.2 TUI settings (toolkit "tui"): colour scheme (default Terminal); centre scrolling (on); status glyphs (automatic: symbols on UTF-8, letters otherwise / letters); sidebar width (28); details height (12); pinned panels (both); columns (order, shown, widths); progress
 auto-close (shared with the GUIs' meaning); confirm quit with marks (on).
 
 13.3 Saved on change, not on exit (a terminal may be closed under Kram).
@@ -650,7 +653,7 @@ N or P here that are PLANNED there change with the note given.
 | MENU_PACKAGE, MENU_SIDEBAR | §7.7 | S |
 | RELEASE_BUTTON | top line `Fedora N is out: r` | S |
 | RELEASE_DIALOG, RELEASE_WATCH | §10.12 | S |
-| SEARCH_BAR | popup (T12) | P: a popup, not a bar |
+| SEARCH_BAR | the search dialog (T12) | P: a dialog, not a bar |
 | SEARCH_FILTER_WHILE_TYPING, SEARCH_MODES | §7.6 | S |
 | SETTINGS_MENU_BAR, SETTINGS_TOOLBAR_STYLE | — | N (already) |
 | SETTINGS_REGISTRY | §13.1 | S |
@@ -679,11 +682,10 @@ N or P here that are PLANNED there change with the note given.
 | 3. Dialogs | §10.4–§10.20 and the remaining detail tabs |
 | 4. Release | §16 all S/P/N with notes, parity tests green on 4.0 and 8.1, §14.4 checked, man page, `kram-tui` in the spec and COPR |
 
-## 18. Open questions
+## 18. Decisions on the open questions (2026-11-24)
 
-1. Status glyphs default: symbols (§7.3.4) or letters? (letters are a setting either way.)
-2. Search: keep the popup (T12) or a line over the list as the GUIs' field? The popup now filters the list behind
-   it while typing (§7.6.2), so the difference is where the field is.
-3. `U` for Mark All Upgrades and `Z` for Unmark All: capitals are easy to hit by mistake with Caps Lock; both are
-   undoable (marks only), so they stay unless there is a better pair.
-4. Should `q` ask when marks are pending even without changes running (§10.19 says yes)?
+1. Status glyphs: symbols (`■ □ ▲ …`) when the terminal speaks UTF-8, letters (`i p u …`) when it does not; a
+   setting can ask for letters always (§4.4, §7.3.4, §9.6, §13).
+2. Search stays a modal dialog at the top of the screen; it filters the list behind it while typing (§7.6).
+3. `U` (Mark All Upgrades) and `Z` (Unmark All) stay: both only change marks and can be undone (§6.5).
+4. `q` asks before quitting when marks are not applied (§10.19).
