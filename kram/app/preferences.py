@@ -16,12 +16,24 @@ from ..i18n import _, ngettext
 from ..notifier import STALE_DAYS_DEFAULT, STALE_DAYS_KEY
 
 BOTH = frozenset({"qt", "gtk"})
+TUI = frozenset({"tui"})
 
 STATUS_CLICK = "table/status_click"
 WATCH_RELEASES = "distro/watch"
 TOOLBAR_STYLE = "toolbar/style"
 MENU_BAR = "gtk/menubar"
 STALE_DAYS = STALE_DAYS_KEY  # also read by the tray checker, kram.notifier.stale_days
+# the terminal front end's own (docs/TUI_SPEC.md §13)
+TUI_SCHEME = "tui/scheme"
+TUI_CENTRE_SCROLLING = "tui/centre_scrolling"
+TUI_STATUS_GLYPHS = "tui/status_glyphs"
+TUI_CONFIRM_QUIT = "tui/confirm_quit"
+TUI_SIDEBAR_WIDTH = "tui/sidebar_width"
+TUI_DETAILS_HEIGHT = "tui/details_height"
+TUI_PINNED = "tui/pinned"
+# the terminal's colour schemes: Textual's theme names, ours ("kram-…") made of the terminal's 16 colours only
+TUI_SCHEME_DEFAULT = "textual-ansi"
+TUI_ANSI_SCHEMES = frozenset({"textual-ansi", "kram-midnight", "kram-console"})
 
 
 @dataclass(frozen=True)
@@ -35,7 +47,9 @@ class Pref:
     range: tuple[int, int] = (0, 0)             # the smallest and largest value of an "int"
     toolkits: frozenset[str] = BOTH             # a front end not listed ignores the setting entirely
     visible: Callable[[], bool] = lambda: True
-    section: str = "settings"                   # "settings": the Settings menu; "notifications": that dialog
+    # "settings": the Settings menu; "notifications": that dialog; "layout": kept by the window as it is used
+    # (panel sizes and pins), in no menu
+    section: str = "settings"
 
 
 def _on_fedora() -> bool:
@@ -60,6 +74,40 @@ def _prefs() -> tuple[Pref, ...]:
         Pref(MENU_BAR, "bool", False, _("Show Menu Bar"), toolkits=frozenset({"gtk"})),
         Pref(STALE_DAYS, "int", STALE_DAYS_DEFAULT, _("Warn when the package information is older than:"), range=(1, 365),
              section="notifications"),
+        *_tui_prefs(),
+    )
+
+
+def _tui_prefs() -> tuple[Pref, ...]:
+    """The terminal front end's settings. Its menu lists them after the shared ones; the GUIs never see them."""
+    return (
+        Pref(TUI_SCHEME, "choice", TUI_SCHEME_DEFAULT, _("Colour scheme"), toolkits=TUI, choices=(
+            ("textual-ansi", _("Terminal: 16 colours, follows the terminal")),
+            ("kram-midnight", _("Midnight: 16 colours, blue")),
+            ("kram-console", _("Console: 16 colours, black")),
+            # Textual's own themes, by their names
+            ("textual-dark", "Textual dark"),
+            ("textual-light", "Textual light"),
+            ("nord", "Nord"),
+            ("gruvbox", "Gruvbox"),
+            ("solarized-light", "Solarized light"),
+            ("tokyo-night", "Tokyo Night"),
+        )),
+        Pref(TUI_CENTRE_SCROLLING, "bool", True, _("Centre the cursor when scrolling"), toolkits=TUI),
+        Pref(TUI_STATUS_GLYPHS, "choice", "auto", _("Status glyphs"), toolkits=TUI, choices=(
+            ("auto", _("Symbols, or letters when the terminal is not UTF-8")),
+            ("letters", _("Letters")),
+        )),
+        Pref(TUI_CONFIRM_QUIT, "bool", True, _("Ask before quitting with changes not applied"), toolkits=TUI),
+        Pref(TUI_SIDEBAR_WIDTH, "int", 28, _("Sidebar width"), toolkits=TUI, range=(16, 60), section="layout"),
+        Pref(TUI_DETAILS_HEIGHT, "int", 12, _("Details height"), toolkits=TUI, range=(5, 40), section="layout"),
+        # the panels shown beside and under the list in a wide terminal
+        Pref(TUI_PINNED, "choice", "both", _("Pinned panels"), toolkits=TUI, section="layout", choices=(
+            ("both", _("Sidebar and details")),
+            ("sidebar", _("Sidebar")),
+            ("details", _("Details")),
+            ("none", _("Neither")),
+        )),
     )
 
 

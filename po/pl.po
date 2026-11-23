@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kram\n"
 "Report-Msgid-Bugs-To: https://github.com/elmodos/kram/issues\n"
-"POT-Creation-Date: 2026-11-26 20:05+0200\n"
+"POT-Creation-Date: 2026-11-23 21:08+0200\n"
 "PO-Revision-Date: 2026-11-04 14:07+0200\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -20,8 +20,8 @@ msgstr ""
 "|| n%100>=20) ? 1 : 2);\n"
 
 #: kram/app/actions.py:33
-msgid "Mark All Security Upgrades"
-msgstr "Zaznacz wszystkie aktualizacje bezpieczeństwa"
+msgid "Mark Security Upgrades"
+msgstr "Zaznacz aktualizacje bezpieczeństwa"
 
 #: kram/app/actions.py:34
 msgid "Mark the upgrades that fix a security issue, as dnf upgrade --security"
@@ -212,7 +212,7 @@ msgstr "Otwórz plik pakietu…"
 msgid "Install a downloaded .rpm file (you can also drop it on the window)"
 msgstr "Zainstaluj pobrany plik .rpm (możesz go też upuścić na okno)"
 
-#: kram/app/actions.py:100
+#: kram/app/actions.py:100 kram/tui/app.py:176
 msgid "Quit"
 msgstr "Zakończ"
 
@@ -240,7 +240,7 @@ msgstr "Zaznacz do aktualizacji"
 msgid "Mark for Reinstallation"
 msgstr "Zaznacz do ponownej instalacji"
 
-#: kram/app/actions.py:109 kram/app/browser.py:741
+#: kram/app/actions.py:109 kram/app/browser.py:727
 msgid "Mark for Removal"
 msgstr "Zaznacz do usunięcia"
 
@@ -568,7 +568,7 @@ msgstr[0] "+{size}, {n} pakiet"
 msgstr[1] "+{size}, {n} pakiety"
 msgstr[2] "+{size}, {n} pakietów"
 
-#: kram/app/apply_review.py:321 kram/app/browser.py:657 kram/app/install.py:303
+#: kram/app/apply_review.py:321 kram/app/browser.py:643 kram/app/install.py:303
 #: kram/app/install.py:337 kram/app/install.py:397
 msgid "Resolving dependencies…"
 msgstr "Rozwiązywanie zależności…"
@@ -577,7 +577,7 @@ msgstr "Rozwiązywanie zależności…"
 msgid "These choices cannot be carried out:"
 msgstr "Tego wyboru nie da się zrealizować:"
 
-#: kram/app/apply_review.py:334 kram/app/browser.py:666 kram/app/install.py:384
+#: kram/app/apply_review.py:334 kram/app/browser.py:652 kram/app/install.py:384
 #: kram/app/install.py:418
 #, python-brace-format
 msgid ""
@@ -598,7 +598,7 @@ msgstr ""
 "→ Zablokuj wersję: aktualizacje będą go wtedy pomijać, dopóki nie zostanie "
 "odblokowany."
 
-#: kram/app/browser.py:236
+#: kram/app/browser.py:228
 #, python-brace-format
 msgid "{n} marked change has not been applied. Quit anyway?"
 msgid_plural "{n} marked changes have not been applied. Quit anyway?"
@@ -607,15 +607,15 @@ msgstr[1] "{n} zaznaczone zmiany nie zostały zastosowane. Zakończyć mimo to?"
 msgstr[2] ""
 "{n} zaznaczonych zmian nie zostało zastosowanych. Zakończyć mimo to?"
 
-#: kram/app/browser.py:249 kram/app/install.py:300
+#: kram/app/browser.py:241 kram/app/install.py:300
 msgid "Loading metadata…"
 msgstr "Wczytywanie metadanych…"
 
-#: kram/app/browser.py:259
+#: kram/app/browser.py:251
 msgid "Waiting for another package manager to finish…"
 msgstr "Oczekiwanie na zakończenie innego menedżera pakietów…"
 
-#: kram/app/browser.py:295 kram/app/install.py:345
+#: kram/app/browser.py:287 kram/app/install.py:345
 #, python-brace-format
 msgid ""
 "Could not load the package catalog:\n"
@@ -626,7 +626,7 @@ msgstr ""
 "\n"
 "{error}"
 
-#: kram/app/browser.py:363
+#: kram/app/browser.py:355
 #, python-brace-format
 msgid ""
 "Searching “{text}” ({mode}); the first search also indexes what packages "
@@ -635,54 +635,44 @@ msgstr ""
 "Wyszukiwanie „{text}” ({mode}); pierwsze wyszukiwanie indeksuje też, co "
 "dostarczają pakiety…"
 
-#: kram/app/browser.py:366
+#: kram/app/browser.py:358
 #, python-brace-format
 msgid "Searching “{text}” ({mode})…"
 msgstr "Wyszukiwanie „{text}” ({mode})…"
 
-#: kram/app/browser.py:383 kram/app/copr.py:168
+#: kram/app/browser.py:375 kram/app/copr.py:168
 #, python-brace-format
 msgid "Search failed: {error}"
 msgstr "Wyszukiwanie nie powiodło się: {error}"
 
-#: kram/app/browser.py:475
+#: kram/app/browser.py:467
 #, python-brace-format
 msgid "Nothing provides “{what}”"
 msgstr "Nic nie dostarcza „{what}”"
 
-#: kram/app/browser.py:477
+#: kram/app/browser.py:469
 #, python-brace-format
 msgid "Could not look up “{what}”: {error}"
 msgstr "Nie udało się wyszukać „{what}”: {error}"
 
-#: kram/app/browser.py:491
+#: kram/app/browser.py:483
 #, python-brace-format
 msgid "Package {name} not found in the catalog"
 msgstr "Nie znaleziono pakietu {name} w katalogu"
 
-#: kram/app/browser.py:522
-msgid "Mark Bug Fix Upgrades"
-msgstr "Zaznacz aktualizacje z poprawkami błędów"
-
-#: kram/app/browser.py:524
-msgid "Mark the upgrades this entry lists, the ones with a bug fix advisory"
-msgstr ""
-"Zaznacz aktualizacje, które pokazuje ten wpis: te z komunikatem o poprawce "
-"błędów"
-
-#: kram/app/browser.py:526
+#: kram/app/browser.py:512
 msgid "Refresh Metadata"
 msgstr "Odśwież metadane"
 
-#: kram/app/browser.py:533
+#: kram/app/browser.py:519
 msgid "Remove from History"
 msgstr "Usuń z historii"
 
-#: kram/app/browser.py:535
+#: kram/app/browser.py:521
 msgid "Clear Search History"
 msgstr "Wyczyść historię wyszukiwania"
 
-#: kram/app/browser.py:582
+#: kram/app/browser.py:568
 #, python-brace-format
 msgid "{n} marking saved to {path}"
 msgid_plural "{n} markings saved to {path}"
@@ -690,11 +680,11 @@ msgstr[0] "Zapisano {n} zaznaczenie w {path}"
 msgstr[1] "Zapisano {n} zaznaczenia w {path}"
 msgstr[2] "Zapisano {n} zaznaczeń w {path}"
 
-#: kram/app/browser.py:590
+#: kram/app/browser.py:576
 msgid "Export List as CSV"
 msgstr "Eksportuj listę do CSV"
 
-#: kram/app/browser.py:601 kram/app/markings.py:35
+#: kram/app/browser.py:587 kram/app/markings.py:35
 #, python-brace-format
 msgid ""
 "Could not save {path}:\n"
@@ -705,7 +695,7 @@ msgstr ""
 "\n"
 "{error}"
 
-#: kram/app/browser.py:604
+#: kram/app/browser.py:590
 #, python-brace-format
 msgid "{n} package exported to {path}"
 msgid_plural "{n} packages exported to {path}"
@@ -713,11 +703,11 @@ msgstr[0] "Wyeksportowano {n} pakiet do {path}"
 msgstr[1] "Wyeksportowano {n} pakiety do {path}"
 msgstr[2] "Wyeksportowano {n} pakietów do {path}"
 
-#: kram/app/browser.py:607
+#: kram/app/browser.py:593
 msgid "CSV files (*.csv);;All files (*)"
 msgstr "Pliki CSV (*.csv);;Wszystkie pliki (*)"
 
-#: kram/app/browser.py:626
+#: kram/app/browser.py:612
 #, python-brace-format
 msgid ""
 "{n} upgrade or downgrade unmarked: the version lock keeps the installed "
@@ -735,7 +725,7 @@ msgstr[2] ""
 "Odznaczono {n} aktualizacji lub przywróceń wersji: blokada zachowuje "
 "zainstalowane wersje"
 
-#: kram/app/browser.py:629
+#: kram/app/browser.py:615
 #, python-brace-format
 msgid "Locking the version of {n} package"
 msgid_plural "Locking the versions of {n} packages"
@@ -743,7 +733,7 @@ msgstr[0] "Blokowanie wersji {n} pakietu"
 msgstr[1] "Blokowanie wersji {n} pakietów"
 msgstr[2] "Blokowanie wersji {n} pakietów"
 
-#: kram/app/browser.py:631
+#: kram/app/browser.py:617
 #, python-brace-format
 msgid "Unlocking the version of {n} package"
 msgid_plural "Unlocking the versions of {n} packages"
@@ -751,11 +741,11 @@ msgstr[0] "Odblokowywanie wersji {n} pakietu"
 msgstr[1] "Odblokowywanie wersji {n} pakietów"
 msgstr[2] "Odblokowywanie wersji {n} pakietów"
 
-#: kram/app/browser.py:711
+#: kram/app/browser.py:697
 msgid "Applying changes"
 msgstr "Stosowanie zmian"
 
-#: kram/app/browser.py:734
+#: kram/app/browser.py:720
 #, python-brace-format
 msgid ""
 "This removes the front end of Kram you are using ({package}). Kram closes "
@@ -764,11 +754,11 @@ msgstr ""
 "To usuwa interfejs Kram, którego używasz ({package}). Kram zamknie się po "
 "zastosowaniu zmian; uruchom go ponownie."
 
-#: kram/app/browser.py:737
+#: kram/app/browser.py:723
 msgid "Conflicting packages"
 msgstr "Pakiety w konflikcie"
 
-#: kram/app/browser.py:738
+#: kram/app/browser.py:724
 #, python-brace-format
 msgid ""
 "{n} installed package conflicts with the marked changes and has to be "
@@ -786,7 +776,7 @@ msgstr[2] ""
 "{n} zainstalowanych pakietów jest w konflikcie z zaznaczonymi zmianami i "
 "musi zostać usuniętych, aby je zastosować:"
 
-#: kram/app/browser.py:766
+#: kram/app/browser.py:752
 #, python-brace-format
 msgid ""
 "The changes are applied. They removed the front end of Kram you are using "
@@ -795,7 +785,7 @@ msgstr ""
 "Zmiany zostały zastosowane. Usunęły interfejs Kram, którego używasz "
 "({package}), więc Kram teraz się zamknie. Uruchom go ponownie."
 
-#: kram/app/browser.py:775
+#: kram/app/browser.py:761
 msgid ""
 "Undoing the whole transaction needs versions the repositories no longer "
 "have. What is still possible can be undone without them."
@@ -803,11 +793,11 @@ msgstr ""
 "Cofnięcie całej transakcji wymaga wersji, których repozytoria już nie mają. "
 "To, co jeszcze możliwe, można cofnąć bez nich."
 
-#: kram/app/browser.py:777
+#: kram/app/browser.py:763
 msgid "Undo What Is Possible…"
 msgstr "Cofnij to, co możliwe…"
 
-#: kram/app/browser.py:779
+#: kram/app/browser.py:765
 msgid ""
 "They need a version the version lock excludes. Unlock the package (Package → "
 "Unlock Version) or unmark the change."
@@ -815,35 +805,35 @@ msgstr ""
 "Wymagają wersji wykluczonej przez blokadę wersji. Odblokuj pakiet (Pakiet → "
 "Odblokuj wersję) lub odznacz zmianę."
 
-#: kram/app/browser.py:781
+#: kram/app/browser.py:767
 msgid "Show Locked Packages"
 msgstr "Pokaż zablokowane pakiety"
 
-#: kram/app/browser.py:782
+#: kram/app/browser.py:768
 msgid "Cannot apply changes"
 msgstr "Nie można zastosować zmian"
 
-#: kram/app/browser.py:783
+#: kram/app/browser.py:769
 msgid "The marked changes cannot be carried out. Unmark or change them."
 msgstr "Zaznaczonych zmian nie można wykonać. Odznacz je lub zmień."
 
-#: kram/app/browser.py:784
+#: kram/app/browser.py:770
 msgid "This change cannot be carried out."
 msgstr "Tej zmiany nie można wykonać."
 
-#: kram/app/browser.py:825 kram/app/browser.py:830
+#: kram/app/browser.py:811 kram/app/browser.py:816
 msgid "Refreshing metadata"
 msgstr "Odświeżanie metadanych"
 
-#: kram/app/browser.py:836
+#: kram/app/browser.py:822
 msgid "Downloading metadata again"
 msgstr "Ponowne pobieranie metadanych"
 
-#: kram/app/browser.py:838
+#: kram/app/browser.py:824
 msgid "Cleaning the package cache"
 msgstr "Czyszczenie pamięci podręcznej pakietów"
 
-#: kram/app/browser.py:856
+#: kram/app/browser.py:842
 #, python-brace-format
 msgid ""
 "Could not read the repositories:\n"
@@ -854,11 +844,11 @@ msgstr ""
 "\n"
 "{error}"
 
-#: kram/app/browser.py:865
+#: kram/app/browser.py:851
 msgid "Changing repositories"
 msgstr "Zmienianie repozytoriów"
 
-#: kram/app/browser.py:871
+#: kram/app/browser.py:857
 #, python-brace-format
 msgid "Removing {n} repository"
 msgid_plural "Removing {n} repositories"
@@ -866,28 +856,28 @@ msgstr[0] "Usuwanie {n} repozytorium"
 msgstr[1] "Usuwanie {n} repozytoriów"
 msgstr[2] "Usuwanie {n} repozytoriów"
 
-#: kram/app/browser.py:900
+#: kram/app/browser.py:886
 msgid "Changing the mirror"
 msgstr "Zmienianie serwera lustrzanego"
 
-#: kram/app/browser.py:900
+#: kram/app/browser.py:886
 msgid "Changing the mirror settings"
 msgstr "Zmienianie ustawień serwerów lustrzanych"
 
-#: kram/app/browser.py:917 kram/app/browser.py:947
+#: kram/app/browser.py:903 kram/app/browser.py:933
 #, python-brace-format
 msgid "Undo Transaction {id}"
 msgstr "Cofnięcie transakcji {id}"
 
-#: kram/app/browser.py:918
+#: kram/app/browser.py:904
 msgid "The groups this transaction changed could not be read."
 msgstr "Nie udało się odczytać grup zmienionych przez tę transakcję."
 
-#: kram/app/browser.py:932
+#: kram/app/browser.py:918
 msgid "cannot be marked"
 msgstr "nie można zaznaczyć"
 
-#: kram/app/browser.py:943
+#: kram/app/browser.py:929
 #, python-brace-format
 msgid ""
 "Could not read what the transaction changed:\n"
@@ -898,11 +888,11 @@ msgstr ""
 "\n"
 "{error}"
 
-#: kram/app/browser.py:943
+#: kram/app/browser.py:929
 msgid "Undo Transaction"
 msgstr "Cofnij transakcję"
 
-#: kram/app/browser.py:948
+#: kram/app/browser.py:934
 #, python-brace-format
 msgid "{n} change marked to undo transaction {id}."
 msgid_plural "{n} changes marked to undo transaction {id}."
@@ -910,23 +900,23 @@ msgstr[0] "Zaznaczono {n} zmianę do cofnięcia transakcji {id}."
 msgstr[1] "Zaznaczono {n} zmiany do cofnięcia transakcji {id}."
 msgstr[2] "Zaznaczono {n} zmian do cofnięcia transakcji {id}."
 
-#: kram/app/browser.py:950
+#: kram/app/browser.py:936
 #, python-brace-format
 msgid "{package}: installs {version}, {old} is no longer in the repositories"
 msgstr ""
 "{package}: zostanie zainstalowana wersja {version}, {old} nie ma już w "
 "repozytoriach"
 
-#: kram/app/browser.py:955
+#: kram/app/browser.py:941
 msgid "Review them, then apply."
 msgstr "Przejrzyj je, a potem zastosuj."
 
-#: kram/app/browser.py:958
+#: kram/app/browser.py:944
 #, python-brace-format
 msgid "Nothing of transaction {id} can be undone."
 msgstr "Z transakcji {id} nie można niczego cofnąć."
 
-#: kram/app/browser.py:962
+#: kram/app/browser.py:948
 #, python-brace-format
 msgid "{n} package cannot be undone:"
 msgid_plural "{n} packages cannot be undone:"
@@ -934,7 +924,7 @@ msgstr[0] "Nie można cofnąć {n} pakietu:"
 msgstr[1] "Nie można cofnąć {n} pakietów:"
 msgstr[2] "Nie można cofnąć {n} pakietów:"
 
-#: kram/app/browser.py:966
+#: kram/app/browser.py:952
 #, python-brace-format
 msgid "{n} package comes back in another version:"
 msgid_plural "{n} packages come back in another version:"
@@ -1319,11 +1309,11 @@ msgstr "Zainstalowany, żadne repozytorium go nie dostarcza"
 msgid "Installed as a dependency, no longer needed"
 msgstr "Zainstalowany jako zależność, już niepotrzebny"
 
-#: kram/app/columns.py:104 kram/app/columns.py:220
+#: kram/app/columns.py:104 kram/app/columns.py:218
 msgid "The upgrade cannot be installed now"
 msgstr "Aktualizacji nie można teraz zainstalować"
 
-#: kram/app/columns.py:206
+#: kram/app/columns.py:204
 msgid ""
 "Optional in this group: installing the group brings it only with optional "
 "packages"
@@ -1331,17 +1321,17 @@ msgstr ""
 "Opcjonalny w tej grupie: instalacja grupy dodaje go tylko z pakietami "
 "opcjonalnymi"
 
-#: kram/app/columns.py:210
+#: kram/app/columns.py:208
 #, python-brace-format
 msgid "Installed from {installed}; the latest version comes from {latest}"
 msgstr "Zainstalowano z {installed}; najnowsza wersja pochodzi z {latest}"
 
-#: kram/app/columns.py:223
+#: kram/app/columns.py:221
 #, python-brace-format
 msgid "Marked: {action}"
 msgstr "Zaznaczono: {action}"
 
-#: kram/app/columns.py:224
+#: kram/app/columns.py:222
 msgid "Click for actions"
 msgstr "Kliknij, aby zobaczyć działania"
 
@@ -2282,7 +2272,7 @@ msgstr[2] ""
 msgid "Mark"
 msgstr "Oznacz"
 
-#: kram/app/marking.py:188
+#: kram/app/marking.py:183
 #, python-brace-format
 msgid "{n} package marked for upgrade"
 msgid_plural "{n} packages marked for upgrade"
@@ -2290,7 +2280,7 @@ msgstr[0] "Zaznaczono {n} pakiet do aktualizacji"
 msgstr[1] "Zaznaczono {n} pakiety do aktualizacji"
 msgstr[2] "Zaznaczono {n} pakietów do aktualizacji"
 
-#: kram/app/marking.py:191
+#: kram/app/marking.py:186
 #, python-brace-format
 msgid "{n} upgrade left out: it cannot be installed now"
 msgid_plural "{n} upgrades left out: they cannot be installed now"
@@ -2298,11 +2288,11 @@ msgstr[0] "Pominięto {n} aktualizację: nie można jej teraz zainstalować"
 msgstr[1] "Pominięto {n} aktualizacje: nie można ich teraz zainstalować"
 msgstr[2] "Pominięto {n} aktualizacji: nie można ich teraz zainstalować"
 
-#: kram/app/marking.py:193
+#: kram/app/marking.py:188
 msgid "Status → Cannot be upgraded now lists them with the reason."
 msgstr "Stan → Nie można teraz zaktualizować pokazuje je wraz z przyczyną."
 
-#: kram/app/marking.py:201
+#: kram/app/marking.py:196
 #, python-brace-format
 msgid "{n} unneeded dependency marked for removal"
 msgid_plural "{n} unneeded dependencies marked for removal"
@@ -2310,7 +2300,7 @@ msgstr[0] "{n} niepotrzebna zależność zaznaczona do usunięcia"
 msgstr[1] "{n} niepotrzebne zależności zaznaczone do usunięcia"
 msgstr[2] "{n} niepotrzebnych zależności zaznaczonych do usunięcia"
 
-#: kram/app/marking.py:209
+#: kram/app/marking.py:204
 #, python-brace-format
 msgid "{n} package marked"
 msgid_plural "{n} packages marked"
@@ -2318,15 +2308,15 @@ msgstr[0] "Zaznaczono {n} pakiet"
 msgstr[1] "Zaznaczono {n} pakiety"
 msgstr[2] "Zaznaczono {n} pakietów"
 
-#: kram/app/marking.py:247
+#: kram/app/marking.py:242
 msgid "Checking for upgrades…"
 msgstr "Sprawdzanie aktualizacji…"
 
-#: kram/app/marking.py:248
+#: kram/app/marking.py:243
 msgid "Nothing to upgrade: its packages are up to date and match the group"
 msgstr "Nie ma czego aktualizować: pakiety są aktualne i zgodne z grupą"
 
-#: kram/app/marking.py:250
+#: kram/app/marking.py:245
 msgid "It has no optional packages"
 msgstr "Nie ma pakietów opcjonalnych"
 
@@ -2584,11 +2574,11 @@ msgstr ""
 msgid "Update Notifications"
 msgstr "Powiadomienia o aktualizacjach"
 
-#: kram/app/preferences.py:48
+#: kram/app/preferences.py:62
 msgid "Clicking the status icon marks the likely action"
 msgstr "Kliknięcie ikony stanu zaznacza prawdopodobną czynność"
 
-#: kram/app/preferences.py:49
+#: kram/app/preferences.py:63
 msgid ""
 "A click on the status icon unmarks a marked package, marks one that is not "
 "installed for installation and one with an upgrade for upgrade. Otherwise it "
@@ -2598,43 +2588,110 @@ msgstr ""
 "do instalacji, a mający aktualizację do aktualizacji. W przeciwnym razie "
 "otwiera menu czynności, jak kliknięcie prawym przyciskiem."
 
-#: kram/app/preferences.py:52
+#: kram/app/preferences.py:66
 msgid "Watch Fedora Releases"
 msgstr "Śledź wydania Fedory"
 
-#: kram/app/preferences.py:53
+#: kram/app/preferences.py:67
 msgid "On Reload, ask Fedora's Bodhi service whether a new release is out"
 msgstr "Przy wczytywaniu pytaj usługę Bodhi Fedory, czy wyszło nowe wydanie"
 
-#: kram/app/preferences.py:54
+#: kram/app/preferences.py:68
 msgid "Toolbar"
 msgstr "Pasek narzędzi"
 
-#: kram/app/preferences.py:55
+#: kram/app/preferences.py:69
 msgid "Follow System Settings"
 msgstr "Zgodnie z ustawieniami systemu"
 
-#: kram/app/preferences.py:56
+#: kram/app/preferences.py:70
 msgid "Text Under Icons"
 msgstr "Tekst pod ikonami"
 
-#: kram/app/preferences.py:57
+#: kram/app/preferences.py:71
 msgid "Compact: Text Beside Icons"
 msgstr "Kompaktowo: tekst obok ikon"
 
-#: kram/app/preferences.py:58
+#: kram/app/preferences.py:72
 msgid "Icons Only"
 msgstr "Tylko ikony"
 
-#: kram/app/preferences.py:60
+#: kram/app/preferences.py:74
 msgid "Show Menu Bar"
 msgstr "Pokaż pasek menu"
 
-#: kram/app/preferences.py:61
+#: kram/app/preferences.py:75
 msgid "Warn when the package information is older than:"
 msgstr "Ostrzegaj, gdy informacje o pakietach są starsze niż:"
 
+#: kram/app/preferences.py:84
+msgid "Colour scheme"
+msgstr "Schemat kolorów"
+
+#: kram/app/preferences.py:85
+msgid "Terminal: 16 colours, follows the terminal"
+msgstr "Terminal: 16 kolorów, jak w terminalu"
+
+#: kram/app/preferences.py:86
+msgid "Midnight: 16 colours, blue"
+msgstr "Północ: 16 kolorów, niebieski"
+
+#: kram/app/preferences.py:87
+msgid "Console: 16 colours, black"
+msgstr "Konsola: 16 kolorów, czarny"
+
+#: kram/app/preferences.py:96
+msgid "Centre the cursor when scrolling"
+msgstr "Trzymaj kursor pośrodku podczas przewijania"
+
+#: kram/app/preferences.py:97
+msgid "Status glyphs"
+msgstr "Symbole stanu"
+
+#: kram/app/preferences.py:98
+msgid "Symbols, or letters when the terminal is not UTF-8"
+msgstr "Symbole lub litery, gdy terminal nie obsługuje UTF-8"
+
 #: kram/app/preferences.py:99
+msgid "Letters"
+msgstr "Litery"
+
+#: kram/app/preferences.py:101
+msgid "Ask before quitting with changes not applied"
+msgstr "Pytaj przed zakończeniem, gdy zmiany nie zostały zastosowane"
+
+#: kram/app/preferences.py:102
+msgid "Sidebar width"
+msgstr "Szerokość panelu bocznego"
+
+#: kram/app/preferences.py:103
+msgid "Details height"
+msgstr "Wysokość szczegółów"
+
+#: kram/app/preferences.py:105
+msgid "Pinned panels"
+msgstr "Przypięte panele"
+
+#: kram/app/preferences.py:106
+msgid "Sidebar and details"
+msgstr "Panel boczny i szczegóły"
+
+#: kram/app/preferences.py:107 kram/tui/app.py:173
+msgid "Sidebar"
+msgstr "Panel boczny"
+
+#: kram/app/preferences.py:108 kram/gtk/dialogs/install.py:92
+#: kram/gtk/dialogs/progress.py:50 kram/gtk/ui_port.py:32
+#: kram/qt/install_dialog.py:112 kram/qt/progress_dialog.py:57
+#: kram/tui/app.py:174 kram/tui/app.py:220
+msgid "Details"
+msgstr "Szczegóły"
+
+#: kram/app/preferences.py:109
+msgid "Neither"
+msgstr "Żaden"
+
+#: kram/app/preferences.py:147
 msgid "day"
 msgid_plural "days"
 msgstr[0] "dzień"
@@ -3640,7 +3697,7 @@ msgid "Hub"
 msgstr "Hub"
 
 #: kram/gtk/dialogs/copr.py:50 kram/gtk/dialogs/repos.py:152
-#: kram/qt/copr_dialog.py:51 kram/qt/repos_dialog.py:67
+#: kram/qt/copr_dialog.py:51 kram/qt/repos_dialog.py:67 kram/tui/app.py:219
 msgid "Packages"
 msgstr "Pakiety"
 
@@ -3755,12 +3812,6 @@ msgstr "Instalacja pliku pakietu"
 #: kram/gtk/dialogs/install.py:81 kram/qt/install_dialog.py:103
 msgid "What installing it changes"
 msgstr "Co zmieni instalacja"
-
-#: kram/gtk/dialogs/install.py:92 kram/gtk/dialogs/progress.py:50
-#: kram/gtk/ui_port.py:32 kram/qt/install_dialog.py:112
-#: kram/qt/progress_dialog.py:57
-msgid "Details"
-msgstr "Szczegóły"
 
 #: kram/gtk/dialogs/install.py:96 kram/qt/install_dialog.py:114
 msgid "Scripts"
@@ -3970,19 +4021,19 @@ msgstr "Szukaj (Ctrl+F)"
 msgid "The list is filtered by the search text"
 msgstr "Lista jest filtrowana według wyszukiwanego tekstu"
 
-#: kram/gtk/window.py:118 kram/qt/main_window.py:70
+#: kram/gtk/window.py:99 kram/qt/main_window.py:70
 msgid "Package Manager"
 msgstr "Menedżer pakietów"
 
-#: kram/gtk/window.py:484 kram/qt/main_window.py:536
+#: kram/gtk/window.py:464 kram/qt/main_window.py:536
 msgid "Open Package File"
 msgstr "Otwórz plik pakietu"
 
-#: kram/gtk/window.py:485 kram/qt/main_window.py:537
+#: kram/gtk/window.py:465 kram/qt/main_window.py:537
 msgid "RPM packages (*.rpm)"
 msgstr "Pakiety RPM (*.rpm)"
 
-#: kram/gtk/window.py:558 kram/qt/main_window.py:426
+#: kram/gtk/window.py:538 kram/qt/main_window.py:426
 msgid "A Synaptic-style package manager for Fedora."
 msgstr "Menedżer pakietów dla Fedory w stylu Synaptic."
 
@@ -4040,10 +4091,124 @@ msgstr "Udostępniany na licencji MIT."
 msgid "Main toolbar"
 msgstr "Główny pasek narzędzi"
 
-#: kram/qt/upgrade_dialog.py:55
+#: kram/qt/upgrade_dialog.py:55 kram/tui/dialogs/path.py:83
+#: kram/tui/dialogs/question.py:22
 msgid "Cancel"
 msgstr "Anuluj"
 
 #: kram/qt/whats_new.py:13
 msgid "What's New in Kram"
 msgstr "Co nowego w Kram"
+
+#: kram/tui/__main__.py:10
+msgid "Kram, the package manager, in a terminal."
+msgstr "Kram, menedżer pakietów, w terminalu."
+
+#: kram/tui/__main__.py:12
+msgid "open on the packages with an upgrade"
+msgstr "otwórz na pakietach z aktualizacją"
+
+#: kram/tui/__main__.py:13
+msgid "install a package file"
+msgstr "zainstaluj plik pakietu"
+
+#: kram/tui/app.py:159
+#, python-brace-format
+msgid "Make the terminal larger: Kram needs {size}"
+msgstr "Powiększ terminal: Kram potrzebuje {size}"
+
+#: kram/tui/app.py:160
+msgid "quit"
+msgstr "zakończ"
+
+#: kram/tui/app.py:255 kram/tui/app.py:256
+msgid "hide"
+msgstr "ukryj"
+
+#: kram/tui/app.py:255 kram/tui/app.py:256
+msgid "list"
+msgstr "lista"
+
+#: kram/tui/dialogs/path.py:77 kram/tui/dialogs/question.py:60
+msgid "cancel"
+msgstr "anuluj"
+
+#: kram/tui/dialogs/path.py:77 kram/tui/dialogs/question.py:59
+msgid "choose"
+msgstr "wybierz"
+
+#: kram/tui/dialogs/path.py:77
+msgid "complete"
+msgstr "uzupełnij"
+
+#: kram/tui/dialogs/path.py:82
+msgid "Open"
+msgstr "Otwórz"
+
+#: kram/tui/dialogs/path.py:82
+msgid "Save"
+msgstr "Zapisz"
+
+#: kram/tui/dialogs/path.py:122
+#, python-brace-format
+msgid "“{name}” is a folder"
+msgstr "„{name}” to katalog"
+
+#: kram/tui/dialogs/path.py:126
+#, python-brace-format
+msgid "No such file: {path}"
+msgstr "Nie ma takiego pliku: {path}"
+
+#: kram/tui/dialogs/path.py:131
+#, python-brace-format
+msgid "No such folder: {path}"
+msgstr "Nie ma takiego katalogu: {path}"
+
+#: kram/tui/dialogs/path.py:136
+#, python-brace-format
+msgid "“{name}” already exists. Replace it?"
+msgstr "„{name}” już istnieje. Zastąpić?"
+
+#: kram/tui/dialogs/path.py:137
+msgid "Replace"
+msgstr "Zastąp"
+
+#: kram/tui/dialogs/question.py:22
+msgid "Close"
+msgstr "Zamknij"
+
+#: kram/tui/dialogs/question.py:22
+msgid "No"
+msgstr "Nie"
+
+#: kram/tui/dialogs/question.py:22
+msgid "OK"
+msgstr "OK"
+
+#: kram/tui/dialogs/question.py:22
+msgid "Yes"
+msgstr "Tak"
+
+#: kram/tui/dialogs/question.py:58
+msgid "next"
+msgstr "dalej"
+
+#: kram/tui/dialogs/question.py:60 kram/tui/widgets.py:160
+msgid "close"
+msgstr "zamknij"
+
+#: kram/tui/ui_port.py:78
+msgid "No desktop to open it in: the address is copied"
+msgstr "Brak pulpitu, by go otworzyć: adres skopiowano"
+
+#: kram/tui/ui_port.py:85
+msgid "No desktop to show it in: the path is copied"
+msgstr "Brak pulpitu, by go pokazać: ścieżkę skopiowano"
+
+#: kram/tui/ui_port.py:89
+msgid "Copied"
+msgstr "Skopiowano"
+
+#: kram/tui/widgets.py:160
+msgid "pick"
+msgstr "wybierz"

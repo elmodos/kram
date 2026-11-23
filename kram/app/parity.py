@@ -770,5 +770,12 @@ SETTING_FEATURES: dict[str, Feature] = {
     "distro/watch": Feature.SETTINGS_WATCH_RELEASES,
     "table/status_click": Feature.SETTINGS_STATUS_CLICK,
     "toolbar/style": Feature.SETTINGS_TOOLBAR_STYLE,
+    "tui/centre_scrolling": Feature.SETTINGS_REGISTRY,
+    "tui/confirm_quit": Feature.WINDOW_CLOSE_PENDING,
+    "tui/details_height": Feature.WINDOW_PANES_SAVED,
+    "tui/pinned": Feature.WINDOW_PANES_SAVED,
+    "tui/scheme": Feature.SETTINGS_REGISTRY,
+    "tui/sidebar_width": Feature.WINDOW_PANES_SAVED,
+    "tui/status_glyphs": Feature.SETTINGS_REGISTRY,
     "update_checker/stale_days": Feature.DIALOG_NOTIFICATIONS_STALE_DAYS,
 }

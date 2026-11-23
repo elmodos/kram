@@ -45,9 +45,9 @@ that both GUIs would need goes to `kram/app`, not to `kram/tui`.
 |---|---|---|
 | `kram/tui/__main__.py` | entry point, arguments, single run | `kram/__main__.py` (§15.2) |
 | `kram/tui/app.py` | `KramApp(App)`: screens, key scopes (§6), colours (§9), layout switch (§5) | |
-| `kram/tui/mainloop.py` | `Post` over Textual: `call_from_thread` from worker threads, timers | `kram/core/mainloop.py` |
+| `kram/tui/loop.py` | `post(fn)` over the app's asyncio loop (`call_soon_threadsafe` → `call_later`: in order, never waiting — `call_from_thread` waits for fn, which a worker must not), `TuiScheduler` on Textual timers | `kram/core/mainloop.py`, `kram/gtk/loop.py` |
 | `kram/tui/palette.py` | `Palette` widget, roles, schemes (§9) | |
-| `kram/tui/widgets.py` | `Button`, `CheckBox`, `ChoiceList`, `Hint` (§8) | |
+| `kram/tui/widgets.py` | `Button`, `CheckBox`, `ChoiceList`, `hint()` (§8) | |
 | `kram/tui/package_list.py` | the virtual list (§7.3) | `kram/app/package_list.py`, `columns.py` |
 | `kram/tui/sidebar.py` | views and entries (§7.2) | `kram/app/sidebar.py` |
 | `kram/tui/details.py` | tab strip and documents (§7.4) | `kram/app/details.py`, `doc.py` |
@@ -338,7 +338,7 @@ skipped by `Tab`.
 8.2 `ChoiceList`: a short modal list (views, tabs, sort columns, schemes, advisory kinds) with a double border, the
 current item highlighted, `Enter` picks, `Esc` closes.
 
-8.3 `Hint`: builds §4.5 hints as `rich.text.Text` (Textual's markup has no working escape for `[`).
+8.3 `hint()`: builds §4.5 hints as `rich.text.Text` (Textual's markup has no working escape for `[`).
 
 8.4 No Textual widget is used with its default look where §4 says otherwise: `Button`, `Checkbox`, `SelectionList`,
 `RadioSet`, `Switch`, `Tabs`/`TabbedContent` are not used.
@@ -566,7 +566,9 @@ from changing the system at once.
 ## 13. Settings
 
 13.1 Shared settings come from the registry `kram/app/preferences.py` and `kram/core/settings.py` (the same file as
-the GUIs). A setting with a toolkit other than "tui" is ignored.
+the GUIs). A setting with a toolkit other than "tui" is ignored. Settings meant for every front end are marked for "qt" and "gtk" today
+(`BOTH`); the step that builds the TUI's Settings menu adds "tui" to those that apply (Status click, Watch
+releases).
 
 13.2 TUI settings (toolkit "tui"): colour scheme (default Terminal); centre scrolling (on); status glyphs (automatic: symbols on UTF-8, letters otherwise / letters); sidebar width (28); details height (12); pinned panels (both); columns (order, shown, widths); progress
 auto-close (shared with the GUIs' meaning); confirm quit with marks (on).
