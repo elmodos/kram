@@ -13,6 +13,8 @@ Summary:        Synaptic-style package manager for Fedora
 
 License:        MIT
 URL:            https://github.com/elmodos/kram
+# COPR leaves Packager unset (Vendor is "Fedora Copr - user elmodos"); name the person who packages Kram
+Packager:       Modo Ltunzher <offnormal@gmail.com>
 Source0:        %{url}/archive/v%{base_version}/%{name}-%{base_version}.tar.gz
 
 BuildArch:      noarch
