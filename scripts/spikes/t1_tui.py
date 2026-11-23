@@ -268,8 +268,11 @@ class PackageTable(ScrollView, can_focus=True):
         # wide enough for 95% of the shown names: one 81-character name should not push every other column away
         lengths = sorted(len(self.plist.rows[i].name) for i in self.plist.visible)
         name_w = max(12, min(48, lengths[int(len(lengths) * 0.95)] if lengths else 12))
-        self.columns = [(-1, 1, False), (COL_NAME, name_w, False), (COL_INSTALLED, 16, False),
-                        (COL_CANDIDATE, 16, False), (COL_REPO, 12, False), (COL_SIZE, 9, True), (COL_SUMMARY, 60, False)]
+        fixed = [(-1, 1, False), (COL_NAME, name_w, False), (COL_INSTALLED, 16, False), (COL_CANDIDATE, 16, False),
+                 (COL_REPO, 12, False), (COL_SIZE, 9, True)]
+        # the summary takes the room that is left (it is cut with "…"): no sideways scrolling just for it
+        room = self.size.width - 1 - sum(w + 1 for _c, w, _r in fixed)  # 1: the vertical scrollbar
+        self.columns = [*fixed, (COL_SUMMARY, max(20, room), False)]
 
     @property
     def total_width(self) -> int:
@@ -295,6 +298,7 @@ class PackageTable(ScrollView, can_focus=True):
         self.virtual_size = Size(self.total_width, len(self.plist) + 1 + self._inset)
 
     def on_resize(self) -> None:
+        self.set_columns()
         self._sync_size()
 
     def reset(self) -> None:
@@ -503,7 +507,7 @@ class ChoiceMenu(ModalScreen):
     DEFAULT_CSS = """
     ChoiceMenu { align: center middle; background: $background 50%; }
     ChoiceMenu OptionList { width: auto; min-width: 30; max-width: 90%; height: auto; max-height: 80%;
-                            border: round $accent;
+                            border: double $accent;
                             border-title-color: $accent; background: $surface; }
     """
 
@@ -544,7 +548,7 @@ class SearchPopup(ModalScreen):
     DEFAULT_CSS = """
     SearchPopup { align: center top; background: $background 40%; }
     #search-box { width: 90%; max-width: 84; height: auto; margin-top: 1; padding: 0 1; background: $surface;
-                  border: round $accent; border-title-color: $accent; border-subtitle-color: $accent; }
+                  border: double $accent; border-title-color: $accent; border-subtitle-color: $accent; }
     #search-input { border: none; height: 1; padding: 0; background: $surface; }
     #search-modes, #search-count { height: 1; }
     #search-count { color: $text-muted; }
@@ -638,7 +642,7 @@ class MenuPopup(ModalScreen):
     DEFAULT_CSS = """
     MenuPopup { align: center middle; background: $background 50%; }
     #menu-box { width: auto; height: auto; max-height: 90%; background: $surface;
-                border: round $accent; border-title-color: $accent; border-subtitle-color: $accent; }
+                border: double $accent; border-title-color: $accent; border-subtitle-color: $accent; }
     #menu-titles { width: 14; height: auto; border: none; border-right: solid $border-blurred; padding: 0;
                    background: $surface; }
     #menu-items { width: 46; height: auto; border: none; padding: 0; background: $surface; }
@@ -745,14 +749,24 @@ class KramTui(App):
     App:ansi Footer, App:ansi FooterKey { background: $background; color: $text; }
     App:ansi FooterKey .footer-key--key { background: $background; color: $warning; text-style: bold; }
     App:ansi FooterKey .footer-key--description { background: $background; color: $text; }
-    App:ansi Checkbox { border: none; padding: 0; background: $background; color: $foreground; }
-    App:ansi Checkbox > .toggle--button { background: $background; color: $foreground; }
-    App:ansi Checkbox.-on > .toggle--button { color: $success; text-style: bold; }
+    /* a modal window in 16 colours: no dimming (it can only be a solid fill), the window stays in sight */
+    App:ansi ModalScreen { background: transparent; }  /* "$background 0%" stays opaque in ANSI mode */
     App:ansi Input { background: $background; color: $foreground; }
     #top { height: 1; background: $panel; color: $text; padding: 0 1; }
     #body { height: 1fr; layers: base overlay; }
-    .panel { border: round $border-blurred; border-title-color: $text-muted; border-subtitle-color: $text-muted; }
-    .panel:focus-within { border: round $accent; border-title-color: $accent; border-subtitle-color: $accent; }
+    /* quiet scrollbars: a thin track in the panel's colour, the thumb as an inactive border */
+    * { scrollbar-background: $surface; scrollbar-background-hover: $surface; scrollbar-background-active: $surface;
+        scrollbar-color: $border-blurred; scrollbar-color-hover: $border; scrollbar-color-active: $accent;
+        scrollbar-corner-color: $surface; }
+    /* tables in dialogs: the package list's header, not a filled bar */
+    DataTable > .datatable--header { background: $surface; color: $text-muted; text-style: bold; }
+    App:ansi DataTable > .datatable--header { background: $background; color: $foreground; text-style: bold dim; }
+    /* box drawing as it always was: a panel has a single line (┌─┐), a modal window a double one (╔═╗).
+       An inactive frame takes the text's colour, faint: the theme's own border colour vanishes on dark themes */
+    .panel { border: solid $foreground 30%; border-title-color: $text-muted; border-subtitle-color: $text-muted; }
+    .panel:focus-within { border: solid $accent; border-title-color: $accent; border-subtitle-color: $accent; }
+    App:ansi .panel { border: solid $border-blurred; }
+    App:ansi .panel:focus-within { border: solid $accent; }
     #side { width: 28; height: 1fr; }
     #entries { height: 1fr; border: none; padding: 0; background: transparent; }
     #views { height: auto; border-top: solid $border-blurred; color: $text-muted; display: none; }
@@ -1091,8 +1105,7 @@ class KramTui(App):
         if self.tab == "description":
             descriptions = getattr(self.snap, "descriptions", None) or []
             i = self.index_of.get(id(r))
-            t.append(r.summary + "\n\n", "italic")
-            t.append(descriptions[i] if i is not None and i < len(descriptions) else "")
+            t.append("\n" + (descriptions[i] if i is not None and i < len(descriptions) else r.summary))
         elif self.tab == "general":
             for label, value in (("Installed", r.installed_evr or "—"), ("Latest", r.candidate_evr or "—"),
                                  ("Repository", r.repo_id), ("Size", cell_text(r, COL_SIZE, self.plist.ctx)),

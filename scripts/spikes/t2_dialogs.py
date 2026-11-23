@@ -25,13 +25,14 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import t1_tui as t1  # noqa: E402
+from rich.style import Style  # noqa: E402
 from rich.text import Text  # noqa: E402
 from textual.app import ComposeResult  # noqa: E402
 from textual.binding import Binding  # noqa: E402
 from textual.containers import Horizontal, Vertical, VerticalScroll  # noqa: E402
 from textual.message import Message  # noqa: E402
 from textual.screen import ModalScreen  # noqa: E402
-from textual.widgets import Checkbox, DataTable, Input, ProgressBar, SelectionList, Static  # noqa: E402
+from textual.widgets import DataTable, Input, ProgressBar, Static  # noqa: E402
 
 from kram.app.apply_review import CRITICAL  # noqa: E402
 from kram.app.columns import human_size  # noqa: E402
@@ -42,7 +43,7 @@ POLKIT_MESSAGE = ("Authentication is required to install, remove or upgrade pack
                   "repositories")  # data/io.github.elmodos.Kram.policy
 DIALOG_CSS = """
 .dialog { width: 90%; max-width: 110; height: auto; max-height: 90%; padding: 0 1; background: $surface;
-          border: round $accent; border-title-color: $accent; border-subtitle-color: $accent; }
+          border: double $accent; border-title-color: $accent; border-subtitle-color: $accent; }
 .dialog .note { color: $text-muted; }
 .dialog .warning { color: $error; text-style: bold; }
 /* the bars as wide as the dialog: Textual's own bar is 32 cells */
@@ -99,6 +100,34 @@ class Button(Static, can_focus=True):
 
     def on_click(self) -> None:
         self.action_press()
+
+
+class CheckBox(Static, can_focus=True):
+    """`[x] label`: the one checkbox look of the TUI, as in the repositories table and the menu. Textual's own
+    (`▐X▌`, a block in SelectionList) look different from each other and from ours. Space or Enter ticks it."""
+
+    BINDINGS = [Binding("space,enter", "toggle", show=False)]
+    DEFAULT_CSS = "CheckBox { width: auto; height: 1; } CheckBox:focus { text-style: reverse; }"
+
+    def __init__(self, label: str, value: bool, id: str | None = None):
+        super().__init__(id=id)
+        self.label, self.value = label, value
+
+    def on_mount(self) -> None:
+        self.show()
+
+    def show(self) -> None:
+        t = Text()
+        t.append("[x]" if self.value else "[ ]", t1.role("marked") if self.value else Style())
+        t.append(f" {self.label}")
+        self.update(t)
+
+    def action_toggle(self) -> None:
+        self.value = not self.value
+        self.show()
+
+    def on_click(self) -> None:
+        self.action_toggle()
 
 
 class Dialog(ModalScreen):
@@ -207,7 +236,7 @@ class ApplyDialog(Dialog):
     #apply-box { height: 90%; }
     #apply-scroll { height: 1fr; }
     #changes { height: auto; border-top: solid $border-blurred; border-bottom: solid $border-blurred; }
-    #recs { height: auto; max-height: 6; border: none; padding: 0; background: $surface; }
+    #recs { height: auto; }
     #command { color: $text-muted; height: auto; }
     """
 
@@ -228,9 +257,11 @@ class ApplyDialog(Dialog):
             with VerticalScroll(id="apply-scroll"):
                 yield Static(self.changes_text(), id="changes")
                 yield Static("Recommended packages: untick to leave them out", classes="note")
-                yield SelectionList(("vim-data   recommended by vim-enhanced (sample)", "vim-data", True),
-                                    ("xxd   recommended by vim-enhanced (sample)", "xxd", True), id="recs")
-                yield Checkbox("Download only: install later", id="download-only")
+                with Vertical(id="recs"):
+                    yield CheckBox("vim-data   recommended by vim-enhanced (sample)", True)
+                    yield CheckBox("xxd   recommended by vim-enhanced (sample)", True)
+                yield Static("")
+                yield CheckBox("Download only: install later", False, id="download-only")
                 yield Static("$ " + self.command, id="command")
             with Horizontal(classes="buttons"):
                 yield Button("Apply", id="apply", variant="primary")
