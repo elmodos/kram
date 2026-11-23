@@ -57,6 +57,10 @@ interface, or something remote) does not start from zero:
 - What each front end supports is listed in `kram/app/parity.py`, and explained in
   [docs/PARITY.md](docs/PARITY.md). A front end that is not released yet may have `PLANNED` features; a released one
   may not.
+- **A feature starts in the parity list.** Before any code, add it to `kram/app/parity.py` (as `PLANNED` for the front
+  ends that do not have it yet), then build it, then mark the tests and set the entries to `SUPPORTED`. Split a feature
+  into its parts, one entry each: a mirrors dialog is the dialog, the speed test, pinning a mirror, showing which one is
+  in use, the column in the repositories table. Each part can then be followed, and be missing, on its own front end.
 
 Nothing here makes a remote or web front end, and none is planned. The layering is there so that one could be added
 without rewriting the logic.

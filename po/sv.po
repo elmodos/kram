@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kram\n"
 "Report-Msgid-Bugs-To: https://github.com/elmodos/kram/issues\n"
-"POT-Creation-Date: 2026-11-22 17:47+0000\n"
+"POT-Creation-Date: 2026-11-23 10:10+0000\n"
 "PO-Revision-Date: 2026-11-05 18:05+0200\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -112,7 +112,7 @@ msgid "Enable or disable software repositories"
 msgstr "Aktivera eller inaktivera programvaruförråd"
 
 #: kram/app/actions.py:75 kram/app/empty_list.py:53
-#: kram/gtk/dialogs/repos.py:25 kram/qt/repos_dialog.py:49
+#: kram/gtk/dialogs/repos.py:28 kram/qt/repos_dialog.py:49
 msgid "Repositories"
 msgstr "Förråd"
 
@@ -214,7 +214,7 @@ msgstr "Installera en nedladdad .rpm-fil (du kan också släppa den på fönstre
 msgid "Quit"
 msgstr "Avsluta"
 
-#: kram/app/actions.py:101 kram/qt/main_window.py:399
+#: kram/app/actions.py:101 kram/qt/about_dialog.py:14
 msgid "About Kram"
 msgstr "Om Kram"
 
@@ -238,7 +238,7 @@ msgstr "Markera för uppgradering"
 msgid "Mark for Reinstallation"
 msgstr "Markera för ominstallation"
 
-#: kram/app/actions.py:109 kram/app/browser.py:717
+#: kram/app/actions.py:109 kram/app/browser.py:727
 msgid "Mark for Removal"
 msgstr "Markera för borttagning"
 
@@ -552,7 +552,7 @@ msgid_plural "+{size}, {n} packages"
 msgstr[0] "+{size}, {n} paket"
 msgstr[1] "+{size}, {n} paket"
 
-#: kram/app/apply_review.py:321 kram/app/browser.py:633 kram/app/install.py:303
+#: kram/app/apply_review.py:321 kram/app/browser.py:643 kram/app/install.py:303
 #: kram/app/install.py:337 kram/app/install.py:397
 msgid "Resolving dependencies…"
 msgstr "Löser beroenden…"
@@ -561,7 +561,7 @@ msgstr "Löser beroenden…"
 msgid "These choices cannot be carried out:"
 msgstr "Dessa val går inte att genomföra:"
 
-#: kram/app/apply_review.py:334 kram/app/browser.py:642 kram/app/install.py:384
+#: kram/app/apply_review.py:334 kram/app/browser.py:652 kram/app/install.py:384
 #: kram/app/install.py:418
 #, python-brace-format
 msgid ""
@@ -573,7 +573,7 @@ msgstr ""
 "\n"
 "{error}"
 
-#: kram/app/browser.py:49
+#: kram/app/browser.py:52
 msgid ""
 "To keep an installed package at its version, select it and choose Package → "
 "Lock Version: upgrades then leave it out until it is unlocked."
@@ -581,22 +581,22 @@ msgstr ""
 "För att behålla ett installerat paket på sin version, markera det och välj "
 "Paket → Lås version: uppgraderingar hoppar då över det tills det låses upp."
 
-#: kram/app/browser.py:218
+#: kram/app/browser.py:228
 #, python-brace-format
 msgid "{n} marked change has not been applied. Quit anyway?"
 msgid_plural "{n} marked changes have not been applied. Quit anyway?"
 msgstr[0] "{n} markerad ändring har inte verkställts. Avsluta ändå?"
 msgstr[1] "{n} markerade ändringar har inte verkställts. Avsluta ändå?"
 
-#: kram/app/browser.py:231 kram/app/install.py:300
+#: kram/app/browser.py:241 kram/app/install.py:300
 msgid "Loading metadata…"
 msgstr "Läser in metadata…"
 
-#: kram/app/browser.py:241
+#: kram/app/browser.py:251
 msgid "Waiting for another package manager to finish…"
 msgstr "Väntar på att en annan pakethanterare ska bli klar…"
 
-#: kram/app/browser.py:277 kram/app/install.py:345
+#: kram/app/browser.py:287 kram/app/install.py:345
 #, python-brace-format
 msgid ""
 "Could not load the package catalog:\n"
@@ -607,7 +607,7 @@ msgstr ""
 "\n"
 "{error}"
 
-#: kram/app/browser.py:345
+#: kram/app/browser.py:355
 #, python-brace-format
 msgid ""
 "Searching “{text}” ({mode}); the first search also indexes what packages "
@@ -616,55 +616,55 @@ msgstr ""
 "Söker ”{text}” ({mode}); den första sökningen indexerar också vad paketen "
 "tillhandahåller…"
 
-#: kram/app/browser.py:348
+#: kram/app/browser.py:358
 #, python-brace-format
 msgid "Searching “{text}” ({mode})…"
 msgstr "Söker efter ”{text}” ({mode})…"
 
-#: kram/app/browser.py:365 kram/app/copr.py:158
+#: kram/app/browser.py:375 kram/app/copr.py:158
 #, python-brace-format
 msgid "Search failed: {error}"
 msgstr "Sökningen misslyckades: {error}"
 
-#: kram/app/browser.py:457
+#: kram/app/browser.py:467
 #, python-brace-format
 msgid "Nothing provides “{what}”"
 msgstr "Inget tillhandahåller ”{what}”"
 
-#: kram/app/browser.py:459
+#: kram/app/browser.py:469
 #, python-brace-format
 msgid "Could not look up “{what}”: {error}"
 msgstr "Kunde inte söka efter «{what}»: {error}"
 
-#: kram/app/browser.py:473
+#: kram/app/browser.py:483
 #, python-brace-format
 msgid "Package {name} not found in the catalog"
 msgstr "Paketet {name} finns inte i katalogen"
 
-#: kram/app/browser.py:502
+#: kram/app/browser.py:512
 msgid "Refresh Metadata"
 msgstr "Uppdatera metadata"
 
-#: kram/app/browser.py:509
+#: kram/app/browser.py:519
 msgid "Remove from History"
 msgstr "Ta bort från historiken"
 
-#: kram/app/browser.py:511
+#: kram/app/browser.py:521
 msgid "Clear Search History"
 msgstr "Rensa sökhistoriken"
 
-#: kram/app/browser.py:558
+#: kram/app/browser.py:568
 #, python-brace-format
 msgid "{n} marking saved to {path}"
 msgid_plural "{n} markings saved to {path}"
 msgstr[0] "{n} markering sparad i {path}"
 msgstr[1] "{n} markeringar sparade i {path}"
 
-#: kram/app/browser.py:566
+#: kram/app/browser.py:576
 msgid "Export List as CSV"
 msgstr "Exportera listan som CSV"
 
-#: kram/app/browser.py:577 kram/app/markings.py:35
+#: kram/app/browser.py:587 kram/app/markings.py:35
 #, python-brace-format
 msgid ""
 "Could not save {path}:\n"
@@ -675,18 +675,18 @@ msgstr ""
 "\n"
 "{error}"
 
-#: kram/app/browser.py:580
+#: kram/app/browser.py:590
 #, python-brace-format
 msgid "{n} package exported to {path}"
 msgid_plural "{n} packages exported to {path}"
 msgstr[0] "{n} paket exporterat till {path}"
 msgstr[1] "{n} paket exporterade till {path}"
 
-#: kram/app/browser.py:583
+#: kram/app/browser.py:593
 msgid "CSV files (*.csv);;All files (*)"
 msgstr "CSV-filer (*.csv);;Alla filer (*)"
 
-#: kram/app/browser.py:602
+#: kram/app/browser.py:612
 #, python-brace-format
 msgid ""
 "{n} upgrade or downgrade unmarked: the version lock keeps the installed "
@@ -701,36 +701,38 @@ msgstr[1] ""
 "{n} uppgraderingar eller nedgraderingar avmarkerade: låset behåller de "
 "installerade versionerna"
 
-#: kram/app/browser.py:605
+#: kram/app/browser.py:615
 #, python-brace-format
 msgid "Locking the version of {n} package"
 msgid_plural "Locking the versions of {n} packages"
 msgstr[0] "Låser versionen av {n} paket"
 msgstr[1] "Låser versionerna av {n} paket"
 
-#: kram/app/browser.py:607
+#: kram/app/browser.py:617
 #, python-brace-format
 msgid "Unlocking the version of {n} package"
 msgid_plural "Unlocking the versions of {n} packages"
 msgstr[0] "Låser upp versionen av {n} paket"
 msgstr[1] "Låser upp versionerna av {n} paket"
 
-#: kram/app/browser.py:687
+#: kram/app/browser.py:697
 msgid "Applying changes"
 msgstr "Verkställer ändringar"
 
-#: kram/app/browser.py:710
+#: kram/app/browser.py:720
 #, python-brace-format
 msgid ""
 "This removes the front end of Kram you are using ({package}). Kram closes "
 "after the changes are applied; start it again."
-msgstr "Detta tar bort det gränssnitt för Kram som du använder ({package}). Kram stängs när ändringarna har verkställts; starta det igen."
+msgstr ""
+"Detta tar bort det gränssnitt för Kram som du använder ({package}). Kram "
+"stängs när ändringarna har verkställts; starta det igen."
 
-#: kram/app/browser.py:713
+#: kram/app/browser.py:723
 msgid "Conflicting packages"
 msgstr "Paket i konflikt"
 
-#: kram/app/browser.py:714
+#: kram/app/browser.py:724
 #, python-brace-format
 msgid ""
 "{n} installed package conflicts with the marked changes and has to be "
@@ -738,17 +740,23 @@ msgid ""
 msgid_plural ""
 "{n} installed packages conflict with the marked changes and have to be "
 "removed for them:"
-msgstr[0] "{n} installerat paket är i konflikt med de markerade ändringarna och måste tas bort för dem:"
-msgstr[1] "{n} installerade paket är i konflikt med de markerade ändringarna och måste tas bort för dem:"
+msgstr[0] ""
+"{n} installerat paket är i konflikt med de markerade ändringarna och måste "
+"tas bort för dem:"
+msgstr[1] ""
+"{n} installerade paket är i konflikt med de markerade ändringarna och måste "
+"tas bort för dem:"
 
-#: kram/app/browser.py:742
+#: kram/app/browser.py:752
 #, python-brace-format
 msgid ""
 "The changes are applied. They removed the front end of Kram you are using "
 "({package}), so Kram closes now. Start it again."
-msgstr "Ändringarna är verkställda. De tog bort det gränssnitt för Kram som du använder ({package}), så Kram stängs nu. Starta det igen."
+msgstr ""
+"Ändringarna är verkställda. De tog bort det gränssnitt för Kram som du "
+"använder ({package}), så Kram stängs nu. Starta det igen."
 
-#: kram/app/browser.py:751
+#: kram/app/browser.py:761
 msgid ""
 "Undoing the whole transaction needs versions the repositories no longer "
 "have. What is still possible can be undone without them."
@@ -756,11 +764,11 @@ msgstr ""
 "Att ångra hela transaktionen kräver versioner som förråden inte längre har. "
 "Det som fortfarande går kan ångras utan dem."
 
-#: kram/app/browser.py:753
+#: kram/app/browser.py:763
 msgid "Undo What Is Possible…"
 msgstr "Ångra det som går…"
 
-#: kram/app/browser.py:755
+#: kram/app/browser.py:765
 msgid ""
 "They need a version the version lock excludes. Unlock the package (Package → "
 "Unlock Version) or unmark the change."
@@ -768,36 +776,36 @@ msgstr ""
 "De behöver en version som versionslåset utesluter. Lås upp paketet (Paket → "
 "Lås upp version) eller avmarkera ändringen."
 
-#: kram/app/browser.py:757
+#: kram/app/browser.py:767
 msgid "Show Locked Packages"
 msgstr "Visa låsta paket"
 
-#: kram/app/browser.py:758
+#: kram/app/browser.py:768
 msgid "Cannot apply changes"
 msgstr "Kan inte verkställa ändringarna"
 
-#: kram/app/browser.py:759
+#: kram/app/browser.py:769
 msgid "The marked changes cannot be carried out. Unmark or change them."
 msgstr ""
 "De markerade ändringarna kan inte genomföras. Avmarkera eller ändra dem."
 
-#: kram/app/browser.py:760
+#: kram/app/browser.py:770
 msgid "This change cannot be carried out."
 msgstr "Den här ändringen kan inte genomföras."
 
-#: kram/app/browser.py:801 kram/app/browser.py:806
+#: kram/app/browser.py:811 kram/app/browser.py:816
 msgid "Refreshing metadata"
 msgstr "Uppdaterar metadata"
 
-#: kram/app/browser.py:812
+#: kram/app/browser.py:822
 msgid "Downloading metadata again"
 msgstr "Hämtar metadata igen"
 
-#: kram/app/browser.py:814
+#: kram/app/browser.py:824
 msgid "Cleaning the package cache"
 msgstr "Rensar paketcachen"
 
-#: kram/app/browser.py:823
+#: kram/app/browser.py:842
 #, python-brace-format
 msgid ""
 "Could not read the repositories:\n"
@@ -808,31 +816,39 @@ msgstr ""
 "\n"
 "{error}"
 
-#: kram/app/browser.py:842
+#: kram/app/browser.py:851
+msgid "Changing repositories"
+msgstr "Ändrar förråd"
+
+#: kram/app/browser.py:857
 #, python-brace-format
 msgid "Removing {n} repository"
 msgid_plural "Removing {n} repositories"
 msgstr[0] "Tar bort {n} förråd"
 msgstr[1] "Tar bort {n} förråd"
 
-#: kram/app/browser.py:844
-msgid "Changing repositories"
-msgstr "Ändrar förråd"
+#: kram/app/browser.py:886
+msgid "Changing the mirror"
+msgstr "Ändrar spegeln"
 
-#: kram/app/browser.py:860 kram/app/browser.py:890
+#: kram/app/browser.py:886
+msgid "Changing the mirror settings"
+msgstr "Ändrar inställningarna för speglar"
+
+#: kram/app/browser.py:903 kram/app/browser.py:933
 #, python-brace-format
 msgid "Undo Transaction {id}"
 msgstr "Ångra transaktion {id}"
 
-#: kram/app/browser.py:861
+#: kram/app/browser.py:904
 msgid "The groups this transaction changed could not be read."
 msgstr "De grupper som ändrades av transaktionen kunde inte läsas."
 
-#: kram/app/browser.py:875
+#: kram/app/browser.py:918
 msgid "cannot be marked"
 msgstr "kan inte markeras"
 
-#: kram/app/browser.py:886
+#: kram/app/browser.py:929
 #, python-brace-format
 msgid ""
 "Could not read what the transaction changed:\n"
@@ -843,39 +859,39 @@ msgstr ""
 "\n"
 "{error}"
 
-#: kram/app/browser.py:886
+#: kram/app/browser.py:929
 msgid "Undo Transaction"
 msgstr "Ångra transaktion"
 
-#: kram/app/browser.py:891
+#: kram/app/browser.py:934
 #, python-brace-format
 msgid "{n} change marked to undo transaction {id}."
 msgid_plural "{n} changes marked to undo transaction {id}."
 msgstr[0] "{n} ändring markerad för att ångra transaktion {id}."
 msgstr[1] "{n} ändringar markerade för att ångra transaktion {id}."
 
-#: kram/app/browser.py:893
+#: kram/app/browser.py:936
 #, python-brace-format
 msgid "{package}: installs {version}, {old} is no longer in the repositories"
 msgstr "{package}: installerar {version}, {old} finns inte längre i förråden"
 
-#: kram/app/browser.py:898
+#: kram/app/browser.py:941
 msgid "Review them, then apply."
 msgstr "Granska dem och verkställ sedan."
 
-#: kram/app/browser.py:901
+#: kram/app/browser.py:944
 #, python-brace-format
 msgid "Nothing of transaction {id} can be undone."
 msgstr "Inget av transaktion {id} kan ångras."
 
-#: kram/app/browser.py:905
+#: kram/app/browser.py:948
 #, python-brace-format
 msgid "{n} package cannot be undone:"
 msgid_plural "{n} packages cannot be undone:"
 msgstr[0] "{n} paket kan inte ångras:"
 msgstr[1] "{n} paket kan inte ångras:"
 
-#: kram/app/browser.py:909
+#: kram/app/browser.py:952
 #, python-brace-format
 msgid "{n} package comes back in another version:"
 msgid_plural "{n} packages come back in another version:"
@@ -1137,8 +1153,8 @@ msgid "Update type"
 msgstr "Uppdateringstyp"
 
 #: kram/app/columns.py:28 kram/app/details.py:93 kram/app/sidebar.py:31
-#: kram/core/custom_filters.py:53 kram/gtk/dialogs/repos.py:143
-#: kram/qt/repos_dialog.py:66
+#: kram/core/custom_filters.py:53 kram/gtk/dialogs/repos.py:154
+#: kram/qt/repos_dialog.py:67
 msgid "Origin"
 msgstr "Ursprung"
 
@@ -1279,7 +1295,7 @@ msgstr "Markerat: {action}"
 msgid "Click for actions"
 msgstr "Klicka för åtgärder"
 
-#: kram/app/copr.py:113 kram/app/repos.py:143
+#: kram/app/copr.py:113 kram/app/repos.py:197
 #, python-brace-format
 msgid ""
 "{n} installed package comes from it. It stays installed but will no longer "
@@ -1294,13 +1310,13 @@ msgstr[1] ""
 "{n} installerade paket kommer därifrån. De förblir installerade men får inga "
 "fler uppdateringar (de visas som övergivna)."
 
-#: kram/app/copr.py:117 kram/app/repos.py:152
+#: kram/app/copr.py:117 kram/app/repos.py:206
 msgid "Remove"
 msgstr "Ta bort"
 
-#: kram/app/copr.py:118 kram/app/repos.py:153 kram/gtk/dialogs/copr.py:60
-#: kram/gtk/dialogs/repos.py:61 kram/qt/copr_dialog.py:67
-#: kram/qt/repos_dialog.py:116
+#: kram/app/copr.py:118 kram/app/repos.py:207 kram/gtk/dialogs/copr.py:60
+#: kram/gtk/dialogs/repos.py:64 kram/qt/copr_dialog.py:67
+#: kram/qt/repos_dialog.py:99
 msgid "Show packages"
 msgstr "Visa paket"
 
@@ -1987,8 +2003,8 @@ msgid_plural "{n} files could not be checked: no permission to read them."
 msgstr[0] "{n} fil kunde inte kontrolleras: behörighet att läsa den saknas."
 msgstr[1] "{n} filer kunde inte kontrolleras: behörighet att läsa dem saknas."
 
-#: kram/app/install.py:148 kram/core/search.py:36 kram/gtk/dialogs/repos.py:144
-#: kram/qt/repos_dialog.py:67
+#: kram/app/install.py:148 kram/core/search.py:36 kram/gtk/dialogs/repos.py:156
+#: kram/qt/repos_dialog.py:68
 msgid "File"
 msgstr "Fil"
 
@@ -2269,6 +2285,131 @@ msgid "{n} package marked."
 msgid_plural "{n} packages marked."
 msgstr[0] "{n} paket markerat."
 msgstr[1] "{n} paket markerade."
+
+#: kram/app/mirrors.py:77
+#, python-brace-format
+msgid "Mirrors of {repo}"
+msgstr "Speglar för {repo}"
+
+#: kram/app/mirrors.py:102
+msgid "Loading the list of mirrors…"
+msgstr "Läser in listan över speglar…"
+
+#: kram/app/mirrors.py:120
+#, python-brace-format
+msgid "The repository now downloads from {mirror}."
+msgstr "Förrådet hämtar nu från {mirror}."
+
+#: kram/app/mirrors.py:122
+msgid "The repository takes its mirrors from the list again."
+msgstr "Förrådet hämtar återigen sina speglar från listan."
+
+#: kram/app/mirrors.py:147
+msgid "The list has no mirrors."
+msgstr "Listan innehåller inga speglar."
+
+#: kram/app/mirrors.py:149
+#, python-brace-format
+msgid "{n} mirror. Test the speed to see which is the quickest."
+msgid_plural "{n} mirrors. Test the speed to see which is the quickest."
+msgstr[0] "{n} spegel. Testa hastigheten för att se vilken som är snabbast."
+msgstr[1] "{n} speglar. Testa hastigheten för att se vilken som är snabbast."
+
+#: kram/app/mirrors.py:156
+#, python-brace-format
+msgid "Could not get the list of mirrors: {error}"
+msgstr "Det gick inte att hämta listan över speglar: {error}"
+
+#: kram/app/mirrors.py:182
+msgid "Out of date"
+msgstr "Föråldrad"
+
+#: kram/app/mirrors.py:184
+msgid "Fastest"
+msgstr "Snabbast"
+
+#: kram/app/mirrors.py:188
+msgid "In use"
+msgstr "Används"
+
+#: kram/app/mirrors.py:218
+msgid "Testing the mirrors…"
+msgstr "Testar speglarna…"
+
+#: kram/app/mirrors.py:227
+msgid "The test was stopped."
+msgstr "Testet stoppades."
+
+#: kram/app/mirrors.py:235
+#, python-brace-format
+msgid "Testing the mirrors… {done} of {n} answered"
+msgstr "Testar speglarna… {done} av {n} har svarat"
+
+#: kram/app/mirrors.py:245
+#, python-brace-format
+msgid "{n} of {total} mirrors answered. The quickest is first."
+msgstr "{n} av {total} speglar svarade. Den snabbaste står först."
+
+#: kram/app/mirrors.py:248
+msgid "The test is done. The quickest mirror is first."
+msgstr "Testet är klart. Den snabbaste spegeln står först."
+
+#: kram/app/mirrors.py:263
+msgid "Select a mirror."
+msgstr "Välj en spegel."
+
+#: kram/app/mirrors.py:266
+msgid "This mirror did not answer the test."
+msgstr "Den här spegeln svarade inte på testet."
+
+#: kram/app/mirrors.py:268
+msgid "The repository already uses this mirror."
+msgstr "Förrådet använder redan den här spegeln."
+
+#: kram/app/mirrors.py:274
+msgid "The repository takes its mirrors from the list already."
+msgstr "Förrådet hämtar redan sina speglar från listan."
+
+#: kram/app/mirrors.py:283
+msgid ""
+"Its copy of the repository is older than another mirror's, so it may be "
+"missing updates."
+msgstr ""
+"Dess kopia av förrådet är äldre än en annan spegels, så uppdateringar kan "
+"saknas."
+
+#: kram/app/mirrors.py:286
+msgid "It is not reached over https."
+msgstr "Den nås inte via https."
+
+#: kram/app/mirrors.py:290
+msgid "Use This Mirror"
+msgstr "Använd den här spegeln"
+
+#: kram/app/mirrors.py:295
+msgid "Use this mirror?"
+msgstr "Använda den här spegeln?"
+
+#: kram/app/mirrors.py:314
+msgid ""
+"dnf tests the mirrors of a list itself and uses the fastest, for every "
+"repository."
+msgstr ""
+"dnf testar själv speglarna i en lista och använder den snabbaste, för alla "
+"förråd."
+
+#: kram/app/mirrors.py:316
+msgid "dnf uses the first mirrors of a list that answer, for every repository."
+msgstr ""
+"dnf använder de första speglarna i en lista som svarar, för alla förråd."
+
+#: kram/app/mirrors.py:319
+msgid "Turn Off Fastest Mirror Search"
+msgstr "Stäng av sökningen efter snabbaste spegel"
+
+#: kram/app/mirrors.py:319
+msgid "Turn On Fastest Mirror Search"
+msgstr "Slå på sökningen efter snabbaste spegel"
 
 #: kram/app/notifier.py:63
 #, python-brace-format
@@ -2625,49 +2766,64 @@ msgstr "En ny Fedora-utgåva"
 msgid "Fedora {new} is available, you have {old}"
 msgstr "Fedora {new} finns, du har {old}"
 
-#: kram/app/repos.py:74
+#: kram/app/repos.py:106
 msgid "No metadata yet: use Reload"
 msgstr "Ingen metadata ännu: använd Läs in igen"
 
-#: kram/app/repos.py:89
+#: kram/app/repos.py:113 kram/gtk/dialogs/mirrors.py:57
+#: kram/qt/mirrors_dialog.py:67
+msgid "Automatic"
+msgstr "Automatiskt"
+
+#: kram/app/repos.py:113
+msgid "dnf chooses among the mirrors of the repository's list."
+msgstr "dnf väljer bland speglarna i förrådets lista."
+
+#: kram/app/repos.py:127
 #, python-brace-format
 msgid "{n} repository will change."
 msgid_plural "{n} repositories will change."
 msgstr[0] "{n} förråd kommer att ändras."
 msgstr[1] "{n} förråd kommer att ändras."
 
-#: kram/app/repos.py:96 kram/app/repos.py:104
+#: kram/app/repos.py:134 kram/app/repos.py:142 kram/app/repos.py:165
 msgid "Apply or undo the changes first."
 msgstr "Verkställ eller ångra ändringarna först."
 
-#: kram/app/repos.py:98
+#: kram/app/repos.py:136
 msgid "None of its packages are in the list."
 msgstr "Inget av dess paket finns i listan."
 
-#: kram/app/repos.py:108
+#: kram/app/repos.py:146
 #, python-brace-format
 msgid "The .repo file is part of the installed package {package}."
 msgstr ".repo-filen är en del av det installerade paketet {package}."
 
-#: kram/app/repos.py:110
+#: kram/app/repos.py:148
 msgid "Configured by the system."
 msgstr "Konfigurerat av systemet."
 
-#: kram/app/repos.py:112
+#: kram/app/repos.py:150
 msgid "Not configured in a file."
 msgstr "Inte konfigurerat i en fil."
 
-#: kram/app/repos.py:134
+#: kram/app/repos.py:167
+msgid ""
+"This repository has a single address: there are no mirrors to choose from."
+msgstr ""
+"Det här förrådet har bara en adress: det finns inga speglar att välja mellan."
+
+#: kram/app/repos.py:188
 #, python-brace-format
 msgid "Remove the repository {repo} from the system?"
 msgstr "Ta bort förrådet {repo} från systemet?"
 
-#: kram/app/repos.py:135
+#: kram/app/repos.py:189
 #, python-brace-format
 msgid "Its file {path} will be deleted."
 msgstr "Dess fil {path} kommer att raderas."
 
-#: kram/app/repos.py:137
+#: kram/app/repos.py:191
 #, python-brace-format
 msgid "The file {path} configures {n} repository. Remove it from the system?"
 msgid_plural ""
@@ -2675,7 +2831,7 @@ msgid_plural ""
 msgstr[0] "Filen {path} konfigurerar {n} förråd. Ta bort det från systemet?"
 msgstr[1] "Filen {path} konfigurerar {n} förråd. Ta bort alla från systemet?"
 
-#: kram/app/repos.py:147
+#: kram/app/repos.py:201
 #, python-brace-format
 msgid ""
 "{n} installed package comes from them. It stays installed but will no longer "
@@ -2690,7 +2846,7 @@ msgstr[1] ""
 "{n} installerade paket kommer därifrån. De förblir installerade men får inga "
 "fler uppdateringar (de visas som övergivna)."
 
-#: kram/app/repos.py:161
+#: kram/app/repos.py:216
 msgid "Remove repository"
 msgstr "Ta bort förråd"
 
@@ -2973,7 +3129,7 @@ msgid "PackageKit is working right now. Try again when it has finished."
 msgstr "PackageKit arbetar just nu. Försök igen när det är klart."
 
 #: kram/core/custom_filters.py:48 kram/core/search.py:32
-#: kram/gtk/dialogs/repos.py:140 kram/qt/repos_dialog.py:66
+#: kram/gtk/dialogs/repos.py:151 kram/qt/repos_dialog.py:67
 msgid "Name"
 msgstr "Namn"
 
@@ -3254,8 +3410,8 @@ msgstr "Rekommenderas av"
 msgid "Adds"
 msgstr "Lägger till"
 
-#: kram/gtk/dialogs/apply.py:163 kram/gtk/dialogs/repos.py:34
-#: kram/qt/apply_dialog.py:156 kram/qt/repos_dialog.py:130
+#: kram/gtk/dialogs/apply.py:163 kram/gtk/dialogs/repos.py:38
+#: kram/qt/apply_dialog.py:156 kram/qt/repos_dialog.py:116
 msgid "Apply changes"
 msgstr "Verkställ ändringar"
 
@@ -3307,9 +3463,9 @@ msgid "Delete the copies of files that no longer exist"
 msgstr "Ta bort kopior av filer som inte längre finns"
 
 #: kram/gtk/dialogs/cache.py:111 kram/gtk/dialogs/notifier.py:57
-#: kram/gtk/dialogs/repos.py:200 kram/gtk/files.py:124
+#: kram/gtk/dialogs/repos.py:214 kram/gtk/files.py:124
 #: kram/qt/cache_dialog.py:255 kram/qt/file_list.py:324
-#: kram/qt/notifier_dialog.py:104 kram/qt/repos_dialog.py:178
+#: kram/qt/notifier_dialog.py:104 kram/qt/repos_dialog.py:206
 msgid "Show in File Manager"
 msgstr "Visa i filhanteraren"
 
@@ -3342,8 +3498,8 @@ msgstr "Aktivera markerade"
 msgid "Enabled projects"
 msgstr "Aktiverade projekt"
 
-#: kram/gtk/dialogs/copr.py:47 kram/gtk/dialogs/repos.py:138
-#: kram/qt/copr_dialog.py:51 kram/qt/repos_dialog.py:66
+#: kram/gtk/dialogs/copr.py:47 kram/gtk/dialogs/repos.py:149
+#: kram/qt/copr_dialog.py:51 kram/qt/repos_dialog.py:67
 msgid "Enabled"
 msgstr "Aktiverat"
 
@@ -3356,8 +3512,8 @@ msgstr "Projekt"
 msgid "Hub"
 msgstr "Hubb"
 
-#: kram/gtk/dialogs/copr.py:50 kram/gtk/dialogs/repos.py:141
-#: kram/qt/copr_dialog.py:51 kram/qt/repos_dialog.py:66
+#: kram/gtk/dialogs/copr.py:50 kram/gtk/dialogs/repos.py:152
+#: kram/qt/copr_dialog.py:51 kram/qt/repos_dialog.py:67
 msgid "Packages"
 msgstr "Paket"
 
@@ -3369,8 +3525,8 @@ msgstr "Aktivera"
 msgid "Disable"
 msgstr "Inaktivera"
 
-#: kram/gtk/dialogs/copr.py:59 kram/gtk/dialogs/repos.py:64
-#: kram/qt/copr_dialog.py:66 kram/qt/repos_dialog.py:120
+#: kram/gtk/dialogs/copr.py:59 kram/gtk/dialogs/repos.py:67
+#: kram/qt/copr_dialog.py:66 kram/qt/repos_dialog.py:103
 msgid "Remove…"
 msgstr "Ta bort…"
 
@@ -3432,8 +3588,8 @@ msgstr "Transaktionshistorik"
 msgid "Filter by package name"
 msgstr "Filtrera efter paketnamn"
 
-#: kram/gtk/dialogs/history.py:72 kram/gtk/dialogs/repos.py:139
-#: kram/qt/history_dialog.py:61 kram/qt/repos_dialog.py:66
+#: kram/gtk/dialogs/history.py:72 kram/gtk/dialogs/repos.py:150
+#: kram/qt/history_dialog.py:61 kram/qt/repos_dialog.py:67
 msgid "ID"
 msgstr "ID"
 
@@ -3481,6 +3637,44 @@ msgstr "Detaljer"
 #: kram/gtk/dialogs/install.py:96 kram/qt/install_dialog.py:114
 msgid "Scripts"
 msgstr "Skript"
+
+#: kram/gtk/dialogs/mirrors.py:44 kram/gtk/dialogs/repos.py:155
+#: kram/qt/mirrors_dialog.py:45 kram/qt/repos_dialog.py:68
+msgid "Mirror"
+msgstr "Spegel"
+
+#: kram/gtk/dialogs/mirrors.py:45 kram/qt/mirrors_dialog.py:45
+msgid "Country"
+msgstr "Land"
+
+#: kram/gtk/dialogs/mirrors.py:46 kram/qt/mirrors_dialog.py:45
+msgid "Protocol"
+msgstr "Protokoll"
+
+#: kram/gtk/dialogs/mirrors.py:47 kram/qt/mirrors_dialog.py:45
+msgid "Response"
+msgstr "Svarstid"
+
+#: kram/gtk/dialogs/mirrors.py:48 kram/qt/mirrors_dialog.py:45
+msgid "Speed"
+msgstr "Hastighet"
+
+#: kram/gtk/dialogs/mirrors.py:49 kram/qt/mirrors_dialog.py:45
+msgid "Note"
+msgstr "Anmärkning"
+
+#: kram/gtk/dialogs/mirrors.py:53 kram/gtk/dialogs/mirrors.py:100
+#: kram/qt/mirrors_dialog.py:62 kram/qt/mirrors_dialog.py:128
+msgid "Test Speed"
+msgstr "Testa hastighet"
+
+#: kram/gtk/dialogs/mirrors.py:55 kram/qt/mirrors_dialog.py:65
+msgid "Use Selected Mirror"
+msgstr "Använd vald spegel"
+
+#: kram/gtk/dialogs/mirrors.py:100 kram/qt/mirrors_dialog.py:128
+msgid "Stop Test"
+msgstr "Stoppa test"
 
 #: kram/gtk/dialogs/notifier.py:77 kram/qt/notifier_dialog.py:130
 msgid ""
@@ -3532,28 +3726,33 @@ msgstr "Installation"
 msgid "Close when finished successfully"
 msgstr "Stäng när det har slutförts"
 
-#: kram/gtk/dialogs/repos.py:40 kram/qt/repos_dialog.py:56
+#: kram/gtk/dialogs/repos.py:44 kram/qt/repos_dialog.py:57
 msgid "Filter…"
 msgstr "Filtrera…"
 
-#: kram/gtk/dialogs/repos.py:43 kram/qt/repos_dialog.py:60
+#: kram/gtk/dialogs/repos.py:47 kram/qt/repos_dialog.py:61
 msgid "Show debuginfo and source repositories"
 msgstr "Visa förråd för debuginfo och källkod"
 
-#: kram/gtk/dialogs/repos.py:142 kram/qt/repos_dialog.py:66
+#: kram/gtk/dialogs/repos.py:69 kram/gtk/dialogs/repos.py:208
+#: kram/qt/repos_dialog.py:105 kram/qt/repos_dialog.py:217
+msgid "Mirrors…"
+msgstr "Speglar…"
+
+#: kram/gtk/dialogs/repos.py:153 kram/qt/repos_dialog.py:67
 msgid "Priority"
 msgstr "Prioritet"
 
-#: kram/gtk/dialogs/repos.py:194 kram/qt/repos_dialog.py:186
+#: kram/gtk/dialogs/repos.py:207 kram/qt/repos_dialog.py:214
 msgid "Show Packages"
 msgstr "Visa paket"
 
-#: kram/gtk/dialogs/repos.py:195 kram/qt/repos_dialog.py:189
+#: kram/gtk/dialogs/repos.py:209 kram/qt/repos_dialog.py:220
 msgid "Remove Repository…"
 msgstr "Ta bort förråd…"
 
-#: kram/gtk/dialogs/repos.py:199 kram/gtk/files.py:123 kram/qt/file_list.py:237
-#: kram/qt/repos_dialog.py:177
+#: kram/gtk/dialogs/repos.py:213 kram/gtk/files.py:123 kram/qt/file_list.py:237
+#: kram/qt/repos_dialog.py:205
 msgid "Copy Path"
 msgstr "Kopiera sökväg"
 
@@ -3640,19 +3839,19 @@ msgstr "Sök (Ctrl+F)"
 msgid "The list is filtered by the search text"
 msgstr "Listan filtreras med söktexten"
 
-#: kram/gtk/window.py:97 kram/qt/main_window.py:70
+#: kram/gtk/window.py:99 kram/qt/main_window.py:70
 msgid "Package Manager"
 msgstr "Pakethanterare"
 
-#: kram/gtk/window.py:432 kram/qt/main_window.py:514
+#: kram/gtk/window.py:463 kram/qt/main_window.py:536
 msgid "Open Package File"
 msgstr "Öppna paketfil"
 
-#: kram/gtk/window.py:433 kram/qt/main_window.py:515
+#: kram/gtk/window.py:464 kram/qt/main_window.py:537
 msgid "RPM packages (*.rpm)"
 msgstr "RPM-paket (*.rpm)"
 
-#: kram/gtk/window.py:506 kram/qt/main_window.py:401
+#: kram/gtk/window.py:537 kram/qt/main_window.py:426
 msgid "A Synaptic-style package manager for Fedora."
 msgstr "En pakethanterare för Fedora i Synaptics anda."
 
@@ -3694,13 +3893,13 @@ msgid_plural "The package information is {days} days old"
 msgstr[0] "Paketinformationen är {days} dag gammal"
 msgstr[1] "Paketinformationen är {days} dagar gammal"
 
-#: kram/qt/main_window.py:403
-msgid "Released under the MIT License."
-msgstr "Utgiven under MIT-licensen."
-
-#: kram/qt/main_window.py:406
+#: kram/qt/about_dialog.py:29
 msgid "What's New"
 msgstr "Nyheter"
+
+#: kram/qt/main_window.py:428
+msgid "Released under the MIT License."
+msgstr "Utgiven under MIT-licensen."
 
 #: kram/qt/toolbar.py:25
 msgid "Main toolbar"

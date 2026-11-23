@@ -21,7 +21,8 @@ from ..core.filters import UPGRADES_FIXES, UPGRADES_SECURITY, UPGRADES_SECURITY_
 from ..core.history import Change, UndoProblem, UndoStep, changes_comps, plan_undo
 from ..core.mainloop import Post, Signal
 from ..core.marks import Action, group_request
-from ..core.model import CatalogSnapshot, GroupInfo, PkgRow, Status, TransactionPreview
+from ..core.mirrors import MirrorSource, source_of
+from ..core.model import CatalogSnapshot, GroupInfo, PkgRow, RepoInfo, Status, TransactionPreview
 from ..core.repo_files import file_owners
 from ..core.search import MODE_LABELS, Mode, NarrowingSearch, SearchIndex
 from ..core.settings import store as settings
@@ -37,8 +38,10 @@ from .details import DetailsLoader, DetailsSink
 from .doc import Doc
 from .marking import Marker, group_menu
 from .markings import ask_markings_file, save_markings
+from .mirrors import MirrorChoice
 from .package_list import PackageList, Sort
 from .ports import CANCEL, OK, Button, Question, Ui
+from .repos import ReposData
 from .scheduler import Scheduler
 from .search import SearchController
 from .sidebar import SidebarModel
@@ -56,10 +59,10 @@ LONG_MESSAGE_MS = 8000
 
 @dataclass(frozen=True)
 class ReposChoice:
-    """What the user did in the Repositories dialog: show one repository's packages, remove repositories, or
-    enable and disable them (`changes`: repo id -> enabled)."""
+    """What the Repositories dialog closed with: show one repository's packages, or enable and disable repositories
+    (`changes`: repo id -> enabled). Removals and mirrors are done while it stays open (Browser.remove_repos,
+    Browser.open_mirrors)."""
     show_repo: str | None = None
-    remove_repos: tuple[str, ...] = ()
     changes: dict | None = None
 
 
@@ -118,8 +121,15 @@ class BrowserView(Protocol):
         """Run a helper request with its progress; `done(final event)` if it succeeded, None if not."""
         ...
 
-    def show_repos(self, snap: CatalogSnapshot, counts: dict, owners: dict, listed: Counter, installed: Counter,
-                   done: Callable[[ReposChoice | None], None]) -> None: ...
+    def show_repos(self, data: ReposData, done: Callable[[ReposChoice | None], None]) -> None:
+        """The Repositories dialog. While it is open, the window gives it `repos_data` of every new catalog."""
+        ...
+
+    def show_mirrors(self, repo: RepoInfo, source: MirrorSource, fastestmirror: bool,
+                     apply: Callable[[MirrorChoice], None]) -> None:
+        """The mirrors of `repo`, over the Repositories dialog. `apply(choice)` runs a choice while the dialog stays
+        open; after every reload the window gives the dialog `mirror_state` of the new catalog."""
+        ...
 
     def quit(self) -> None:
         """Close Kram: a transaction removed the front end it is running."""
@@ -818,30 +828,63 @@ class Browser:
     def open_repos(self) -> None:
         if not self.snapshot or self.busy():
             return
-        paths = [r.file_path for r in self.snapshot.repos]
-        self.dnf.submit(lambda: (self.catalog.repo_package_counts(), file_owners(paths)), self._show_repos,
+        self.repos_data(self.snapshot, lambda data: self.view.show_repos(data, self._repos_chosen))
+
+    def repos_data(self, snap: CatalogSnapshot, done: Callable[[ReposData], None]) -> None:
+        """What the Repositories dialog shows for `snap`, read on the dnf thread; `done(data)` on the main thread."""
+        paths = [r.file_path for r in snap.repos]
+
+        def ready(result) -> None:
+            counts, owners = result
+            done(ReposData(snap.repos, counts, owners, Counter(r.origin_repo for r in snap.rows),
+                           Counter(r.from_repo_id for r in snap.rows if r.installed), self.mirror_variables(snap)))
+        self.dnf.submit(lambda: (self.catalog.repo_package_counts(), file_owners(paths)), ready,
                         lambda e: self.ui.warn("Kram", _("Could not read the repositories:\n\n{error}").format(
                             error=e)))
-
-    def _show_repos(self, result) -> None:
-        counts, owners = result
-        snap = self.snapshot
-        self.view.show_repos(snap, counts, owners, Counter(r.origin_repo for r in snap.rows),
-                             Counter(r.from_repo_id for r in snap.rows if r.installed), self._repos_chosen)
 
     def _repos_chosen(self, choice: ReposChoice | None) -> None:
         if choice is None:
             return
         if choice.show_repo:
             self.show_repo_packages(choice.show_repo)
-        elif choice.remove_repos:
-            # back to the list once it is reloaded without them
-            self.once_loaded(lambda _snap: self.open_repos())
-            n = len(choice.remove_repos)
-            self.run_helper_and_reload({"op": "repo_remove", "repos": list(choice.remove_repos)},
-                                       ngettext("Removing {n} repository", "Removing {n} repositories", n).format(n=n))
         elif choice.changes:
             self.run_helper_and_reload({"op": "repo_set_enabled", "repos": choice.changes}, _("Changing repositories"))
+
+    def remove_repos(self, repo_ids: list[str]) -> None:
+        """Remove repositories, from the Repositories dialog: it stays open and shows the list after the reload."""
+        n = len(repo_ids)
+        self.run_helper_and_reload({"op": "repo_remove", "repos": list(repo_ids)},
+                                   ngettext("Removing {n} repository", "Removing {n} repositories", n).format(n=n))
+
+    def mirror_variables(self, snap: CatalogSnapshot | None = None) -> dict[str, str]:
+        snap = snap or self.snapshot
+        return {"releasever": snap.releasever, "basearch": snap.basearch} if snap else {}
+
+    def open_mirrors(self, repo_id: str) -> None:
+        """The mirrors dialog of a repository, over the Repositories dialog, which stays open."""
+        repo = next((r for r in self.snapshot.repos if r.id == repo_id), None) if self.snapshot else None
+        source = source_of(repo, self.mirror_variables()) if repo else None
+        if source is None or self.busy():
+            return
+        self.view.show_mirrors(repo, source, self.snapshot.fastestmirror, self.apply_mirror_choice)
+
+    def mirror_state(self, snap: CatalogSnapshot, repo_id: str) -> tuple[MirrorSource, bool] | None:
+        """(where `repo_id` takes its mirrors from, dnf's fastestmirror) in `snap`; None if it has no mirrors now."""
+        repo = next((r for r in snap.repos if r.id == repo_id), None)
+        source = source_of(repo, self.mirror_variables(snap)) if repo else None
+        return (source, snap.fastestmirror) if source is not None else None
+
+    def apply_mirror_choice(self, choice: MirrorChoice) -> None:
+        """Run a choice of the Mirrors dialog, which stays open; the reload then shows it the new state."""
+        if not choice.repo and choice.fastestmirror is None:
+            return
+        request: dict = {"op": "mirrors"}
+        if choice.repo:
+            request["pin"] = {"repo": choice.repo, "baseurl": choice.baseurl}
+        if choice.fastestmirror is not None:
+            request["fastestmirror"] = choice.fastestmirror
+        title = _("Changing the mirror") if choice.repo else _("Changing the mirror settings")
+        self.run_helper_and_reload(request, title)
 
     def show_repo_packages(self, repo_id: str) -> None:
         """The repository's entry of the Origin filters, with the search cleared."""

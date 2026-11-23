@@ -50,7 +50,7 @@ def test_the_id_and_the_path_fit_when_the_window_is_wide(app):
     assert not dlg.table.horizontalScrollBar().isVisible()
 
 
-@pytest.mark.parametrize("width", [1100, 1180])
+@pytest.mark.parametrize("width", [1200, 1300])
 def test_a_narrower_window_cuts_the_path_not_the_id_and_does_not_scroll(app, width):
     dlg = shown(app, width)
     assert dlg.table.columnWidth(COL_ID) >= text_width(dlg, COPR_ID)  # the id is always whole
@@ -144,8 +144,8 @@ def test_every_cell_has_the_repositorys_menu(app, monkeypatch):
         dlg._context_menu(dlg.table.visualItemRect(dlg.table.item(0, col)).center())
     assert len(FakeMenu.opened) == dlg.table.columnCount()
     entries = FakeMenu.opened[0].entries
-    assert [e and e.text for e in entries] == ["Show Packages", "Remove Repository…", None, "Copy Path",
-                                               "Show in File Manager"]
+    assert [e and e.text for e in entries] == ["Show Packages", "Mirrors…", "Remove Repository…", None,
+                                               "Copy Path", "Show in File Manager"]
     dlg._context_menu(QPoint(-5, -5))  # nowhere: no menu
     assert len(FakeMenu.opened) == dlg.table.columnCount()
 
@@ -235,6 +235,24 @@ def test_removal_of_a_single_repository(app):
     assert "/etc/yum.repos.d/vscode.repo" in box.informative and "installed" not in box.informative
     assert "show" not in [b.id for b in box.buttons]  # nothing installed from it
     assert dlg.remove_repos == ["code"]
+
+
+@pytest.mark.feature(Feature.DIALOG_REPOSITORIES_REMOVE_IN_PLACE, front="qt")
+@pytest.mark.feature(Feature.DIALOG_REPOSITORIES_UPDATES_IN_PLACE, front="qt")
+def test_a_removal_runs_while_the_dialog_stays_open_and_it_then_shows_the_new_list(app):
+    from kram.app.repos import ReposData
+    removed = []
+    dlg = ReposDialog(MORE, Counter(), None, on_remove=removed.append)
+    dlg.show()
+    dlg.repos._ui = RecordingUi(["remove"])
+    select(dlg, "insync")
+    dlg.remove_btn.click()
+    assert removed == [["insync", "insync-source"]] and dlg.isVisible() and dlg.result() == 0
+    select(dlg, "updates")
+    dlg.set_data(ReposData([r for r in MORE if not r.id.startswith("insync")], Counter({"updates": 5})))
+    ids = [dlg.table.item(i, repos_dialog.COL_ID).text() for i in range(dlg.table.rowCount())]
+    assert "insync" not in ids and "updates" in ids and dlg.isVisible()
+    assert dlg._selected_id() == "updates"  # the selection stays on its repository
 
 
 def test_show_in_file_manager_selects_the_file_or_falls_back_to_its_folder():

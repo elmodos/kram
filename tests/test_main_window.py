@@ -12,7 +12,7 @@ pytest.importorskip("PySide6.QtWidgets")
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from PySide6.QtCore import QObject, Signal
-from PySide6.QtWidgets import QApplication, QDialog
+from PySide6.QtWidgets import QApplication, QDialog, QMessageBox
 
 from kram.app.marking import group_menu
 from kram.core import net
@@ -710,7 +710,7 @@ def test_no_refresh_while_the_marks_are_resolved(window, monkeypatch):
 
 def test_a_failed_resolve_clears_the_status_and_allows_a_retry(window, monkeypatch):
     jobs = _marked_window(window, monkeypatch)
-    monkeypatch.setattr(main_window.QMessageBox, "critical", lambda *a: None)
+    monkeypatch.setattr(QMessageBox, "critical", lambda *a: None)
     window.browser.apply()
     jobs[0][2](RuntimeError("boom"))
     assert not window.browser.busy() and "Resolving" not in window.status.text()
@@ -763,7 +763,7 @@ def test_a_progress_dialog_for_a_refused_request_stays_disconnected(app, monkeyp
         def request(self, _request):
             return False
     warned = []
-    monkeypatch.setattr(main_window.QMessageBox, "warning", lambda *a: warned.append(a))
+    monkeypatch.setattr(QMessageBox, "warning", lambda *a: warned.append(a))
     import kram.qt.progress_dialog as progress_dialog
     monkeypatch.setattr(progress_dialog.QMessageBox, "warning", lambda *a: warned.append(a))
     client = Busy()
@@ -818,3 +818,41 @@ def test_marking_recounts_only_the_marked_entry(window, monkeypatch):
     assert calls == []  # the status predicates did not run again over the catalog
     marked = window.sidebar.item_of("status:marked")
     assert marked.text(0).endswith("(1)")
+
+
+@pytest.mark.feature(Feature.DIALOG_MIRRORS_OVER_REPOSITORIES, front="qt")
+def test_mirrors_opens_over_the_repositories_dialog_and_its_list_updates_in_place(window, monkeypatch):
+    from collections import Counter
+
+    from kram.app.repos import ReposData
+    from kram.core.model import Origin, RepoInfo
+    repo = RepoInfo("updates", "Updates", True, Origin.FEDORA, 60, 99, "", metalink="https://mirrors.example/m")
+    b, seen = window.browser, {}
+
+    class Mirrors:
+        def __init__(self, repo, source, fastest, parent, **kw):
+            seen["parent"] = parent
+            self.choice = None
+
+        def exec(self):
+            return 0
+
+        def deleteLater(self):
+            pass
+    monkeypatch.setattr(main_window, "MirrorsDialog", Mirrors)
+    data = ReposData([repo], Counter())
+    monkeypatch.setattr(b, "repos_data", lambda snap, done: done(data))
+
+    def exec_repos(dlg):
+        monkeypatch.setattr(QApplication, "activeModalWidget", staticmethod(lambda: dlg))
+        window.show_mirrors(repo, None, False, lambda choice: None)
+        updated = []
+        monkeypatch.setattr(dlg, "set_data", updated.append)
+        b.catalog_loaded.emit(SimpleNamespace())  # the reload after a change made from it
+        seen["updated"] = updated
+        return 0
+    monkeypatch.setattr(main_window.ReposDialog, "exec", exec_repos)
+    window.show_repos(data, lambda choice: seen.setdefault("closed", choice))
+    assert isinstance(seen["parent"], main_window.ReposDialog)  # over Repositories, which was still open
+    assert seen["updated"] == [data] and seen["closed"].changes is None
+    b.catalog_loaded.emit(SimpleNamespace())  # after it closed: nothing more for it

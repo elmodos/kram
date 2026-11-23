@@ -78,13 +78,28 @@ def test_rejects_bad_input():
         '{"op": "remove_leftovers", "paths": ["/etc/passwd"]}',
         '{"op": "remove_leftovers", "paths": ["/etc/x/../shadow.rpmsave"]}',
         '{"op": "remove_leftovers", "paths": ["/var/x.rpmsave"]}',
+        '{"op": "mirrors"}',
+        '{"op": "mirrors", "fastestmirror": "yes"}',
+        '{"op": "mirrors", "pin": "updates"}',
+        '{"op": "mirrors", "pin": {"repo": "-updates", "baseurl": null}}',
+        '{"op": "mirrors", "pin": {"repo": "updates; rm", "baseurl": null}}',
+        '{"op": "mirrors", "pin": {"baseurl": "https://mirror.example/fedora/"}}',
+        '{"op": "mirrors", "pin": {"repo": "updates", "baseurl": "https://mirror.example/fedora"}}',
+        '{"op": "mirrors", "pin": {"repo": "updates", "baseurl": "ftp://mirror.example/fedora/"}}',
+        '{"op": "mirrors", "pin": {"repo": "updates", "baseurl": "file:///etc/"}}',
+        '{"op": "mirrors", "pin": {"repo": "updates", "baseurl": "https://user:pw@mirror.example/fedora/"}}',
+        '{"op": "mirrors", "pin": {"repo": "updates", "baseurl": "https://mirror.example/f/$releasever/"}}',
+        '{"op": "mirrors", "pin": {"repo": "updates", "baseurl": "https://mirror.example/a b/"}}',
+        '{"op": "mirrors", "pin": {"repo": "updates", "baseurl": "https://mirror.example/f/?x=1/"}}',
+        '{"op": "mirrors", "pin": {"repo": "updates", "baseurl": 7}}',
+        '{"op": "mirrors", "pin": {"repo": "no-such-repo-anywhere", "baseurl": null}}',
         '{"op": "refresh", "repos": []}',
         '{"op": "refresh", "repos": "fedora"}',
         '{"op": "refresh", "repos": ["-fedora"]}',
         '{"op": "refresh", "repos": ["fedora; rm -rf /"]}',
         '{"op": "refresh", "repos": [7]}',
     )
-    assert len(events) == 61
+    assert len(events) == 76
     assert all(ev["event"] == "done" and ev["ok"] is False and ev["stage"] == "protocol" for ev in events)
 
 

@@ -48,6 +48,9 @@ To release a front end: make every entry `SUPPORTED`, `PARTIAL` or `NOT_INTENDED
 
 ## Adding a feature
 
+Do this first, before the code: the list is the plan. Give every separately visible part of a feature its own name
+(a dialog, each of its buttons, a column, a status), not one entry for the whole.
+
 1. Add the name to `Feature` in its sorted place, with its scope prefix, and its description to `DESCRIPTIONS`.
    If it is an action of the main window or a setting, name it in `ACTION_FEATURES` or `SETTING_FEATURES`: a test fails
    for an action or a setting that has no feature.

@@ -450,8 +450,9 @@ def test_the_repositories_dialog_toggles_filters_and_chooses():
     win = Gtk.Window(default_width=1200, default_height=700)
     win.present()
     closed = []
+    removed = []
     dlg = ReposDialog(_repos(), Counter({"fedora": 70000, "code": 3}), lambda d, ok: closed.append((d, ok)),
-                      listed=Counter({"code": 3}), installed=Counter({"code": 1}))
+                      listed=Counter({"code": 3}), installed=Counter({"code": 1}), on_remove=removed.append)
     dlg.present(win)
     spin(seconds=0.3)
     assert dlg.selection.get_n_items() == 2  # no debuginfo repository unless asked for
@@ -472,14 +473,41 @@ def test_the_repositories_dialog_toggles_filters_and_chooses():
     menu = dlg.menu_model("code")
     labels = [menu.get_item_link(s, "section").get_item_attribute_value(i, "label", None).get_string()
               for s in range(menu.get_n_items()) for i in range(menu.get_item_link(s, "section").get_n_items())]
-    assert labels == ["Show Packages", "Remove Repository…", "Copy Path", "Show in File Manager"]
-    # removing it closes with the choice
+    assert labels == ["Show Packages", "Mirrors…", "Remove Repository…", "Copy Path", "Show in File Manager"]
+    # removing it runs while the dialog stays open
     dlg.repos._ui = RecordingUi(["remove"])
     _select_repo(dlg, "code")
     assert dlg.remove_btn.get_sensitive()
     dlg.remove_btn.emit("clicked")
-    spin(lambda: bool(closed), 2)
-    assert closed and closed[0][1] is False and dlg.remove_repos == ["code"]
+    spin(seconds=0.2)
+    assert removed == [["code"]] and not closed
+    win.destroy()
+
+
+@pytest.mark.feature(Feature.DIALOG_REPOSITORIES_REMOVE_IN_PLACE, front="gtk")
+@pytest.mark.feature(Feature.DIALOG_REPOSITORIES_UPDATES_IN_PLACE, front="gtk")
+def test_the_repositories_dialog_stays_open_and_shows_the_list_after_a_removal():
+    from collections import Counter
+
+    from kram.app.ports import RecordingUi
+    from kram.app.repos import ReposData
+    from kram.gtk.dialogs.repos import ReposDialog
+    win = Gtk.Window(default_width=1300, default_height=700)
+    win.present()
+    closed, removed = [], []
+    dlg = ReposDialog(_repos(), Counter(), lambda d, ok: closed.append(ok), on_remove=removed.append)
+    dlg.present(win)
+    spin(seconds=0.2)
+    dlg.repos._ui = RecordingUi(["remove"])
+    _select_repo(dlg, "fedora")
+    dlg.remove_btn.emit("clicked")  # "fedora" here is the user's own file: removable
+    spin(seconds=0.2)
+    assert removed and not closed
+    # the reload after the removal: the list without it, the dialog still open
+    dlg.set_data(ReposData([r for r in _repos() if r.id != "fedora"], Counter({"code": 3})))
+    spin(seconds=0.2)
+    assert [dlg.selection.get_item(i).data.repo.id for i in range(dlg.selection.get_n_items())] == ["code"]
+    assert not closed
     win.destroy()
 
 
@@ -497,6 +525,185 @@ def test_the_repositories_dialog_applies():
     dlg.apply_btn.emit("clicked")
     spin(lambda: bool(closed), 2)
     assert closed == [True] and dlg.changes() == {"fedora": False}
+    win.destroy()
+
+
+def _mirror_dialog(source=None, fastest=False, mirrors=None):
+    """A mirrors dialog over a fake network; (dialog, net, applied choices, window). `dlg.closed_calls` records its
+    closing."""
+    from test_mirrors_flow import SOURCE, A, B, C, Net
+
+    from kram.core.model import Origin, RepoInfo
+    from kram.gtk.dialogs.mirrors import MirrorsDialog
+    repo = RepoInfo("updates", "Fedora 45 - Updates", True, Origin.FEDORA, 60, 99, "/usr/share/dnf5/repos.d/fedora.repo",
+                    metalink="https://mirrors.example/metalink")
+    net, closed, applied = Net(), [], []
+    win = Gtk.Window(default_width=1000, default_height=700)
+    win.present()
+    dlg = MirrorsDialog(repo, source or SOURCE, fastest, closed.append, on_choice=applied.append, fetch=net.fetch,
+                        speed_test=net.speed_test)
+    dlg.closed_calls = closed
+    dlg.present(win)
+    net.requests[0].done(list(mirrors or (A, B, C)))
+    spin(lambda: dlg.store.get_n_items() == len(mirrors or (A, B, C)), 2)
+    return dlg, net, applied, win
+
+
+def _select_mirror(dlg, url: str) -> None:
+    for i in range(dlg.selection.get_n_items()):
+        if dlg.selection.get_item(i).data.mirror.url == url:
+            dlg.selection.set_selected(i)
+            return
+    raise AssertionError(url)
+
+
+@pytest.mark.feature(Feature.DIALOG_MIRRORS, front="gtk")
+@pytest.mark.feature(Feature.DIALOG_MIRRORS_PIN, front="gtk")
+@pytest.mark.feature(Feature.DIALOG_MIRRORS_SPEED_TEST, front="gtk")
+def test_the_mirrors_dialog_tests_ranks_and_uses_a_mirror():
+    from test_mirrors_flow import A, B, C, probe
+
+    from kram.app.mirrors import MirrorChoice
+    dlg, net, applied, win = _mirror_dialog()
+    assert dlg.get_title() == "Mirrors of Fedora 45 - Updates"
+    assert not dlg.use_btn.get_sensitive()
+    dlg.test_btn.emit("clicked")
+    [test] = net.tests
+    assert test.started
+    _select_mirror(dlg, A.url)
+    test.probe(A, probe(0.3, 1_000_000))
+    test.probe(B, probe(0.1, 8_000_000))
+    test.probe(C, probe(None, error="Connection refused"))
+    test.done()
+    assert [dlg.selection.get_item(i).data.name for i in range(3)] == ["b.example/f", "a.example/f", "c.example/f"]
+    assert [dlg.selection.get_item(i).data.note for i in range(3)] == ["Fastest", "", "Connection refused"]
+    assert dlg._selected_url() == A.url  # the selection stays with its mirror
+    _select_mirror(dlg, C.url)
+    assert not dlg.use_btn.get_sensitive()
+    _select_mirror(dlg, B.url)
+    assert dlg.use_btn.get_sensitive()
+    dlg.use_btn.emit("clicked")
+    spin(seconds=0.1)
+    assert applied == [MirrorChoice("updates", B.url)] and not dlg.closed_calls  # applied, still open
+    win.destroy()
+
+
+@pytest.mark.feature(Feature.DIALOG_MIRRORS_IN_USE, front="gtk")
+def test_the_pinned_mirror_is_marked_in_use_and_bold():
+    from test_mirrors_flow import PINNED
+    dlg, _net, _applied, win = _mirror_dialog(PINNED)
+    spin(seconds=0.3)
+    assert [dlg.selection.get_item(i).data.note for i in range(3)] == ["", "In use", ""]
+    bold = [w.get_text() for w in _walk(dlg.table) if isinstance(w, Gtk.Label) and w.has_css_class("heading")]
+    assert bold == ["b.example/f"]
+    win.destroy()
+
+
+@pytest.mark.feature(Feature.DIALOG_MIRRORS_AUTOMATIC, front="gtk")
+def test_the_mirrors_dialog_goes_back_to_automatic():
+    from test_mirrors_flow import PINNED
+
+    from kram.app.mirrors import MirrorChoice
+    dlg, _net, applied, win = _mirror_dialog(PINNED)
+    assert dlg.selection.get_item(1).data.note == "In use"
+    assert dlg.automatic_btn.get_sensitive()
+    dlg.automatic_btn.emit("clicked")
+    spin(seconds=0.1)
+    assert applied == [MirrorChoice("updates", None)] and not dlg.closed_calls
+    win.destroy()
+
+
+@pytest.mark.feature(Feature.DIALOG_MIRRORS_FASTEST, front="gtk")
+def test_the_mirrors_dialog_switches_the_fastest_mirror_option():
+    from kram.app.mirrors import MirrorChoice
+    dlg, _net, applied, win = _mirror_dialog(fastest=False)
+    assert dlg.fastest_btn.get_label() == "Turn On Fastest Mirror Search"
+    dlg.fastest_btn.emit("clicked")
+    spin(seconds=0.1)
+    assert applied == [MirrorChoice(fastestmirror=True)] and not dlg.closed_calls
+    win.destroy()
+
+
+@pytest.mark.feature(Feature.DIALOG_MIRRORS_APPLY_IN_PLACE, front="gtk")
+def test_the_mirrors_dialog_shows_the_new_state_after_a_choice_was_applied():
+    from test_mirrors_flow import SOURCE, A
+
+    from kram.app.mirrors import MirrorChoice
+    from kram.core.mirrors import MirrorSource, SourceKind
+    dlg, _net, applied, win = _mirror_dialog(fastest=False)
+    _select_mirror(dlg, A.url)
+    dlg.use_btn.emit("clicked")
+    assert applied == [MirrorChoice("updates", A.url)] and not dlg.closed_calls
+    dlg.set_state(MirrorSource(SourceKind.METALINK, SOURCE.url, A.url), True)  # after the reload
+    spin(seconds=0.2)
+    assert dlg.selection.get_item(0).data.note == "In use" and dlg.selection.get_item(0).data.current
+    assert dlg.status.get_text() == "The repository now downloads from a.example/f."
+    assert dlg.automatic_btn.get_sensitive() and not dlg.use_btn.get_sensitive()
+    assert dlg.fastest_btn.get_label() == "Turn Off Fastest Mirror Search"
+    win.destroy()
+
+
+def test_closing_the_mirrors_dialog_stops_the_test():
+    dlg, net, applied, win = _mirror_dialog()
+    dlg.test_btn.emit("clicked")
+    dlg.close()
+    spin(lambda: bool(dlg.closed_calls), 2)
+    assert net.tests[0].cancelled and not applied
+    win.destroy()
+
+
+@pytest.mark.feature(Feature.DIALOG_REPOSITORIES_MIRRORS, front="gtk")
+def test_the_repositories_dialog_offers_mirrors_for_a_repository_with_a_list():
+    from collections import Counter
+
+    from kram.core.model import Origin, RepoInfo
+    from kram.gtk.dialogs.repos import ReposDialog
+    repos = [RepoInfo("updates", "Updates", True, Origin.FEDORA, 60, 99, "/usr/share/dnf5/repos.d/fedora.repo",
+                      metalink="https://mirrors.example/metalink"), *_repos()[2:]]
+    win = Gtk.Window()
+    win.present()
+    closed, asked = [], []
+    dlg = ReposDialog(repos, Counter(), lambda d, ok: closed.append(d), on_mirrors=asked.append)
+    dlg.present(win)
+    spin(seconds=0.2)
+    _select_repo(dlg, "code")
+    assert not dlg.mirrors_btn.get_sensitive() and "single address" in dlg.mirrors_btn.get_tooltip_text()
+    _select_repo(dlg, "updates")
+    assert dlg.mirrors_btn.get_sensitive()
+    dlg.mirrors_btn.emit("clicked")
+    spin(seconds=0.2)
+    assert asked == ["updates"] and not closed  # Mirrors opens over it
+    win.destroy()
+
+
+@pytest.mark.feature(Feature.DIALOG_MIRRORS_OVER_REPOSITORIES, front="gtk")
+def test_the_mirrors_dialog_is_stacked_over_the_open_repositories_dialog(monkeypatch):
+    from collections import Counter
+
+    from test_mirrors_flow import SOURCE
+
+    from kram.core.model import Origin, RepoInfo
+    from kram.gtk import window as gtk_window
+    repo = RepoInfo("updates", "Updates", True, Origin.FEDORA, 60, 99, "", metalink="https://mirrors.example/m")
+    shown = []
+
+    class Mirrors:
+        def __init__(self, *args, **kw):
+            pass
+
+        def present(self, parent):
+            shown.append(parent)
+    monkeypatch.setattr(gtk_window, "MirrorsDialog", Mirrors)
+    from kram.gtk.dialogs.repos import ReposDialog
+    win = Gtk.Window(default_width=1300, default_height=700)
+    win.present()
+    closed = []
+    repos_dialog = ReposDialog([repo], Counter(), lambda d, ok: closed.append(ok))
+    repos_dialog.present(win)
+    spin(seconds=0.2)
+    host = SimpleNamespace(browser=SimpleNamespace(catalog_loaded=SimpleNamespace(connect=lambda f: None)))
+    gtk_window.MainWindow.show_mirrors(host, repo, SOURCE, False, lambda c: None)
+    assert shown == [host] and not closed  # on the window, where libadwaita stacks it over the open Repositories
     win.destroy()
 
 
@@ -928,3 +1135,28 @@ def test_an_rpm_dropped_on_the_window_opens_the_installer(monkeypatch):
     assert win._dropped(None, other, 0, 0) is False
     win.close()
     spin(seconds=0.2)
+
+
+@pytest.mark.feature(Feature.DIALOG_REPOSITORIES_MIRROR_COLUMN, front="gtk")
+def test_the_repositories_table_shows_which_mirror_each_repository_uses(tmp_path):
+    from collections import Counter
+
+    from kram.core.model import Origin, RepoInfo
+    from kram.gtk.dialogs.repos import ReposDialog
+    f = tmp_path / "fedora-updates.repo"
+    f.write_text("[pinned]\nmetalink=https://mirrors.example/metalink\n")
+    repos = [RepoInfo("updates", "Updates", True, Origin.FEDORA, 60, 99, "", metalink="https://mirrors.example/m"),
+             RepoInfo("pinned", "Pinned", True, Origin.FEDORA, 60, 99, str(f),
+                      baseurls=("https://mirror.karneval.cz/pub/linux/fedora/",)),
+             RepoInfo("code", "Visual Studio Code", True, Origin.THIRD_PARTY, 60, 99, "",
+                      baseurls=("https://packages.example/",))]
+    win = Gtk.Window(default_width=1400, default_height=700)
+    win.present()
+    dlg = ReposDialog(repos, Counter(), lambda d, ok: None)
+    dlg.present(win)
+    spin(seconds=0.4)
+    assert {ln.repo.id: ln.mirror for ln in (dlg.selection.get_item(i).data for i in range(3))} == {
+        "updates": "Automatic", "pinned": "mirror.karneval.cz", "code": ""}
+    texts = [w.get_text() for w in _walk(dlg.table) if isinstance(w, Gtk.Label)]
+    assert "mirror.karneval.cz" in texts and "Automatic" in texts
+    win.destroy()

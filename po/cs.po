@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kram\n"
 "Report-Msgid-Bugs-To: https://github.com/elmodos/kram/issues\n"
-"POT-Creation-Date: 2026-11-22 17:47+0000\n"
+"POT-Creation-Date: 2026-11-23 10:10+0000\n"
 "PO-Revision-Date: 2026-11-04 14:07+0200\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -110,7 +110,7 @@ msgid "Enable or disable software repositories"
 msgstr "Povolit nebo zakázat repozitáře softwaru"
 
 #: kram/app/actions.py:75 kram/app/empty_list.py:53
-#: kram/gtk/dialogs/repos.py:25 kram/qt/repos_dialog.py:49
+#: kram/gtk/dialogs/repos.py:28 kram/qt/repos_dialog.py:49
 msgid "Repositories"
 msgstr "Repozitáře"
 
@@ -210,7 +210,7 @@ msgstr "Nainstalovat stažený soubor .rpm (můžete jej také přetáhnout na o
 msgid "Quit"
 msgstr "Ukončit"
 
-#: kram/app/actions.py:101 kram/qt/main_window.py:399
+#: kram/app/actions.py:101 kram/qt/about_dialog.py:14
 msgid "About Kram"
 msgstr "O aplikaci Kram"
 
@@ -234,7 +234,7 @@ msgstr "Označit k aktualizaci"
 msgid "Mark for Reinstallation"
 msgstr "Označit k přeinstalaci"
 
-#: kram/app/actions.py:109 kram/app/browser.py:717
+#: kram/app/actions.py:109 kram/app/browser.py:727
 msgid "Mark for Removal"
 msgstr "Označit k odebrání"
 
@@ -559,7 +559,7 @@ msgstr[0] "+{size}, {n} balíček"
 msgstr[1] "+{size}, {n} balíčky"
 msgstr[2] "+{size}, {n} balíčků"
 
-#: kram/app/apply_review.py:321 kram/app/browser.py:633 kram/app/install.py:303
+#: kram/app/apply_review.py:321 kram/app/browser.py:643 kram/app/install.py:303
 #: kram/app/install.py:337 kram/app/install.py:397
 msgid "Resolving dependencies…"
 msgstr "Řešení závislostí…"
@@ -568,7 +568,7 @@ msgstr "Řešení závislostí…"
 msgid "These choices cannot be carried out:"
 msgstr "Tento výběr nelze provést:"
 
-#: kram/app/apply_review.py:334 kram/app/browser.py:642 kram/app/install.py:384
+#: kram/app/apply_review.py:334 kram/app/browser.py:652 kram/app/install.py:384
 #: kram/app/install.py:418
 #, python-brace-format
 msgid ""
@@ -580,7 +580,7 @@ msgstr ""
 "\n"
 "{error}"
 
-#: kram/app/browser.py:49
+#: kram/app/browser.py:52
 msgid ""
 "To keep an installed package at its version, select it and choose Package → "
 "Lock Version: upgrades then leave it out until it is unlocked."
@@ -589,7 +589,7 @@ msgstr ""
 "Balíček → Uzamknout verzi: aktualizace jej pak vynechají, dokud nebude "
 "odemčen."
 
-#: kram/app/browser.py:218
+#: kram/app/browser.py:228
 #, python-brace-format
 msgid "{n} marked change has not been applied. Quit anyway?"
 msgid_plural "{n} marked changes have not been applied. Quit anyway?"
@@ -597,15 +597,15 @@ msgstr[0] "{n} označená změna nebyla použita. Přesto ukončit?"
 msgstr[1] "{n} označené změny nebyly použity. Přesto ukončit?"
 msgstr[2] "{n} označených změn nebylo použito. Přesto ukončit?"
 
-#: kram/app/browser.py:231 kram/app/install.py:300
+#: kram/app/browser.py:241 kram/app/install.py:300
 msgid "Loading metadata…"
 msgstr "Načítání metadat…"
 
-#: kram/app/browser.py:241
+#: kram/app/browser.py:251
 msgid "Waiting for another package manager to finish…"
 msgstr "Čekání na dokončení jiného správce balíčků…"
 
-#: kram/app/browser.py:277 kram/app/install.py:345
+#: kram/app/browser.py:287 kram/app/install.py:345
 #, python-brace-format
 msgid ""
 "Could not load the package catalog:\n"
@@ -616,7 +616,7 @@ msgstr ""
 "\n"
 "{error}"
 
-#: kram/app/browser.py:345
+#: kram/app/browser.py:355
 #, python-brace-format
 msgid ""
 "Searching “{text}” ({mode}); the first search also indexes what packages "
@@ -624,44 +624,44 @@ msgid ""
 msgstr ""
 "Hledání „{text}“ ({mode}); první hledání také indexuje, co balíčky poskytují…"
 
-#: kram/app/browser.py:348
+#: kram/app/browser.py:358
 #, python-brace-format
 msgid "Searching “{text}” ({mode})…"
 msgstr "Hledání „{text}“ ({mode})…"
 
-#: kram/app/browser.py:365 kram/app/copr.py:158
+#: kram/app/browser.py:375 kram/app/copr.py:158
 #, python-brace-format
 msgid "Search failed: {error}"
 msgstr "Hledání selhalo: {error}"
 
-#: kram/app/browser.py:457
+#: kram/app/browser.py:467
 #, python-brace-format
 msgid "Nothing provides “{what}”"
 msgstr "Nic neposkytuje „{what}“"
 
-#: kram/app/browser.py:459
+#: kram/app/browser.py:469
 #, python-brace-format
 msgid "Could not look up “{what}”: {error}"
 msgstr "Nepodařilo se vyhledat „{what}“: {error}"
 
-#: kram/app/browser.py:473
+#: kram/app/browser.py:483
 #, python-brace-format
 msgid "Package {name} not found in the catalog"
 msgstr "Balíček {name} nebyl v katalogu nalezen"
 
-#: kram/app/browser.py:502
+#: kram/app/browser.py:512
 msgid "Refresh Metadata"
 msgstr "Obnovit metadata"
 
-#: kram/app/browser.py:509
+#: kram/app/browser.py:519
 msgid "Remove from History"
 msgstr "Odebrat z historie"
 
-#: kram/app/browser.py:511
+#: kram/app/browser.py:521
 msgid "Clear Search History"
 msgstr "Vymazat historii hledání"
 
-#: kram/app/browser.py:558
+#: kram/app/browser.py:568
 #, python-brace-format
 msgid "{n} marking saved to {path}"
 msgid_plural "{n} markings saved to {path}"
@@ -669,11 +669,11 @@ msgstr[0] "{n} označení uloženo do {path}"
 msgstr[1] "{n} označení uložena do {path}"
 msgstr[2] "{n} označení uloženo do {path}"
 
-#: kram/app/browser.py:566
+#: kram/app/browser.py:576
 msgid "Export List as CSV"
 msgstr "Exportovat seznam do CSV"
 
-#: kram/app/browser.py:577 kram/app/markings.py:35
+#: kram/app/browser.py:587 kram/app/markings.py:35
 #, python-brace-format
 msgid ""
 "Could not save {path}:\n"
@@ -684,7 +684,7 @@ msgstr ""
 "\n"
 "{error}"
 
-#: kram/app/browser.py:580
+#: kram/app/browser.py:590
 #, python-brace-format
 msgid "{n} package exported to {path}"
 msgid_plural "{n} packages exported to {path}"
@@ -692,11 +692,11 @@ msgstr[0] "{n} balíček exportován do {path}"
 msgstr[1] "{n} balíčky exportovány do {path}"
 msgstr[2] "{n} balíčků exportováno do {path}"
 
-#: kram/app/browser.py:583
+#: kram/app/browser.py:593
 msgid "CSV files (*.csv);;All files (*)"
 msgstr "Soubory CSV (*.csv);;Všechny soubory (*)"
 
-#: kram/app/browser.py:602
+#: kram/app/browser.py:612
 #, python-brace-format
 msgid ""
 "{n} upgrade or downgrade unmarked: the version lock keeps the installed "
@@ -714,7 +714,7 @@ msgstr[2] ""
 "Zrušeno označení {n} aktualizací nebo návratů verze: zámek ponechává "
 "nainstalované verze"
 
-#: kram/app/browser.py:605
+#: kram/app/browser.py:615
 #, python-brace-format
 msgid "Locking the version of {n} package"
 msgid_plural "Locking the versions of {n} packages"
@@ -722,7 +722,7 @@ msgstr[0] "Zamykání verze {n} balíčku"
 msgstr[1] "Zamykání verzí {n} balíčků"
 msgstr[2] "Zamykání verzí {n} balíčků"
 
-#: kram/app/browser.py:607
+#: kram/app/browser.py:617
 #, python-brace-format
 msgid "Unlocking the version of {n} package"
 msgid_plural "Unlocking the versions of {n} packages"
@@ -730,22 +730,24 @@ msgstr[0] "Odemykání verze {n} balíčku"
 msgstr[1] "Odemykání verzí {n} balíčků"
 msgstr[2] "Odemykání verzí {n} balíčků"
 
-#: kram/app/browser.py:687
+#: kram/app/browser.py:697
 msgid "Applying changes"
 msgstr "Použití změn"
 
-#: kram/app/browser.py:710
+#: kram/app/browser.py:720
 #, python-brace-format
 msgid ""
 "This removes the front end of Kram you are using ({package}). Kram closes "
 "after the changes are applied; start it again."
-msgstr "Tím se odebere rozhraní Kramu, které právě používáte ({package}). Kram se po provedení změn zavře; spusťte jej znovu."
+msgstr ""
+"Tím se odebere rozhraní Kramu, které právě používáte ({package}). Kram se po "
+"provedení změn zavře; spusťte jej znovu."
 
-#: kram/app/browser.py:713
+#: kram/app/browser.py:723
 msgid "Conflicting packages"
 msgstr "Konfliktní balíčky"
 
-#: kram/app/browser.py:714
+#: kram/app/browser.py:724
 #, python-brace-format
 msgid ""
 "{n} installed package conflicts with the marked changes and has to be "
@@ -753,18 +755,26 @@ msgid ""
 msgid_plural ""
 "{n} installed packages conflict with the marked changes and have to be "
 "removed for them:"
-msgstr[0] "{n} nainstalovaný balíček je v konfliktu s označenými změnami a musí být kvůli nim odebrán:"
-msgstr[1] "{n} nainstalované balíčky jsou v konfliktu s označenými změnami a musí být kvůli nim odebrány:"
-msgstr[2] "{n} nainstalovaných balíčků je v konfliktu s označenými změnami a musí být kvůli nim odebráno:"
+msgstr[0] ""
+"{n} nainstalovaný balíček je v konfliktu s označenými změnami a musí být "
+"kvůli nim odebrán:"
+msgstr[1] ""
+"{n} nainstalované balíčky jsou v konfliktu s označenými změnami a musí být "
+"kvůli nim odebrány:"
+msgstr[2] ""
+"{n} nainstalovaných balíčků je v konfliktu s označenými změnami a musí být "
+"kvůli nim odebráno:"
 
-#: kram/app/browser.py:742
+#: kram/app/browser.py:752
 #, python-brace-format
 msgid ""
 "The changes are applied. They removed the front end of Kram you are using "
 "({package}), so Kram closes now. Start it again."
-msgstr "Změny byly provedeny. Odebraly rozhraní Kramu, které používáte ({package}), takže se Kram nyní zavře. Spusťte jej znovu."
+msgstr ""
+"Změny byly provedeny. Odebraly rozhraní Kramu, které používáte ({package}), "
+"takže se Kram nyní zavře. Spusťte jej znovu."
 
-#: kram/app/browser.py:751
+#: kram/app/browser.py:761
 msgid ""
 "Undoing the whole transaction needs versions the repositories no longer "
 "have. What is still possible can be undone without them."
@@ -772,11 +782,11 @@ msgstr ""
 "Vrácení celé transakce potřebuje verze, které už repozitáře nemají. Co je "
 "ještě možné, lze vrátit bez nich."
 
-#: kram/app/browser.py:753
+#: kram/app/browser.py:763
 msgid "Undo What Is Possible…"
 msgstr "Vrátit, co je možné…"
 
-#: kram/app/browser.py:755
+#: kram/app/browser.py:765
 msgid ""
 "They need a version the version lock excludes. Unlock the package (Package → "
 "Unlock Version) or unmark the change."
@@ -784,35 +794,35 @@ msgstr ""
 "Vyžadují verzi, kterou zámek verzí vylučuje. Odemkněte balíček (Balíček → "
 "Odemknout verzi) nebo zrušte označení změny."
 
-#: kram/app/browser.py:757
+#: kram/app/browser.py:767
 msgid "Show Locked Packages"
 msgstr "Zobrazit uzamčené balíčky"
 
-#: kram/app/browser.py:758
+#: kram/app/browser.py:768
 msgid "Cannot apply changes"
 msgstr "Změny nelze použít"
 
-#: kram/app/browser.py:759
+#: kram/app/browser.py:769
 msgid "The marked changes cannot be carried out. Unmark or change them."
 msgstr "Označené změny nelze provést. Zrušte jejich označení nebo je upravte."
 
-#: kram/app/browser.py:760
+#: kram/app/browser.py:770
 msgid "This change cannot be carried out."
 msgstr "Tuto změnu nelze provést."
 
-#: kram/app/browser.py:801 kram/app/browser.py:806
+#: kram/app/browser.py:811 kram/app/browser.py:816
 msgid "Refreshing metadata"
 msgstr "Obnovování metadat"
 
-#: kram/app/browser.py:812
+#: kram/app/browser.py:822
 msgid "Downloading metadata again"
 msgstr "Opětovné stahování metadat"
 
-#: kram/app/browser.py:814
+#: kram/app/browser.py:824
 msgid "Cleaning the package cache"
 msgstr "Čištění mezipaměti balíčků"
 
-#: kram/app/browser.py:823
+#: kram/app/browser.py:842
 #, python-brace-format
 msgid ""
 "Could not read the repositories:\n"
@@ -823,7 +833,11 @@ msgstr ""
 "\n"
 "{error}"
 
-#: kram/app/browser.py:842
+#: kram/app/browser.py:851
+msgid "Changing repositories"
+msgstr "Změna repozitářů"
+
+#: kram/app/browser.py:857
 #, python-brace-format
 msgid "Removing {n} repository"
 msgid_plural "Removing {n} repositories"
@@ -831,24 +845,28 @@ msgstr[0] "Odebírání {n} repozitáře"
 msgstr[1] "Odebírání {n} repozitářů"
 msgstr[2] "Odebírání {n} repozitářů"
 
-#: kram/app/browser.py:844
-msgid "Changing repositories"
-msgstr "Změna repozitářů"
+#: kram/app/browser.py:886
+msgid "Changing the mirror"
+msgstr "Změna zrcadla"
 
-#: kram/app/browser.py:860 kram/app/browser.py:890
+#: kram/app/browser.py:886
+msgid "Changing the mirror settings"
+msgstr "Změna nastavení zrcadel"
+
+#: kram/app/browser.py:903 kram/app/browser.py:933
 #, python-brace-format
 msgid "Undo Transaction {id}"
 msgstr "Vrácení transakce {id}"
 
-#: kram/app/browser.py:861
+#: kram/app/browser.py:904
 msgid "The groups this transaction changed could not be read."
 msgstr "Skupiny změněné touto transakcí nelze načíst."
 
-#: kram/app/browser.py:875
+#: kram/app/browser.py:918
 msgid "cannot be marked"
 msgstr "nelze označit"
 
-#: kram/app/browser.py:886
+#: kram/app/browser.py:929
 #, python-brace-format
 msgid ""
 "Could not read what the transaction changed:\n"
@@ -859,11 +877,11 @@ msgstr ""
 "\n"
 "{error}"
 
-#: kram/app/browser.py:886
+#: kram/app/browser.py:929
 msgid "Undo Transaction"
 msgstr "Vrátit transakci"
 
-#: kram/app/browser.py:891
+#: kram/app/browser.py:934
 #, python-brace-format
 msgid "{n} change marked to undo transaction {id}."
 msgid_plural "{n} changes marked to undo transaction {id}."
@@ -871,21 +889,21 @@ msgstr[0] "Označena {n} změna k vrácení transakce {id}."
 msgstr[1] "Označeny {n} změny k vrácení transakce {id}."
 msgstr[2] "Označeno {n} změn k vrácení transakce {id}."
 
-#: kram/app/browser.py:893
+#: kram/app/browser.py:936
 #, python-brace-format
 msgid "{package}: installs {version}, {old} is no longer in the repositories"
 msgstr "{package}: nainstaluje se {version}, {old} už v repozitářích není"
 
-#: kram/app/browser.py:898
+#: kram/app/browser.py:941
 msgid "Review them, then apply."
 msgstr "Zkontrolujte je a pak je použijte."
 
-#: kram/app/browser.py:901
+#: kram/app/browser.py:944
 #, python-brace-format
 msgid "Nothing of transaction {id} can be undone."
 msgstr "Z transakce {id} nelze nic vrátit."
 
-#: kram/app/browser.py:905
+#: kram/app/browser.py:948
 #, python-brace-format
 msgid "{n} package cannot be undone:"
 msgid_plural "{n} packages cannot be undone:"
@@ -893,7 +911,7 @@ msgstr[0] "{n} balíček nelze vrátit:"
 msgstr[1] "{n} balíčky nelze vrátit:"
 msgstr[2] "{n} balíčků nelze vrátit:"
 
-#: kram/app/browser.py:909
+#: kram/app/browser.py:952
 #, python-brace-format
 msgid "{n} package comes back in another version:"
 msgid_plural "{n} packages come back in another version:"
@@ -1158,8 +1176,8 @@ msgid "Update type"
 msgstr "Typ aktualizace"
 
 #: kram/app/columns.py:28 kram/app/details.py:93 kram/app/sidebar.py:31
-#: kram/core/custom_filters.py:53 kram/gtk/dialogs/repos.py:143
-#: kram/qt/repos_dialog.py:66
+#: kram/core/custom_filters.py:53 kram/gtk/dialogs/repos.py:154
+#: kram/qt/repos_dialog.py:67
 msgid "Origin"
 msgstr "Původ"
 
@@ -1300,7 +1318,7 @@ msgstr "Označeno: {action}"
 msgid "Click for actions"
 msgstr "Klepnutím zobrazíte akce"
 
-#: kram/app/copr.py:113 kram/app/repos.py:143
+#: kram/app/copr.py:113 kram/app/repos.py:197
 #, python-brace-format
 msgid ""
 "{n} installed package comes from it. It stays installed but will no longer "
@@ -1318,13 +1336,13 @@ msgstr[2] ""
 "Pochází z něj {n} nainstalovaných balíčků. Zůstanou nainstalované, ale už "
 "nebudou dostávat aktualizace (zobrazí se jako osiřelé)."
 
-#: kram/app/copr.py:117 kram/app/repos.py:152
+#: kram/app/copr.py:117 kram/app/repos.py:206
 msgid "Remove"
 msgstr "Odebrat"
 
-#: kram/app/copr.py:118 kram/app/repos.py:153 kram/gtk/dialogs/copr.py:60
-#: kram/gtk/dialogs/repos.py:61 kram/qt/copr_dialog.py:67
-#: kram/qt/repos_dialog.py:116
+#: kram/app/copr.py:118 kram/app/repos.py:207 kram/gtk/dialogs/copr.py:60
+#: kram/gtk/dialogs/repos.py:64 kram/qt/copr_dialog.py:67
+#: kram/qt/repos_dialog.py:99
 msgid "Show packages"
 msgstr "Zobrazit balíčky"
 
@@ -2033,8 +2051,8 @@ msgstr[0] "{n} soubor nelze ověřit: chybí oprávnění ke čtení."
 msgstr[1] "{n} soubory nelze ověřit: chybí oprávnění ke čtení."
 msgstr[2] "{n} souborů nelze ověřit: chybí oprávnění ke čtení."
 
-#: kram/app/install.py:148 kram/core/search.py:36 kram/gtk/dialogs/repos.py:144
-#: kram/qt/repos_dialog.py:67
+#: kram/app/install.py:148 kram/core/search.py:36 kram/gtk/dialogs/repos.py:156
+#: kram/qt/repos_dialog.py:68
 msgid "File"
 msgstr "Soubor"
 
@@ -2325,6 +2343,132 @@ msgid_plural "{n} packages marked."
 msgstr[0] "Označen {n} balíček."
 msgstr[1] "Označeny {n} balíčky."
 msgstr[2] "Označeno {n} balíčků."
+
+#: kram/app/mirrors.py:77
+#, python-brace-format
+msgid "Mirrors of {repo}"
+msgstr "Zrcadla repozitáře {repo}"
+
+#: kram/app/mirrors.py:102
+msgid "Loading the list of mirrors…"
+msgstr "Načítání seznamu zrcadel…"
+
+#: kram/app/mirrors.py:120
+#, python-brace-format
+msgid "The repository now downloads from {mirror}."
+msgstr "Repozitář nyní stahuje ze zrcadla {mirror}."
+
+#: kram/app/mirrors.py:122
+msgid "The repository takes its mirrors from the list again."
+msgstr "Repozitář opět bere zrcadla ze seznamu."
+
+#: kram/app/mirrors.py:147
+msgid "The list has no mirrors."
+msgstr "Seznam neobsahuje žádná zrcadla."
+
+#: kram/app/mirrors.py:149
+#, python-brace-format
+msgid "{n} mirror. Test the speed to see which is the quickest."
+msgid_plural "{n} mirrors. Test the speed to see which is the quickest."
+msgstr[0] "{n} zrcadlo. Otestujte rychlost a uvidíte, které je nejrychlejší."
+msgstr[1] "{n} zrcadla. Otestujte rychlost a uvidíte, které je nejrychlejší."
+msgstr[2] "{n} zrcadel. Otestujte rychlost a uvidíte, které je nejrychlejší."
+
+#: kram/app/mirrors.py:156
+#, python-brace-format
+msgid "Could not get the list of mirrors: {error}"
+msgstr "Seznam zrcadel se nepodařilo získat: {error}"
+
+#: kram/app/mirrors.py:182
+msgid "Out of date"
+msgstr "Zastaralé"
+
+#: kram/app/mirrors.py:184
+msgid "Fastest"
+msgstr "Nejrychlejší"
+
+#: kram/app/mirrors.py:188
+msgid "In use"
+msgstr "Používá se"
+
+#: kram/app/mirrors.py:218
+msgid "Testing the mirrors…"
+msgstr "Testování zrcadel…"
+
+#: kram/app/mirrors.py:227
+msgid "The test was stopped."
+msgstr "Test byl zastaven."
+
+#: kram/app/mirrors.py:235
+#, python-brace-format
+msgid "Testing the mirrors… {done} of {n} answered"
+msgstr "Testování zrcadel… odpovědělo {done} z {n}"
+
+#: kram/app/mirrors.py:245
+#, python-brace-format
+msgid "{n} of {total} mirrors answered. The quickest is first."
+msgstr "Odpovědělo {n} z {total} zrcadel. Nejrychlejší je první."
+
+#: kram/app/mirrors.py:248
+msgid "The test is done. The quickest mirror is first."
+msgstr "Test je hotov. Nejrychlejší zrcadlo je první."
+
+#: kram/app/mirrors.py:263
+msgid "Select a mirror."
+msgstr "Vyberte zrcadlo."
+
+#: kram/app/mirrors.py:266
+msgid "This mirror did not answer the test."
+msgstr "Toto zrcadlo na test neodpovědělo."
+
+#: kram/app/mirrors.py:268
+msgid "The repository already uses this mirror."
+msgstr "Repozitář už toto zrcadlo používá."
+
+#: kram/app/mirrors.py:274
+msgid "The repository takes its mirrors from the list already."
+msgstr "Repozitář už bere zrcadla ze seznamu."
+
+#: kram/app/mirrors.py:283
+msgid ""
+"Its copy of the repository is older than another mirror's, so it may be "
+"missing updates."
+msgstr ""
+"Jeho kopie repozitáře je starší než u jiného zrcadla, takže mu mohou chybět "
+"aktualizace."
+
+#: kram/app/mirrors.py:286
+msgid "It is not reached over https."
+msgstr "Nepřistupuje se k němu přes https."
+
+#: kram/app/mirrors.py:290
+msgid "Use This Mirror"
+msgstr "Použít toto zrcadlo"
+
+#: kram/app/mirrors.py:295
+msgid "Use this mirror?"
+msgstr "Použít toto zrcadlo?"
+
+#: kram/app/mirrors.py:314
+msgid ""
+"dnf tests the mirrors of a list itself and uses the fastest, for every "
+"repository."
+msgstr ""
+"dnf si zrcadla ze seznamu sám otestuje a použije nejrychlejší, pro všechny "
+"repozitáře."
+
+#: kram/app/mirrors.py:316
+msgid "dnf uses the first mirrors of a list that answer, for every repository."
+msgstr ""
+"dnf používá první zrcadla ze seznamu, která odpoví, pro všechny repozitáře."
+
+#: kram/app/mirrors.py:319
+msgid "Turn Off Fastest Mirror Search"
+msgstr "Vypnout hledání nejrychlejšího zrcadla"
+
+#: kram/app/mirrors.py:319
+msgid "Turn On Fastest Mirror Search"
+msgstr "Zapnout hledání nejrychlejšího zrcadla"
 
 #: kram/app/notifier.py:63
 #, python-brace-format
@@ -2684,11 +2828,20 @@ msgstr "Nové vydání Fedory"
 msgid "Fedora {new} is available, you have {old}"
 msgstr "Je dostupná Fedora {new}, máte {old}"
 
-#: kram/app/repos.py:74
+#: kram/app/repos.py:106
 msgid "No metadata yet: use Reload"
 msgstr "Zatím žádná metadata: použijte Znovu načíst"
 
-#: kram/app/repos.py:89
+#: kram/app/repos.py:113 kram/gtk/dialogs/mirrors.py:57
+#: kram/qt/mirrors_dialog.py:67
+msgid "Automatic"
+msgstr "Automaticky"
+
+#: kram/app/repos.py:113
+msgid "dnf chooses among the mirrors of the repository's list."
+msgstr "dnf vybírá mezi zrcadly ze seznamu repozitáře."
+
+#: kram/app/repos.py:127
 #, python-brace-format
 msgid "{n} repository will change."
 msgid_plural "{n} repositories will change."
@@ -2696,38 +2849,43 @@ msgstr[0] "Změní se {n} repozitář."
 msgstr[1] "Změní se {n} repozitáře."
 msgstr[2] "Změní se {n} repozitářů."
 
-#: kram/app/repos.py:96 kram/app/repos.py:104
+#: kram/app/repos.py:134 kram/app/repos.py:142 kram/app/repos.py:165
 msgid "Apply or undo the changes first."
 msgstr "Nejprve změny použijte nebo vraťte zpět."
 
-#: kram/app/repos.py:98
+#: kram/app/repos.py:136
 msgid "None of its packages are in the list."
 msgstr "Žádný z jeho balíčků není v seznamu."
 
-#: kram/app/repos.py:108
+#: kram/app/repos.py:146
 #, python-brace-format
 msgid "The .repo file is part of the installed package {package}."
 msgstr "Soubor .repo je součástí nainstalovaného balíčku {package}."
 
-#: kram/app/repos.py:110
+#: kram/app/repos.py:148
 msgid "Configured by the system."
 msgstr "Nastaven systémem."
 
-#: kram/app/repos.py:112
+#: kram/app/repos.py:150
 msgid "Not configured in a file."
 msgstr "Není nastaven v souboru."
 
-#: kram/app/repos.py:134
+#: kram/app/repos.py:167
+msgid ""
+"This repository has a single address: there are no mirrors to choose from."
+msgstr "Tento repozitář má jedinou adresu: nejsou zde žádná zrcadla k výběru."
+
+#: kram/app/repos.py:188
 #, python-brace-format
 msgid "Remove the repository {repo} from the system?"
 msgstr "Odebrat repozitář {repo} ze systému?"
 
-#: kram/app/repos.py:135
+#: kram/app/repos.py:189
 #, python-brace-format
 msgid "Its file {path} will be deleted."
 msgstr "Jeho soubor {path} bude smazán."
 
-#: kram/app/repos.py:137
+#: kram/app/repos.py:191
 #, python-brace-format
 msgid "The file {path} configures {n} repository. Remove it from the system?"
 msgid_plural ""
@@ -2738,7 +2896,7 @@ msgstr[1] ""
 msgstr[2] ""
 "Soubor {path} nastavuje {n} repozitářů. Odebrat je všechny ze systému?"
 
-#: kram/app/repos.py:147
+#: kram/app/repos.py:201
 #, python-brace-format
 msgid ""
 "{n} installed package comes from them. It stays installed but will no longer "
@@ -2756,7 +2914,7 @@ msgstr[2] ""
 "Pochází z nich {n} nainstalovaných balíčků. Zůstanou nainstalované, ale už "
 "nebudou dostávat aktualizace (zobrazí se jako osiřelé)."
 
-#: kram/app/repos.py:161
+#: kram/app/repos.py:216
 msgid "Remove repository"
 msgstr "Odebrat repozitář"
 
@@ -3043,7 +3201,7 @@ msgid "PackageKit is working right now. Try again when it has finished."
 msgstr "PackageKit právě pracuje. Zkuste to znovu, až skončí."
 
 #: kram/core/custom_filters.py:48 kram/core/search.py:32
-#: kram/gtk/dialogs/repos.py:140 kram/qt/repos_dialog.py:66
+#: kram/gtk/dialogs/repos.py:151 kram/qt/repos_dialog.py:67
 msgid "Name"
 msgstr "Název"
 
@@ -3326,8 +3484,8 @@ msgstr "Doporučuje"
 msgid "Adds"
 msgstr "Přidá"
 
-#: kram/gtk/dialogs/apply.py:163 kram/gtk/dialogs/repos.py:34
-#: kram/qt/apply_dialog.py:156 kram/qt/repos_dialog.py:130
+#: kram/gtk/dialogs/apply.py:163 kram/gtk/dialogs/repos.py:38
+#: kram/qt/apply_dialog.py:156 kram/qt/repos_dialog.py:116
 msgid "Apply changes"
 msgstr "Použít změny"
 
@@ -3379,9 +3537,9 @@ msgid "Delete the copies of files that no longer exist"
 msgstr "Smazat kopie souborů, které už neexistují"
 
 #: kram/gtk/dialogs/cache.py:111 kram/gtk/dialogs/notifier.py:57
-#: kram/gtk/dialogs/repos.py:200 kram/gtk/files.py:124
+#: kram/gtk/dialogs/repos.py:214 kram/gtk/files.py:124
 #: kram/qt/cache_dialog.py:255 kram/qt/file_list.py:324
-#: kram/qt/notifier_dialog.py:104 kram/qt/repos_dialog.py:178
+#: kram/qt/notifier_dialog.py:104 kram/qt/repos_dialog.py:206
 msgid "Show in File Manager"
 msgstr "Zobrazit ve správci souborů"
 
@@ -3413,8 +3571,8 @@ msgstr "Povolit vybraný"
 msgid "Enabled projects"
 msgstr "Povolené projekty"
 
-#: kram/gtk/dialogs/copr.py:47 kram/gtk/dialogs/repos.py:138
-#: kram/qt/copr_dialog.py:51 kram/qt/repos_dialog.py:66
+#: kram/gtk/dialogs/copr.py:47 kram/gtk/dialogs/repos.py:149
+#: kram/qt/copr_dialog.py:51 kram/qt/repos_dialog.py:67
 msgid "Enabled"
 msgstr "Povoleno"
 
@@ -3427,8 +3585,8 @@ msgstr "Projekt"
 msgid "Hub"
 msgstr "Hub"
 
-#: kram/gtk/dialogs/copr.py:50 kram/gtk/dialogs/repos.py:141
-#: kram/qt/copr_dialog.py:51 kram/qt/repos_dialog.py:66
+#: kram/gtk/dialogs/copr.py:50 kram/gtk/dialogs/repos.py:152
+#: kram/qt/copr_dialog.py:51 kram/qt/repos_dialog.py:67
 msgid "Packages"
 msgstr "Balíčky"
 
@@ -3440,8 +3598,8 @@ msgstr "Povolit"
 msgid "Disable"
 msgstr "Zakázat"
 
-#: kram/gtk/dialogs/copr.py:59 kram/gtk/dialogs/repos.py:64
-#: kram/qt/copr_dialog.py:66 kram/qt/repos_dialog.py:120
+#: kram/gtk/dialogs/copr.py:59 kram/gtk/dialogs/repos.py:67
+#: kram/qt/copr_dialog.py:66 kram/qt/repos_dialog.py:103
 msgid "Remove…"
 msgstr "Odebrat…"
 
@@ -3502,8 +3660,8 @@ msgstr "Historie transakcí"
 msgid "Filter by package name"
 msgstr "Filtrovat podle názvu balíčku"
 
-#: kram/gtk/dialogs/history.py:72 kram/gtk/dialogs/repos.py:139
-#: kram/qt/history_dialog.py:61 kram/qt/repos_dialog.py:66
+#: kram/gtk/dialogs/history.py:72 kram/gtk/dialogs/repos.py:150
+#: kram/qt/history_dialog.py:61 kram/qt/repos_dialog.py:67
 msgid "ID"
 msgstr "ID"
 
@@ -3551,6 +3709,44 @@ msgstr "Podrobnosti"
 #: kram/gtk/dialogs/install.py:96 kram/qt/install_dialog.py:114
 msgid "Scripts"
 msgstr "Skripty"
+
+#: kram/gtk/dialogs/mirrors.py:44 kram/gtk/dialogs/repos.py:155
+#: kram/qt/mirrors_dialog.py:45 kram/qt/repos_dialog.py:68
+msgid "Mirror"
+msgstr "Zrcadlo"
+
+#: kram/gtk/dialogs/mirrors.py:45 kram/qt/mirrors_dialog.py:45
+msgid "Country"
+msgstr "Země"
+
+#: kram/gtk/dialogs/mirrors.py:46 kram/qt/mirrors_dialog.py:45
+msgid "Protocol"
+msgstr "Protokol"
+
+#: kram/gtk/dialogs/mirrors.py:47 kram/qt/mirrors_dialog.py:45
+msgid "Response"
+msgstr "Odezva"
+
+#: kram/gtk/dialogs/mirrors.py:48 kram/qt/mirrors_dialog.py:45
+msgid "Speed"
+msgstr "Rychlost"
+
+#: kram/gtk/dialogs/mirrors.py:49 kram/qt/mirrors_dialog.py:45
+msgid "Note"
+msgstr "Poznámka"
+
+#: kram/gtk/dialogs/mirrors.py:53 kram/gtk/dialogs/mirrors.py:100
+#: kram/qt/mirrors_dialog.py:62 kram/qt/mirrors_dialog.py:128
+msgid "Test Speed"
+msgstr "Otestovat rychlost"
+
+#: kram/gtk/dialogs/mirrors.py:55 kram/qt/mirrors_dialog.py:65
+msgid "Use Selected Mirror"
+msgstr "Použít vybrané zrcadlo"
+
+#: kram/gtk/dialogs/mirrors.py:100 kram/qt/mirrors_dialog.py:128
+msgid "Stop Test"
+msgstr "Zastavit test"
 
 #: kram/gtk/dialogs/notifier.py:77 kram/qt/notifier_dialog.py:130
 msgid ""
@@ -3602,28 +3798,33 @@ msgstr "Instalace"
 msgid "Close when finished successfully"
 msgstr "Po úspěšném dokončení zavřít"
 
-#: kram/gtk/dialogs/repos.py:40 kram/qt/repos_dialog.py:56
+#: kram/gtk/dialogs/repos.py:44 kram/qt/repos_dialog.py:57
 msgid "Filter…"
 msgstr "Filtrovat…"
 
-#: kram/gtk/dialogs/repos.py:43 kram/qt/repos_dialog.py:60
+#: kram/gtk/dialogs/repos.py:47 kram/qt/repos_dialog.py:61
 msgid "Show debuginfo and source repositories"
 msgstr "Zobrazit repozitáře debuginfo a zdrojové"
 
-#: kram/gtk/dialogs/repos.py:142 kram/qt/repos_dialog.py:66
+#: kram/gtk/dialogs/repos.py:69 kram/gtk/dialogs/repos.py:208
+#: kram/qt/repos_dialog.py:105 kram/qt/repos_dialog.py:217
+msgid "Mirrors…"
+msgstr "Zrcadla…"
+
+#: kram/gtk/dialogs/repos.py:153 kram/qt/repos_dialog.py:67
 msgid "Priority"
 msgstr "Priorita"
 
-#: kram/gtk/dialogs/repos.py:194 kram/qt/repos_dialog.py:186
+#: kram/gtk/dialogs/repos.py:207 kram/qt/repos_dialog.py:214
 msgid "Show Packages"
 msgstr "Zobrazit balíčky"
 
-#: kram/gtk/dialogs/repos.py:195 kram/qt/repos_dialog.py:189
+#: kram/gtk/dialogs/repos.py:209 kram/qt/repos_dialog.py:220
 msgid "Remove Repository…"
 msgstr "Odebrat repozitář…"
 
-#: kram/gtk/dialogs/repos.py:199 kram/gtk/files.py:123 kram/qt/file_list.py:237
-#: kram/qt/repos_dialog.py:177
+#: kram/gtk/dialogs/repos.py:213 kram/gtk/files.py:123 kram/qt/file_list.py:237
+#: kram/qt/repos_dialog.py:205
 msgid "Copy Path"
 msgstr "Kopírovat cestu"
 
@@ -3712,19 +3913,19 @@ msgstr "Hledat (Ctrl+F)"
 msgid "The list is filtered by the search text"
 msgstr "Seznam je filtrován podle hledaného textu"
 
-#: kram/gtk/window.py:97 kram/qt/main_window.py:70
+#: kram/gtk/window.py:99 kram/qt/main_window.py:70
 msgid "Package Manager"
 msgstr "Správce balíčků"
 
-#: kram/gtk/window.py:432 kram/qt/main_window.py:514
+#: kram/gtk/window.py:463 kram/qt/main_window.py:536
 msgid "Open Package File"
 msgstr "Otevřít soubor balíčku"
 
-#: kram/gtk/window.py:433 kram/qt/main_window.py:515
+#: kram/gtk/window.py:464 kram/qt/main_window.py:537
 msgid "RPM packages (*.rpm)"
 msgstr "Balíčky RPM (*.rpm)"
 
-#: kram/gtk/window.py:506 kram/qt/main_window.py:401
+#: kram/gtk/window.py:537 kram/qt/main_window.py:426
 msgid "A Synaptic-style package manager for Fedora."
 msgstr "Správce balíčků pro Fedoru ve stylu Synaptic."
 
@@ -3769,13 +3970,13 @@ msgstr[0] "Informace o balíčcích jsou {days} den staré"
 msgstr[1] "Informace o balíčcích jsou {days} dny staré"
 msgstr[2] "Informace o balíčcích jsou {days} dní staré"
 
-#: kram/qt/main_window.py:403
-msgid "Released under the MIT License."
-msgstr "Šířeno pod licencí MIT."
-
-#: kram/qt/main_window.py:406
+#: kram/qt/about_dialog.py:29
 msgid "What's New"
 msgstr "Co je nového"
+
+#: kram/qt/main_window.py:428
+msgid "Released under the MIT License."
+msgstr "Šířeno pod licencí MIT."
 
 #: kram/qt/toolbar.py:25
 msgid "Main toolbar"

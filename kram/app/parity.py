@@ -59,6 +59,14 @@ class Feature(Enum):
     DIALOG_INSTALL_FILE_CHECK = "dialog_install_file_check"
     DIALOG_INSTALL_FILE_COMMAND = "dialog_install_file_command"
     DIALOG_INSTALL_FILE_RECOMMENDATIONS = "dialog_install_file_recommendations"
+    DIALOG_MIRRORS = "dialog_mirrors"
+    DIALOG_MIRRORS_APPLY_IN_PLACE = "dialog_mirrors_apply_in_place"
+    DIALOG_MIRRORS_AUTOMATIC = "dialog_mirrors_automatic"
+    DIALOG_MIRRORS_FASTEST = "dialog_mirrors_fastest"
+    DIALOG_MIRRORS_IN_USE = "dialog_mirrors_in_use"
+    DIALOG_MIRRORS_OVER_REPOSITORIES = "dialog_mirrors_over_repositories"
+    DIALOG_MIRRORS_PIN = "dialog_mirrors_pin"
+    DIALOG_MIRRORS_SPEED_TEST = "dialog_mirrors_speed_test"
     DIALOG_NOTIFICATIONS = "dialog_notifications"
     DIALOG_NOTIFICATIONS_FEDORA_TIMER = "dialog_notifications_fedora_timer"
     DIALOG_NOTIFICATIONS_STALE_DAYS = "dialog_notifications_stale_days"
@@ -69,9 +77,14 @@ class Feature(Enum):
     DIALOG_PROGRESS_LOG = "dialog_progress_log"
     DIALOG_REPOSITORIES = "dialog_repositories"
     DIALOG_REPOSITORIES_FILTER = "dialog_repositories_filter"
+    DIALOG_REPOSITORIES_MIRRORS = "dialog_repositories_mirrors"
+    DIALOG_REPOSITORIES_MIRROR_COLUMN = "dialog_repositories_mirror_column"
     DIALOG_REPOSITORIES_REMOVE = "dialog_repositories_remove"
+    DIALOG_REPOSITORIES_REMOVE_IN_PLACE = "dialog_repositories_remove_in_place"
     DIALOG_REPOSITORIES_SHOW_AUX = "dialog_repositories_show_aux"
+    DIALOG_REPOSITORIES_UPDATES_IN_PLACE = "dialog_repositories_updates_in_place"
     DIALOG_WHATS_NEW = "dialog_whats_new"
+    DIALOG_WHATS_NEW_OVER_ABOUT = "dialog_whats_new_over_about"
     ICON_NON_PIXELATED = "icon_non_pixelated"
     INSTALL_FILE_ARGUMENT = "install_file_argument"
     INSTALL_FILE_DROP = "install_file_drop"
@@ -197,6 +210,14 @@ DESCRIPTIONS: dict[Feature, str] = {
     Feature.DIALOG_INSTALL_FILE_CHECK: 'Reinstall checks the installed files with rpm -V first; what it repairs is listed',
     Feature.DIALOG_INSTALL_FILE_COMMAND: "'Equivalent command': sudo dnf5 install <file>, read-only",
     Feature.DIALOG_INSTALL_FILE_RECOMMENDATIONS: 'Recommended packages of the file, with checkboxes',
+    Feature.DIALOG_MIRRORS: 'Mirrors of a repository: the list its metalink gives, and pinning the repository to one',
+    Feature.DIALOG_MIRRORS_APPLY_IN_PLACE: 'Use Selected Mirror, Automatic and the fastest-mirror switch run over the Mirrors window, which stays open and then shows the new state',
+    Feature.DIALOG_MIRRORS_AUTOMATIC: "Automatic: the repository goes back to taking its mirrors from the list",
+    Feature.DIALOG_MIRRORS_FASTEST: "Turn dnf's own fastest-mirror search on or off, for every repository",
+    Feature.DIALOG_MIRRORS_IN_USE: 'The mirror the repository is pinned to is marked in the list: In use, in bold',
+    Feature.DIALOG_MIRRORS_OVER_REPOSITORIES: 'Mirrors opens over Repositories, which stays open behind it',
+    Feature.DIALOG_MIRRORS_PIN: 'Use Selected Mirror: pin the repository to it; asks about an out-of-date or plain http mirror',
+    Feature.DIALOG_MIRRORS_SPEED_TEST: 'Test Speed: how fast each mirror answers and downloads, the quickest first; Stop',
     Feature.DIALOG_NOTIFICATIONS: "Update Notifications: the tray icon, the stale-data days, Fedora's timer, other notifiers",
     Feature.DIALOG_NOTIFICATIONS_FEDORA_TIMER: "Turn On Fedora's Update Check: asks for the password, shows the timer's state",
     Feature.DIALOG_NOTIFICATIONS_STALE_DAYS: 'Warn when the package information is older than N days',
@@ -207,9 +228,14 @@ DESCRIPTIONS: dict[Feature, str] = {
     Feature.DIALOG_PROGRESS_LOG: "'Details' log of the helper's events, timestamped",
     Feature.DIALOG_REPOSITORIES: "Repositories: enable and disable, show packages, remove the user's own",
     Feature.DIALOG_REPOSITORIES_FILTER: 'Filter the repositories by id or name',
+    Feature.DIALOG_REPOSITORIES_MIRRORS: 'Mirrors… for a repository that has a list of mirrors; off, with the reason, for one that has one address',
+    Feature.DIALOG_REPOSITORIES_MIRROR_COLUMN: "The Mirror column of the repositories table: Automatic, or the host of the mirror the repository is pinned to",
     Feature.DIALOG_REPOSITORIES_REMOVE: 'Remove names every repository of the file, and the packages that come from them',
+    Feature.DIALOG_REPOSITORIES_REMOVE_IN_PLACE: 'Removing a repository runs over the Repositories dialog, which stays open',
     Feature.DIALOG_REPOSITORIES_SHOW_AUX: "Checkbox 'Show debuginfo and source repositories'",
+    Feature.DIALOG_REPOSITORIES_UPDATES_IN_PLACE: 'After a change made from it (a removal, a mirror) the Repositories table shows the new state without closing',
     Feature.DIALOG_WHATS_NEW: "What's New: the release notes, newest first",
+    Feature.DIALOG_WHATS_NEW_OVER_ABOUT: "What's New opens over About, which stays open behind it",
     Feature.ICON_NON_PIXELATED: 'The painted status, origin and mark icons are sharp at every screen scale',
     Feature.INSTALL_FILE_ARGUMENT: 'kram file.rpm opens the installer alone, without the main window',
     Feature.INSTALL_FILE_DROP: 'An .rpm dropped on the main window opens the installer',
@@ -321,6 +347,14 @@ QT: dict[Feature, Entry] = {
     Feature.DIALOG_INSTALL_FILE_CHECK: Entry(Support.SUPPORTED),
     Feature.DIALOG_INSTALL_FILE_COMMAND: Entry(Support.SUPPORTED),
     Feature.DIALOG_INSTALL_FILE_RECOMMENDATIONS: Entry(Support.PARTIAL, 'no widget test'),
+    Feature.DIALOG_MIRRORS: Entry(Support.SUPPORTED),
+    Feature.DIALOG_MIRRORS_APPLY_IN_PLACE: Entry(Support.SUPPORTED),
+    Feature.DIALOG_MIRRORS_AUTOMATIC: Entry(Support.SUPPORTED),
+    Feature.DIALOG_MIRRORS_FASTEST: Entry(Support.SUPPORTED),
+    Feature.DIALOG_MIRRORS_IN_USE: Entry(Support.SUPPORTED),
+    Feature.DIALOG_MIRRORS_OVER_REPOSITORIES: Entry(Support.SUPPORTED),
+    Feature.DIALOG_MIRRORS_PIN: Entry(Support.SUPPORTED),
+    Feature.DIALOG_MIRRORS_SPEED_TEST: Entry(Support.SUPPORTED),
     Feature.DIALOG_NOTIFICATIONS: Entry(Support.SUPPORTED),
     Feature.DIALOG_NOTIFICATIONS_FEDORA_TIMER: Entry(Support.PARTIAL, 'the state is in test_notifier.py; the button is not tested'),
     Feature.DIALOG_NOTIFICATIONS_STALE_DAYS: Entry(Support.SUPPORTED),
@@ -331,9 +365,14 @@ QT: dict[Feature, Entry] = {
     Feature.DIALOG_PROGRESS_LOG: Entry(Support.PARTIAL, 'no widget test'),
     Feature.DIALOG_REPOSITORIES: Entry(Support.SUPPORTED),
     Feature.DIALOG_REPOSITORIES_FILTER: Entry(Support.PARTIAL, 'no widget test'),
+    Feature.DIALOG_REPOSITORIES_MIRRORS: Entry(Support.SUPPORTED),
+    Feature.DIALOG_REPOSITORIES_MIRROR_COLUMN: Entry(Support.SUPPORTED),
     Feature.DIALOG_REPOSITORIES_REMOVE: Entry(Support.SUPPORTED),
+    Feature.DIALOG_REPOSITORIES_REMOVE_IN_PLACE: Entry(Support.SUPPORTED),
     Feature.DIALOG_REPOSITORIES_SHOW_AUX: Entry(Support.PARTIAL, 'no widget test'),
+    Feature.DIALOG_REPOSITORIES_UPDATES_IN_PLACE: Entry(Support.SUPPORTED),
     Feature.DIALOG_WHATS_NEW: Entry(Support.SUPPORTED),
+    Feature.DIALOG_WHATS_NEW_OVER_ABOUT: Entry(Support.SUPPORTED),
     Feature.ICON_NON_PIXELATED: Entry(Support.PARTIAL, 'drawn and rendered (test_icons_render), sharp at 125 % checked by hand (56b13fc)'),
     Feature.INSTALL_FILE_ARGUMENT: Entry(Support.PARTIAL, 'the entry point kram file.rpm is not tested'),
     Feature.INSTALL_FILE_DROP: Entry(Support.PARTIAL, 'dropping an .rpm on the window is not tested'),
@@ -445,6 +484,14 @@ GTK: dict[Feature, Entry] = {
     Feature.DIALOG_INSTALL_FILE_CHECK: Entry(Support.PARTIAL, 'not tested in GTK'),
     Feature.DIALOG_INSTALL_FILE_COMMAND: Entry(Support.SUPPORTED),
     Feature.DIALOG_INSTALL_FILE_RECOMMENDATIONS: Entry(Support.PARTIAL, 'not tested'),
+    Feature.DIALOG_MIRRORS: Entry(Support.SUPPORTED),
+    Feature.DIALOG_MIRRORS_APPLY_IN_PLACE: Entry(Support.SUPPORTED),
+    Feature.DIALOG_MIRRORS_AUTOMATIC: Entry(Support.SUPPORTED),
+    Feature.DIALOG_MIRRORS_FASTEST: Entry(Support.SUPPORTED),
+    Feature.DIALOG_MIRRORS_IN_USE: Entry(Support.SUPPORTED),
+    Feature.DIALOG_MIRRORS_OVER_REPOSITORIES: Entry(Support.SUPPORTED),
+    Feature.DIALOG_MIRRORS_PIN: Entry(Support.SUPPORTED),
+    Feature.DIALOG_MIRRORS_SPEED_TEST: Entry(Support.SUPPORTED),
     Feature.DIALOG_NOTIFICATIONS: Entry(Support.SUPPORTED),
     Feature.DIALOG_NOTIFICATIONS_FEDORA_TIMER: Entry(Support.PARTIAL, 'not tested'),
     Feature.DIALOG_NOTIFICATIONS_STALE_DAYS: Entry(Support.PARTIAL, 'not tested'),
@@ -455,9 +502,15 @@ GTK: dict[Feature, Entry] = {
     Feature.DIALOG_PROGRESS_LOG: Entry(Support.SUPPORTED),
     Feature.DIALOG_REPOSITORIES: Entry(Support.SUPPORTED),
     Feature.DIALOG_REPOSITORIES_FILTER: Entry(Support.SUPPORTED),
+    Feature.DIALOG_REPOSITORIES_MIRRORS: Entry(Support.SUPPORTED),
+    Feature.DIALOG_REPOSITORIES_MIRROR_COLUMN: Entry(Support.SUPPORTED),
     Feature.DIALOG_REPOSITORIES_REMOVE: Entry(Support.PARTIAL, 'not tested in GTK'),
+    Feature.DIALOG_REPOSITORIES_REMOVE_IN_PLACE: Entry(Support.SUPPORTED),
     Feature.DIALOG_REPOSITORIES_SHOW_AUX: Entry(Support.SUPPORTED),
+    Feature.DIALOG_REPOSITORIES_UPDATES_IN_PLACE: Entry(Support.SUPPORTED),
     Feature.DIALOG_WHATS_NEW: Entry(Support.SUPPORTED),
+    Feature.DIALOG_WHATS_NEW_OVER_ABOUT: Entry(Support.NOT_INTENDED, "libadwaita's About dialog shows What's New as a page of its own, "
+                                                       "with a back button: nothing closes"),
     Feature.ICON_NON_PIXELATED: Entry(Support.SUPPORTED),
     Feature.INSTALL_FILE_ARGUMENT: Entry(Support.PARTIAL, 'only the argument parsing is tested; the installer runs by hand'),
     Feature.INSTALL_FILE_DROP: Entry(Support.SUPPORTED),
@@ -569,6 +622,14 @@ TUI: dict[Feature, Entry] = {
     Feature.DIALOG_INSTALL_FILE_CHECK: Entry(Support.PLANNED),
     Feature.DIALOG_INSTALL_FILE_COMMAND: Entry(Support.PLANNED),
     Feature.DIALOG_INSTALL_FILE_RECOMMENDATIONS: Entry(Support.PLANNED),
+    Feature.DIALOG_MIRRORS: Entry(Support.PLANNED),
+    Feature.DIALOG_MIRRORS_APPLY_IN_PLACE: Entry(Support.PLANNED),
+    Feature.DIALOG_MIRRORS_AUTOMATIC: Entry(Support.PLANNED),
+    Feature.DIALOG_MIRRORS_FASTEST: Entry(Support.PLANNED),
+    Feature.DIALOG_MIRRORS_IN_USE: Entry(Support.PLANNED),
+    Feature.DIALOG_MIRRORS_OVER_REPOSITORIES: Entry(Support.PLANNED),
+    Feature.DIALOG_MIRRORS_PIN: Entry(Support.PLANNED),
+    Feature.DIALOG_MIRRORS_SPEED_TEST: Entry(Support.PLANNED),
     Feature.DIALOG_NOTIFICATIONS: Entry(Support.PLANNED),
     Feature.DIALOG_NOTIFICATIONS_FEDORA_TIMER: Entry(Support.PLANNED),
     Feature.DIALOG_NOTIFICATIONS_STALE_DAYS: Entry(Support.PLANNED),
@@ -579,9 +640,14 @@ TUI: dict[Feature, Entry] = {
     Feature.DIALOG_PROGRESS_LOG: Entry(Support.PLANNED),
     Feature.DIALOG_REPOSITORIES: Entry(Support.PLANNED),
     Feature.DIALOG_REPOSITORIES_FILTER: Entry(Support.PLANNED),
+    Feature.DIALOG_REPOSITORIES_MIRRORS: Entry(Support.PLANNED),
+    Feature.DIALOG_REPOSITORIES_MIRROR_COLUMN: Entry(Support.PLANNED),
     Feature.DIALOG_REPOSITORIES_REMOVE: Entry(Support.PLANNED),
+    Feature.DIALOG_REPOSITORIES_REMOVE_IN_PLACE: Entry(Support.PLANNED),
     Feature.DIALOG_REPOSITORIES_SHOW_AUX: Entry(Support.PLANNED),
+    Feature.DIALOG_REPOSITORIES_UPDATES_IN_PLACE: Entry(Support.PLANNED),
     Feature.DIALOG_WHATS_NEW: Entry(Support.PLANNED),
+    Feature.DIALOG_WHATS_NEW_OVER_ABOUT: Entry(Support.PLANNED),
     Feature.ICON_NON_PIXELATED: Entry(Support.NOT_INTENDED, 'a terminal draws no painted icons'),
     Feature.INSTALL_FILE_ARGUMENT: Entry(Support.PLANNED),
     Feature.INSTALL_FILE_DROP: Entry(Support.PLANNED),

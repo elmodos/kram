@@ -5,7 +5,7 @@ from collections.abc import Callable
 
 from gi.repository import Adw, Gdk, Gio, GLib, Gtk, Pango
 
-from ...app.repos import RepoLine, Repos, matches
+from ...app.repos import RepoLine, Repos, ReposData, matches
 from ...core.model import RepoInfo
 from ...i18n import _
 from .. import icons
@@ -16,17 +16,21 @@ from .common import Node, frame, label, standard_button
 class ReposDialog(Adw.Dialog):
     def __init__(self, repos: list[RepoInfo], counts: Counter, done: Callable[["ReposDialog", bool], None], *,
                  owners: dict[str, str] | None = None, listed: Counter | None = None,
-                 installed: Counter | None = None):
+                 installed: Counter | None = None, variables: dict[str, str] | None = None, on_remove=None,
+                 on_mirrors=None):
         """`counts`: available packages per repo; `owners`: .repo file -> the package that owns it; `listed`: rows
         of the package list per repo (its Origin filter); `installed`: installed packages per repo they came from.
 
-        `done(dialog, accepted)` once it closes; `show_repo` or `remove_repos` then says what the user asked for
-        instead of applying changes."""
-        super().__init__(title=_("Repositories"), content_width=1180, content_height=620)
+        `variables`: releasever and basearch (see kram.app.repos.Repos); `on_remove` and `on_mirrors` run while the
+        dialog stays open (kram.app.repos.Repos), and `set_data` then shows the new state.
+        `done(dialog, accepted)` once it closes; `show_repo` then says whether the user asked to see a repository's
+        packages instead of applying changes."""
+        super().__init__(title=_("Repositories"), content_width=1300, content_height=620)
         self._done = done
         self._accepted = False
         self.ui = GtkUi(self)
-        self.repos = Repos(repos, counts, self.ui, self, owners=owners, listed=listed, installed=installed)
+        self.repos = Repos(repos, counts, self.ui, self, owners=owners, listed=listed, installed=installed,
+                           variables=variables, on_remove=on_remove, on_mirrors=on_mirrors)
         header, body = frame(self)
         close = standard_button("_Close")
         close.connect("clicked", lambda _b: self.close())
@@ -45,11 +49,10 @@ class ReposDialog(Adw.Dialog):
         top.append(self.show_aux)
         body.append(top)
 
-        store = Gio.ListStore(item_type=Node)
-        for line in self.repos.lines():
-            store.append(Node(line))
+        self.store = Gio.ListStore(item_type=Node)
+        self.store.splice(0, 0, [Node(line) for line in self.repos.lines()])
         self._filter = Gtk.CustomFilter.new(self._matches)
-        self.selection = Gtk.SingleSelection(model=Gtk.FilterListModel(model=store, filter=self._filter),
+        self.selection = Gtk.SingleSelection(model=Gtk.FilterListModel(model=self.store, filter=self._filter),
                                              autoselect=False, can_unselect=True)
         self.selection.connect("selection-changed", lambda *_a: self._update_buttons())
         self.table = Gtk.ColumnView(model=self.selection)
@@ -63,7 +66,10 @@ class ReposDialog(Adw.Dialog):
         self.packages_btn.connect("clicked", lambda _b: self.repos.show_packages(self._selected_id()))
         self.remove_btn = Gtk.Button(child=Adw.ButtonContent(label=_("Remove…"), icon_name="user-trash-symbolic"))
         self.remove_btn.connect("clicked", lambda _b: self.repos.remove(self._selected_id()))
+        self.mirrors_btn = Gtk.Button(child=Adw.ButtonContent(label=_("Mirrors…"), icon_name="network-server-symbolic"))
+        self.mirrors_btn.connect("clicked", lambda _b: self.repos.show_mirrors(self._selected_id()))
         row.append(self.packages_btn)
+        row.append(self.mirrors_btn)
         row.append(self.remove_btn)
         body.append(row)
         self.summary = Gtk.Label(xalign=0)
@@ -72,6 +78,7 @@ class ReposDialog(Adw.Dialog):
         self._menu_repo: str | None = None
         group = Gio.SimpleActionGroup()
         for name, fn in (("show", lambda: self.repos.show_packages(self._menu_repo)),
+                         ("mirrors", lambda: self.repos.show_mirrors(self._menu_repo)),
                          ("remove", lambda: self.repos.remove(self._menu_repo)),
                          ("copy", lambda: self.ui.copy_text(self.repos.repos[self._menu_repo].file_path)),
                          ("reveal", lambda: self.ui.show_in_file_manager(self.repos.repos[self._menu_repo].file_path))):
@@ -134,6 +141,10 @@ class ReposDialog(Adw.Dialog):
             icons.set_image(box.get_first_child(), line.origin_icon)
             box.get_last_child().set_text(line.origin)
 
+        def bind_mirror(widget: Gtk.Label, line: RepoLine) -> None:
+            widget.set_text(line.mirror)
+            widget.set_tooltip_text(line.mirror_tip or None)
+
         middle = Pango.EllipsizeMode.MIDDLE  # a long id or path keeps both its start and its end
         add(_("Enabled"), setup_check, bind_check)
         add(_("ID"), lambda: label(middle), text(lambda line: line.repo.id, tip=True), width=200)
@@ -141,6 +152,7 @@ class ReposDialog(Adw.Dialog):
         add(_("Packages"), lambda: label(numeric=True), bind_packages)
         add(_("Priority"), lambda: label(numeric=True), text(lambda line: line.priority))
         add(_("Origin"), setup_origin, bind_origin)
+        add(_("Mirror"), lambda: label(middle), bind_mirror, width=190)
         add(_("File"), lambda: label(middle), text(lambda line: line.repo.file_path, tip=True), width=300)
 
     def _matches(self, node: Node) -> bool:
@@ -189,9 +201,11 @@ class ReposDialog(Adw.Dialog):
     def menu_model(self, repo_id: str) -> Gio.Menu:
         self._menu_repo = repo_id
         self.menu_actions.lookup_action("show").set_enabled(self.repos.packages_blocker(repo_id) is None)
+        self.menu_actions.lookup_action("mirrors").set_enabled(self.repos.mirrors_action(repo_id).enabled)
         self.menu_actions.lookup_action("remove").set_enabled(self.repos.removal_blocker(repo_id) is None)
         menu, main = Gio.Menu(), Gio.Menu()
         main.append(_("Show Packages"), "repo.show")
+        main.append(_("Mirrors…"), "repo.mirrors")
         main.append(_("Remove Repository…"), "repo.remove")
         menu.append_section(None, main)
         if self.repos.repos[repo_id].file_path:
@@ -208,9 +222,22 @@ class ReposDialog(Adw.Dialog):
         self._popover.set_pointing_to(rect)
         self._popover.popup()
 
+    def set_data(self, data: ReposData) -> None:
+        """Show the repositories as they are now: after a removal or a mirror change made from the dialog."""
+        selected = self._selected_id()
+        self.repos.update(data)
+        self.store.splice(0, self.store.get_n_items(), [Node(line) for line in self.repos.lines()])
+        self.selection.set_selected(Gtk.INVALID_LIST_POSITION)
+        for i in range(self.selection.get_n_items()):
+            if self.selection.get_item(i).data.repo.id == selected:
+                self.selection.set_selected(i)
+                break
+        self._update_buttons()
+
     # the choice the dialog closed with, for the main window
     show_repo = property(lambda self: self.repos.show_repo)
     remove_repos = property(lambda self: self.repos.remove_repos)
+    mirror_repo = property(lambda self: self.repos.mirror_repo)
 
     def changes(self) -> dict[str, bool]:
         """Repo id -> new enabled state, only for repos the user toggled."""
@@ -233,7 +260,8 @@ class ReposDialog(Adw.Dialog):
     def _update_buttons(self) -> None:
         self.apply_btn.set_sensitive(bool(self.repos.changes()))
         packages, remove = self.repos.actions(self._selected_id())
-        for button, state in ((self.packages_btn, packages), (self.remove_btn, remove)):
+        mirrors = self.repos.mirrors_action(self._selected_id())
+        for button, state in ((self.packages_btn, packages), (self.remove_btn, remove), (self.mirrors_btn, mirrors)):
             button.set_sensitive(state.enabled)
             button.set_tooltip_text(state.tooltip or None)
         self.summary.set_text(self.repos.summary())

@@ -67,6 +67,14 @@ MAX_SIZED_RECOMMENDATIONS = 10
 MAX_BLOCKED_REASONS = 20
 
 
+def _option(option, default=""):
+    """A libdnf5 option's value; `default` when the option is not set (`get_value` raises then)."""
+    try:
+        return option.get_value()
+    except libdnf5.exception.OptionValueNotSetError:
+        return default
+
+
 def _evr_tuple(pkg):
     return pkg.get_epoch() or "0", pkg.get_version(), pkg.get_release()
 
@@ -225,7 +233,8 @@ class Catalog:
         return CatalogSnapshot(rows, n_installed, n_upgradable, time.monotonic() - t0,
                                basearch=basearch, releasever=base.get_vars().get_value("releasever"),
                                repos=self._repos(), descriptions=descriptions, groups=groups, environments=environments,
-                               provides={q: self.provides_keys(*q) for q in provides})
+                               provides={q: self.provides_keys(*q) for q in provides},
+                               fastestmirror=bool(base.get_config().get_fastestmirror_option().get_value()))
 
     @staticmethod
     def _lock_fields(locks, excluded, key, installed, cand) -> dict:
@@ -328,8 +337,12 @@ class Catalog:
                 continue
             # get_timestamp() is -1 when the repo has no loaded metadata (get_age() is then meaningless)
             age = r.get_age() if r.is_enabled() and r.get_timestamp() != -1 else None
+            conf = r.get_config()
             repos.append(RepoInfo(r.get_id(), r.get_name(), r.is_enabled(), classify(r.get_id()), age,
-                                  priority=r.get_priority(), file_path=r.get_repo_file_path()))
+                                  priority=r.get_priority(), file_path=r.get_repo_file_path(),
+                                  metalink=_option(conf.get_metalink_option()),
+                                  mirrorlist=_option(conf.get_mirrorlist_option()),
+                                  baseurls=tuple(_option(conf.get_baseurl_option(), ()))))
         repos.sort(key=lambda r: r.id)
         return repos
 

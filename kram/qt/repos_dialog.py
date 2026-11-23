@@ -23,14 +23,14 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
-from ..app.repos import Repos, matches
+from ..app.repos import Repos, ReposData, matches
 from ..core.model import RepoInfo
 from ..i18n import _
 from .files import show_in_file_manager
 from .icons import icon
 from .qt_ui import QtUi
 
-COL_ENABLED, COL_ID, COL_NAME, COL_PACKAGES, COL_PRIORITY, COL_ORIGIN, COL_FILE = range(7)
+COL_ENABLED, COL_ID, COL_NAME, COL_PACKAGES, COL_PRIORITY, COL_ORIGIN, COL_MIRROR, COL_FILE = range(8)
 NAME_MIN = 140  # px: the name gives way first, but stays readable
 FILE_MIN = 220  # px: the path is cut in the middle below this, to start with
 MIN_COLUMN = 40  # px: the least the user can drag a column to
@@ -40,15 +40,16 @@ COLUMN_PAD = 14  # px added to a column that fits its contents: the measure leav
 
 class ReposDialog(QDialog):
     def __init__(self, repos: list[RepoInfo], counts: Counter, parent=None, *, owners: dict[str, str] | None = None,
-                 listed: Counter | None = None, installed: Counter | None = None):
-        """`counts`: available packages per repo; `owners`: .repo file -> the package that owns it; `listed`: rows
-        of the package list per repo (its Origin filter); `installed`: installed packages per repo they came from.
-
-        After exec(), `show_repo` or `remove_repos` says what the user asked for instead of applying changes."""
+                 listed: Counter | None = None, installed: Counter | None = None,
+                 variables: dict[str, str] | None = None, on_remove=None, on_mirrors=None):
+        """The arguments are those of kram.app.repos.ReposData; `on_remove` and `on_mirrors` those of Repos: they run
+        while the dialog stays open, and `set_data` then shows the new state. After exec(), `show_repo` says whether
+        the user asked to see a repository's packages instead of applying changes."""
         super().__init__(parent)
         self.setWindowTitle(_("Repositories"))
-        self.resize(1180, 620)
-        self.repos = Repos(repos, counts, QtUi(self), self, owners=owners, listed=listed, installed=installed)
+        self.resize(1300, 620)
+        self.repos = Repos(repos, counts, QtUi(self), self, owners=owners, listed=listed, installed=installed,
+                           variables=variables, on_remove=on_remove, on_mirrors=on_mirrors)
 
         lay = QVBoxLayout(self)
         top = QHBoxLayout()
@@ -62,9 +63,9 @@ class ReposDialog(QDialog):
         top.addWidget(self.show_aux)
         lay.addLayout(top)
 
-        t = self.table = QTableWidget(len(repos), 7)
+        t = self.table = QTableWidget(0, 8)
         t.setHorizontalHeaderLabels([_("Enabled"), _("ID"), _("Name"), _("Packages"), _("Priority"), _("Origin"),
-                                     _("File")])
+                                     _("Mirror"), _("File")])
         t.verticalHeader().hide()
         t.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         t.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
@@ -75,28 +76,10 @@ class ReposDialog(QDialog):
             t.setItemDelegateForColumn(col, middle)
         t.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         t.customContextMenuRequested.connect(self._context_menu)
-        for i, line in enumerate(self.repos.lines()):
-            r = line.repo
-            check = QTableWidgetItem()
-            check.setFlags(Qt.ItemFlag.ItemIsUserCheckable | Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable)
-            check.setCheckState(Qt.CheckState.Checked if r.enabled else Qt.CheckState.Unchecked)
-            check.setData(Qt.ItemDataRole.UserRole, r.id)
-            t.setItem(i, COL_ENABLED, check)
-            t.setItem(i, COL_ID, self._item(r.id))
-            t.setItem(i, COL_NAME, self._item(r.name))
-            packages = QTableWidgetItem(line.packages)
-            if line.packages_tip:
-                packages.setToolTip(line.packages_tip)
-            packages.setTextAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
-            t.setItem(i, COL_PACKAGES, packages)
-            prio = QTableWidgetItem(line.priority)
-            prio.setTextAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
-            t.setItem(i, COL_PRIORITY, prio)
-            t.setItem(i, COL_ORIGIN, QTableWidgetItem(icon(line.origin_icon), line.origin))
-            t.setItem(i, COL_FILE, self._item(r.file_path))
+        self._fill()
         # the narrow columns fit what they show; the name and the path get their start sizes in _fit_columns
         t.resizeColumnsToContents()
-        for col in (COL_ENABLED, COL_ID, COL_PACKAGES, COL_PRIORITY, COL_ORIGIN):
+        for col in (COL_ENABLED, COL_ID, COL_PACKAGES, COL_PRIORITY, COL_ORIGIN, COL_MIRROR):
             t.setColumnWidth(col, t.columnWidth(col) + COLUMN_PAD)
         # every column can be dragged, and what does not fit scrolls sideways; the sizes below are only a start: they
         # follow the window until the user resizes a column himself, and are then left alone
@@ -119,7 +102,10 @@ class ReposDialog(QDialog):
         self.packages_btn.clicked.connect(self._show_selected_packages)
         self.remove_btn = QPushButton(QIcon.fromTheme("edit-delete"), _("Remove…"))
         self.remove_btn.clicked.connect(self._remove_selected)
+        self.mirrors_btn = QPushButton(QIcon.fromTheme("network-server"), _("Mirrors…"))
+        self.mirrors_btn.clicked.connect(self._show_selected_mirrors)
         row.addWidget(self.packages_btn)
+        row.addWidget(self.mirrors_btn)
         row.addWidget(self.remove_btn)
         row.addStretch()
         lay.addLayout(row)
@@ -132,6 +118,48 @@ class ReposDialog(QDialog):
         self.buttons.accepted.connect(self.accept)
         self.buttons.rejected.connect(self.reject)
         lay.addWidget(self.buttons)
+        self._apply_filter()
+        self._update_buttons()
+
+    def _fill(self) -> None:
+        t = self.table
+        t.blockSignals(True)  # no itemChanged while the checkboxes are filled
+        t.setRowCount(0)
+        lines = self.repos.lines()
+        t.setRowCount(len(lines))
+        for i, line in enumerate(lines):
+            r = line.repo
+            check = QTableWidgetItem()
+            check.setFlags(Qt.ItemFlag.ItemIsUserCheckable | Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable)
+            check.setCheckState(Qt.CheckState.Checked if r.enabled else Qt.CheckState.Unchecked)
+            check.setData(Qt.ItemDataRole.UserRole, r.id)
+            t.setItem(i, COL_ENABLED, check)
+            t.setItem(i, COL_ID, self._item(r.id))
+            t.setItem(i, COL_NAME, self._item(r.name))
+            packages = QTableWidgetItem(line.packages)
+            if line.packages_tip:
+                packages.setToolTip(line.packages_tip)
+            packages.setTextAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+            t.setItem(i, COL_PACKAGES, packages)
+            prio = QTableWidgetItem(line.priority)
+            prio.setTextAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+            t.setItem(i, COL_PRIORITY, prio)
+            t.setItem(i, COL_ORIGIN, QTableWidgetItem(icon(line.origin_icon), line.origin))
+            mirror = self._item(line.mirror)
+            if line.mirror_tip:
+                mirror.setToolTip(line.mirror_tip)
+            t.setItem(i, COL_MIRROR, mirror)
+            t.setItem(i, COL_FILE, self._item(r.file_path))
+        t.blockSignals(False)
+
+    def set_data(self, data: ReposData) -> None:
+        """Show the repositories as they are now: after a removal or a mirror change made from the dialog."""
+        selected = self._selected_id()
+        self.repos.update(data)
+        self._fill()
+        for i in range(self.table.rowCount()):
+            if self.table.item(i, COL_ENABLED).data(Qt.ItemDataRole.UserRole) == selected:
+                self.table.selectRow(i)
         self._apply_filter()
         self._update_buttons()
 
@@ -152,7 +180,7 @@ class ReposDialog(QDialog):
             return
         t = self.table
         wanted = t.sizeHintForColumn(COL_FILE) + FIT_MARGIN
-        others = sum(t.columnWidth(c) for c in (COL_ENABLED, COL_ID, COL_PACKAGES, COL_PRIORITY, COL_ORIGIN))
+        others = sum(t.columnWidth(c) for c in (COL_ENABLED, COL_ID, COL_PACKAGES, COL_PRIORITY, COL_ORIGIN, COL_MIRROR))
         free = t.viewport().width() - others
         path = max(FILE_MIN, min(wanted, free - NAME_MIN))
         self._fitting = True
@@ -186,6 +214,9 @@ class ReposDialog(QDialog):
         show = menu.addAction(QIcon.fromTheme("view-list-details"), _("Show Packages"),
                               lambda: self.repos.show_packages(repo_id))
         show.setEnabled(self.repos.packages_blocker(repo_id) is None)
+        mirrors = menu.addAction(QIcon.fromTheme("network-server"), _("Mirrors…"),
+                                 lambda: self.repos.show_mirrors(repo_id))
+        mirrors.setEnabled(self.repos.mirrors_action(repo_id).enabled)
         remove = menu.addAction(QIcon.fromTheme("edit-delete"), _("Remove Repository…"),
                                 lambda: self.repos.remove(repo_id))
         remove.setEnabled(self.repos.removal_blocker(repo_id) is None)
@@ -207,9 +238,13 @@ class ReposDialog(QDialog):
     def _remove_selected(self) -> None:
         self.repos.remove(self._selected_id())
 
+    def _show_selected_mirrors(self) -> None:
+        self.repos.show_mirrors(self._selected_id())
+
     # the choice the dialog closed with, for the main window
     show_repo = property(lambda self: self.repos.show_repo)
-    remove_repos = property(lambda self: self.repos.remove_repos)
+    remove_repos = property(lambda self: self.repos.remove_repos)  # the last removal asked for
+    mirror_repo = property(lambda self: self.repos.mirror_repo)    # the last repository whose mirrors were asked for
 
     def changes(self) -> dict[str, bool]:
         """Repo id -> new enabled state, only for repos the user toggled."""
@@ -226,7 +261,8 @@ class ReposDialog(QDialog):
     def _update_buttons(self, *_args):
         self.apply_btn.setEnabled(bool(self.repos.changes()))
         packages, remove = self.repos.actions(self._selected_id())
-        for button, state in ((self.packages_btn, packages), (self.remove_btn, remove)):
+        mirrors = self.repos.mirrors_action(self._selected_id())
+        for button, state in ((self.packages_btn, packages), (self.remove_btn, remove), (self.mirrors_btn, mirrors)):
             button.setEnabled(state.enabled)
             button.setToolTip(state.tooltip)
         self.summary.setText(self.repos.summary())

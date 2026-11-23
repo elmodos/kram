@@ -15,6 +15,7 @@ from ..app.actions import ActionState, DynamicItem
 from ..app.browser import Browser, ReposChoice, rpm_path
 from ..app.custom_filters import CustomFilters
 from ..app.doc import Doc
+from ..app.mirrors import MirrorChoice
 from ..app.package_list import Sort
 from ..app.progress import BUSY
 from ..app.release_watch import BUTTON_ICONS as RELEASE_ICONS
@@ -33,6 +34,7 @@ from .dialogs.copr import CoprDialog
 from .dialogs.filters import FiltersDialog
 from .dialogs.history import HistoryWindow
 from .dialogs.install import InstallDialog
+from .dialogs.mirrors import MirrorsDialog
 from .dialogs.notifier import NotifierDialog
 from .dialogs.progress import ProgressDialog
 from .dialogs.repos import ReposDialog
@@ -365,10 +367,39 @@ class MainWindow(Adw.ApplicationWindow):
             return
         dlg.present(self)  # over the dialog that started it (COPR, Package Cache): libadwaita stacks them
 
-    def show_repos(self, snap, counts, owners, listed, installed, done: Callable[[ReposChoice | None], None]) -> None:
+    def show_repos(self, data, done: Callable[[ReposChoice | None], None]) -> None:
+        b = self.browser
+        shown = [True]
+
+        def refresh(snap) -> None:  # after a removal or a mirror change made from it: it stays open
+            b.repos_data(snap, lambda new: shown[0] and dlg.set_data(new))
+
         def closed(dlg: ReposDialog, accepted: bool) -> None:
-            done(ReposChoice(dlg.show_repo, tuple(dlg.remove_repos or ()), dlg.changes() if accepted else None))
-        ReposDialog(snap.repos, counts, closed, owners=owners, listed=listed, installed=installed).present(self)
+            shown[0] = False  # data read for it later is dropped
+            b.catalog_loaded.disconnect(refresh)
+            done(ReposChoice(dlg.show_repo, dlg.changes() if accepted else None))
+        dlg = ReposDialog(data.repos, data.counts, closed, owners=data.owners, listed=data.listed,
+                          installed=data.installed, variables=data.variables, on_remove=b.remove_repos,
+                          on_mirrors=b.open_mirrors)
+        b.catalog_loaded.connect(refresh)
+        dlg.present(self)
+
+    def show_mirrors(self, repo, source, fastestmirror: bool, apply: Callable[[MirrorChoice], None]) -> None:
+        # libadwaita stacks it over the Repositories dialog, which stays open behind it; a choice is applied while this
+        # one stays open too, and the reload shows it the new state
+        b = self.browser
+        shown = [True]
+
+        def refresh(snap) -> None:
+            if shown[0] and (state := b.mirror_state(snap, repo.id)) is not None:
+                dlg.set_state(*state)
+
+        def closed(_dlg) -> None:
+            shown[0] = False
+            b.catalog_loaded.disconnect(refresh)
+        dlg = MirrorsDialog(repo, source, fastestmirror, closed, on_choice=apply)
+        b.catalog_loaded.connect(refresh)
+        dlg.present(self)
 
     # ---------------------------------------------------------------- the other dialogs
 

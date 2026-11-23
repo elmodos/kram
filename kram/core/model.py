@@ -138,6 +138,10 @@ class RepoInfo:
     age_seconds: int | None   # time since metadata was downloaded; None if not loaded
     priority: int = 99
     file_path: str = ""
+    # as configured, variables replaced; empty when not set. A repository pinned to one mirror has no metalink here
+    metalink: str = ""
+    mirrorlist: str = ""
+    baseurls: tuple[str, ...] = ()
 
 
 ENVIRONMENT_PREFIX = "env:"   # GroupInfo.key of an environment; comps ids never contain ":"
@@ -185,6 +189,7 @@ class CatalogSnapshot:
     # (capability, is a glob) -> keys of the packages providing it; only what custom filters asked for (libdnf5 knows
     # the rest, but filters run on the GUI thread)
     provides: dict[tuple[str, bool], frozenset[tuple[str, str]]] = field(default_factory=dict)
+    fastestmirror: bool = False   # dnf's own option: test the mirrors of a metalink and use the fastest
 
     @property
     def unavailable_repos(self) -> list[RepoInfo]:

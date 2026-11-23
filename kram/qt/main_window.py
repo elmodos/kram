@@ -10,7 +10,6 @@ from PySide6.QtWidgets import (
     QApplication,
     QMainWindow,
     QMenu,
-    QMessageBox,
     QSplitter,
     QToolButton,
     QWidget,
@@ -22,11 +21,12 @@ from ..app.actions import ActionState, DynamicItem, table_menu
 from ..app.browser import Browser, ReposChoice, rpm_path
 from ..app.custom_filters import CustomFilters
 from ..app.doc import Doc
+from ..app.mirrors import MirrorChoice
 from ..app.package_list import Sort
-from ..core import releases
 from ..core.model import CatalogSnapshot, PkgRow, TransactionPreview
 from ..core.settings import store as settings
 from ..i18n import _
+from .about_dialog import AboutDialog
 from .actions import WindowActions, fill_dynamic
 from .apply_dialog import ApplyDialog
 from .cache_dialog import CacheDialog
@@ -35,6 +35,7 @@ from .custom_filters import edit_dialog
 from .details import DetailsTabs
 from .history_dialog import HistoryDialog
 from .install_dialog import InstallDialog
+from .mirrors_dialog import MirrorsDialog
 from .notifier_dialog import NotifierDialog
 from .package_model import COL_NAME, COL_STATUS, PackageTableModel
 from .package_view import PackageView
@@ -48,7 +49,6 @@ from .sidebar import Sidebar
 from .status_bar import MainStatusBar
 from .toolbar import MainToolBar
 from .upgrade_dialog import UpgradeDialog
-from .whats_new import WhatsNewDialog
 
 DETAILS_TAB_KEY = "details/tab-name"  # "details/tab" held its position before the advisories tab came
 FILES_VIEW_KEY = "details/files-view"  # "tree" or "list"
@@ -339,12 +339,38 @@ class MainWindow(QMainWindow):
         dlg.deleteLater()  # with its whole log
         done(result)
 
-    def show_repos(self, snap, counts, owners, listed, installed, done: Callable[[ReposChoice | None], None]) -> None:
-        dlg = ReposDialog(snap.repos, counts, self, owners=owners, listed=listed, installed=installed)
+    def show_repos(self, data, done: Callable[[ReposChoice | None], None]) -> None:
+        b = self.browser
+        dlg = ReposDialog(data.repos, data.counts, self, owners=data.owners, listed=data.listed,
+                          installed=data.installed, variables=data.variables, on_remove=b.remove_repos,
+                          on_mirrors=b.open_mirrors)
+        shown = [True]
+
+        def refresh(snap) -> None:  # after a removal or a mirror change made from it: it stays open
+            b.repos_data(snap, lambda new: shown[0] and dlg.set_data(new))
+        b.catalog_loaded.connect(refresh)
         accepted = dlg.exec() == ReposDialog.Accepted
-        choice = ReposChoice(dlg.show_repo, tuple(dlg.remove_repos or ()), dlg.changes() if accepted else None)
+        shown[0] = False  # data read for it later is dropped
+        b.catalog_loaded.disconnect(refresh)
+        choice = ReposChoice(dlg.show_repo, dlg.changes() if accepted else None)
         dlg.deleteLater()
         done(choice)
+
+    def show_mirrors(self, repo, source, fastestmirror: bool, apply: Callable[[MirrorChoice], None]) -> None:
+        # over the Repositories dialog that asked for it, which stays open behind it; a choice is applied while this one
+        # stays open too, and the reload shows it the new state
+        b = self.browser
+        dlg = MirrorsDialog(repo, source, fastestmirror, QApplication.activeModalWidget() or self, on_choice=apply)
+        shown = [True]
+
+        def refresh(snap) -> None:
+            if shown[0] and (state := b.mirror_state(snap, repo.id)) is not None:
+                dlg.set_state(*state)
+        b.catalog_loaded.connect(refresh)
+        dlg.exec()
+        shown[0] = False
+        b.catalog_loaded.disconnect(refresh)
+        dlg.deleteLater()
 
     def run_helper_and_reload(self, request: dict, title: str) -> bool:
         ok = []
@@ -396,17 +422,13 @@ class MainWindow(QMainWindow):
         self.custom_filters.new_from_view(self.browser.filter, self.search.text(), self.search.mode())
 
     def about(self):
-        box = QMessageBox(QMessageBox.Icon.NoIcon, _("About Kram"),
-                          f"<h3>Kram · Qt {__version__}</h3><p>{toolkit_versions()}</p>"
+        dlg = AboutDialog(f"<h3>Kram · Qt {__version__}</h3><p>{toolkit_versions()}</p>"
                           f"<p>{_('A Synaptic-style package manager for Fedora.')}</p>"
                           f"<p><a href='{HOMEPAGE}'>{HOMEPAGE}</a></p>"
                           f"<p>Copyright © 2026 Modo Ltunzher<br>{_('Released under the MIT License.')}</p>",
-                          QMessageBox.StandardButton.Close, self)
-        box.setIconPixmap(self.windowIcon().pixmap(64, 64))
-        whats_new = box.addButton(_("What's New"), QMessageBox.ButtonRole.ActionRole)
-        box.exec()
-        if box.clickedButton() is whats_new:
-            WhatsNewDialog(releases.load(), self).exec()
+                          self.windowIcon().pixmap(64, 64), self)
+        dlg.exec()
+        dlg.deleteLater()
 
     # ---------------------------------------------------------------- the other dialogs
 

@@ -27,6 +27,10 @@ Protocol: one JSON request per line on stdin, JSON event lines on stdout.
   {"op": "versionlock", "action": "add"|"delete", "names": ["<package name>", ...]}
                                                            `dnf5 versionlock add|delete`; add: installed packages only
   {"op": "repo_remove", "repos": ["<repo id>", ...]}      delete their .repo files; see repo_files_to_remove()
+  {"op": "mirrors", "pin": {"repo": "<repo id>", "baseurl": "https://mirror/path/"|null}, "fastestmirror": bool}
+                                                           pin: the repository downloads from that mirror only
+                                                           (baseurl null: back to its metalink); fastestmirror: dnf's
+                                                           own option; either may be left out; see set_mirrors()
   {"op": "find_leftovers"}                                 .rpmnew/.rpmsave/.rpmorig files in /etc ("done" has "files")
   {"op": "remove_leftovers", "paths": ["/etc/...rpmsave", ...]}   see check_leftover()
   {"op": "clean_cache", "target": "dnf_packages"|"dnf_metadata"|"packagekit"}   see clean_cache()
@@ -98,6 +102,11 @@ REPO_DIR = "/etc/yum.repos.d"
 # where `dnf5 config-manager setopt` keeps the options it sets, e.g. a repository's "enabled"
 CONFIG_MANAGER_OVERRIDES = "/etc/dnf/repos.override.d/99-config_manager.repo"
 MAX_REMOVE_REPOS = 100
+# a mirror's address for a pinned repository (mirrors); must match kram.core.mirrors.BASEURL_RE. No variables, query,
+# credentials or spaces: the value is written into a .repo file that root reads
+BASEURL_RE = re.compile(r"^https?://[A-Za-z0-9](?:[A-Za-z0-9.-]{0,251}[A-Za-z0-9])?(?::\d{1,5})?"
+                        r"(?:/[A-Za-z0-9._~%+/-]*)?/$")
+MIRROR_OPTIONS = ("baseurl", "metalink", "mirrorlist")
 
 # rpm's copies of changed configuration files: the new default it did not apply (.rpmnew), the user's version it put
 # aside (.rpmsave, .rpmorig)
@@ -578,6 +587,47 @@ def set_repos_enabled(req: dict) -> None:
             fail("config", "repo_not_changed", "Could not change repository {repo}", repo=repo_id)
             return
     if any(repos.values()):
+        load_metadata()
+    emit("done", ok=True)
+
+
+def set_mirrors(req: dict) -> None:
+    """Pin a repository to one mirror, or let libdnf5 choose again; switch dnf's fastestmirror option.
+
+    Pinning is what a person does by hand: `baseurl` is the mirror and the `metalink` and `mirrorlist` are emptied,
+    through `dnf5 config-manager`, so it lands in the same override file as every other change of Kram and is as easy
+    to undo with `unsetopt`. The repository gets a cache of its own for the new address, so its metadata is
+    downloaded again (not when only fastestmirror changed)."""
+    pin, fastest = req.get("pin"), req.get("fastestmirror")
+    if pin is None and fastest is None:
+        raise ProtocolError("mirrors: nothing to change")
+    if fastest is not None and not isinstance(fastest, bool):
+        raise ProtocolError("mirrors: fastestmirror must be true or false")
+    if pin is not None:
+        if not isinstance(pin, dict):
+            raise ProtocolError("mirrors: pin must be an object")
+        repo_id, baseurl = pin.get("repo"), pin.get("baseurl")
+        if not isinstance(repo_id, str) or not REPO_ID_RE.match(repo_id):
+            raise ProtocolError(f"mirrors: invalid repo id {repo_id!r}")
+        if baseurl is not None and (not isinstance(baseurl, str) or not BASEURL_RE.match(baseurl)):
+            raise ProtocolError(f"mirrors: invalid baseurl {baseurl!r}")
+        import libdnf5
+        base = make_base(load=False)  # keep it referenced: RepoQuery holds weak pointers into it
+        if repo_id not in {r.get_id() for r in libdnf5.repo.RepoQuery(base)}:
+            raise ProtocolError(f"mirrors: not configured: {repo_id}")
+        if baseurl is None:
+            argv = ["unsetopt", *(f"{repo_id}.{name}" for name in MIRROR_OPTIONS)]
+        else:
+            argv = ["setopt", f"{repo_id}.baseurl={baseurl}", f"{repo_id}.metalink=", f"{repo_id}.mirrorlist="]
+        if not run_command(["dnf5", "-q", "-y", "config-manager", *argv]):
+            fail("config", "mirror_not_changed", "Could not change the mirror of {repo}", repo=repo_id)
+            return
+    if fastest is not None:
+        option = "setopt" if fastest else "unsetopt"
+        if not run_command(["dnf5", "-q", "-y", "config-manager", option, f"fastestmirror{'=1' if fastest else ''}"]):
+            fail("config", "fastestmirror_not_changed", "Could not change the fastest mirror option")
+            return
+    if pin is not None:
         load_metadata()
     emit("done", ok=True)
 
@@ -1175,12 +1225,13 @@ def main() -> int:
             if op == "ping":
                 emit("done", ok=True, uid=os.geteuid())
             elif op in ("transaction", "local_install", "refresh", "repo_set_enabled", "copr", "clean_cache",
-                        "repo_remove", "find_leftovers", "remove_leftovers", "versionlock"):
+                        "repo_remove", "find_leftovers", "remove_leftovers", "versionlock",
+                        "mirrors"):
                 if "DownloadProgress" not in globals():
                     DownloadProgress, RpmProgress, KeyImport = _callbacks()
                 {"transaction": run_transaction, "local_install": local_install, "refresh": refresh,
                  "repo_set_enabled": set_repos_enabled, "copr": copr, "clean_cache": clean_cache,
-                 "versionlock": versionlock,
+                 "versionlock": versionlock, "mirrors": set_mirrors,
                  "repo_remove": remove_repos, "find_leftovers": lambda _r: find_leftovers(),
                  "remove_leftovers": remove_leftovers}[op](req)
                 if _gui_gone:  # the transaction is finished and no one is listening: exit cleanly

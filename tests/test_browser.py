@@ -1,11 +1,13 @@
 """kram.app.browser without a toolkit: the flows that wait for the user, with a fake window and a recording Ui."""
 from types import SimpleNamespace
 
-from kram.app.browser import Browser, ReposChoice
+from kram.app.browser import Browser
+from kram.app.mirrors import MirrorChoice
 from kram.app.ports import RecordingUi
 from kram.app.scheduler import FakeScheduler
 from kram.core.history import Change
 from kram.core.marks import Action
+from kram.core.mirrors import SourceKind
 from kram.core.model import CatalogSnapshot, Origin, PkgRow, RepoInfo, Status, TransactionPreview
 
 
@@ -46,6 +48,7 @@ class View:
         self.review = None      # what review_changes answers: a request, or None (cancelled)
         self.helper = {"ok": True}
         self.repos = None
+        self.mirrors = None     # what show_mirrors answers: a MirrorChoice, or None
         self.selected: list[PkgRow] = []
 
     def __getattr__(self, name):  # everything else is only recorded
@@ -74,9 +77,14 @@ class View:
         self.calls.append(("helper", request))
         done(self.helper)
 
-    def show_repos(self, snap, counts, owners, listed, installed, done):
-        self.calls.append(("repos", counts))
+    def show_repos(self, data, done):
+        self.calls.append(("repos", data.counts))
         done(self.repos)
+
+    def show_mirrors(self, repo, source, fastestmirror, apply):
+        self.calls.append(("mirrors", repo.id, source.kind, fastestmirror))
+        if self.mirrors is not None:  # the user chose something while it is open
+            apply(self.mirrors)
 
 
 class Helper:
@@ -245,21 +253,80 @@ def test_a_failed_resolve_says_so_and_allows_a_retry():
     assert len(jobs.jobs) == 1
 
 
-def test_removing_repositories_reopens_the_list_after_the_reload():
+def test_removing_repositories_runs_the_helper_and_reopens_nothing():
     b, view, _ui, jobs = browser()
-    b.snapshot = CatalogSnapshot(ROWS, 1, 0, 0.0, repos=[RepoInfo("copr:a", "a", True, Origin.COPR, 60)])
-    opened = []
+    b.snapshot = CatalogSnapshot(ROWS, 1, 0, 0.0, repos=[RepoInfo("copr:a", "a", True, Origin.COPR, 60)],
+                                 releasever="45", basearch="x86_64")
     b.reload = lambda: view.calls.append(("reload",))
-    view.repos = ReposChoice(remove_repos=("copr:a",))
     b.catalog.repo_package_counts = lambda: {"copr:a": 3}
     b.open_repos()
     jobs.run(({"copr:a": 3}, {}))
+    assert views(view, "repos") == [("repos", {"copr:a": 3})]
+    b.remove_repos(["copr:a"])  # from the dialog, which stays open
     assert views(view, "helper") == [("helper", {"op": "repo_remove", "repos": ["copr:a"]})]
-    b.open_repos = lambda: opened.append(1)
     b.catalog_loaded.emit(b.snapshot)
-    b.catalog_loaded.emit(b.snapshot)  # only once
-    assert opened == [1] and views(view, "repos")[0][1] == {"copr:a": 3}
+    assert len(views(view, "repos")) == 1  # the open dialog updates itself: no second one
 
+
+def test_the_repositories_data_is_read_for_any_snapshot():
+    b, _view, _ui, jobs = browser()
+    snap = CatalogSnapshot(ROWS, 1, 0, 0.0, repos=[RepoInfo("copr:a", "a", True, Origin.COPR, 60)],
+                           releasever="45", basearch="x86_64")
+    b.catalog.repo_package_counts = lambda: {"copr:a": 3}
+    got = []
+    b.repos_data(snap, got.append)
+    jobs.run(({"copr:a": 3}, {"/x.repo": "pkg"}))
+    [data] = got
+    assert (data.repos, data.counts, data.owners, data.variables) == (
+        snap.repos, {"copr:a": 3}, {"/x.repo": "pkg"}, {"releasever": "45", "basearch": "x86_64"})
+
+
+def mirror_browser():
+    b, view, _ui, jobs = browser()
+    repo = RepoInfo("updates", "Updates", True, Origin.FEDORA, 60, metalink="https://ml/x")
+    b.snapshot = CatalogSnapshot(ROWS, 1, 0, 0.0, repos=[repo], releasever="45", basearch="x86_64", fastestmirror=True)
+    b.reload = lambda: view.calls.append(("reload",))
+    return b, view
+
+
+def test_the_mirrors_dialog_opens_and_closing_it_changes_nothing():
+    b, view = mirror_browser()
+    b.open_mirrors("updates")
+    assert views(view, "mirrors") == [("mirrors", "updates", SourceKind.METALINK, True)]
+    assert not views(view, "helper") and not views(view, "repos")  # Repositories was never closed
+
+
+def test_pinning_a_mirror_runs_the_helper_and_reloads():
+    b, view = mirror_browser()
+    view.mirrors = MirrorChoice("updates", "https://a.example/f/")
+    b.open_mirrors("updates")
+    assert views(view, "helper") == [("helper", {"op": "mirrors",
+                                                 "pin": {"repo": "updates", "baseurl": "https://a.example/f/"}})]
+    assert views(view, "reload") and not views(view, "repos")
+    b.snapshot.repos[0].metalink, b.snapshot.repos[0].baseurls = "", ("https://a.example/f/",)
+    b.snapshot.repos[0].file_path = ""
+    assert b.mirror_state(b.snapshot, "updates") is None  # pinned, but its file names no list: nothing to show
+    b.snapshot.repos[0].metalink = "https://ml/x"
+    source, fastest = b.mirror_state(b.snapshot, "updates")
+    assert source.url == "https://ml/x" and fastest is True and b.mirror_state(b.snapshot, "gone") is None
+
+
+def test_going_back_to_automatic_and_the_fastest_option():
+    b, view = mirror_browser()
+    view.mirrors = MirrorChoice("updates", None)
+    b.open_mirrors("updates")
+    view.mirrors = MirrorChoice(fastestmirror=False)
+    b.open_mirrors("updates")
+    assert [r for _n, r in views(view, "helper")] == [{"op": "mirrors", "pin": {"repo": "updates", "baseurl": None}},
+                                                      {"op": "mirrors", "fastestmirror": False}]
+
+
+def test_a_repository_without_mirrors_opens_nothing():
+    b, view = mirror_browser()
+    b.snapshot.repos[0].metalink = ""
+    b.open_mirrors("updates")
+    b.open_mirrors("gone")
+    assert not views(view, "mirrors")
 
 def test_an_undo_reports_what_cannot_be_undone():
     b, view, ui, jobs = browser()

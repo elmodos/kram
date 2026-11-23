@@ -49,22 +49,39 @@ def url_with(url: str, params: Mapping[str, str] | None) -> str:
     return f"{url}?{urllib.parse.urlencode(params)}" if params else url
 
 
-def _read(url: str, timeout_s: float, headers: Mapping[str, str]) -> bytes:
-    request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT, **headers})
-    try:
-        with urllib.request.urlopen(request, timeout=timeout_s) as answer:  # noqa: S310 (https URLs of our own)
-            return answer.read()
-    except urllib.error.HTTPError as e:
-        raise NetError(f"HTTP {e.code}: {e.reason}") from e
-    except urllib.error.URLError as e:
+def as_net_error(e: Exception) -> NetError:
+    """The one `NetError` for whatever a request raised: `str()` of it is the reason for the user."""
+    if isinstance(e, urllib.error.HTTPError):
+        return NetError(f"HTTP {e.code}: {e.reason}")
+    if isinstance(e, urllib.error.URLError):
         reason = e.reason
         if isinstance(reason, (TimeoutError, socket.timeout)):
-            raise NetError("Operation timed out") from e
-        raise NetError(str(getattr(reason, "strerror", None) or reason)) from e
-    except (TimeoutError, socket.timeout) as e:  # a timeout while reading the body
-        raise NetError("Operation timed out") from e
+            return NetError("Operation timed out")
+        return NetError(str(getattr(reason, "strerror", None) or reason))
+    if isinstance(e, (TimeoutError, socket.timeout)):  # a timeout while reading the body
+        return NetError("Operation timed out")
+    if isinstance(e, OSError):
+        return NetError(e.strerror or str(e))
+    return NetError(str(e))
+
+
+def open_url(url: str, timeout_s: float, headers: Mapping[str, str] | None = None):
+    """The open response of a GET (a context manager), or a `NetError`."""
+    request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT, **(headers or {})})
+    try:
+        return urllib.request.urlopen(request, timeout=timeout_s)  # noqa: S310 (http(s) URLs only: callers check)
     except OSError as e:
-        raise NetError(e.strerror or str(e)) from e
+        raise as_net_error(e) from e
+
+
+def _read(url: str, timeout_s: float, headers: Mapping[str, str]) -> bytes:
+    try:
+        with open_url(url, timeout_s, headers) as answer:
+            return answer.read()
+    except NetError:
+        raise
+    except OSError as e:  # a failure while reading the body
+        raise as_net_error(e) from e
 
 
 def fetch(url: str, *, timeout_s: float, post: Callable[[Callable[[], None]], None],
