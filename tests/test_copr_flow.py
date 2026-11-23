@@ -56,6 +56,31 @@ def test_the_table_and_the_buttons():
     b = c.buttons(p, None, "")
     assert (b.enable, b.disable, b.remove, b.add) == (False, True, True, False)
     assert c.buttons(None, None, "owner/project").add
+    assert not c.buttons(None, None, " Elmodos/kram ").add  # already enabled
+
+
+def test_an_enabled_project_cannot_be_added_again(monkeypatch):
+    payload = {"items": [{"full_name": "elmodos/Kram", "description": "", "chroot_repos": {"fedora-45-x86_64": ""}}]}
+    monkeypatch.setattr(net, "fetch", lambda url, *, done, **kw: done(json.dumps(payload).encode()))
+    c, view, ui, helper, _shown = projects()
+    c.search("kram")
+    kram = view.results[0].project
+    assert not c.buttons(None, kram, "").add
+    c.enable(kram, "")
+    c.enable(None, "elmodos/Kram")
+    assert helper == []
+
+
+def test_a_disabled_project_can_be_enabled_from_the_search(monkeypatch):
+    payload = {"items": [{"full_name": "elmodos/Kram", "description": "", "chroot_repos": {"fedora-45-x86_64": ""}}]}
+    monkeypatch.setattr(net, "fetch", lambda url, *, done, **kw: done(json.dumps(payload).encode()))
+    c, view, ui, helper, _shown = projects()
+    snap = snapshot()
+    snap.repos = [RepoInfo(REPO, "Kram", False, Origin.COPR, 60)]
+    c.set_catalog(snap, Counter())
+    c.search("kram")
+    [line] = view.results
+    assert line.name == "elmodos/Kram" and c.buttons(None, line.project, "").add
 
 
 @pytest.mark.feature(Feature.DIALOG_COPR_REMOVE_QUESTION, front="qt")

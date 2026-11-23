@@ -100,8 +100,18 @@ class CoprProjects:
     def buttons(self, project: EnabledProject | None, result: CoprProject | None, typed: str) -> Buttons:
         """For the selected project, the selected search result and the text in the field."""
         sel = project is not None
-        return Buttons(sel and not project.enabled, sel and project.enabled, sel, sel,
-                       result is not None or bool(PROJECT_RE.match(typed.strip())))
+        if result is not None:
+            add = not self._is_enabled(result.full_name)
+        else:
+            text = typed.strip()
+            add = bool(PROJECT_RE.match(text)) and not self._is_enabled(text)
+        return Buttons(sel and not project.enabled, sel and project.enabled, sel, sel, add)
+
+    def _is_enabled(self, full_name: str) -> bool:
+        """The owner/project is on this system and on: enabling it again would do nothing. A disabled one can be
+        enabled from the search too."""
+        name = full_name.lower()
+        return any(p.enabled and p.hub == DEFAULT_HUB and p.project.lower() == name for p in self.projects)
 
     def change(self, project: EnabledProject, action: str) -> None:
         """"enable" or "disable"."""
@@ -176,13 +186,12 @@ class CoprProjects:
         snap = self._snap
         if snap is None:
             return
-        enabled = {p.project.lower() for p in self.projects if p.hub == DEFAULT_HUB}
         chroot = f"fedora-{snap.releasever}-{snap.basearch}"
         lines = []
         for p in self.results:
             ok = p.has_chroot(snap.releasever, snap.basearch)
             lines.append(ResultLine(
-                p, p.full_name + ("  " + _("(enabled)") if p.full_name.lower() in enabled else ""), p.description,
+                p, p.full_name + ("  " + _("(enabled)") if self._is_enabled(p.full_name) else ""), p.description,
                 p.description + (f"\n\n{p.homepage}" if p.homepage else ""), ("✓ " if ok else "✗ ") + chroot, ok,
                 "" if ok else _("Builds exist for: {chroots}").format(chroots=", ".join(p.chroots) or "—")))
         self._view.show_results(lines)
@@ -191,8 +200,10 @@ class CoprProjects:
         """Enable the selected search result; without one, the owner/project typed in the field."""
         if result is None:
             text = typed.strip()  # allow enabling a typed owner/project without searching
-            if PROJECT_RE.match(text):
+            if PROJECT_RE.match(text) and not self._is_enabled(text):
                 self._copr("enable", text, DEFAULT_HUB)
+            return
+        if self._is_enabled(result.full_name):
             return
         snap = self._snap
         if snap and not result.has_chroot(snap.releasever, snap.basearch):
