@@ -34,6 +34,11 @@ VIEWS = [
     ("search", _("Search results"), "history"),
     ("custom", _("Custom filters"), "custom"),
 ]
+# the icon on each view's button: symbolic, so it reads as one monochrome glyph next to the label in any theme
+VIEW_ICONS = {
+    "status": "checkbox-checked-symbolic", "origin": "network-server-symbolic", "groups": "view-grid-symbolic",
+    "environments": "computer-symbolic", "search": "edit-find-symbolic", "custom": "object-select-symbolic",
+}
 
 
 def history_id(text: str, mode: int) -> str:

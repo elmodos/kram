@@ -53,3 +53,22 @@ def test_an_empty_entry_goes_once_the_selection_leaves_it(app):
     app.processEvents()
     assert bar.item_of("status:blocked") is None
     assert bar.current_entry_id == "status:upgradable"
+
+
+@pytest.mark.feature(Feature.SIDEBAR_SECTION_ICONS, front="qt")
+def test_every_section_button_has_its_view_icon(app):
+    from PySide6.QtGui import QIcon
+
+    from kram.app.sidebar import VIEW_ICONS, VIEWS
+    from kram.qt.sidebar import Sidebar
+
+    QIcon.setThemeSearchPaths(["/usr/share/icons", *QIcon.themeSearchPaths()])
+    assert [view_id for view_id, _label, _b in VIEWS] == list(VIEW_ICONS)
+    for theme in ("breeze", "Adwaita"):  # every name is in both
+        QIcon.setThemeName(theme)
+        if all(QIcon.hasThemeIcon(name) for name in VIEW_ICONS.values()):
+            break
+    else:
+        pytest.skip("neither Breeze nor Adwaita is installed")
+    bar = Sidebar()
+    assert all(not btn.icon().isNull() for btn in bar._buttons.buttons())

@@ -9,14 +9,9 @@ from collections.abc import Callable
 
 from gi.repository import Adw, Gdk, Gio, GObject, Gtk, Pango
 
-from ..app.sidebar import VIEWS, Listing, SidebarModel, entry_font, entry_icon
+from ..app.sidebar import VIEW_ICONS, VIEWS, Listing, SidebarModel, entry_font, entry_icon
 from ..core.filters import FilterEntry
 from .icons import set_image
-
-VIEW_ICONS = {
-    "status": "checkbox-checked-symbolic", "origin": "network-server-symbolic", "groups": "view-grid-symbolic",
-    "environments": "computer-symbolic", "search": "edit-find-symbolic", "custom": "object-select-symbolic",
-}
 
 
 class _Entry(GObject.Object):

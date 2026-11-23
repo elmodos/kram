@@ -972,8 +972,7 @@ def test_the_gtk_front_end_names_gtk_and_libadwaita():
 
 @pytest.mark.feature(Feature.SIDEBAR_SECTION_ICONS, front="gtk")
 def test_every_section_button_has_an_icon_the_theme_has():
-    from kram.app.sidebar import VIEWS
-    from kram.gtk.sidebar import VIEW_ICONS
+    from kram.app.sidebar import VIEW_ICONS, VIEWS
     theme = Gtk.IconTheme.get_for_display(Gdk.Display.get_default())
     assert [view_id for view_id, _label, _b in VIEWS] == list(VIEW_ICONS)
     missing = [name for name in VIEW_ICONS.values() if not theme.has_icon(name)]

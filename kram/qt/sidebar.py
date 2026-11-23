@@ -2,7 +2,7 @@
 kram.app.sidebar.SidebarModel. A tree: nested entries (an origin's repositories, an environment's groups) are
 children of the entry above them."""
 from PySide6.QtCore import QPoint, Qt, Signal
-from PySide6.QtGui import QFont
+from PySide6.QtGui import QFont, QIcon
 from PySide6.QtWidgets import (
     QButtonGroup,
     QHeaderView,
@@ -14,7 +14,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from ..app.sidebar import VIEWS, Listing, SidebarModel, entry_font, entry_icon, entry_text
+from ..app.sidebar import VIEW_ICONS, VIEWS, Listing, SidebarModel, entry_font, entry_icon, entry_text
 from ..core.filters import FilterEntry
 from .icons import icon
 from .qt_loop import QtScheduler
@@ -57,7 +57,7 @@ class Sidebar(QWidget):
 
         self._buttons = QButtonGroup(self)
         for view_id, label, _builder in VIEWS:
-            btn = QPushButton(label)
+            btn = QPushButton(QIcon.fromTheme(VIEW_ICONS[view_id]), label)
             btn.setCheckable(True)
             btn.setChecked(view_id == self.model.current_view)
             btn.clicked.connect(lambda _checked, v=view_id: self.set_view(v))

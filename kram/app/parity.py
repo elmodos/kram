@@ -422,7 +422,7 @@ QT: dict[Feature, Entry] = {
     Feature.SIDEBAR_CUSTOM_FILTER_MENU: Entry(Support.SUPPORTED),
     Feature.SIDEBAR_ENVIRONMENTS_TREE: Entry(Support.SUPPORTED),
     Feature.SIDEBAR_GROUP_CHANGE: Entry(Support.SUPPORTED),
-    Feature.SIDEBAR_SECTION_ICONS: Entry(Support.PARTIAL, 'the section buttons are text only; icons are not drawn in Qt'),
+    Feature.SIDEBAR_SECTION_ICONS: Entry(Support.SUPPORTED),
     Feature.SIDEBAR_VIEWS: Entry(Support.SUPPORTED),
     Feature.SYSTEM_FILE_MANAGER: Entry(Support.PARTIAL, 'not tested'),
     Feature.SYSTEM_POLKIT: Entry(Support.PARTIAL, "the helper's requests are tested; the prompt is not"),
