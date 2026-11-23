@@ -34,6 +34,11 @@ webhook with the **push** event), never `elmodos/Kram`, where a snapshot would r
 
 ## Releases
 
+`scripts/release.sh X.Y.Z` does steps 1 and 2 on `main`: it collects the `Changelog:` trailers of the commits since
+the last tag, opens them in the git editor, writes them to the spec's `%changelog` and the metainfo `<release>`,
+bumps the version, commits "Release X.Y.Z", tags it and runs `scripts/rpm_check.sh`. It never pushes; it prints
+the push command and how to undo. `--no-edit` keeps the items as they are, `--no-check` skips rpm_check.sh.
+
 1. Bump the version in `pyproject.toml`, `kram/__init__.py`, `%global base_version` in `packaging/kram.spec`
    (reset `Release:` to 1, add a `%changelog` entry) and add a `<release>` to
    `data/io.github.elmodos.Kram.metainfo.xml`. `tests/test_packaging.py` fails if they disagree.
