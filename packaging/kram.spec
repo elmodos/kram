@@ -1,5 +1,5 @@
 %global appid io.github.elmodos.Kram
-%global base_version 0.14.0
+%global base_version 0.14.1
 # the first version that is split into kram-common + kram-qt + kram-gtk; the single kram package before it is
 # obsoleted by kram-qt
 %global split_version 0.12.0
@@ -272,6 +272,10 @@ rm -f "$state"
 %{python3_sitelib}/kram/gtk/
 
 %changelog
+* Mon Nov 23 2026 Modo Ltunzher <offnormal@gmail.com> - 0.14.1-1
+- COPR: the search no longer offers to enable a project that is already enabled
+- GTK front end: right-clicking a selected package that is not installed opens the context menu again
+
 * Mon Nov 23 2026 Modo Ltunzher <offnormal@gmail.com> - 0.14.0-1
 - GTK front end: the button for a new Fedora release sits in the left half of the header bar
 - Repositories: Mirrors… lists a repository's mirrors, tests how fast each one is and pins the repository to the one you choose, or back to automatic
