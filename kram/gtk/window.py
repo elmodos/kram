@@ -116,7 +116,7 @@ class MainWindow(Adw.ApplicationWindow):
         first, fallback = RELEASE_ICONS
         self.upgrade_button = Gtk.Button(action_name="win.upgrade", child=Adw.ButtonContent(
             label="Fedora", icon_name=icons.first_themed((first, fallback)) or "software-update-available-symbolic"))
-        header.pack_end(self.upgrade_button)
+        header.pack_start(self.upgrade_button)
         self.releases.changed.connect(self.update_release_button)
         b.refreshed.connect(self.releases.check)
         self.update_release_button()
