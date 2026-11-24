@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kram\n"
 "Report-Msgid-Bugs-To: https://github.com/elmodos/kram/issues\n"
-"POT-Creation-Date: 2026-11-23 21:08+0200\n"
+"POT-Creation-Date: 2026-11-24 01:38+0200\n"
 "PO-Revision-Date: 2026-11-04 14:07+0200\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -200,7 +200,7 @@ msgstr "打开软件包文件…"
 msgid "Install a downloaded .rpm file (you can also drop it on the window)"
 msgstr "安装已下载的 .rpm 文件（也可以把它拖放到窗口上）"
 
-#: kram/app/actions.py:100 kram/tui/app.py:176
+#: kram/app/actions.py:100 kram/tui/app.py:199
 msgid "Quit"
 msgstr "退出"
 
@@ -2428,14 +2428,14 @@ msgstr "固定的面板"
 msgid "Sidebar and details"
 msgstr "侧栏和详细信息"
 
-#: kram/app/preferences.py:107 kram/tui/app.py:173
+#: kram/app/preferences.py:107 kram/tui/app.py:195
 msgid "Sidebar"
 msgstr "侧栏"
 
 #: kram/app/preferences.py:108 kram/gtk/dialogs/install.py:92
 #: kram/gtk/dialogs/progress.py:50 kram/gtk/ui_port.py:32
 #: kram/qt/install_dialog.py:112 kram/qt/progress_dialog.py:57
-#: kram/tui/app.py:174 kram/tui/app.py:220
+#: kram/tui/app.py:196 kram/tui/app.py:246
 msgid "Details"
 msgstr "详细信息"
 
@@ -3413,7 +3413,7 @@ msgid "Hub"
 msgstr "中心"
 
 #: kram/gtk/dialogs/copr.py:50 kram/gtk/dialogs/repos.py:152
-#: kram/qt/copr_dialog.py:51 kram/qt/repos_dialog.py:67 kram/tui/app.py:219
+#: kram/qt/copr_dialog.py:51 kram/qt/repos_dialog.py:67 kram/tui/app.py:245
 msgid "Packages"
 msgstr "软件包"
 
@@ -3773,7 +3773,7 @@ msgid "{n} of them is a security update"
 msgid_plural "{n} of them are security updates"
 msgstr[0] "其中 {n} 个是安全更新"
 
-#: kram/notifier/tray.py:237
+#: kram/notifier/tray.py:237 kram/tui/window.py:134
 #, python-brace-format
 msgid "The package information is {days} day old"
 msgid_plural "The package information is {days} days old"
@@ -3791,7 +3791,7 @@ msgstr "以 MIT 许可证发布。"
 msgid "Main toolbar"
 msgstr "主工具栏"
 
-#: kram/qt/upgrade_dialog.py:55 kram/tui/dialogs/path.py:83
+#: kram/qt/upgrade_dialog.py:55 kram/tui/dialogs/path.py:85
 #: kram/tui/dialogs/question.py:22
 msgid "Cancel"
 msgstr "取消"
@@ -3812,64 +3812,72 @@ msgstr "打开时显示可升级的软件包"
 msgid "install a package file"
 msgstr "安装软件包文件"
 
-#: kram/tui/app.py:159
+#: kram/tui/app.py:181
 #, python-brace-format
 msgid "Make the terminal larger: Kram needs {size}"
 msgstr "请把终端调大：Kram 需要 {size}"
 
-#: kram/tui/app.py:160
+#: kram/tui/app.py:182 kram/tui/window.py:121
 msgid "quit"
 msgstr "退出"
 
-#: kram/tui/app.py:255 kram/tui/app.py:256
+#: kram/tui/app.py:282 kram/tui/app.py:283
 msgid "hide"
 msgstr "隐藏"
 
-#: kram/tui/app.py:255 kram/tui/app.py:256
+#: kram/tui/app.py:282 kram/tui/app.py:283
 msgid "list"
 msgstr "列表"
 
-#: kram/tui/dialogs/path.py:77 kram/tui/dialogs/question.py:60
+#: kram/tui/app.py:284
+msgid "copy"
+msgstr "复制"
+
+#: kram/tui/app.py:284
+msgid "sort"
+msgstr "排序"
+
+#: kram/tui/dialogs/path.py:79 kram/tui/dialogs/question.py:60
 msgid "cancel"
 msgstr "取消"
 
-#: kram/tui/dialogs/path.py:77 kram/tui/dialogs/question.py:59
+#: kram/tui/dialogs/path.py:79 kram/tui/dialogs/question.py:59
 msgid "choose"
 msgstr "选择"
 
-#: kram/tui/dialogs/path.py:77
+#: kram/tui/dialogs/path.py:79
 msgid "complete"
 msgstr "补全"
 
-#: kram/tui/dialogs/path.py:82
+#: kram/tui/dialogs/path.py:84
 msgid "Open"
 msgstr "打开"
 
-#: kram/tui/dialogs/path.py:82
+#: kram/tui/dialogs/path.py:84
 msgid "Save"
 msgstr "保存"
 
-#: kram/tui/dialogs/path.py:122
+#: kram/tui/dialogs/path.py:124
 #, python-brace-format
 msgid "“{name}” is a folder"
 msgstr "“{name}”是文件夹"
 
-#: kram/tui/dialogs/path.py:126
+#: kram/tui/dialogs/path.py:128
 #, python-brace-format
 msgid "No such file: {path}"
 msgstr "没有此文件：{path}"
 
-#: kram/tui/dialogs/path.py:131
+#: kram/tui/dialogs/path.py:133
 #, python-brace-format
 msgid "No such folder: {path}"
 msgstr "没有此文件夹：{path}"
 
-#: kram/tui/dialogs/path.py:136
+#: kram/tui/dialogs/path.py:138
 #, python-brace-format
 msgid "“{name}” already exists. Replace it?"
 msgstr "“{name}”已存在。要替换吗？"
 
-#: kram/tui/dialogs/path.py:137
+#: kram/tui/dialogs/path.py:139
 msgid "Replace"
 msgstr "替换"
 
@@ -3897,6 +3905,30 @@ msgstr "下一个"
 msgid "close"
 msgstr "关闭"
 
+#: kram/tui/package_list.py:72
+msgctxt "short column header"
+msgid "Installed"
+msgstr "已安装"
+
+#: kram/tui/package_list.py:73
+msgctxt "short column header"
+msgid "Latest"
+msgstr "最新"
+
+#: kram/tui/package_list.py:74
+msgctxt "short column header"
+msgid "Size"
+msgstr "大小"
+
+#: kram/tui/package_list.py:75
+msgctxt "short column header"
+msgid "Download"
+msgstr "下载"
+
+#: kram/tui/package_list.py:235
+msgid "Sort"
+msgstr "排序"
+
 #: kram/tui/ui_port.py:78
 msgid "No desktop to open it in: the address is copied"
 msgstr "没有可以打开它的桌面：已复制地址"
@@ -3912,3 +3944,26 @@ msgstr "已复制"
 #: kram/tui/widgets.py:160
 msgid "pick"
 msgstr "选择"
+
+#: kram/tui/window.py:120
+msgid "Another package manager is running: waiting"
+msgstr "另一个软件包管理器正在运行：等待中"
+
+#: kram/tui/window.py:148
+#, python-brace-format
+msgid "“{text}” in {filter}"
+msgstr "{filter}中的“{text}”"
+
+#: kram/tui/window.py:153
+#, python-brace-format
+msgid "{n} change marked"
+msgid_plural "{n} changes marked"
+msgstr[0] "已标记 {n} 项更改"
+
+#: kram/tui/window.py:171
+msgid "Not in this version yet"
+msgstr "此版本中尚不可用"
+
+#: kram/tui/window.py:202
+msgid "Sort by"
+msgstr "排序依据"

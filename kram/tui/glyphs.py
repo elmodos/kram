@@ -40,14 +40,16 @@ class Glyphs:
     ellipsis: str
     times: str            # "40×12"
     bullet: str           # the current view in the sidebar's list of views
+    selected: str         # the package list's margin of a row in a selection of several (§7.3.6)
+    warning: str          # before a warning on the top line (§5.4)
     panel_border: str     # Textual border types: a panel's single line, a modal window's double one
     modal_border: str
 
 
-UNICODE = Glyphs(left="←", right="→", up="↑", down="↓", ellipsis="…", times="×", bullet="●", panel_border="solid",
-                 modal_border="double")
-ASCII = Glyphs(left="<-", right="->", up="^", down="v", ellipsis="...", times="x", bullet="*", panel_border="ascii",
-               modal_border="ascii")
+UNICODE = Glyphs(left="←", right="→", up="↑", down="↓", ellipsis="…", times="×", bullet="●", selected="▌", warning="!",
+                 panel_border="solid", modal_border="double")
+ASCII = Glyphs(left="<-", right="->", up="^", down="v", ellipsis="...", times="x", bullet="*", selected="|", warning="!",
+               panel_border="ascii", modal_border="ascii")
 
 
 @dataclass(frozen=True)

@@ -32,6 +32,20 @@ from kram.tui.widgets import Button, CheckBox, ChoiceList, hint  # noqa: E402
 WIDE, NARROW = (120, 40), (80, 24)
 
 
+@pytest.fixture(autouse=True)
+def _made_up_catalog(monkeypatch):
+    """The window loads the catalog as it starts: a made-up one here, never the system's (tests/test_tui_window.py
+    tests the window itself)."""
+    from types import SimpleNamespace
+
+    from kram.app.browser import Browser
+    from kram.core.model import CatalogSnapshot
+    from kram.tui import window
+    catalog = SimpleNamespace(load=lambda *a, **k: CatalogSnapshot([], 0, 0, 0.1), blocked_upgrades=lambda: {})
+    monkeypatch.setattr(window, "Browser", lambda view, ui, scheduler, details, post, **kw: Browser(
+        view, ui, scheduler, details, post, catalog=catalog, **kw))
+
+
 def run(test, size=WIDE, app=None):
     """Run `test(app, pilot)` in a headless app of the given terminal size."""
     app = app or KramApp()
@@ -389,10 +403,10 @@ def test_messages_and_status():
         await pilot.press("enter")
         await pilot.pause()
         app.ui.status("Loading", 0)
-        assert app.window.query_one("#top").render().plain == "Kram  Loading"
+        assert app.window.query_one("#top").render().plain.startswith("Kram  Loading")
         app.ui.copy_text("vim-enhanced")
         assert app.clipboard == "vim-enhanced"
-        assert app.window.query_one("#top").render().plain == "Kram  Copied"
+        assert app.window.query_one("#top").render().plain.startswith("Kram  Copied")
     run(test)
 
 

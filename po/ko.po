@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kram\n"
 "Report-Msgid-Bugs-To: https://github.com/elmodos/kram/issues\n"
-"POT-Creation-Date: 2026-11-23 21:08+0200\n"
+"POT-Creation-Date: 2026-11-24 01:38+0200\n"
 "PO-Revision-Date: 2026-11-04 14:07+0200\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -201,7 +201,7 @@ msgstr "패키지 파일 열기…"
 msgid "Install a downloaded .rpm file (you can also drop it on the window)"
 msgstr "내려받은 .rpm 파일을 설치합니다 (창에 끌어다 놓아도 됩니다)"
 
-#: kram/app/actions.py:100 kram/tui/app.py:176
+#: kram/app/actions.py:100 kram/tui/app.py:199
 msgid "Quit"
 msgstr "끝내기"
 
@@ -2480,14 +2480,14 @@ msgstr "고정된 패널"
 msgid "Sidebar and details"
 msgstr "사이드바와 자세히"
 
-#: kram/app/preferences.py:107 kram/tui/app.py:173
+#: kram/app/preferences.py:107 kram/tui/app.py:195
 msgid "Sidebar"
 msgstr "사이드바"
 
 #: kram/app/preferences.py:108 kram/gtk/dialogs/install.py:92
 #: kram/gtk/dialogs/progress.py:50 kram/gtk/ui_port.py:32
 #: kram/qt/install_dialog.py:112 kram/qt/progress_dialog.py:57
-#: kram/tui/app.py:174 kram/tui/app.py:220
+#: kram/tui/app.py:196 kram/tui/app.py:246
 msgid "Details"
 msgstr "자세히"
 
@@ -3470,7 +3470,7 @@ msgid "Hub"
 msgstr "허브"
 
 #: kram/gtk/dialogs/copr.py:50 kram/gtk/dialogs/repos.py:152
-#: kram/qt/copr_dialog.py:51 kram/qt/repos_dialog.py:67 kram/tui/app.py:219
+#: kram/qt/copr_dialog.py:51 kram/qt/repos_dialog.py:67 kram/tui/app.py:245
 msgid "Packages"
 msgstr "패키지"
 
@@ -3832,7 +3832,7 @@ msgid "{n} of them is a security update"
 msgid_plural "{n} of them are security updates"
 msgstr[0] "그중 {n}개는 보안 업데이트"
 
-#: kram/notifier/tray.py:237
+#: kram/notifier/tray.py:237 kram/tui/window.py:134
 #, python-brace-format
 msgid "The package information is {days} day old"
 msgid_plural "The package information is {days} days old"
@@ -3850,7 +3850,7 @@ msgstr "MIT 라이선스로 배포됩니다."
 msgid "Main toolbar"
 msgstr "주 도구 모음"
 
-#: kram/qt/upgrade_dialog.py:55 kram/tui/dialogs/path.py:83
+#: kram/qt/upgrade_dialog.py:55 kram/tui/dialogs/path.py:85
 #: kram/tui/dialogs/question.py:22
 msgid "Cancel"
 msgstr "취소"
@@ -3871,64 +3871,72 @@ msgstr "업그레이드가 있는 패키지로 열기"
 msgid "install a package file"
 msgstr "패키지 파일 설치"
 
-#: kram/tui/app.py:159
+#: kram/tui/app.py:181
 #, python-brace-format
 msgid "Make the terminal larger: Kram needs {size}"
 msgstr "터미널을 키우십시오: Kram에는 {size}이(가) 필요합니다"
 
-#: kram/tui/app.py:160
+#: kram/tui/app.py:182 kram/tui/window.py:121
 msgid "quit"
 msgstr "끝내기"
 
-#: kram/tui/app.py:255 kram/tui/app.py:256
+#: kram/tui/app.py:282 kram/tui/app.py:283
 msgid "hide"
 msgstr "숨기기"
 
-#: kram/tui/app.py:255 kram/tui/app.py:256
+#: kram/tui/app.py:282 kram/tui/app.py:283
 msgid "list"
 msgstr "목록"
 
-#: kram/tui/dialogs/path.py:77 kram/tui/dialogs/question.py:60
+#: kram/tui/app.py:284
+msgid "copy"
+msgstr "복사"
+
+#: kram/tui/app.py:284
+msgid "sort"
+msgstr "정렬"
+
+#: kram/tui/dialogs/path.py:79 kram/tui/dialogs/question.py:60
 msgid "cancel"
 msgstr "취소"
 
-#: kram/tui/dialogs/path.py:77 kram/tui/dialogs/question.py:59
+#: kram/tui/dialogs/path.py:79 kram/tui/dialogs/question.py:59
 msgid "choose"
 msgstr "선택"
 
-#: kram/tui/dialogs/path.py:77
+#: kram/tui/dialogs/path.py:79
 msgid "complete"
 msgstr "완성"
 
-#: kram/tui/dialogs/path.py:82
+#: kram/tui/dialogs/path.py:84
 msgid "Open"
 msgstr "열기"
 
-#: kram/tui/dialogs/path.py:82
+#: kram/tui/dialogs/path.py:84
 msgid "Save"
 msgstr "저장"
 
-#: kram/tui/dialogs/path.py:122
+#: kram/tui/dialogs/path.py:124
 #, python-brace-format
 msgid "“{name}” is a folder"
 msgstr "“{name}”은(는) 폴더입니다"
 
-#: kram/tui/dialogs/path.py:126
+#: kram/tui/dialogs/path.py:128
 #, python-brace-format
 msgid "No such file: {path}"
 msgstr "그런 파일이 없습니다: {path}"
 
-#: kram/tui/dialogs/path.py:131
+#: kram/tui/dialogs/path.py:133
 #, python-brace-format
 msgid "No such folder: {path}"
 msgstr "그런 폴더가 없습니다: {path}"
 
-#: kram/tui/dialogs/path.py:136
+#: kram/tui/dialogs/path.py:138
 #, python-brace-format
 msgid "“{name}” already exists. Replace it?"
 msgstr "“{name}”이(가) 이미 있습니다. 바꾸시겠습니까?"
 
-#: kram/tui/dialogs/path.py:137
+#: kram/tui/dialogs/path.py:139
 msgid "Replace"
 msgstr "바꾸기"
 
@@ -3956,6 +3964,30 @@ msgstr "다음"
 msgid "close"
 msgstr "닫기"
 
+#: kram/tui/package_list.py:72
+msgctxt "short column header"
+msgid "Installed"
+msgstr "설치됨"
+
+#: kram/tui/package_list.py:73
+msgctxt "short column header"
+msgid "Latest"
+msgstr "최신"
+
+#: kram/tui/package_list.py:74
+msgctxt "short column header"
+msgid "Size"
+msgstr "크기"
+
+#: kram/tui/package_list.py:75
+msgctxt "short column header"
+msgid "Download"
+msgstr "다운로드"
+
+#: kram/tui/package_list.py:235
+msgid "Sort"
+msgstr "정렬"
+
 #: kram/tui/ui_port.py:78
 msgid "No desktop to open it in: the address is copied"
 msgstr "열 데스크톱이 없습니다: 주소를 복사했습니다"
@@ -3971,3 +4003,26 @@ msgstr "복사했습니다"
 #: kram/tui/widgets.py:160
 msgid "pick"
 msgstr "선택"
+
+#: kram/tui/window.py:120
+msgid "Another package manager is running: waiting"
+msgstr "다른 패키지 관리자가 실행 중입니다: 기다리는 중"
+
+#: kram/tui/window.py:148
+#, python-brace-format
+msgid "“{text}” in {filter}"
+msgstr "{filter}의 “{text}”"
+
+#: kram/tui/window.py:153
+#, python-brace-format
+msgid "{n} change marked"
+msgid_plural "{n} changes marked"
+msgstr[0] "{n}개 변경 표시됨"
+
+#: kram/tui/window.py:171
+msgid "Not in this version yet"
+msgstr "이 버전에는 아직 없습니다"
+
+#: kram/tui/window.py:202
+msgid "Sort by"
+msgstr "정렬 기준"

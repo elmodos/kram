@@ -39,7 +39,7 @@ SLIDE_HEIGHT = 11  # the details slide-over; at most 3/5 of the body, so that ro
 PANELS = ("sidebar", "details")
 PINNED = {"both": {"sidebar", "details"}, "sidebar": {"sidebar"}, "details": {"details"}, "none": set()}
 # the window's own keys: off while another screen is up or a text field has the focus (the module's docstring)
-WINDOW_ACTIONS = frozenset({"toggle_panel", "back_to_list", "quit"})
+WINDOW_ACTIONS = frozenset({"toggle_panel", "back_to_list", "quit", "back"})
 
 CSS = PALETTE_CSS + """
 /* 16 colours: Textual draws some widgets in colours blended with transparency, which a 16-colour terminal cannot
@@ -113,23 +113,31 @@ class Body(Horizontal):
 
 
 class PanelBody(Widget, can_focus=True):
-    """What a panel focuses until its real content (the list, the sidebar's entries, the details) is built."""
-
-    def on_focus(self) -> None:
-        if self.id == "list":
-            self.app.list_focused()
+    """What a panel focuses until its real content (the sidebar's entries, the details) is built."""
 
     def render(self) -> str:
         return ""
 
 
 class TopLine(Static):
-    """The top line (§5.4): "Kram", then a transient message (the Ui port's `status`)."""
+    """The top line (§5.4): "Kram", the window's status (the filter, its rows, the marks; or what Kram is doing)
+    or a transient message over it (the Ui port's `status`), and on the right what is wrong with the catalog and its
+    age. What does not fit is dropped from the right."""
 
     def __init__(self, **kw):
         super().__init__(**kw)
         self.message = ""
+        self.status = Text()
+        self.right: list[Text] = []
         self._timer: Timer | None = None
+
+    def set_status(self, status: str | Text) -> None:
+        self.status = Text(status) if isinstance(status, str) else status
+        self.refresh()
+
+    def set_right(self, parts: list[Text]) -> None:
+        self.right = parts
+        self.refresh()
 
     def show_message(self, text: str, timeout_ms: int = 0) -> None:
         """`text` until the next one, or for `timeout_ms`."""
@@ -144,8 +152,22 @@ class TopLine(Static):
     def render(self) -> Text:
         line = Text()
         line.append("Kram", "bold")
-        if self.message:
-            line.append("  " + self.message)
+        left = Text(self.message) if self.message else self.status
+        if left:
+            line.append("  ")
+            line.append_text(left)
+        width = self.size.width
+        right = list(self.right)
+        while right and line.cell_len + sum(p.cell_len + 2 for p in right) > width:
+            right.pop()
+        if right:
+            gap = width - line.cell_len - sum(p.cell_len for p in right) - 2 * (len(right) - 1)
+            line.append(" " * gap)
+            for i, part in enumerate(right):
+                line.append("  " if i else "")
+                line.append_text(part)
+        else:
+            line.truncate(width, overflow="ellipsis")
         return line
 
 
@@ -173,6 +195,7 @@ class KramApp(App):
         Binding("g", "toggle_panel('sidebar')", _("Sidebar")),
         Binding("d", "toggle_panel('details')", _("Details")),
         Binding("escape", "back_to_list", show=False),
+        Binding("alt+left", "back", show=False),
         Binding("q", "quit", _("Quit")),
     ]
 
@@ -192,6 +215,8 @@ class KramApp(App):
         self.ui = TuiUi(self, self.show_status)
         for theme in ANSI_THEMES:
             self.register_theme(theme)
+        from .window import MainWindow  # it needs the Ui port and the glyphs set above
+        self.main = MainWindow(self)
 
     def get_css_variables(self) -> dict[str, str]:
         # the border types: box drawing, or plain ASCII where the terminal is not UTF-8 (§9.6)
@@ -207,7 +232,7 @@ class KramApp(App):
                 yield Static("", id="views")
             with Vertical(id="main"):
                 with Vertical(id="packages", classes="panel"):
-                    yield PanelBody(id="list")
+                    yield self.main.list
                 with Vertical(id="details", classes="panel"):
                     yield PanelBody(id="details-body")
         yield Footer()
@@ -222,6 +247,7 @@ class KramApp(App):
         self.refresh_colours()
         self.window.query_one("#list").focus()
         self.apply_layout()
+        self.main.start()
 
     @property
     def window(self) -> Screen:
@@ -255,6 +281,7 @@ class KramApp(App):
         """Draw again what took its colours from `role` in Python: the hints, the views, every widget's text."""
         self.window.query_one("#sidebar").border_subtitle = hint(("g", _("hide")), ("esc", _("list")))
         self.window.query_one("#details").border_subtitle = hint(("d", _("hide")), ("esc", _("list")))
+        self.window.query_one("#packages").border_subtitle = hint(("s", _("sort")), ("y", _("copy")))
         self.show_views()
         for screen in self.screen_stack:
             for widget in screen.query("*"):
@@ -265,8 +292,12 @@ class KramApp(App):
 
     # ---------------------------------------------------------------- the top line
 
+    @property
+    def top_line(self) -> TopLine:
+        return self.window.query_one(TopLine)
+
     def show_status(self, text: str, timeout_ms: int = 0) -> None:
-        self.window.query_one(TopLine).show_message(text, timeout_ms)
+        self.top_line.show_message(text, timeout_ms)
 
     # ---------------------------------------------------------------- the panels
 
@@ -324,6 +355,7 @@ class KramApp(App):
         sidebar.styles.width = SLIDE_WIDTH if narrow else preferences.value(preferences.TUI_SIDEBAR_WIDTH)
         details.styles.height = self.slide_height() if narrow else preferences.value(preferences.TUI_DETAILS_HEIGHT)
         if narrow == self.narrow:
+            self.update_list_inset()
             return
         self.narrow = narrow
         body.set_class(narrow, "narrow")
@@ -334,6 +366,13 @@ class KramApp(App):
                 pinned[name] = True
             self.panel(name).set_class(not focused if narrow else not pinned[name], "hidden")
         self.set_pinned(pinned)
+        self.update_list_inset()
+
+    def update_list_inset(self) -> None:
+        """The details slide-over covers the bottom of the list: the cursor keeps out from under it (§7.3.9). The
+        list's bottom border is under it too, so it covers one line fewer of the rows."""
+        open_ = self.narrow and not self.panel("details").has_class("hidden")
+        self.main.list.bottom_inset = self.slide_height() - 1 if open_ else 0
 
     def slide_height(self) -> int:
         return max(3, min(SLIDE_HEIGHT, self.window.query_one(Body).size.height * 3 // 5))
@@ -354,6 +393,7 @@ class KramApp(App):
             panel.add_class("hidden")
             if not self.narrow:
                 self.set_pinned({**self.pinned, name: False})
+            self.update_list_inset()
             return
         if self.narrow:
             for other in PANELS:
@@ -362,15 +402,21 @@ class KramApp(App):
             self.set_pinned({**self.pinned, name: True})
         panel.remove_class("hidden")
         self.focus_target(name).focus()
+        self.update_list_inset()
 
     def action_back_to_list(self) -> None:
         self.list_widget.focus()
+
+    def action_back(self) -> None:
+        """alt+←: the package before the last link followed (§6.5)."""
+        self.main.browser.go_back()
 
     def list_focused(self) -> None:
         """Focus moved to the list (Esc, Tab, a click): a slide-over closes, a pinned panel stays."""
         if self.narrow:
             for name in PANELS:
                 self.panel(name).add_class("hidden")
+            self.update_list_inset()
 
     # ---------------------------------------------------------------- who gets a key
 
@@ -390,4 +436,5 @@ class KramApp(App):
 
     def request_quit(self) -> None:
         """Quit (§10.19). With nothing pending Kram quits at once; asking first comes with the marks."""
+        self.main.shutdown()
         self.exit()

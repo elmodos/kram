@@ -661,11 +661,11 @@ TUI: dict[Feature, Entry] = {
     Feature.LIST_COLUMNS: Entry(Support.PLANNED),
     Feature.LIST_CONTEXT_MENU: Entry(Support.PLANNED),
     Feature.LIST_DOUBLE_CLICK_MARK: Entry(Support.PLANNED),
-    Feature.LIST_EMPTY_EXPLANATION: Entry(Support.PLANNED),
-    Feature.LIST_LOCK_PADLOCK: Entry(Support.PLANNED),
-    Feature.LIST_MULTI_SELECT: Entry(Support.PLANNED),
-    Feature.LIST_ROW_TINT: Entry(Support.PLANNED),
-    Feature.LIST_SORT: Entry(Support.PLANNED),
+    Feature.LIST_EMPTY_EXPLANATION: Entry(Support.SUPPORTED),
+    Feature.LIST_LOCK_PADLOCK: Entry(Support.SUPPORTED),
+    Feature.LIST_MULTI_SELECT: Entry(Support.SUPPORTED),
+    Feature.LIST_ROW_TINT: Entry(Support.PARTIAL, '16 colours tint the glyph and the name, not the row'),
+    Feature.LIST_SORT: Entry(Support.SUPPORTED),
     Feature.LIST_STATUS_CLICK: Entry(Support.PLANNED),
     Feature.MARKINGS_CSV_EXPORT: Entry(Support.PLANNED),
     Feature.MARKINGS_FILE: Entry(Support.PLANNED),
@@ -713,7 +713,7 @@ TUI: dict[Feature, Entry] = {
     Feature.WINDOW_HEADER_BUTTONS: Entry(Support.PLANNED),
     Feature.WINDOW_KEYBOARD_ONLY: Entry(Support.PLANNED),
     Feature.WINDOW_PANES_SAVED: Entry(Support.PLANNED),
-    Feature.WINDOW_STATUS_BAR: Entry(Support.PLANNED),
+    Feature.WINDOW_STATUS_BAR: Entry(Support.SUPPORTED),
 }
 
 # the front ends that are released: any PLANNED or NOT_IMPLEMENTED entry in them fails the test run

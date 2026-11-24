@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kram\n"
 "Report-Msgid-Bugs-To: https://github.com/elmodos/kram/issues\n"
-"POT-Creation-Date: 2026-11-23 21:08+0200\n"
+"POT-Creation-Date: 2026-11-24 01:38+0200\n"
 "PO-Revision-Date: 2026-11-04 14:07+0200\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -216,7 +216,7 @@ msgid "Install a downloaded .rpm file (you can also drop it on the window)"
 msgstr ""
 "Installa un file .rpm scaricato (puoi anche trascinarlo sulla finestra)"
 
-#: kram/app/actions.py:100 kram/tui/app.py:176
+#: kram/app/actions.py:100 kram/tui/app.py:199
 msgid "Quit"
 msgstr "Esci"
 
@@ -2607,14 +2607,14 @@ msgstr "Pannelli fissati"
 msgid "Sidebar and details"
 msgstr "Barra laterale e dettagli"
 
-#: kram/app/preferences.py:107 kram/tui/app.py:173
+#: kram/app/preferences.py:107 kram/tui/app.py:195
 msgid "Sidebar"
 msgstr "Barra laterale"
 
 #: kram/app/preferences.py:108 kram/gtk/dialogs/install.py:92
 #: kram/gtk/dialogs/progress.py:50 kram/gtk/ui_port.py:32
 #: kram/qt/install_dialog.py:112 kram/qt/progress_dialog.py:57
-#: kram/tui/app.py:174 kram/tui/app.py:220
+#: kram/tui/app.py:196 kram/tui/app.py:246
 msgid "Details"
 msgstr "Dettagli"
 
@@ -3624,7 +3624,7 @@ msgid "Hub"
 msgstr "Hub"
 
 #: kram/gtk/dialogs/copr.py:50 kram/gtk/dialogs/repos.py:152
-#: kram/qt/copr_dialog.py:51 kram/qt/repos_dialog.py:67 kram/tui/app.py:219
+#: kram/qt/copr_dialog.py:51 kram/qt/repos_dialog.py:67 kram/tui/app.py:245
 msgid "Packages"
 msgstr "Pacchetti"
 
@@ -3998,7 +3998,7 @@ msgid_plural "{n} of them are security updates"
 msgstr[0] "di cui {n} di sicurezza"
 msgstr[1] "di cui {n} di sicurezza"
 
-#: kram/notifier/tray.py:237
+#: kram/notifier/tray.py:237 kram/tui/window.py:134
 #, python-brace-format
 msgid "The package information is {days} day old"
 msgid_plural "The package information is {days} days old"
@@ -4017,7 +4017,7 @@ msgstr "Distribuito con licenza MIT."
 msgid "Main toolbar"
 msgstr "Barra degli strumenti principale"
 
-#: kram/qt/upgrade_dialog.py:55 kram/tui/dialogs/path.py:83
+#: kram/qt/upgrade_dialog.py:55 kram/tui/dialogs/path.py:85
 #: kram/tui/dialogs/question.py:22
 msgid "Cancel"
 msgstr "Annulla"
@@ -4038,64 +4038,72 @@ msgstr "apri sui pacchetti con un aggiornamento"
 msgid "install a package file"
 msgstr "installa un file di pacchetto"
 
-#: kram/tui/app.py:159
+#: kram/tui/app.py:181
 #, python-brace-format
 msgid "Make the terminal larger: Kram needs {size}"
 msgstr "Ingrandisci il terminale: Kram ha bisogno di {size}"
 
-#: kram/tui/app.py:160
+#: kram/tui/app.py:182 kram/tui/window.py:121
 msgid "quit"
 msgstr "esci"
 
-#: kram/tui/app.py:255 kram/tui/app.py:256
+#: kram/tui/app.py:282 kram/tui/app.py:283
 msgid "hide"
 msgstr "nascondi"
 
-#: kram/tui/app.py:255 kram/tui/app.py:256
+#: kram/tui/app.py:282 kram/tui/app.py:283
 msgid "list"
 msgstr "elenco"
 
-#: kram/tui/dialogs/path.py:77 kram/tui/dialogs/question.py:60
+#: kram/tui/app.py:284
+msgid "copy"
+msgstr "copia"
+
+#: kram/tui/app.py:284
+msgid "sort"
+msgstr "ordina"
+
+#: kram/tui/dialogs/path.py:79 kram/tui/dialogs/question.py:60
 msgid "cancel"
 msgstr "annulla"
 
-#: kram/tui/dialogs/path.py:77 kram/tui/dialogs/question.py:59
+#: kram/tui/dialogs/path.py:79 kram/tui/dialogs/question.py:59
 msgid "choose"
 msgstr "scegli"
 
-#: kram/tui/dialogs/path.py:77
+#: kram/tui/dialogs/path.py:79
 msgid "complete"
 msgstr "completa"
 
-#: kram/tui/dialogs/path.py:82
+#: kram/tui/dialogs/path.py:84
 msgid "Open"
 msgstr "Apri"
 
-#: kram/tui/dialogs/path.py:82
+#: kram/tui/dialogs/path.py:84
 msgid "Save"
 msgstr "Salva"
 
-#: kram/tui/dialogs/path.py:122
+#: kram/tui/dialogs/path.py:124
 #, python-brace-format
 msgid "“{name}” is a folder"
 msgstr "«{name}» è una cartella"
 
-#: kram/tui/dialogs/path.py:126
+#: kram/tui/dialogs/path.py:128
 #, python-brace-format
 msgid "No such file: {path}"
 msgstr "File inesistente: {path}"
 
-#: kram/tui/dialogs/path.py:131
+#: kram/tui/dialogs/path.py:133
 #, python-brace-format
 msgid "No such folder: {path}"
 msgstr "Cartella inesistente: {path}"
 
-#: kram/tui/dialogs/path.py:136
+#: kram/tui/dialogs/path.py:138
 #, python-brace-format
 msgid "“{name}” already exists. Replace it?"
 msgstr "«{name}» esiste già. Sostituirlo?"
 
-#: kram/tui/dialogs/path.py:137
+#: kram/tui/dialogs/path.py:139
 msgid "Replace"
 msgstr "Sostituisci"
 
@@ -4123,6 +4131,30 @@ msgstr "avanti"
 msgid "close"
 msgstr "chiudi"
 
+#: kram/tui/package_list.py:72
+msgctxt "short column header"
+msgid "Installed"
+msgstr "Installata"
+
+#: kram/tui/package_list.py:73
+msgctxt "short column header"
+msgid "Latest"
+msgstr "Ultima"
+
+#: kram/tui/package_list.py:74
+msgctxt "short column header"
+msgid "Size"
+msgstr "Dimensione"
+
+#: kram/tui/package_list.py:75
+msgctxt "short column header"
+msgid "Download"
+msgstr "Download"
+
+#: kram/tui/package_list.py:235
+msgid "Sort"
+msgstr "Ordina"
+
 #: kram/tui/ui_port.py:78
 msgid "No desktop to open it in: the address is copied"
 msgstr "Nessun desktop in cui aprirlo: l'indirizzo è stato copiato"
@@ -4138,3 +4170,27 @@ msgstr "Copiato"
 #: kram/tui/widgets.py:160
 msgid "pick"
 msgstr "scegli"
+
+#: kram/tui/window.py:120
+msgid "Another package manager is running: waiting"
+msgstr "È in esecuzione un altro gestore di pacchetti: in attesa"
+
+#: kram/tui/window.py:148
+#, python-brace-format
+msgid "“{text}” in {filter}"
+msgstr "«{text}» in {filter}"
+
+#: kram/tui/window.py:153
+#, python-brace-format
+msgid "{n} change marked"
+msgid_plural "{n} changes marked"
+msgstr[0] "{n} modifica contrassegnata"
+msgstr[1] "{n} modifiche contrassegnate"
+
+#: kram/tui/window.py:171
+msgid "Not in this version yet"
+msgstr "Non ancora in questa versione"
+
+#: kram/tui/window.py:202
+msgid "Sort by"
+msgstr "Ordina per"

@@ -16,7 +16,7 @@ from textual.widget import Widget
 from ..app import preferences
 
 ROLES = ("muted", "rule", "key", "current", "header", "cursor", "cursor-blurred", "upgradable", "installed", "ok",
-         "marked", "info", "danger", "badge", "frame", "frame-focus")
+         "marked", "info", "danger", "badge", "frame", "frame-focus", "tint-marked", "tint-danger")
 
 PALETTE_CSS = """
 Palette > .role--muted { color: $text-muted; }
@@ -38,6 +38,11 @@ Palette > .role--badge { color: $error; text-style: reverse bold; }
 /* the theme's own border colour vanishes on dark themes: the text's colour, faint */
 Palette > .role--frame { color: $foreground 30%; }
 Palette > .role--frame-focus { color: $accent; }
+/* a marked row's background in high colour (§7.3.5): the mark's colour, blended with the background by the theme
+   itself (a colour with transparency would come out solid here). 16 colours have no tint: the glyph and the name
+   take the mark's colour instead, which the list does without these roles */
+Palette > .role--tint-marked { background: $accent-muted; }
+Palette > .role--tint-danger { background: $error-muted; }
 
 App:ansi Palette > .role--muted { color: $foreground; text-style: dim; }
 App:ansi Palette > .role--key { color: $warning; text-style: bold; }
