@@ -32,7 +32,7 @@ from ..i18n import _
 from . import loop
 from .glyphs import glyphs, is_utf8
 from .keymap import KEYS_KEYS, MENU_KEYS, WINDOW_RUN, bindings_key
-from .palette import ANSI_THEMES, DEFAULT_SCHEME, PALETTE_CSS, Palette, is_ansi, schemes
+from .palette import ANSI_THEMES, DEFAULT_SCHEME, PALETTE_CSS, Palette, is_ansi, role, schemes
 from .ui_port import TuiUi
 from .widgets import hint
 
@@ -134,6 +134,16 @@ App:ansi .search #search-status { color: $foreground; text-style: dim; }
                                          border-top: $panel-border $border-blurred; background: $surface; }
 App:ansi .search History, App:ansi .search History:focus { background: $background; }
 
+/* the progress of a helper request (§10.2): the bars as wide as the dialog (Textual's own bar is 32 cells), with
+   their labels above them */
+ProgressDialog, LogDialog { align: center middle; }
+.dialog.progress ProgressBar { width: 100%; height: 1; }
+.dialog.progress ProgressBar Bar { width: 1fr; }
+.dialog.progress .bar-label { margin-top: 1; height: 1; }
+.dialog.progress-log { height: 90%; }
+.progress-log Log { height: 1fr; background: $surface; }
+App:ansi .progress-log Log { background: $background; }
+
 TooSmall { align: center middle; }
 TooSmall > Static { width: 100%; height: auto; }
 """
@@ -156,6 +166,7 @@ class TopLine(Static):
         self.message = ""
         self.status = Text()
         self.right: list[Text] = []
+        self.root = False  # Kram runs as root: the ROOT badge (§5.4, §11.2)
         self._timer: Timer | None = None
 
     def set_status(self, status: str | Text) -> None:
@@ -165,6 +176,17 @@ class TopLine(Static):
     def set_right(self, parts: list[Text]) -> None:
         self.right = parts
         self.refresh()
+
+    def set_root(self, on: bool) -> None:
+        self.root = on
+        self.refresh()
+
+    def _badge(self, note: bool) -> list[Text]:
+        if not self.root:
+            return []
+        # TRANSLATORS: the badge on the top line of the terminal front end when it runs as root
+        badge = [Text(" " + _("ROOT") + " ", role("badge"))]
+        return badge + [Text(_("changes need no password"), role("muted"))] if note else badge
 
     def show_message(self, text: str, timeout_ms: int = 0) -> None:
         """`text` until the next one, or for `timeout_ms`."""
@@ -184,9 +206,16 @@ class TopLine(Static):
             line.append("  ")
             line.append_text(left)
         width = self.size.width
-        right = list(self.right)
-        while right and line.cell_len + sum(p.cell_len + 2 for p in right) > width:
-            right.pop()
+
+        def fits(parts: list[Text]) -> bool:
+            return line.cell_len + sum(p.cell_len + 2 for p in parts) <= width
+        # the badge first on the right, so that dropping from the right drops it last: its note, then itself
+        right = self._badge(True) + list(self.right)
+        while right and not fits(right):
+            if len(right) == 2 and self.root:
+                right = self._badge(False)
+            else:
+                right.pop()
         if right:
             gap = width - line.cell_len - sum(p.cell_len for p in right) - 2 * (len(right) - 1)
             line.append(" " * gap)

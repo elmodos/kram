@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kram\n"
 "Report-Msgid-Bugs-To: https://github.com/elmodos/kram/issues\n"
-"POT-Creation-Date: 2026-11-24 04:48+0200\n"
+"POT-Creation-Date: 2026-11-24 05:48+0200\n"
 "PO-Revision-Date: 2026-11-04 14:07+0200\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -215,7 +215,7 @@ msgid "Install a downloaded .rpm file (you can also drop it on the window)"
 msgstr ""
 "Instalar un archivo .rpm descargado (también puede soltarlo sobre la ventana)"
 
-#: kram/app/actions.py:100 kram/tui/app.py:233 kram/tui/app.py:520
+#: kram/app/actions.py:100 kram/tui/app.py:262 kram/tui/app.py:549
 msgid "Quit"
 msgstr "Salir"
 
@@ -1636,7 +1636,7 @@ msgstr[1] ""
 "{n} repositorios no tienen metadatos, así que sus paquetes faltan en la "
 "lista."
 
-#: kram/app/empty_list.py:58 kram/tui/window.py:246
+#: kram/app/empty_list.py:58 kram/tui/window.py:259
 msgid "Loading the package catalog…"
 msgstr "Cargando el catálogo de paquetes…"
 
@@ -1644,7 +1644,7 @@ msgstr "Cargando el catálogo de paquetes…"
 msgid "Could not load the package catalog."
 msgstr "No se pudo cargar el catálogo de paquetes."
 
-#: kram/app/empty_list.py:62
+#: kram/app/empty_list.py:62 kram/tui/root.py:306
 msgid "Try again"
 msgstr "Reintentar"
 
@@ -2619,14 +2619,15 @@ msgstr "Paneles fijados"
 msgid "Sidebar and details"
 msgstr "Barra lateral y detalles"
 
-#: kram/app/preferences.py:109 kram/tui/app.py:225
+#: kram/app/preferences.py:109 kram/tui/app.py:254
 msgid "Sidebar"
 msgstr "Barra lateral"
 
 #: kram/app/preferences.py:110 kram/gtk/dialogs/install.py:92
 #: kram/gtk/dialogs/progress.py:50 kram/gtk/ui_port.py:32
 #: kram/qt/install_dialog.py:112 kram/qt/progress_dialog.py:57
-#: kram/tui/app.py:226 kram/tui/app.py:285 kram/tui/package_list.py:271
+#: kram/tui/app.py:255 kram/tui/app.py:314 kram/tui/dialogs/progress.py:229
+#: kram/tui/package_list.py:271
 msgid "Details"
 msgstr "Detalles"
 
@@ -3639,7 +3640,7 @@ msgid "Hub"
 msgstr "Hub"
 
 #: kram/gtk/dialogs/copr.py:50 kram/gtk/dialogs/repos.py:152
-#: kram/qt/copr_dialog.py:51 kram/qt/repos_dialog.py:67 kram/tui/app.py:284
+#: kram/qt/copr_dialog.py:51 kram/qt/repos_dialog.py:67 kram/tui/app.py:313
 msgid "Packages"
 msgstr "Paquetes"
 
@@ -3838,14 +3839,17 @@ msgid "Other update notifiers"
 msgstr "Otros notificadores de actualizaciones"
 
 #: kram/gtk/dialogs/progress.py:38 kram/qt/progress_dialog.py:42
+#: kram/tui/dialogs/progress.py:98
 msgid "Download"
 msgstr "Descarga"
 
 #: kram/gtk/dialogs/progress.py:40 kram/qt/progress_dialog.py:44
+#: kram/tui/dialogs/progress.py:99
 msgid "Installation"
 msgstr "Instalación"
 
 #: kram/gtk/dialogs/progress.py:57 kram/qt/progress_dialog.py:61
+#: kram/tui/dialogs/progress.py:162
 msgid "Close when finished successfully"
 msgstr "Cerrar al terminar correctamente"
 
@@ -3965,15 +3969,15 @@ msgstr "Paquetes RPM (*.rpm)"
 msgid "A Synaptic-style package manager for Fedora."
 msgstr "Un gestor de paquetes para Fedora al estilo de Synaptic."
 
-#: kram/ipc/client.py:67
+#: kram/ipc/client.py:72 kram/tui/root.py:50
 msgid "Could not start pkexec. Is polkit installed?"
 msgstr "No se pudo iniciar pkexec. ¿Está instalado polkit?"
 
-#: kram/ipc/client.py:136
+#: kram/ipc/client.py:141 kram/tui/root.py:52
 msgid "Authentication was cancelled or not authorized."
 msgstr "La autenticación se canceló o no se autorizó."
 
-#: kram/ipc/client.py:138
+#: kram/ipc/client.py:143 kram/tui/root.py:53
 #, python-brace-format
 msgid "The privileged helper exited unexpectedly (code {code})."
 msgstr ""
@@ -3997,7 +4001,7 @@ msgid_plural "{n} of them are security updates"
 msgstr[0] "{n} de ellas es de seguridad"
 msgstr[1] "{n} de ellas son de seguridad"
 
-#: kram/notifier/tray.py:237 kram/tui/window.py:144
+#: kram/notifier/tray.py:237 kram/tui/window.py:150
 #, python-brace-format
 msgid "The package information is {days} day old"
 msgid_plural "The package information is {days} days old"
@@ -4037,36 +4041,45 @@ msgstr "abrir en los paquetes con actualización"
 msgid "install a package file"
 msgstr "instalar un archivo de paquete"
 
-#: kram/tui/app.py:208
+#. TRANSLATORS: the badge on the top line of the terminal front end when it runs as root
+#: kram/tui/app.py:188
+msgid "ROOT"
+msgstr "ROOT"
+
+#: kram/tui/app.py:189
+msgid "changes need no password"
+msgstr "los cambios no piden contraseña"
+
+#: kram/tui/app.py:237
 #, python-brace-format
 msgid "Make the terminal larger: Kram needs {size}"
 msgstr "Agrande el terminal: Kram necesita {size}"
 
-#: kram/tui/app.py:209 kram/tui/window.py:131
+#: kram/tui/app.py:238 kram/tui/window.py:137
 msgid "quit"
 msgstr "salir"
 
-#: kram/tui/app.py:227 kram/tui/search.py:156
+#: kram/tui/app.py:256 kram/tui/search.py:156
 msgid "Search"
 msgstr "Buscar"
 
-#: kram/tui/app.py:228 kram/tui/menu.py:89 kram/tui/sidebar.py:289
+#: kram/tui/app.py:257 kram/tui/menu.py:89 kram/tui/sidebar.py:289
 msgid "Menu"
 msgstr "Menú"
 
-#: kram/tui/app.py:229 kram/tui/dialogs/keys.py:85
+#: kram/tui/app.py:258 kram/tui/dialogs/keys.py:85
 msgid "Keys"
 msgstr "Teclas"
 
-#: kram/tui/app.py:230
+#: kram/tui/app.py:259
 msgid "Focus the list"
 msgstr "Ir a la lista"
 
-#: kram/tui/app.py:335
+#: kram/tui/app.py:364
 msgid "copy"
 msgstr "copiar"
 
-#: kram/tui/app.py:335
+#: kram/tui/app.py:364
 msgid "sort"
 msgstr "ordenar"
 
@@ -4176,6 +4189,7 @@ msgid "choose"
 msgstr "elegir"
 
 #: kram/tui/dialogs/about.py:63 kram/tui/dialogs/keys.py:87
+#: kram/tui/dialogs/progress.py:67 kram/tui/dialogs/progress.py:203
 #: kram/tui/dialogs/question.py:60 kram/tui/menu.py:90 kram/tui/search.py:186
 #: kram/tui/widgets.py:163 kram/tui/widgets.py:225
 msgid "close"
@@ -4185,11 +4199,12 @@ msgstr "cerrar"
 msgid "next"
 msgstr "siguiente"
 
-#: kram/tui/dialogs/about.py:73 kram/tui/dialogs/question.py:22
+#: kram/tui/dialogs/about.py:73 kram/tui/dialogs/progress.py:164
+#: kram/tui/dialogs/question.py:22
 msgid "Close"
 msgstr "Cerrar"
 
-#: kram/tui/dialogs/about.py:81 kram/tui/window.py:183
+#: kram/tui/dialogs/about.py:81 kram/tui/window.py:189
 msgid "Not in this version yet"
 msgstr "Aún no está en esta versión"
 
@@ -4197,7 +4212,7 @@ msgstr "Aún no está en esta versión"
 msgid "Window"
 msgstr "Ventana"
 
-#: kram/tui/dialogs/keys.py:87
+#: kram/tui/dialogs/keys.py:87 kram/tui/dialogs/progress.py:67
 msgid "scroll"
 msgstr "desplazar"
 
@@ -4240,6 +4255,23 @@ msgstr "«{name}» ya existe. ¿Reemplazarlo?"
 #: kram/tui/dialogs/path.py:139
 msgid "Replace"
 msgstr "Reemplazar"
+
+#: kram/tui/dialogs/progress.py:188
+msgid "Your desktop asks for the password in its own window."
+msgstr "Su escritorio pide la contraseña en su propia ventana."
+
+#: kram/tui/dialogs/progress.py:203 kram/tui/dialogs/progress.py:205
+#: kram/tui/dialogs/progress.py:207
+msgid "log"
+msgstr "registro"
+
+#: kram/tui/dialogs/progress.py:205
+msgid "stop"
+msgstr "detener"
+
+#: kram/tui/dialogs/progress.py:207
+msgid "not while it runs"
+msgstr "no mientras se ejecuta"
 
 #: kram/tui/dialogs/question.py:22
 msgid "No"
@@ -4320,6 +4352,48 @@ msgstr "Menú contextual"
 #: kram/tui/package_list.py:272
 msgid "Clear the selection"
 msgstr "Quitar la selección"
+
+#: kram/tui/root.py:51
+msgid "Authorization was cancelled."
+msgstr "Se canceló la autorización."
+
+#: kram/tui/root.py:54
+msgid ""
+"Kram needs administrator rights. Kram comes back when you have answered."
+msgstr "Kram necesita derechos de administrador. Kram vuelve cuando haya respondido."
+
+#: kram/tui/root.py:262 kram/tui/root.py:264
+msgid "Administrator rights"
+msgstr "Derechos de administrador"
+
+#: kram/tui/root.py:265
+#, python-brace-format
+msgid "“{what}” needs administrator rights."
+msgstr "«{what}» necesita derechos de administrador."
+
+#: kram/tui/root.py:266
+msgid ""
+"There is no password window here (no desktop, or no polkit agent in it), so "
+"Kram steps aside for a moment: polkit asks for your password in this "
+"terminal, and Kram comes back when you have answered. It asks once for the "
+"whole session."
+msgstr "Aquí no hay ventana de contraseña (no hay escritorio, o no tiene agente de polkit), así que Kram se aparta un momento: polkit pide su contraseña en este terminal y Kram vuelve cuando haya respondido. La pide una vez para toda la sesión."
+
+#: kram/tui/root.py:269
+msgid "Continue"
+msgstr "Continuar"
+
+#: kram/tui/root.py:270
+msgid "Started as root (sudo kram-tui), Kram asks no password at all."
+msgstr "Iniciado como root (sudo kram-tui), Kram no pide ninguna contraseña."
+
+#: kram/tui/root.py:304
+msgid "Not authorized"
+msgstr "No autorizado"
+
+#: kram/tui/root.py:305
+msgid "The password was not accepted, or this user may not change the system."
+msgstr "La contraseña no fue aceptada, o este usuario no puede cambiar el sistema."
 
 #: kram/tui/search.py:41
 msgid "A part of the package name"
@@ -4424,51 +4498,51 @@ msgstr "Copiado"
 msgid "pick"
 msgstr "elegir"
 
-#: kram/tui/window.py:130
+#: kram/tui/window.py:136
 msgid "Another package manager is running: waiting"
 msgstr "Otro gestor de paquetes está en marcha: esperando"
 
-#: kram/tui/window.py:160
+#: kram/tui/window.py:166
 #, python-brace-format
 msgid "“{text}” in {filter}"
 msgstr "«{text}» en {filter}"
 
-#: kram/tui/window.py:165
+#: kram/tui/window.py:171
 #, python-brace-format
 msgid "{n} change marked"
 msgid_plural "{n} changes marked"
 msgstr[0] "{n} cambio marcado"
 msgstr[1] "{n} cambios marcados"
 
-#: kram/tui/window.py:250
+#: kram/tui/window.py:263
 msgid "Nothing is marked"
 msgstr "No hay nada marcado"
 
-#: kram/tui/window.py:252
+#: kram/tui/window.py:265
 msgid "No package has an upgrade"
 msgstr "Ningún paquete tiene actualización"
 
-#: kram/tui/window.py:254
+#: kram/tui/window.py:267
 msgid "No upgrade of this kind"
 msgstr "No hay actualizaciones de este tipo"
 
-#: kram/tui/window.py:256
+#: kram/tui/window.py:269
 msgid "No unneeded dependencies"
 msgstr "No hay dependencias innecesarias"
 
-#: kram/tui/window.py:258
+#: kram/tui/window.py:271
 msgid "Only for one package at a time"
 msgstr "Solo para un paquete a la vez"
 
-#: kram/tui/window.py:259 kram/tui/window.py:262
+#: kram/tui/window.py:272 kram/tui/window.py:275
 msgid "Not for this package"
 msgstr "No para este paquete"
 
-#: kram/tui/window.py:261
+#: kram/tui/window.py:274
 msgid "Not marked"
 msgstr "No marcado"
 
-#: kram/tui/window.py:336
+#: kram/tui/window.py:350
 msgid "Sort by"
 msgstr "Ordenar por"
 

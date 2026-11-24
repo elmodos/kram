@@ -534,6 +534,7 @@ def test_the_top_line_drops_what_does_not_fit_from_the_right(monkeypatch):
     repos = [RepoInfo("fedora", "Fedora", True, Origin.FEDORA, 9 * DAY + 60),
              RepoInfo("broken", "Broken", True, Origin.THIRD_PARTY, None)]
     use_catalog(monkeypatch, snapshot(repos=repos))
+    monkeypatch.setattr(window_module, "is_root", lambda: False)  # the test container runs as root: no badge
 
     async def test(app, pilot):
         line = top(app)
@@ -556,7 +557,7 @@ def test_dialogs_of_later_steps_say_so(monkeypatch):
     results = []
 
     async def test(app, pilot):
-        app.main.run_helper({"op": "refresh"}, "Refreshing metadata", results.append)
+        app.main.review_changes(None, {"op": "transaction"}, "x86_64", None, results.append)
         await pilot.pause()
         assert isinstance(app.screen, QuestionDialog) and results == [None]
         await pilot.press("enter")

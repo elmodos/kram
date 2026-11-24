@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kram\n"
 "Report-Msgid-Bugs-To: https://github.com/elmodos/kram/issues\n"
-"POT-Creation-Date: 2026-11-24 04:48+0200\n"
+"POT-Creation-Date: 2026-11-24 05:48+0200\n"
 "PO-Revision-Date: 2026-11-04 14:07+0200\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -201,7 +201,7 @@ msgstr "패키지 파일 열기…"
 msgid "Install a downloaded .rpm file (you can also drop it on the window)"
 msgstr "내려받은 .rpm 파일을 설치합니다 (창에 끌어다 놓아도 됩니다)"
 
-#: kram/app/actions.py:100 kram/tui/app.py:233 kram/tui/app.py:520
+#: kram/app/actions.py:100 kram/tui/app.py:262 kram/tui/app.py:549
 msgid "Quit"
 msgstr "끝내기"
 
@@ -1560,7 +1560,7 @@ msgid_plural ""
 "list."
 msgstr[0] "저장소 {n}개에 메타데이터가 없어서 그 패키지가 목록에 없습니다."
 
-#: kram/app/empty_list.py:58 kram/tui/window.py:246
+#: kram/app/empty_list.py:58 kram/tui/window.py:259
 msgid "Loading the package catalog…"
 msgstr "패키지 카탈로그를 불러오는 중…"
 
@@ -1568,7 +1568,7 @@ msgstr "패키지 카탈로그를 불러오는 중…"
 msgid "Could not load the package catalog."
 msgstr "패키지 카탈로그를 불러올 수 없습니다."
 
-#: kram/app/empty_list.py:62
+#: kram/app/empty_list.py:62 kram/tui/root.py:306
 msgid "Try again"
 msgstr "다시 시도"
 
@@ -2495,14 +2495,15 @@ msgstr "고정된 패널"
 msgid "Sidebar and details"
 msgstr "사이드바와 자세히"
 
-#: kram/app/preferences.py:109 kram/tui/app.py:225
+#: kram/app/preferences.py:109 kram/tui/app.py:254
 msgid "Sidebar"
 msgstr "사이드바"
 
 #: kram/app/preferences.py:110 kram/gtk/dialogs/install.py:92
 #: kram/gtk/dialogs/progress.py:50 kram/gtk/ui_port.py:32
 #: kram/qt/install_dialog.py:112 kram/qt/progress_dialog.py:57
-#: kram/tui/app.py:226 kram/tui/app.py:285 kram/tui/package_list.py:271
+#: kram/tui/app.py:255 kram/tui/app.py:314 kram/tui/dialogs/progress.py:229
+#: kram/tui/package_list.py:271
 msgid "Details"
 msgstr "자세히"
 
@@ -3486,7 +3487,7 @@ msgid "Hub"
 msgstr "허브"
 
 #: kram/gtk/dialogs/copr.py:50 kram/gtk/dialogs/repos.py:152
-#: kram/qt/copr_dialog.py:51 kram/qt/repos_dialog.py:67 kram/tui/app.py:284
+#: kram/qt/copr_dialog.py:51 kram/qt/repos_dialog.py:67 kram/tui/app.py:313
 msgid "Packages"
 msgstr "패키지"
 
@@ -3680,14 +3681,17 @@ msgid "Other update notifiers"
 msgstr "다른 업데이트 알림 프로그램"
 
 #: kram/gtk/dialogs/progress.py:38 kram/qt/progress_dialog.py:42
+#: kram/tui/dialogs/progress.py:98
 msgid "Download"
 msgstr "다운로드"
 
 #: kram/gtk/dialogs/progress.py:40 kram/qt/progress_dialog.py:44
+#: kram/tui/dialogs/progress.py:99
 msgid "Installation"
 msgstr "설치"
 
 #: kram/gtk/dialogs/progress.py:57 kram/qt/progress_dialog.py:61
+#: kram/tui/dialogs/progress.py:162
 msgid "Close when finished successfully"
 msgstr "성공적으로 끝나면 닫기"
 
@@ -3806,15 +3810,15 @@ msgstr "RPM 패키지 (*.rpm)"
 msgid "A Synaptic-style package manager for Fedora."
 msgstr "Synaptic 스타일의 Fedora용 패키지 관리자입니다."
 
-#: kram/ipc/client.py:67
+#: kram/ipc/client.py:72 kram/tui/root.py:50
 msgid "Could not start pkexec. Is polkit installed?"
 msgstr "pkexec를 시작할 수 없습니다. polkit이 설치되어 있습니까?"
 
-#: kram/ipc/client.py:136
+#: kram/ipc/client.py:141 kram/tui/root.py:52
 msgid "Authentication was cancelled or not authorized."
 msgstr "인증이 취소되었거나 허용되지 않았습니다."
 
-#: kram/ipc/client.py:138
+#: kram/ipc/client.py:143 kram/tui/root.py:53
 #, python-brace-format
 msgid "The privileged helper exited unexpectedly (code {code})."
 msgstr "권한 있는 도우미가 예기치 않게 종료되었습니다 (코드 {code})."
@@ -3835,7 +3839,7 @@ msgid "{n} of them is a security update"
 msgid_plural "{n} of them are security updates"
 msgstr[0] "그중 {n}개는 보안 업데이트"
 
-#: kram/notifier/tray.py:237 kram/tui/window.py:144
+#: kram/notifier/tray.py:237 kram/tui/window.py:150
 #, python-brace-format
 msgid "The package information is {days} day old"
 msgid_plural "The package information is {days} days old"
@@ -3874,36 +3878,45 @@ msgstr "업그레이드가 있는 패키지로 열기"
 msgid "install a package file"
 msgstr "패키지 파일 설치"
 
-#: kram/tui/app.py:208
+#. TRANSLATORS: the badge on the top line of the terminal front end when it runs as root
+#: kram/tui/app.py:188
+msgid "ROOT"
+msgstr "ROOT"
+
+#: kram/tui/app.py:189
+msgid "changes need no password"
+msgstr "변경 시 암호 불필요"
+
+#: kram/tui/app.py:237
 #, python-brace-format
 msgid "Make the terminal larger: Kram needs {size}"
 msgstr "터미널을 키우십시오: Kram에는 {size}이(가) 필요합니다"
 
-#: kram/tui/app.py:209 kram/tui/window.py:131
+#: kram/tui/app.py:238 kram/tui/window.py:137
 msgid "quit"
 msgstr "끝내기"
 
-#: kram/tui/app.py:227 kram/tui/search.py:156
+#: kram/tui/app.py:256 kram/tui/search.py:156
 msgid "Search"
 msgstr "검색"
 
-#: kram/tui/app.py:228 kram/tui/menu.py:89 kram/tui/sidebar.py:289
+#: kram/tui/app.py:257 kram/tui/menu.py:89 kram/tui/sidebar.py:289
 msgid "Menu"
 msgstr "메뉴"
 
-#: kram/tui/app.py:229 kram/tui/dialogs/keys.py:85
+#: kram/tui/app.py:258 kram/tui/dialogs/keys.py:85
 msgid "Keys"
 msgstr "키"
 
-#: kram/tui/app.py:230
+#: kram/tui/app.py:259
 msgid "Focus the list"
 msgstr "목록으로 이동"
 
-#: kram/tui/app.py:335
+#: kram/tui/app.py:364
 msgid "copy"
 msgstr "복사"
 
-#: kram/tui/app.py:335
+#: kram/tui/app.py:364
 msgid "sort"
 msgstr "정렬"
 
@@ -4013,6 +4026,7 @@ msgid "choose"
 msgstr "선택"
 
 #: kram/tui/dialogs/about.py:63 kram/tui/dialogs/keys.py:87
+#: kram/tui/dialogs/progress.py:67 kram/tui/dialogs/progress.py:203
 #: kram/tui/dialogs/question.py:60 kram/tui/menu.py:90 kram/tui/search.py:186
 #: kram/tui/widgets.py:163 kram/tui/widgets.py:225
 msgid "close"
@@ -4022,11 +4036,12 @@ msgstr "닫기"
 msgid "next"
 msgstr "다음"
 
-#: kram/tui/dialogs/about.py:73 kram/tui/dialogs/question.py:22
+#: kram/tui/dialogs/about.py:73 kram/tui/dialogs/progress.py:164
+#: kram/tui/dialogs/question.py:22
 msgid "Close"
 msgstr "닫기"
 
-#: kram/tui/dialogs/about.py:81 kram/tui/window.py:183
+#: kram/tui/dialogs/about.py:81 kram/tui/window.py:189
 msgid "Not in this version yet"
 msgstr "이 버전에는 아직 없습니다"
 
@@ -4034,7 +4049,7 @@ msgstr "이 버전에는 아직 없습니다"
 msgid "Window"
 msgstr "창"
 
-#: kram/tui/dialogs/keys.py:87
+#: kram/tui/dialogs/keys.py:87 kram/tui/dialogs/progress.py:67
 msgid "scroll"
 msgstr "스크롤"
 
@@ -4077,6 +4092,23 @@ msgstr "“{name}”이(가) 이미 있습니다. 바꾸시겠습니까?"
 #: kram/tui/dialogs/path.py:139
 msgid "Replace"
 msgstr "바꾸기"
+
+#: kram/tui/dialogs/progress.py:188
+msgid "Your desktop asks for the password in its own window."
+msgstr "데스크톱이 자체 창에서 암호를 묻습니다."
+
+#: kram/tui/dialogs/progress.py:203 kram/tui/dialogs/progress.py:205
+#: kram/tui/dialogs/progress.py:207
+msgid "log"
+msgstr "로그"
+
+#: kram/tui/dialogs/progress.py:205
+msgid "stop"
+msgstr "중지"
+
+#: kram/tui/dialogs/progress.py:207
+msgid "not while it runs"
+msgstr "실행 중에는 불가"
 
 #: kram/tui/dialogs/question.py:22
 msgid "No"
@@ -4157,6 +4189,48 @@ msgstr "컨텍스트 메뉴"
 #: kram/tui/package_list.py:272
 msgid "Clear the selection"
 msgstr "선택 해제"
+
+#: kram/tui/root.py:51
+msgid "Authorization was cancelled."
+msgstr "권한 부여가 취소되었습니다."
+
+#: kram/tui/root.py:54
+msgid ""
+"Kram needs administrator rights. Kram comes back when you have answered."
+msgstr "Kram에 관리자 권한이 필요합니다. 응답하면 Kram이 돌아옵니다."
+
+#: kram/tui/root.py:262 kram/tui/root.py:264
+msgid "Administrator rights"
+msgstr "관리자 권한"
+
+#: kram/tui/root.py:265
+#, python-brace-format
+msgid "“{what}” needs administrator rights."
+msgstr "“{what}” 작업에는 관리자 권한이 필요합니다."
+
+#: kram/tui/root.py:266
+msgid ""
+"There is no password window here (no desktop, or no polkit agent in it), so "
+"Kram steps aside for a moment: polkit asks for your password in this "
+"terminal, and Kram comes back when you have answered. It asks once for the "
+"whole session."
+msgstr "여기에는 암호 창이 없습니다(데스크톱이 없거나 polkit 에이전트가 없음). 그래서 Kram이 잠시 비켜서고, polkit이 이 터미널에서 암호를 묻습니다. 응답하면 Kram이 돌아옵니다. 암호는 세션당 한 번만 묻습니다."
+
+#: kram/tui/root.py:269
+msgid "Continue"
+msgstr "계속"
+
+#: kram/tui/root.py:270
+msgid "Started as root (sudo kram-tui), Kram asks no password at all."
+msgstr "root로 실행하면(sudo kram-tui) Kram은 암호를 전혀 묻지 않습니다."
+
+#: kram/tui/root.py:304
+msgid "Not authorized"
+msgstr "권한 없음"
+
+#: kram/tui/root.py:305
+msgid "The password was not accepted, or this user may not change the system."
+msgstr "암호가 받아들여지지 않았거나 이 사용자는 시스템을 변경할 수 없습니다."
 
 #: kram/tui/search.py:41
 msgid "A part of the package name"
@@ -4259,50 +4333,50 @@ msgstr "복사했습니다"
 msgid "pick"
 msgstr "선택"
 
-#: kram/tui/window.py:130
+#: kram/tui/window.py:136
 msgid "Another package manager is running: waiting"
 msgstr "다른 패키지 관리자가 실행 중입니다: 기다리는 중"
 
-#: kram/tui/window.py:160
+#: kram/tui/window.py:166
 #, python-brace-format
 msgid "“{text}” in {filter}"
 msgstr "{filter}의 “{text}”"
 
-#: kram/tui/window.py:165
+#: kram/tui/window.py:171
 #, python-brace-format
 msgid "{n} change marked"
 msgid_plural "{n} changes marked"
 msgstr[0] "{n}개 변경 표시됨"
 
-#: kram/tui/window.py:250
+#: kram/tui/window.py:263
 msgid "Nothing is marked"
 msgstr "표시된 항목이 없습니다"
 
-#: kram/tui/window.py:252
+#: kram/tui/window.py:265
 msgid "No package has an upgrade"
 msgstr "업그레이드가 있는 패키지가 없습니다"
 
-#: kram/tui/window.py:254
+#: kram/tui/window.py:267
 msgid "No upgrade of this kind"
 msgstr "이 종류의 업그레이드가 없습니다"
 
-#: kram/tui/window.py:256
+#: kram/tui/window.py:269
 msgid "No unneeded dependencies"
 msgstr "불필요한 의존성이 없습니다"
 
-#: kram/tui/window.py:258
+#: kram/tui/window.py:271
 msgid "Only for one package at a time"
 msgstr "한 번에 패키지 하나만"
 
-#: kram/tui/window.py:259 kram/tui/window.py:262
+#: kram/tui/window.py:272 kram/tui/window.py:275
 msgid "Not for this package"
 msgstr "이 패키지에는 해당하지 않습니다"
 
-#: kram/tui/window.py:261
+#: kram/tui/window.py:274
 msgid "Not marked"
 msgstr "표시되지 않음"
 
-#: kram/tui/window.py:336
+#: kram/tui/window.py:350
 msgid "Sort by"
 msgstr "정렬 기준"
 

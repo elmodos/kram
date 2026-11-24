@@ -371,6 +371,7 @@ def test_the_window_s_and_the_list_s_action_keys(monkeypatch):
         monkeypatch.setattr(b, "reload", lambda: ran.append("reload"))
         monkeypatch.setattr(b, "mark_selected", lambda action, evr="": ran.append(action))
         monkeypatch.setattr(b, "unmark_selected", lambda: ran.append("unmark"))
+        monkeypatch.setattr(b, "set_version_lock", lambda lock: ran.append(("lock", lock)))
         await pilot.press("R")
         await pilot.press("minus")  # pkg0000 is installed
         await pilot.press("down", "plus", "insert")  # pkg0001 is not
@@ -380,9 +381,9 @@ def test_the_window_s_and_the_list_s_action_keys(monkeypatch):
         await pilot.press("equals_sign")  # not installed: neither lock nor unlock
         await pilot.pause()
         assert len(app.screen_stack) == 1
-        await pilot.press("up", "equals_sign")  # locking runs through the helper, a later step
+        await pilot.press("up", "equals_sign")  # installed: locked (tests/test_tui_progress.py runs it)
         await pilot.pause()
-        assert isinstance(app.screen, QuestionDialog)
+        assert ran[-1] == ("lock", True)
     run(test)
 
 

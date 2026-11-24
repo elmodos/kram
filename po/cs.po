@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kram\n"
 "Report-Msgid-Bugs-To: https://github.com/elmodos/kram/issues\n"
-"POT-Creation-Date: 2026-11-24 04:48+0200\n"
+"POT-Creation-Date: 2026-11-24 05:48+0200\n"
 "PO-Revision-Date: 2026-11-04 14:07+0200\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -206,7 +206,7 @@ msgstr "Otevřít soubor balíčku…"
 msgid "Install a downloaded .rpm file (you can also drop it on the window)"
 msgstr "Nainstalovat stažený soubor .rpm (můžete jej také přetáhnout na okno)"
 
-#: kram/app/actions.py:100 kram/tui/app.py:233 kram/tui/app.py:520
+#: kram/app/actions.py:100 kram/tui/app.py:262 kram/tui/app.py:549
 msgid "Quit"
 msgstr "Ukončit"
 
@@ -1649,7 +1649,7 @@ msgstr[1] ""
 "{n} repozitáře nemají metadata, proto jejich balíčky v seznamu chybí."
 msgstr[2] "{n} repozitářů nemá metadata, proto jejich balíčky v seznamu chybí."
 
-#: kram/app/empty_list.py:58 kram/tui/window.py:246
+#: kram/app/empty_list.py:58 kram/tui/window.py:259
 msgid "Loading the package catalog…"
 msgstr "Načítání katalogu balíčků…"
 
@@ -1657,7 +1657,7 @@ msgstr "Načítání katalogu balíčků…"
 msgid "Could not load the package catalog."
 msgstr "Katalog balíčků se nepodařilo načíst."
 
-#: kram/app/empty_list.py:62
+#: kram/app/empty_list.py:62 kram/tui/root.py:306
 msgid "Try again"
 msgstr "Zkusit znovu"
 
@@ -2652,14 +2652,15 @@ msgstr "Připnuté panely"
 msgid "Sidebar and details"
 msgstr "Postranní panel a podrobnosti"
 
-#: kram/app/preferences.py:109 kram/tui/app.py:225
+#: kram/app/preferences.py:109 kram/tui/app.py:254
 msgid "Sidebar"
 msgstr "Postranní panel"
 
 #: kram/app/preferences.py:110 kram/gtk/dialogs/install.py:92
 #: kram/gtk/dialogs/progress.py:50 kram/gtk/ui_port.py:32
 #: kram/qt/install_dialog.py:112 kram/qt/progress_dialog.py:57
-#: kram/tui/app.py:226 kram/tui/app.py:285 kram/tui/package_list.py:271
+#: kram/tui/app.py:255 kram/tui/app.py:314 kram/tui/dialogs/progress.py:229
+#: kram/tui/package_list.py:271
 msgid "Details"
 msgstr "Podrobnosti"
 
@@ -3671,7 +3672,7 @@ msgid "Hub"
 msgstr "Hub"
 
 #: kram/gtk/dialogs/copr.py:50 kram/gtk/dialogs/repos.py:152
-#: kram/qt/copr_dialog.py:51 kram/qt/repos_dialog.py:67 kram/tui/app.py:284
+#: kram/qt/copr_dialog.py:51 kram/qt/repos_dialog.py:67 kram/tui/app.py:313
 msgid "Packages"
 msgstr "Balíčky"
 
@@ -3866,14 +3867,17 @@ msgid "Other update notifiers"
 msgstr "Další upozorňování na aktualizace"
 
 #: kram/gtk/dialogs/progress.py:38 kram/qt/progress_dialog.py:42
+#: kram/tui/dialogs/progress.py:98
 msgid "Download"
 msgstr "Stahování"
 
 #: kram/gtk/dialogs/progress.py:40 kram/qt/progress_dialog.py:44
+#: kram/tui/dialogs/progress.py:99
 msgid "Installation"
 msgstr "Instalace"
 
 #: kram/gtk/dialogs/progress.py:57 kram/qt/progress_dialog.py:61
+#: kram/tui/dialogs/progress.py:162
 msgid "Close when finished successfully"
 msgstr "Po úspěšném dokončení zavřít"
 
@@ -3993,15 +3997,15 @@ msgstr "Balíčky RPM (*.rpm)"
 msgid "A Synaptic-style package manager for Fedora."
 msgstr "Správce balíčků pro Fedoru ve stylu Synaptic."
 
-#: kram/ipc/client.py:67
+#: kram/ipc/client.py:72 kram/tui/root.py:50
 msgid "Could not start pkexec. Is polkit installed?"
 msgstr "Nelze spustit pkexec. Je nainstalován polkit?"
 
-#: kram/ipc/client.py:136
+#: kram/ipc/client.py:141 kram/tui/root.py:52
 msgid "Authentication was cancelled or not authorized."
 msgstr "Ověření bylo zrušeno nebo nebylo povoleno."
 
-#: kram/ipc/client.py:138
+#: kram/ipc/client.py:143 kram/tui/root.py:53
 #, python-brace-format
 msgid "The privileged helper exited unexpectedly (code {code})."
 msgstr "Privilegovaný pomocný proces neočekávaně skončil (kód {code})."
@@ -4026,7 +4030,7 @@ msgstr[0] "z toho {n} bezpečnostní aktualizace"
 msgstr[1] "z toho {n} bezpečnostní aktualizace"
 msgstr[2] "z toho {n} bezpečnostních aktualizací"
 
-#: kram/notifier/tray.py:237 kram/tui/window.py:144
+#: kram/notifier/tray.py:237 kram/tui/window.py:150
 #, python-brace-format
 msgid "The package information is {days} day old"
 msgid_plural "The package information is {days} days old"
@@ -4067,36 +4071,45 @@ msgstr "otevřít na balíčcích s aktualizací"
 msgid "install a package file"
 msgstr "nainstalovat soubor balíčku"
 
-#: kram/tui/app.py:208
+#. TRANSLATORS: the badge on the top line of the terminal front end when it runs as root
+#: kram/tui/app.py:188
+msgid "ROOT"
+msgstr "ROOT"
+
+#: kram/tui/app.py:189
+msgid "changes need no password"
+msgstr "změny bez hesla"
+
+#: kram/tui/app.py:237
 #, python-brace-format
 msgid "Make the terminal larger: Kram needs {size}"
 msgstr "Zvětšete terminál: Kram potřebuje {size}"
 
-#: kram/tui/app.py:209 kram/tui/window.py:131
+#: kram/tui/app.py:238 kram/tui/window.py:137
 msgid "quit"
 msgstr "ukončit"
 
-#: kram/tui/app.py:227 kram/tui/search.py:156
+#: kram/tui/app.py:256 kram/tui/search.py:156
 msgid "Search"
 msgstr "Hledat"
 
-#: kram/tui/app.py:228 kram/tui/menu.py:89 kram/tui/sidebar.py:289
+#: kram/tui/app.py:257 kram/tui/menu.py:89 kram/tui/sidebar.py:289
 msgid "Menu"
 msgstr "Nabídka"
 
-#: kram/tui/app.py:229 kram/tui/dialogs/keys.py:85
+#: kram/tui/app.py:258 kram/tui/dialogs/keys.py:85
 msgid "Keys"
 msgstr "Klávesy"
 
-#: kram/tui/app.py:230
+#: kram/tui/app.py:259
 msgid "Focus the list"
 msgstr "Přejít na seznam"
 
-#: kram/tui/app.py:335
+#: kram/tui/app.py:364
 msgid "copy"
 msgstr "kopírovat"
 
-#: kram/tui/app.py:335
+#: kram/tui/app.py:364
 msgid "sort"
 msgstr "řadit"
 
@@ -4206,6 +4219,7 @@ msgid "choose"
 msgstr "vybrat"
 
 #: kram/tui/dialogs/about.py:63 kram/tui/dialogs/keys.py:87
+#: kram/tui/dialogs/progress.py:67 kram/tui/dialogs/progress.py:203
 #: kram/tui/dialogs/question.py:60 kram/tui/menu.py:90 kram/tui/search.py:186
 #: kram/tui/widgets.py:163 kram/tui/widgets.py:225
 msgid "close"
@@ -4215,11 +4229,12 @@ msgstr "zavřít"
 msgid "next"
 msgstr "další"
 
-#: kram/tui/dialogs/about.py:73 kram/tui/dialogs/question.py:22
+#: kram/tui/dialogs/about.py:73 kram/tui/dialogs/progress.py:164
+#: kram/tui/dialogs/question.py:22
 msgid "Close"
 msgstr "Zavřít"
 
-#: kram/tui/dialogs/about.py:81 kram/tui/window.py:183
+#: kram/tui/dialogs/about.py:81 kram/tui/window.py:189
 msgid "Not in this version yet"
 msgstr "V této verzi zatím není"
 
@@ -4227,7 +4242,7 @@ msgstr "V této verzi zatím není"
 msgid "Window"
 msgstr "Okno"
 
-#: kram/tui/dialogs/keys.py:87
+#: kram/tui/dialogs/keys.py:87 kram/tui/dialogs/progress.py:67
 msgid "scroll"
 msgstr "posun"
 
@@ -4270,6 +4285,23 @@ msgstr "„{name}“ už existuje. Nahradit?"
 #: kram/tui/dialogs/path.py:139
 msgid "Replace"
 msgstr "Nahradit"
+
+#: kram/tui/dialogs/progress.py:188
+msgid "Your desktop asks for the password in its own window."
+msgstr "Vaše pracovní prostředí se ptá na heslo ve vlastním okně."
+
+#: kram/tui/dialogs/progress.py:203 kram/tui/dialogs/progress.py:205
+#: kram/tui/dialogs/progress.py:207
+msgid "log"
+msgstr "záznam"
+
+#: kram/tui/dialogs/progress.py:205
+msgid "stop"
+msgstr "zastavit"
+
+#: kram/tui/dialogs/progress.py:207
+msgid "not while it runs"
+msgstr "ne za běhu"
 
 #: kram/tui/dialogs/question.py:22
 msgid "No"
@@ -4350,6 +4382,48 @@ msgstr "Místní nabídka"
 #: kram/tui/package_list.py:272
 msgid "Clear the selection"
 msgstr "Zrušit výběr"
+
+#: kram/tui/root.py:51
+msgid "Authorization was cancelled."
+msgstr "Autorizace byla zrušena."
+
+#: kram/tui/root.py:54
+msgid ""
+"Kram needs administrator rights. Kram comes back when you have answered."
+msgstr "Kram potřebuje oprávnění správce. Kram se vrátí, až odpovíte."
+
+#: kram/tui/root.py:262 kram/tui/root.py:264
+msgid "Administrator rights"
+msgstr "Oprávnění správce"
+
+#: kram/tui/root.py:265
+#, python-brace-format
+msgid "“{what}” needs administrator rights."
+msgstr "„{what}“ vyžaduje oprávnění správce."
+
+#: kram/tui/root.py:266
+msgid ""
+"There is no password window here (no desktop, or no polkit agent in it), so "
+"Kram steps aside for a moment: polkit asks for your password in this "
+"terminal, and Kram comes back when you have answered. It asks once for the "
+"whole session."
+msgstr "Není tu okno pro heslo (žádné pracovní prostředí nebo v něm žádný agent polkit), proto Kram na chvíli ustoupí: polkit se zeptá na heslo v tomto terminálu a Kram se vrátí, až odpovíte. Ptá se jednou za celou relaci."
+
+#: kram/tui/root.py:269
+msgid "Continue"
+msgstr "Pokračovat"
+
+#: kram/tui/root.py:270
+msgid "Started as root (sudo kram-tui), Kram asks no password at all."
+msgstr "Spuštěný jako root (sudo kram-tui) se Kram na heslo vůbec neptá."
+
+#: kram/tui/root.py:304
+msgid "Not authorized"
+msgstr "Neautorizováno"
+
+#: kram/tui/root.py:305
+msgid "The password was not accepted, or this user may not change the system."
+msgstr "Heslo nebylo přijato, nebo tento uživatel nesmí měnit systém."
 
 #: kram/tui/search.py:41
 msgid "A part of the package name"
@@ -4454,16 +4528,16 @@ msgstr "Zkopírováno"
 msgid "pick"
 msgstr "vybrat"
 
-#: kram/tui/window.py:130
+#: kram/tui/window.py:136
 msgid "Another package manager is running: waiting"
 msgstr "Běží jiný správce balíčků: čeká se"
 
-#: kram/tui/window.py:160
+#: kram/tui/window.py:166
 #, python-brace-format
 msgid "“{text}” in {filter}"
 msgstr "„{text}“ v {filter}"
 
-#: kram/tui/window.py:165
+#: kram/tui/window.py:171
 #, python-brace-format
 msgid "{n} change marked"
 msgid_plural "{n} changes marked"
@@ -4471,35 +4545,35 @@ msgstr[0] "{n} změna označena"
 msgstr[1] "{n} změny označeny"
 msgstr[2] "{n} změn označeno"
 
-#: kram/tui/window.py:250
+#: kram/tui/window.py:263
 msgid "Nothing is marked"
 msgstr "Nic není označeno"
 
-#: kram/tui/window.py:252
+#: kram/tui/window.py:265
 msgid "No package has an upgrade"
 msgstr "Žádný balíček nemá aktualizaci"
 
-#: kram/tui/window.py:254
+#: kram/tui/window.py:267
 msgid "No upgrade of this kind"
 msgstr "Žádné aktualizace tohoto druhu"
 
-#: kram/tui/window.py:256
+#: kram/tui/window.py:269
 msgid "No unneeded dependencies"
 msgstr "Žádné nepotřebné závislosti"
 
-#: kram/tui/window.py:258
+#: kram/tui/window.py:271
 msgid "Only for one package at a time"
 msgstr "Jen pro jeden balíček najednou"
 
-#: kram/tui/window.py:259 kram/tui/window.py:262
+#: kram/tui/window.py:272 kram/tui/window.py:275
 msgid "Not for this package"
 msgstr "Ne pro tento balíček"
 
-#: kram/tui/window.py:261
+#: kram/tui/window.py:274
 msgid "Not marked"
 msgstr "Neoznačeno"
 
-#: kram/tui/window.py:336
+#: kram/tui/window.py:350
 msgid "Sort by"
 msgstr "Řadit podle"
 

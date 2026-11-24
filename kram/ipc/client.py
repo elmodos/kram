@@ -50,10 +50,15 @@ class HelperClient:
         except OSError:
             self._proc = None
             return False
+        self._attach(proc)
+        return True
+
+    def _attach(self, proc: subprocess.Popen) -> None:
+        """`proc` is the helper from now on: its output is read and reported. Called by `_start`, and by a front end
+        that starts and authenticates the helper its own way before the first request (kram.tui.root)."""
         self._proc = proc
         threading.Thread(target=self._read_stdout, args=(proc,), name="kram-helper-stdout", daemon=True).start()
         threading.Thread(target=self._read_stderr, args=(proc,), name="kram-helper-stderr", daemon=True).start()
-        return True
 
     def request(self, req: dict) -> bool:
         """Send one request; events arrive via `event` until one with event == "done" (or `failed` fires).

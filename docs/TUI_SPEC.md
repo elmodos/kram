@@ -445,8 +445,10 @@ summary line (`DIALOG_APPLY_FREE_SPACE`). When nothing can be done: the problem 
 10.2 **Progress.** Stage line bold; download bar; for a transaction the package bar; both full width (T17) with
 their labels above. The log (`DIALOG_PROGRESS_LOG`): the last lines under the bars, `l` opens the whole log with
 timestamps in a scrolling area. `[x] Close when finished successfully`, remembered (`DIALOG_PROGRESS_AUTO_CLOSE`).
-While the transaction runs, `Esc` and quit do nothing and the hint says so (`DIALOG_PROGRESS_CLOSE_LOCK`); before
-it runs `Esc` stops. No Close button until done. The OpenPGP key question is a §10.21 question over it
+While the helper has the request, `Esc` and quit do nothing and the hint says so (`esc not while it runs`,
+`DIALOG_PROGRESS_CLOSE_LOCK`); before that, while authentication runs, `Esc` stops (the helper has no cancel
+operation). Outcomes of authentication (cancelled, not authorized, pkexec missing) show as the dialog's error stage
+with `< Close >`; a cancel the user chose shows nothing more. No Close button until done. The OpenPGP key question is a §10.21 question over it
 (`DIALOG_PROGRESS_KEY_QUESTION`). Waiting for a desktop's polkit window shows "Waiting for authentication… Your
 desktop asks for the password in its own window."
 

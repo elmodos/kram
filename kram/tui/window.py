@@ -3,9 +3,12 @@ kram.gtk.window.MainWindow is. It wires the sidebar (kram.tui.sidebar), the pack
 the details (kram.tui.details) and the top line (§5.4) to the Browser; the app (kram.tui.app) lays out the panels
 and decides who gets a key.
 
-The parts of `BrowserView` that later steps bring (the Apply dialog, the progress of the helper, the repositories,
-the mirrors) say so through the Ui port meanwhile, each with the section that replaces it. So do the actions of the
-menu whose dialogs come later (`NOT_YET`).
+The helper is the terminal's own client (kram.tui.root, §11): it gets root before the first request, and the
+progress of every request is the dialog of kram.tui.dialogs.progress (§10.2).
+
+The parts of `BrowserView` that later steps bring (the Apply dialog, the repositories, the mirrors) say so through
+the Ui port meanwhile, each with the section that replaces it. So do the actions of the menu whose dialogs come
+later (`NOT_YET`).
 
 The actions of kram.app.actions run here, by id (`run_action`), whether from the menu, a context menu or a key: what
 each runs is what the GUIs connect to it (kram.gtk.window._connect_actions). Whether one is enabled comes from
@@ -34,17 +37,18 @@ from ..notifier import stale_days
 from . import loop
 from .details import Details
 from .dialogs.about import AboutDialog
+from .dialogs.progress import ProgressDialog
 from .menu import open_table_menu
 from .package_list import PackageTable, column_label
 from .palette import role
+from .root import RootAccess, TuiHelperClient, is_root
 from .search import open_search
 from .sidebar import Sidebar
 from .widgets import ChoiceList
 
 FRONT_PACKAGE = "kram-tui"
-# the actions whose dialogs or progress come in later steps (docs/TUI_SPEC.md §17): "Not in this version yet"
-NOT_YET = frozenset({"reload", "apply", "lock", "unlock", "history", "show_in_history", "open_file", "repos", "copr",
-                     "cache", "notifications"})
+# the actions whose dialogs come in later steps (docs/TUI_SPEC.md §17): "Not in this version yet"
+NOT_YET = frozenset({"apply", "history", "show_in_history", "open_file", "repos", "copr", "cache", "notifications"})
 # Browser says this while the catalog load waits for the system repo lock (Browser._waiting_for_lock)
 LOCK_STATUS = "Waiting for another package manager to finish…"
 
@@ -57,8 +61,9 @@ class MainWindow:
         self.ui = app.ui
         self.details = Details(self, app.glyphs, id="details", classes="panel")
         self.scheduler = loop.TuiScheduler()
+        self.root = RootAccess(app, self.ui)
         self.browser = b = Browser(self, self.ui, self.scheduler, self.details, loop.post,
-                                   front_package=FRONT_PACKAGE)
+                                   helper=TuiHelperClient(loop.post, self.root), front_package=FRONT_PACKAGE)
         # the user's filters show and can be deleted; editing them waits for the Custom Filters dialog (§10.10)
         b.custom_filters = CustomFilters(b.sidebar, b.catalog, b.dnf, lambda: b.snapshot, self.ui, self._edit_filters)
         self.sidebar = Sidebar(self, app.glyphs, id="sidebar", classes="panel")
@@ -76,6 +81,7 @@ class MainWindow:
         b = self.browser
         b.restore_settings()
         b.custom_filters.restore()
+        self.top.set_root(is_root())
         self.details.select_name(settings.get(DETAILS_TAB_KEY, "description"))
         if self.app.upgradable:
             b.show_view(instance.UPGRADABLE)
@@ -188,8 +194,15 @@ class MainWindow:
         done(None)
 
     def run_helper(self, request: dict, title: str, done: Callable[[dict | None], None]) -> None:
-        self._not_yet()  # replaced by the Progress dialog and the root flow, §10.2 and §11
-        done(None)
+        """The request with its progress dialog, shown by the root flow: at once, or when the authentication has
+        something to say (kram.tui.root)."""
+        dialog = ProgressDialog(self.browser.helper, request, title, lambda ok, result: done(result if ok else None),
+                                self.ui, self.root)
+        if not dialog.start():
+            self.ui.warn(title, _(BUSY))
+            done(None)
+            return
+        self.root.present(dialog)
 
     def show_repos(self, data, done: Callable[[ReposChoice | None], None]) -> None:
         self._not_yet()  # replaced by the Repositories dialog, §10.4
@@ -276,7 +289,8 @@ class MainWindow:
         """What each action runs, but those of NOT_YET."""
         b, marker = self.browser, self.browser.marker
         return {
-            "reload_cache": b.reload, "mark_upgrades": marker.mark_all_upgrades,
+            "reload": b.refresh_metadata, "reload_cache": b.reload, "mark_upgrades": marker.mark_all_upgrades,
+            "lock": lambda: b.set_version_lock(True), "unlock": lambda: b.set_version_lock(False),
             "mark_unneeded": marker.mark_unneeded, "unmark_all": marker.unmark_all,
             "properties": lambda: self.show_tab("general"), "why_blocked": lambda: self.show_tab("dependencies"),
             "find": self.find, "back": b.go_back, "quit": self.app.request_quit, "about": self.about,

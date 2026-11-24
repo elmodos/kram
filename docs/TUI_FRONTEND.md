@@ -265,6 +265,10 @@ its own 16-colour schemes too.
   Rules for other widgets belong in the app's `CSS`.
 - **Colours blended with transparency vanish with 16 colours** (the footer's words, a checkbox's label): in
   `App:ansi` those widgets get plain theme colours.
+- **`self._closing` belongs to Textual's `Screen`**: a subclass that sets it hangs its own dismissal for ever.
+- **A screen's `is_mounted` is still False inside its own `on_mount`.**
+- **`Screen.dismiss()` of a screen that is not on top** pops the top screen on Textual 8.1 (4.0 ignores it with a
+  warning): dismiss only the top screen, and start what follows from the dismissal callback (TUI_SPEC §11.3.8).
 - **The SVG screenshots draw the terminal's default text colour as invisible** where it is set explicitly (the
   footer's words in the Terminal scheme). In a terminal it is right (`default on default`, checked).
 
