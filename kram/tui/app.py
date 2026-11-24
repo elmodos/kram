@@ -15,6 +15,7 @@ size (4.0 does), so the switch is made on the resize of the panels' container, `
 import os
 
 from rich.text import Text
+from textual import events
 from textual.app import App, ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal, Vertical
@@ -299,8 +300,13 @@ class KramApp(App, inherit_bindings=False):
         self.quitting = False  # the quit question is up: a second q does not ask again
         for theme in ANSI_THEMES:
             self.register_theme(theme)
-        from .window import MainWindow  # it needs the Ui port and the glyphs set above
-        self.main = MainWindow(self)
+        self.main = self.make_main()
+
+    def make_main(self):
+        """The main window; it needs the Ui port and the glyphs set above. None in the installer alone
+        (kram.tui.installer)."""
+        from .window import MainWindow
+        return MainWindow(self)
 
     def get_css_variables(self) -> dict[str, str]:
         # the border types: box drawing, or plain ASCII where the terminal is not UTF-8 (§9.6)
@@ -373,7 +379,8 @@ class KramApp(App, inherit_bindings=False):
 
     def refresh_colours(self) -> None:
         """Draw again what took its colours from `role` in Python: the hints, every widget's text."""
-        self.window.query_one("#packages").border_subtitle = hint(("s", _("sort")), ("y", _("copy")))
+        if self.main is not None:
+            self.window.query_one("#packages").border_subtitle = hint(("s", _("sort")), ("y", _("copy")))
         for screen in self.screen_stack:
             for widget in screen.query("*"):
                 refresh = getattr(widget, "refresh_colours", None)
@@ -540,6 +547,14 @@ class KramApp(App, inherit_bindings=False):
         if action == "command_palette" and isinstance(self.screen, TooSmall):
             return False
         return True
+
+    def on_paste(self, event: events.Paste) -> None:
+        """A paste the focused widget left to the window: the path of a package file opens the installer
+        (MainWindow.paste, INSTALL_FILE_DROP). Not while another screen is up: its text fields take their pastes."""
+        if self.main is None or len(self.screen_stack) > 1 or isinstance(self.focused, Input):
+            return
+        if self.main.paste(event.text):
+            event.stop()
 
     # ---------------------------------------------------------------- quitting
 

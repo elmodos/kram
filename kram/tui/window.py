@@ -15,6 +15,12 @@ The COPR dialog (kram.tui.dialogs.copr, §10.6) stays open while its changes run
 the Transaction History (kram.tui.dialogs.history, §10.7) reads the history again after every new catalog while it
 is open, and a package chosen in it is selected in the list once it has closed.
 
+A package file is installed in the Install package file dialog (kram.tui.dialogs.install, §10.8), opened from
+File → Open Package File… (a path line, in the folder of the last file, which the GUIs remember too) or from the path
+of an `.rpm` pasted into the window: a terminal turns a file dropped on it into its path, pasted, so this is how a
+drop arrives (INSTALL_FILE_DROP). Settings → Cleanup… is the dialog of kram.tui.dialogs.cache (§10.9); what it
+cleans or deletes runs over it.
+
 The Repositories dialog (kram.tui.dialogs.repos, §10.4) and the Mirrors dialog over it (kram.tui.dialogs.mirrors,
 §10.5) stay open while what is done from them runs: while each is open, every new catalog gives it the new state,
 as the GUIs' windows do.
@@ -27,7 +33,11 @@ The actions of kram.app.actions run here, by id (`run_action`), whether from the
 each runs is what the GUIs connect to it (kram.gtk.window._connect_actions). Whether one is enabled comes from
 `Browser.update_actions` (`apply_actions`), and the menu says why one is not (`disabled_reason`).
 """
+import os
+import shlex
 from collections.abc import Callable
+from pathlib import Path
+from urllib.parse import unquote, urlparse
 
 from rich.text import Text
 
@@ -62,8 +72,10 @@ from . import loop
 from .details import Details
 from .dialogs.about import AboutDialog
 from .dialogs.apply import ApplyDialog
+from .dialogs.cache import CacheDialog
 from .dialogs.copr import CoprDialog
 from .dialogs.history import HistoryDialog
+from .dialogs.install import InstallDialog
 from .dialogs.mirrors import MirrorsDialog
 from .dialogs.progress import ProgressDialog
 from .dialogs.repos import ReposDialog
@@ -77,9 +89,48 @@ from .widgets import ChoiceList
 
 FRONT_PACKAGE = "kram-tui"
 # the actions whose dialogs come in later steps (docs/TUI_SPEC.md §17): "Not in this version yet"
-NOT_YET = frozenset({"open_file", "cache", "notifications"})
+NOT_YET = frozenset({"notifications"})
+INSTALL_DIR_KEY = "install/dir"  # the folder of the last package file opened, shared with the GUIs
 # Browser says this while the catalog load waits for the system repo lock (Browser._waiting_for_lock)
 LOCK_STATUS = "Waiting for another package manager to finish…"
+
+
+def pasted_rpm(text: str) -> str | None:
+    """The package file a paste names: one path of an existing `.rpm`, as terminals paste a dropped file: plain,
+    quoted or with its spaces escaped (shell words), or as a `file://` URL. None for anything else."""
+    text = text.strip()
+    if not text or "\n" in text:
+        return None
+    try:
+        words = shlex.split(text)
+    except ValueError:  # an unmatched quote: not a shell word, maybe a path with an apostrophe
+        words = [text]
+    if len(words) != 1:
+        words = [text]  # a path with spaces nobody quoted
+    path = words[0]
+    if path.startswith("file:"):
+        url = urlparse(path)
+        if url.netloc not in ("", "localhost"):
+            return None
+        path = unquote(url.path)
+    path = os.path.expanduser(path)
+    if not path.endswith(".rpm") or not Path(path).is_file():
+        return None
+    return os.path.abspath(path)
+
+
+def downloads_dir() -> str:
+    """Where Open Package File starts the first time, as the GUIs do: the user's downloads, else home."""
+    home = Path.home()
+    try:
+        for line in (home / ".config/user-dirs.dirs").read_text().splitlines():
+            if line.startswith("XDG_DOWNLOAD_DIR="):
+                folder = Path(line.partition("=")[2].strip().strip('"').replace("$HOME", str(home)))
+                if folder.is_dir():
+                    return str(folder)
+    except OSError:
+        pass
+    return str(home / "Downloads") if (home / "Downloads").is_dir() else str(home)
 
 
 class MainWindow:
@@ -318,6 +369,58 @@ class MainWindow:
         if len(rows) == 1:
             self.open_history(rows[0].name)
 
+    # ---------------------------------------------------------------- a package file and Cleanup (§10.8, §10.9)
+
+    def open_package_file(self, path: str | None = None) -> None:
+        """File → Open Package File… (kram.gtk.window.open_package_file): a path line in the folder of the last
+        file; with `path` (a paste), that file at once."""
+        if not self.browser.can_open_file():
+            return
+        if path:
+            self.install_file(path)
+            return
+
+        def chosen(path: str | None) -> None:
+            # from the path line's dismissal, which may still be on the screens: no can_open_file again
+            if path:
+                settings.set(INSTALL_DIR_KEY, str(Path(path).parent))
+                self.install_file(path)
+        self.ui.choose_open_file(_("Open package file"), settings.get(INSTALL_DIR_KEY, downloads_dir()),
+                                 _("RPM packages (*.rpm)"), chosen)
+
+    def install_file(self, path: str) -> None:
+        """The Install package file dialog over the window; a change it made reloads the catalog."""
+        b = self.browser
+        if b.snapshot is None:
+            return
+
+        def run(request: dict, title: str, done: Callable[[bool], None]) -> None:
+            b.run_helper(request, title, lambda result: done(result is not None))
+
+        def closed(changed: bool | None) -> None:
+            if changed:
+                b.reload()
+            b.update_actions()
+        dialog = InstallDialog(path, b.catalog, b.dnf, busy=lambda: b.helper.busy, run=run,
+                               basearch=b.snapshot.basearch, marks=len(b.packages.marks))
+        self.app.push_screen(dialog, closed)
+
+    def paste(self, text: str) -> bool:
+        """A paste into the window (INSTALL_FILE_DROP): the path of an `.rpm` opens it in the installer, as a drop
+        does in the GUIs; nothing while a dialog is open or for anything else. False: not taken."""
+        path = pasted_rpm(text)
+        if path is None or not self.browser.can_open_file():
+            return False
+        self.open_package_file(path)
+        return True
+
+    def open_cache(self) -> None:
+        """Settings → Cleanup… (kram.gtk.window.open_cache)."""
+        b = self.browser
+        if not b.snapshot or b.busy():
+            return
+        self.app.push_screen(CacheDialog(b.dnf, b.clean_cache, self.ui, run_helper=b.run_helper))
+
     def _edit_filters(self, filters, snap, select, new, resolve_provides, done) -> None:
         self._not_yet()  # replaced by the Custom Filters dialog, §10.10
         done(None)
@@ -395,6 +498,7 @@ class MainWindow:
         return {
             "reload": b.refresh_metadata, "reload_cache": b.reload, "mark_upgrades": marker.mark_all_upgrades,
             "apply": b.apply, "repos": b.open_repos, "copr": self.open_copr, "history": self.open_history,
+            "open_file": self.open_package_file, "cache": self.open_cache,
             "show_in_history": self.show_in_history,
             "lock": lambda: b.set_version_lock(True), "unlock": lambda: b.set_version_lock(False),
             "mark_unneeded": marker.mark_unneeded, "unmark_all": marker.unmark_all,

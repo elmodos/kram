@@ -22,7 +22,7 @@ from kram.app.ports import Button as QuestionButton
 from kram.core.marks import Action  # noqa: E402
 from kram.core.model import Status  # noqa: E402
 from kram.tui import glyphs, loop  # noqa: E402
-from kram.tui.__main__ import main, parse_args  # noqa: E402
+from kram.tui.__main__ import parse_args  # noqa: E402
 from kram.tui.app import KramApp, TooSmall  # noqa: E402
 from kram.tui.dialogs.path import PathDialog, complete  # noqa: E402
 from kram.tui.dialogs.question import QuestionDialog  # noqa: E402
@@ -548,7 +548,6 @@ def test_command_line(capsys):
     with pytest.raises(SystemExit) as stop:
         parse_args(["--version"])
     assert stop.value.code == 0 and "kram-tui" in capsys.readouterr().out
-    assert main(["vim.rpm"]) == 2 and "later version" in capsys.readouterr().err
     app = KramApp(upgradable=True, file=None)
     assert app.upgradable and app.file is None
 

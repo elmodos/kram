@@ -143,7 +143,7 @@ def test_an_entry_runs_what_the_gui_s_action_runs(monkeypatch):
         await pilot.pause()
         # an action whose dialog comes later says so
         await open_menu(app, pilot, "Settings")
-        await go_to(app, pilot, "Cleanup…")
+        await go_to(app, pilot, "Update Notifications…")
         await pilot.press("enter")
         await pilot.pause()
         assert isinstance(app.screen, QuestionDialog) and app.screen.question.text == "Not in this version yet"

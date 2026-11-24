@@ -557,7 +557,7 @@ def test_dialogs_of_later_steps_say_so(monkeypatch):
     use_catalog(monkeypatch)
 
     async def test(app, pilot):
-        app.main.run_action("cache")  # the Cleanup dialog comes in a later step (§10.9)
+        app.main.run_action("notifications")  # the Update notifications dialog comes in a later step (§10.11)
         await pilot.pause()
         assert isinstance(app.screen, QuestionDialog) and app.screen.question.text == "Not in this version yet"
         await pilot.press("enter")

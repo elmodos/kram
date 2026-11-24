@@ -156,6 +156,99 @@ class RecBox(CheckBox):
         self.row = row
 
 
+class RecList(Vertical):
+    """The recommendations as checkboxes (DIALOG_APPLY_RECOMMENDATIONS, DIALOG_INSTALL_FILE_RECOMMENDATIONS): a
+    note, a header, then a box per recommendation in columns: the package, what recommends it (dropped when narrow)
+    and what it adds. The Apply changes and the Install package file dialogs show it; a box ticked or unticked posts
+    CheckBox.Changed to the dialog."""
+
+    DEFAULT_CSS = """
+    RecList { height: auto; }
+    RecList #recs { height: auto; }
+    RecList RecBox { width: 100%; }
+    RecList RecBox.nested { padding-left: 2; }
+    """
+
+    def __init__(self, **kw):
+        super().__init__(**kw)
+        self.recs: list[RecRow] = []
+        self.nested: list[RecRow] = []
+
+    def compose(self) -> ComposeResult:
+        yield Lines(id="recs-note", classes="head")
+        yield Lines(id="recs-header")
+        yield Vertical(id="recs")
+
+    def on_resize(self) -> None:
+        self.label()
+
+    def show(self, direct: list[RecRow], nested: list[RecRow]) -> None:
+        box = self.query_one("#recs", Vertical)
+        old = list(box.query(RecBox))
+        if [b.row.rec.what for b in old] == [r.rec.what for r in direct + nested]:
+            for b, row in zip(old, direct + nested, strict=True):  # the same ones: in place, the focus stays
+                b.row = row
+                b.set_value(row.rec.checked)
+        else:
+            focused = self.screen.focused
+            focused = focused.row.rec.what if isinstance(focused, RecBox) else None
+            box.remove_children()
+            boxes = [RecBox(r, False) for r in direct]
+            if nested:
+                title = Recommendations.nested_title(len(nested))
+                boxes.append(Lines(lambda: Text(title, role("header")), classes="head"))
+                boxes += [RecBox(r, True) for r in nested]
+            box.mount(*boxes)
+            again = next((b for b in boxes if isinstance(b, RecBox) and b.row.rec.what == focused), None)
+            if again is not None:
+                self.call_after_refresh(again.focus)
+        self.recs, self.nested = direct, nested
+
+        def note() -> Text:
+            if not (direct or nested):
+                return Text()
+            text = Text(_("Recommended packages."), Style(bold=True))
+            text.append(" " + _("Not required, but suggested by the packages being installed. "
+                                "Uncheck what you do not want."))
+            return text
+        self.query_one("#recs-note", Lines).show(note)
+        self.call_after_refresh(self.label)
+
+    def set_enabled(self, on: bool) -> None:
+        for box in self.query(RecBox):
+            box.set_enabled(on)
+
+    def _widths(self) -> tuple[int, int, bool]:
+        """(the package column, the recommended-by column, whether that one is shown) for the width."""
+        rows = self.recs + self.nested
+        width = self.query_one("#recs").size.width or 60
+        narrow = width < NARROW
+        label = min(30, max([cell_len(r.label) for r in rows] + [cell_len(_("Recommended package"))]) + 2)
+        by = min(30, max([cell_len(r.by) for r in rows] + [cell_len(_("Recommended by"))]) + 2)
+        return label, by, not narrow
+
+    def label(self) -> None:
+        if not self.is_mounted:
+            return
+        label_w, by_w, with_by = self._widths()
+        e = self.app.glyphs.ellipsis
+
+        def cell(text: str, width: int) -> str:  # a column and the gap after it
+            return fit(text, width - 2, False, e) + "  "
+        for b in self.query(RecBox):
+            w = label_w - (2 if b.has_class("nested") else 0)
+            text = cell(b.row.label, w) + (cell(b.row.by, by_w) if with_by else "") + b.row.adds
+            b.set_label(text.rstrip())
+        header = self.query_one("#recs-header", Lines)
+        if self.recs or self.nested:
+            # 4: the checkbox's "[x] " before the label
+            text = " " * 4 + cell(_("Recommended package"), label_w) + (
+                cell(_("Recommended by"), by_w) if with_by else "") + _("Adds")
+            header.show(lambda: Text(text, role("header")))
+        else:
+            header.show(Text)
+
+
 class ApplyDialog(ModalScreen):
     """`resolve`: resolves the request again when a recommendation is unticked (Browser's)."""
 
@@ -170,9 +263,6 @@ class ApplyDialog(ModalScreen):
     ApplyDialog { align: center middle; }
     ApplyDialog #apply-scroll { height: auto; }
     ApplyDialog #changes { margin-top: 1; }
-    ApplyDialog #recs { height: auto; }
-    ApplyDialog RecBox { width: 100%; }
-    ApplyDialog RecBox.nested { padding-left: 2; }
     ApplyDialog .head { margin-top: 1; }
     """
 
@@ -184,8 +274,6 @@ class ApplyDialog(ModalScreen):
         self.sizes: list[Span] = []
         self.resolving_text: str | None = None
         self.command = ""
-        self.recs: list[RecRow] = []
-        self.nested: list[RecRow] = []
         self.free: list[tuple[str, int]] = []  # free_space, worked out when the space is checked
 
     # ---------------------------------------------------------------- the widgets
@@ -204,9 +292,7 @@ class ApplyDialog(ModalScreen):
                 yield Lines(id="skipped")
                 yield ChangeList(self.app.glyphs, id="changes")
                 yield Lines(id="note", classes="head")
-                yield Lines(id="recs-note", classes="head")
-                yield Lines(id="recs-header")
-                yield Vertical(id="recs")
+                yield RecList(id="rec-list")
                 yield CheckBox(_("Download packages only"), False, id="download-only", classes="head")
                 yield Lines(lambda: Text(_("Equivalent command"), role("header")), classes="head")
                 yield Lines(lambda: Text(self.command, role("muted")), id="command")
@@ -221,7 +307,6 @@ class ApplyDialog(ModalScreen):
         self._fit()
 
     def on_resize(self) -> None:
-        self._label_recs()
         self._fit()
 
     def _fit(self) -> None:
@@ -255,65 +340,6 @@ class ApplyDialog(ModalScreen):
         self.query_one(f"#{name}", Lines).show(make)
 
     # ---------------------------------------------------------------- the recommendations
-
-    def _show_recs(self, direct: list[RecRow], nested: list[RecRow]) -> None:
-        box = self.query_one("#recs", Vertical)
-        old = list(box.query(RecBox))
-        if [b.row.rec.what for b in old] == [r.rec.what for r in direct + nested]:
-            for b, row in zip(old, direct + nested, strict=True):  # the same ones: in place, the focus stays
-                b.row = row
-                b.set_value(row.rec.checked)
-        else:
-            focused = self.focused.row.rec.what if isinstance(self.focused, RecBox) else None
-            box.remove_children()
-            boxes = [RecBox(r, False) for r in direct]
-            if nested:
-                title = Recommendations.nested_title(len(nested))
-                boxes.append(Lines(lambda: Text(title, role("header")), classes="head"))
-                boxes += [RecBox(r, True) for r in nested]
-            box.mount(*boxes)
-            again = next((b for b in boxes if isinstance(b, RecBox) and b.row.rec.what == focused), None)
-            if again is not None:
-                self.call_after_refresh(again.focus)
-        self.recs, self.nested = direct, nested
-        def note() -> Text:
-            if not (direct or nested):
-                return Text()
-            text = Text(_("Recommended packages."), Style(bold=True))
-            text.append(" " + _("Not required, but suggested by the packages being installed. "
-                                "Uncheck what you do not want."))
-            return text
-        self.query_one("#recs-note", Lines).show(note)
-        self.call_after_refresh(self._label_recs)
-
-    def _rec_widths(self) -> tuple[int, int, bool]:
-        """(the package column, the recommended-by column, whether that one is shown) for the width."""
-        rows = self.recs + self.nested
-        width = self.query_one("#recs").size.width or 60
-        narrow = width < NARROW
-        label = min(30, max([cell_len(r.label) for r in rows] + [cell_len(_("Recommended package"))]) + 2)
-        by = min(30, max([cell_len(r.by) for r in rows] + [cell_len(_("Recommended by"))]) + 2)
-        return label, by, not narrow
-
-    def _label_recs(self) -> None:
-        if not self.is_mounted:
-            return
-        label_w, by_w, with_by = self._rec_widths()
-        e = self.app.glyphs.ellipsis
-        def cell(text: str, width: int) -> str:  # a column and the gap after it
-            return fit(text, width - 2, False, e) + "  "
-        for b in self.query(RecBox):
-            w = label_w - (2 if b.has_class("nested") else 0)
-            text = cell(b.row.label, w) + (cell(b.row.by, by_w) if with_by else "") + b.row.adds
-            b.set_label(text.rstrip())
-        header = self.query_one("#recs-header", Lines)
-        if self.recs or self.nested:
-            # 4: the checkbox's "[x] " before the label
-            text = " " * 4 + cell(_("Recommended package"), label_w) + (
-                cell(_("Recommended by"), by_w) if with_by else "") + _("Adds")
-            header.show(lambda: Text(text, role("header")))
-        else:
-            header.show(Text)
 
     def on_check_box_changed(self, event: CheckBox.Changed) -> None:
         event.stop()
@@ -355,7 +381,7 @@ class ApplyDialog(ModalScreen):
     def show_preview(self, preview: TransactionPreview, sections: list[ChangeSection],
                      recs: tuple[list[RecRow], list[RecRow]]) -> None:
         self.query_one(ChangeList).show(sections)
-        self._show_recs(*recs)
+        self.query_one(RecList).show(*recs)
         self._fit()
 
     def show_texts(self, sizes: list[Span], note: str, warning: str, skipped_title: str, skipped: str) -> None:
@@ -385,7 +411,6 @@ class ApplyDialog(ModalScreen):
     def set_resolving(self, busy: bool, text: str | None = None) -> None:
         self.busy = busy
         self.resolving_text = text if busy or text is not None else None
-        for box in self.query(RecBox):
-            box.set_enabled(not busy)
+        self.query_one(RecList).set_enabled(not busy)
         self.query_one("#summary", Lines).refresh(layout=True)
         self._fit()
