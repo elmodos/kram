@@ -565,3 +565,24 @@ def test_a_modal_window_is_transparent_in_16_colours():
         await pilot.pause()
         assert app.screen.styles.background.a > 0
     run(test)
+
+
+def test_lines_drawn_in_python_are_on_the_schemes_background():
+    """Textual lays no background under `render_line`'s segments: without `palette.filled` the panels showed the
+    terminal's own background (black) in every scheme."""
+    async def test(app, pilot):
+        for scheme in ("solarized-light", "kram-midnight"):
+            app.set_scheme(scheme)
+            await pilot.pause()
+            await pilot.pause()
+            for name in ("EntryList", "PackageTable", "DetailsBody"):
+                widget = app.window.query_one(name)
+                assert widget.rich_style.bgcolor is not None
+                for y in range(widget.size.height):  # the cursor's line has a background of its own
+                    assert all(s.style and s.style.bgcolor for s in widget.render_line(y) if s.text), (scheme, name, y)
+        app.set_scheme("textual-ansi")  # the terminal's own background: left unset
+        await pilot.pause()
+        await pilot.pause()
+        assert all(s.style is None or s.style.bgcolor is None
+                   for s in app.window.query_one("EntryList").render_line(5))
+    run(test)

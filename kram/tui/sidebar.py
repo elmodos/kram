@@ -29,7 +29,7 @@ from ..i18n import _, pgettext
 from .glyphs import Glyphs
 from .keymap import CONTEXT_KEYS
 from .package_list import MOVE
-from .palette import role
+from .palette import filled, role
 from .widgets import ChoiceList, PopupMenu, hint
 
 PLACEHOLDERS = {
@@ -163,6 +163,9 @@ class EntryList(ScrollView, can_focus=True):
         return indent + "  "
 
     def render_line(self, y: int) -> Strip:
+        return filled(self, self._line(y))
+
+    def _line(self, y: int) -> Strip:
         width = self.scrollable_content_region.width
         listing = self.listing
         if listing is None:

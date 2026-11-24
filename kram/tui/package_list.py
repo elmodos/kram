@@ -53,7 +53,7 @@ from ..core.model import SECURITY_LEVELS, PkgRow, Status
 from ..i18n import _, pgettext
 from .glyphs import UNICODE, Glyphs, StatusGlyphs, status_glyphs
 from .keymap import CONTEXT_KEYS, bindings_key
-from .palette import role
+from .palette import filled, role
 from .widgets import hint
 
 # ---------------------------------------------------------------- the columns (§7.3.2)
@@ -443,6 +443,9 @@ class PackageTable(ScrollView, can_focus=True):
     # ---------------------------------------------------------------- drawing
 
     def render_line(self, y: int) -> Strip:
+        return filled(self, self._line(y))
+
+    def _line(self, y: int) -> Strip:
         self.lines_drawn += 1
         width = self.scrollable_content_region.width
         if not len(self.packages) and y > 0:

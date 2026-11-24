@@ -10,6 +10,7 @@ The rules live in `PALETTE_CSS`, which the app puts in its own CSS: a widget's D
 and Textual prefixes a rule starting with `App:ansi` there with the widget's name, so it never matches.
 """
 from rich.style import Style
+from textual.strip import Strip
 from textual.theme import Theme
 from textual.widget import Widget
 
@@ -89,6 +90,17 @@ def role(name: str) -> Style:
     else:
         style = _without_default(style)
     return style.without_color if palette.app.no_color else style
+
+
+def filled(widget: Widget, strip: Strip) -> Strip:
+    """A line drawn in Python (`render_line`) on the widget's own background. Textual does not lay it under such
+    lines: a segment without a background shows the terminal's default one, black on most terminals, whatever the
+    scheme (only a translucent modal screen on top covered it up). The terminal's own background ("default", the
+    Terminal scheme) is left unset: it is what shows anyway."""
+    bgcolor = widget.rich_style.bgcolor
+    if bgcolor is None or bgcolor.is_default:
+        return strip
+    return strip.apply_style(Style(bgcolor=bgcolor))
 
 
 def _without_default(style: Style) -> Style:

@@ -49,7 +49,7 @@ from .doc_view import DocLines, doc_lines, link_of
 from .files import FileState
 from .glyphs import Glyphs
 from .package_list import EXTEND, MOVE, fit
-from .palette import role
+from .palette import filled, role
 from .widgets import ChoiceList, hint
 
 FILTER_DELAY_MS = 150  # as the GUIs: a package can have tens of thousands of files, filter once the typing pauses
@@ -217,6 +217,9 @@ class DetailsBody(ScrollView, can_focus=True):
     # ---------------------------------------------------------------- drawing
 
     def render_line(self, y: int) -> Strip:
+        return filled(self, self._line(y))
+
+    def _line(self, y: int) -> Strip:
         width = self.scrollable_content_region.width
         d = self.details
         top = self.scroll_offset.y
