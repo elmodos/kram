@@ -45,6 +45,7 @@ def test_pot_is_up_to_date(tmp_path):
 
 
 @pytest.mark.feature(Feature.TRANSLATIONS_CATALOGS, front="gtk")
+@pytest.mark.feature(Feature.TRANSLATIONS_CATALOGS, front="tui")  # one catalog for every front end
 @pytest.mark.parametrize("po", sorted(PO_DIR.glob("*.po")), ids=lambda p: p.stem)
 def test_po_compiles_and_is_complete(po):
     out = subprocess.run(["msgfmt", "--check", "--statistics", "-o", "/dev/null", str(po)],

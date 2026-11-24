@@ -8,8 +8,7 @@ progress of every request is the dialog of kram.tui.dialogs.progress (§10.2).
 
 The changes are reviewed in the Apply changes dialog (kram.tui.dialogs.apply, §10.1) and run in the progress dialog;
 Browser does the rest of the flow (the conflicts offer, the form when nothing can be done, the reload, closing Kram
-when the transaction removed kram-tui), as it does for the GUIs. The actions of the menu whose dialogs come in later
-steps say so through the Ui port meanwhile (`NOT_YET`).
+when the transaction removed kram-tui), as it does for the GUIs.
 
 The COPR dialog (kram.tui.dialogs.copr, §10.6) stays open while its changes run, as the Repositories dialog does;
 the Transaction History (kram.tui.dialogs.history, §10.7) reads the history again after every new catalog while it
@@ -25,6 +24,12 @@ The Repositories dialog (kram.tui.dialogs.repos, §10.4) and the Mirrors dialog 
 §10.5) stay open while what is done from them runs: while each is open, every new catalog gives it the new state,
 as the GUIs' windows do.
 
+Settings → Custom Filters…, New Filter from Current View and `e` on a custom filter open the Custom Filters dialog
+(kram.tui.dialogs.filters, §10.10); Update Notifications… is kram.tui.dialogs.notifier (§10.11) and Columns… is
+kram.tui.dialogs.columns (§10.18), saved as the list follows it. As in the GUIs, a Reload asks Bodhi whether a new
+Fedora release is out (kram.app.release_watch): the top line says so, and `r` opens the Fedora N dialog
+(kram.tui.dialogs.upgrade, §10.12), whose check is kept for the session.
+
 Marking (§7.5) is the GUIs': `space` and a click on the status cell are the status click (the likely mark, or the
 row's menu, as the setting says), a double click is the likely mark, and the keys of kram.tui.keymap run the Package
 menu's actions.
@@ -33,6 +38,7 @@ The actions of kram.app.actions run here, by id (`run_action`), whether from the
 each runs is what the GUIs connect to it (kram.gtk.window._connect_actions). Whether one is enabled comes from
 `Browser.update_actions` (`apply_actions`), and the menu says why one is not (`disabled_reason`).
 """
+import json
 import os
 import shlex
 from collections.abc import Callable
@@ -62,7 +68,9 @@ from ..app.marking import group_menu
 from ..app.mirrors import MirrorChoice
 from ..app.package_list import Sort
 from ..app.progress import BUSY
+from ..app.release_watch import ReleaseWatcher
 from ..app.status import error_text, metadata_age, missing_repos
+from ..app.upgrade import UpgradeCheck
 from ..core.marks import Action
 from ..core.model import CatalogSnapshot, GroupInfo, PkgRow, TransactionPreview
 from ..core.settings import store as settings
@@ -73,14 +81,18 @@ from .details import Details
 from .dialogs.about import AboutDialog
 from .dialogs.apply import ApplyDialog
 from .dialogs.cache import CacheDialog
+from .dialogs.columns import ColumnsDialog
 from .dialogs.copr import CoprDialog
+from .dialogs.filters import FiltersDialog
 from .dialogs.history import HistoryDialog
 from .dialogs.install import InstallDialog
 from .dialogs.mirrors import MirrorsDialog
+from .dialogs.notifier import NotifierDialog
 from .dialogs.progress import ProgressDialog
 from .dialogs.repos import ReposDialog
+from .dialogs.upgrade import UpgradeDialog, UpgradeState
 from .menu import menu_title, open_table_menu
-from .package_list import PackageTable, column_label
+from .package_list import Columns, PackageTable, column_label
 from .palette import role
 from .root import RootAccess, TuiHelperClient, is_root
 from .search import open_search
@@ -88,8 +100,6 @@ from .sidebar import Sidebar
 from .widgets import ChoiceList
 
 FRONT_PACKAGE = "kram-tui"
-# the actions whose dialogs come in later steps (docs/TUI_SPEC.md §17): "Not in this version yet"
-NOT_YET = frozenset({"notifications"})
 INSTALL_DIR_KEY = "install/dir"  # the folder of the last package file opened, shared with the GUIs
 # Browser says this while the catalog load waits for the system repo lock (Browser._waiting_for_lock)
 LOCK_STATUS = "Waiting for another package manager to finish…"
@@ -144,7 +154,7 @@ class MainWindow:
         self.root = RootAccess(app, self.ui)
         self.browser = b = Browser(self, self.ui, self.scheduler, self.details, loop.post,
                                    helper=TuiHelperClient(loop.post, self.root), front_package=FRONT_PACKAGE)
-        # the user's filters show and can be deleted; editing them waits for the Custom Filters dialog (§10.10)
+        # the user's filters, edited in the Custom Filters dialog (§10.10)
         b.custom_filters = CustomFilters(b.sidebar, b.catalog, b.dnf, lambda: b.snapshot, self.ui, self._edit_filters)
         self.sidebar = Sidebar(self, app.glyphs, id="sidebar", classes="panel")
         self.list = PackageTable(b.packages, self, app.glyphs, app.utf8, id="list")
@@ -155,12 +165,26 @@ class MainWindow:
         self.defs: dict[str, ActionDef] = {d.id: d for d in action_defs()}
         self.actions: ActionState | None = None  # from Browser.update_actions; None until it first says
         self.reload_enabled = self.apply_enabled = False
+        # Fedora N (§5.4, §10.12): on Reload Bodhi is asked whether a new release is out, as in the GUIs; the top
+        # line says so while the setting watches, and the check of the dialog is kept for the session
+        self.releases = ReleaseWatcher(loop.post)
+        self.releases.changed.connect(self.show_release)
+        b.refreshed.connect(self.releases.check)
+        preferences.changed.connect(self._pref_changed)
+        self._watching_prefs = True
+        self.upgrade: tuple[UpgradeState, UpgradeCheck] | None = None
+        self.catalog_shown: CatalogSnapshot | None = None  # the right of the top line is about it
 
     def start(self) -> None:
         """Once the app runs (its loop takes what the worker posts): the settings, then the catalog."""
         b = self.browser
         b.restore_settings()
         b.custom_filters.restore()
+        try:
+            columns = json.loads(preferences.value(preferences.TUI_COLUMNS))
+        except (TypeError, ValueError):
+            columns = {}
+        self.list.set_columns(Columns.from_dict(columns))
         self.top.set_root(is_root())
         self.details.select_name(settings.get(DETAILS_TAB_KEY, "description"))
         if self.app.upgradable:
@@ -169,6 +193,16 @@ class MainWindow:
 
     def shutdown(self) -> None:
         self.browser.shutdown()
+
+    def detach(self) -> None:
+        """The app has ended: the settings' signal outlives it, and must not reach this window any more."""
+        if self._watching_prefs:
+            self._watching_prefs = False
+            preferences.changed.disconnect(self._pref_changed)
+
+    def _pref_changed(self, key: str) -> None:
+        if key == preferences.WATCH_RELEASES:  # SETTINGS_WATCH_RELEASES: the notice follows it at once
+            self.show_release()
 
     @property
     def top(self):
@@ -221,18 +255,36 @@ class MainWindow:
         return self.top.status.plain
 
     def show_catalog(self, snap: CatalogSnapshot) -> None:
-        """The right of the top line: what is wrong with the catalog, then its age (dropped first when narrow)."""
         self.waiting_for_lock = False
+        self.catalog_shown = snap
+        self._show_right()
+
+    def show_release(self) -> None:
+        """ReleaseWatcher.changed, the setting: the notice of a new Fedora release (RELEASE_BUTTON). Bodhi's answer
+        may come after Kram has ended: there is no top line then."""
+        if self.app.screen_stack:
+            self._show_right()
+
+    def _show_right(self) -> None:
+        """The right of the top line: what is wrong with the catalog, that a new Fedora release is out, then the
+        catalog's age; dropped from the right when narrow, so the age goes first."""
         warn = self.app.glyphs.warning + " "
         parts = []
-        age = snap.metadata_age
-        if age is not None and (days := age // 86400) >= stale_days():
-            parts.append(Text(warn + ngettext("The package information is {days} day old",
-                                              "The package information is {days} days old", days).format(days=days),
-                              role("danger")))
-        if (missing := missing_repos(snap)) is not None:
-            parts.append(Text(warn + missing[0], role("danger")))
-        parts.append(Text(metadata_age(age), role("muted")))
+        if (snap := self.catalog_shown) is not None:
+            age = snap.metadata_age
+            if age is not None and (days := age // 86400) >= stale_days():
+                parts.append(Text(warn + ngettext("The package information is {days} day old",
+                                                  "The package information is {days} days old",
+                                                  days).format(days=days), role("danger")))
+            if (missing := missing_repos(snap)) is not None:
+                parts.append(Text(warn + missing[0], role("danger")))
+        if (target := self.releases.target()) is not None:
+            # TRANSLATORS: on the top line of the terminal front end; the key that opens its dialog follows
+            notice = Text(_("Fedora {version} is out").format(version=target) + ": ", role("info"))
+            notice.append("r", role("key"))
+            parts.append(notice)
+        if snap is not None:
+            parts.append(Text(metadata_age(snap.metadata_age), role("muted")))
         self.top.set_right(parts)
 
     def show_counts(self, snap: CatalogSnapshot, shown: int, to_install: int, to_remove: int,
@@ -264,9 +316,6 @@ class MainWindow:
         self.apply_enabled = on
 
     # ---------------------------------------------------------------- BrowserView: dialogs
-
-    def _not_yet(self) -> None:
-        self.ui.info("Kram", _("Not in this version yet"))
 
     def review_changes(self, preview: TransactionPreview, request: dict, basearch: str, resolve,
                        done: Callable[[dict | None], None]) -> None:
@@ -414,6 +463,35 @@ class MainWindow:
         self.open_package_file(path)
         return True
 
+    def open_notifications(self) -> None:
+        """Settings → Update Notifications… (§10.11)."""
+        self.app.push_screen(NotifierDialog(self.ui))
+
+    def open_upgrade(self) -> None:
+        """`r` while the top line says a new Fedora release is out (§10.12): its dialog, with the check made for
+        that release earlier in the session, if any (kram.gtk.window.open_upgrade)."""
+        target, snap = self.releases.target(), self.browser.snapshot
+        if target is None or snap is None:
+            return
+        if self.upgrade is None or self.upgrade[0].target != target:
+            state = UpgradeState(target)
+            check = UpgradeCheck(target, self.browser.dnf, loop.post, state)
+            self.upgrade = state, check
+            check.ask_copr(snap)
+        state, check = self.upgrade
+        self.app.push_screen(UpgradeDialog(state, check, self.releases.running, self.releases.running_eol(),
+                                           self.ui))
+
+    def open_columns(self) -> None:
+        """Settings → Columns… (§10.18): a change shows in the list at once and is saved."""
+        def apply(columns: Columns) -> None:
+            self.list.set_columns(columns)
+            preferences.set_value(preferences.TUI_COLUMNS, json.dumps(columns.to_dict()))
+
+        def shown_width(col: int) -> int:
+            return next((w for c, w in self.list.columns if c == col), 0)
+        self.app.push_screen(ColumnsDialog(self.list.columns_state, apply, shown_width))
+
     def open_cache(self) -> None:
         """Settings → Cleanup… (kram.gtk.window.open_cache)."""
         b = self.browser
@@ -422,8 +500,10 @@ class MainWindow:
         self.app.push_screen(CacheDialog(b.dnf, b.clean_cache, self.ui, run_helper=b.run_helper))
 
     def _edit_filters(self, filters, snap, select, new, resolve_provides, done) -> None:
-        self._not_yet()  # replaced by the Custom Filters dialog, §10.10
-        done(None)
+        """Settings → Custom Filters…, New Filter from Current View, `e` on a custom filter in the sidebar (§10.10):
+        `done` from the dialog's dismissal."""
+        self.app.push_screen(FiltersDialog(filters, snap, self.ui, select=select, new=new,
+                                           resolve_provides=resolve_provides, scheduler=self.scheduler), done)
 
     # ---------------------------------------------------------------- the sidebar's menu and keys (§7.2.6)
 
@@ -487,18 +567,15 @@ class MainWindow:
             if reason := self.disabled_reason(action_id):
                 self.ui.status(reason, STATUS_MESSAGE_MS)
             return
-        if action_id in NOT_YET:
-            self._not_yet()
-            return
         self.action_runs()[action_id]()
 
     def action_runs(self) -> dict[str, Callable[[], None]]:
-        """What each action runs, but those of NOT_YET."""
+        """What each action runs."""
         b, marker = self.browser, self.browser.marker
         return {
             "reload": b.refresh_metadata, "reload_cache": b.reload, "mark_upgrades": marker.mark_all_upgrades,
             "apply": b.apply, "repos": b.open_repos, "copr": self.open_copr, "history": self.open_history,
-            "open_file": self.open_package_file, "cache": self.open_cache,
+            "open_file": self.open_package_file, "cache": self.open_cache, "notifications": self.open_notifications,
             "show_in_history": self.show_in_history,
             "lock": lambda: b.set_version_lock(True), "unlock": lambda: b.set_version_lock(False),
             "mark_unneeded": marker.mark_unneeded, "unmark_all": marker.unmark_all,

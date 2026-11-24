@@ -19,11 +19,13 @@ from textual.widgets import OptionList  # noqa: E402
 from kram.app import preferences  # noqa: E402
 from kram.app.actions import menu_bar, table_menu, walk  # noqa: E402
 from kram.app.parity import Feature  # noqa: E402
+from kram.core import releases  # noqa: E402
 from kram.core.marks import Action  # noqa: E402
 from kram.tui.app import KramApp  # noqa: E402
-from kram.tui.dialogs.about import AboutDialog  # noqa: E402
+from kram.tui.dialogs.about import AboutDialog, WhatsNewDialog  # noqa: E402
 from kram.tui.dialogs.colours import ColoursDialog  # noqa: E402
 from kram.tui.dialogs.keys import KeysDialog  # noqa: E402
+from kram.tui.dialogs.notifier import NotifierDialog  # noqa: E402
 from kram.tui.dialogs.question import QuestionDialog  # noqa: E402
 from kram.tui.menu import MenuPopup, menu_title  # noqa: E402
 from kram.tui.search import SearchDialog  # noqa: E402
@@ -122,7 +124,9 @@ def test_m_and_f9_open_the_menus_of_the_menu_bar(monkeypatch):
     run(test)
 
 
+@pytest.mark.feature(Feature.WINDOW_KEYBOARD_ONLY, front="tui")
 def test_an_entry_runs_what_the_gui_s_action_runs(monkeypatch):
+    """Every action is in the menu (§6.6), reached and run by keys alone."""
     use_catalog(monkeypatch)
 
     async def test(app, pilot):
@@ -141,12 +145,11 @@ def test_an_entry_runs_what_the_gui_s_action_runs(monkeypatch):
         assert isinstance(app.screen, SearchDialog)  # opened once the menu was gone
         await pilot.press("escape")
         await pilot.pause()
-        # an action whose dialog comes later says so
         await open_menu(app, pilot, "Settings")
         await go_to(app, pilot, "Update Notifications…")
         await pilot.press("enter")
         await pilot.pause()
-        assert isinstance(app.screen, QuestionDialog) and app.screen.question.text == "Not in this version yet"
+        assert isinstance(app.screen, NotifierDialog)
     run(test)
 
 
@@ -271,7 +274,7 @@ def test_the_settings_menu_holds_the_registry_s_settings_for_the_terminal(monkey
         settings = shown[shown.index("New Filter from Current View…") + 1:]
         assert settings == ["[ ] Clicking the status icon marks the likely action", "[x] Watch Fedora Releases",
                             "[x] Centre the cursor when scrolling", f"Status glyphs {app.glyphs.right}",
-                            "[x] Ask before quitting with changes not applied", "Colours…"]
+                            "[x] Ask before quitting with changes not applied", "Colours…", "Columns…"]
         await go_to(app, pilot, "[x] Centre")
         assert status(app) == ""  # it has no tooltip
         await pilot.press("enter")  # ticked in place; the menu stays
@@ -441,7 +444,10 @@ def test_ctrl_p_is_apply_and_textual_s_command_palette_is_off(monkeypatch):
 # ---------------------------------------------------------------- About (§10.13)
 
 @pytest.mark.feature(Feature.DIALOG_ABOUT_TOOLKIT, front="tui")
+@pytest.mark.feature(Feature.DIALOG_WHATS_NEW, front="tui")
+@pytest.mark.feature(Feature.DIALOG_WHATS_NEW_OVER_ABOUT, front="tui")
 def test_about_names_textual_and_its_version(monkeypatch):
+    """…and What's New opens over it (§10.14): the release notes, newest first, scrolling."""
     use_catalog(monkeypatch)
     from kram import HOMEPAGE, __version__
 
@@ -458,8 +464,18 @@ def test_about_names_textual_and_its_version(monkeypatch):
         assert about.focused.id == "close"
         about.query_one("#whats-new", Button).action_press()
         await pilot.pause()
-        assert isinstance(app.screen, QuestionDialog)  # over About, which stays
-        await pilot.press("enter")
+        whats_new = app.screen
+        assert isinstance(whats_new, WhatsNewDialog) and app.screen_stack[-2] is about  # over About, which stays
+        notes = releases.load()
+        text = str(whats_new.query_one("#whats-new").render())
+        assert text.startswith(f"{notes[0].version} — {notes[0].date}")  # the newest first
+        assert text.index(f"{notes[1].version} — ") > text.index(notes[0].items[0][:20])
+        scroll = whats_new.query_one("#whats-new-scroll")
+        assert whats_new.focused is scroll and scroll.max_scroll_y > 0
+        await pilot.press("pagedown")
+        await pilot.pause()
+        assert scroll.scroll_y > 0
+        await pilot.press("escape")
         await pilot.pause()
         assert app.screen is about
         await pilot.press("escape")
@@ -550,12 +566,10 @@ def test_the_sidebar_s_cursor_follows_a_selection_made_by_code(monkeypatch):
 
 
 def test_every_menu_action_has_a_way_to_run(monkeypatch):
-    """Every action the menus hold runs something in the terminal: its own code, or "Not in this version yet"."""
+    """Every action the menus hold runs something of its own in the terminal."""
     use_catalog(monkeypatch)
 
     async def test(app, pilot):
-        from kram.tui.window import NOT_YET
         ids = {i.action for m in (*menu_bar(), table_menu()) for i in walk(m.items) if i.action}
-        runs = app.main.action_runs()
-        assert ids - NOT_YET <= set(runs) and not NOT_YET & set(runs)
+        assert ids <= set(app.main.action_runs())
     run(test)

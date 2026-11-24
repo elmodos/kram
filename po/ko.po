@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kram\n"
 "Report-Msgid-Bugs-To: https://github.com/elmodos/kram/issues\n"
-"POT-Creation-Date: 2026-11-24 12:25+0200\n"
+"POT-Creation-Date: 2026-11-24 15:00+0200\n"
 "PO-Revision-Date: 2026-11-04 14:07+0200\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -155,7 +155,7 @@ msgstr "업데이트가 있을 때 시스템 트레이에 아이콘 표시"
 msgid "Find"
 msgstr "찾기"
 
-#: kram/app/actions.py:88 kram/tui/menu.py:184
+#: kram/app/actions.py:88 kram/tui/menu.py:187
 msgid "Back"
 msgstr "뒤로"
 
@@ -203,12 +203,12 @@ msgstr "패키지 파일 열기…"
 msgid "Install a downloaded .rpm file (you can also drop it on the window)"
 msgstr "내려받은 .rpm 파일을 설치합니다 (창에 끌어다 놓아도 됩니다)"
 
-#: kram/app/actions.py:100 kram/tui/app.py:275 kram/tui/app.py:580
+#: kram/app/actions.py:100 kram/tui/app.py:275 kram/tui/app.py:604
 msgid "Quit"
 msgstr "끝내기"
 
 #: kram/app/actions.py:101 kram/qt/about_dialog.py:14
-#: kram/tui/dialogs/about.py:62
+#: kram/tui/dialogs/about.py:66
 msgid "About Kram"
 msgstr "Kram 정보"
 
@@ -1056,7 +1056,7 @@ msgid "Delete leftover files"
 msgstr "남은 파일 삭제"
 
 #: kram/app/cache.py:238 kram/gtk/dialogs/filters.py:149
-#: kram/qt/filters_dialog.py:143
+#: kram/qt/filters_dialog.py:143 kram/tui/dialogs/filters.py:222
 msgid "Delete"
 msgstr "삭제"
 
@@ -1334,13 +1334,14 @@ msgstr ""
 "겠습니까?"
 
 #: kram/app/custom_filters.py:120 kram/gtk/dialogs/filters.py:148
-#: kram/qt/filters_dialog.py:142
+#: kram/qt/filters_dialog.py:142 kram/tui/dialogs/filters.py:361
 msgid "New filter"
 msgstr "새 필터"
 
 #: kram/app/custom_filters.py:129 kram/gtk/dialogs/filters.py:125
 #: kram/gtk/dialogs/filters.py:283 kram/qt/filters_dialog.py:126
-#: kram/qt/filters_dialog.py:275
+#: kram/qt/filters_dialog.py:275 kram/tui/dialogs/filters.py:201
+#: kram/tui/dialogs/filters.py:373
 msgid "Custom Filters"
 msgstr "사용자 정의 필터"
 
@@ -1364,7 +1365,7 @@ msgstr "권고문"
 #: kram/app/details.py:30 kram/gtk/dialogs/copr.py:88
 #: kram/gtk/dialogs/install.py:91 kram/qt/copr_dialog.py:92
 #: kram/qt/install_dialog.py:112 kram/tui/dialogs/copr.py:58
-#: kram/tui/dialogs/install.py:152
+#: kram/tui/dialogs/install.py:155
 msgid "Description"
 msgstr "설명"
 
@@ -1373,13 +1374,13 @@ msgid "General"
 msgstr "일반"
 
 #: kram/app/details.py:31 kram/gtk/dialogs/install.py:93
-#: kram/qt/install_dialog.py:113 kram/tui/dialogs/install.py:154
+#: kram/qt/install_dialog.py:113 kram/tui/dialogs/install.py:157
 msgid "Dependencies"
 msgstr "의존성"
 
 #: kram/app/details.py:31 kram/gtk/dialogs/install.py:94
 #: kram/qt/install_dialog.py:113 kram/tui/dialogs/cache.py:45
-#: kram/tui/dialogs/install.py:156
+#: kram/tui/dialogs/install.py:159
 msgid "Files"
 msgstr "파일"
 
@@ -1388,7 +1389,7 @@ msgid "Versions"
 msgstr "버전"
 
 #: kram/app/details.py:32 kram/gtk/dialogs/install.py:95
-#: kram/qt/install_dialog.py:114 kram/tui/dialogs/install.py:158
+#: kram/qt/install_dialog.py:114 kram/tui/dialogs/install.py:161
 msgid "Changelog"
 msgstr "변경 기록"
 
@@ -1568,7 +1569,7 @@ msgid_plural ""
 "list."
 msgstr[0] "저장소 {n}개에 메타데이터가 없어서 그 패키지가 목록에 없습니다."
 
-#: kram/app/empty_list.py:58 kram/tui/window.py:466
+#: kram/app/empty_list.py:58 kram/tui/window.py:546
 msgid "Loading the package catalog…"
 msgstr "패키지 카탈로그를 불러오는 중…"
 
@@ -1803,8 +1804,8 @@ msgid "Unknown origin"
 msgstr "출처 알 수 없음"
 
 #: kram/app/install.py:44 kram/gtk/dialogs/install.py:52
-#: kram/qt/install_dialog.py:148 kram/tui/dialogs/install.py:120
-#: kram/tui/dialogs/install.py:167
+#: kram/qt/install_dialog.py:148 kram/tui/dialogs/install.py:122
+#: kram/tui/dialogs/install.py:170
 msgid "Install"
 msgstr "설치"
 
@@ -2377,7 +2378,7 @@ msgstr ""
 msgid "Only for you: stops it now and at every login"
 msgstr "본인에게만: 지금 그리고 로그인할 때마다 중지합니다"
 
-#: kram/app/notifier.py:70
+#: kram/app/notifier.py:70 kram/tui/dialogs/notifier.py:99
 msgid "Turn Off"
 msgstr "끄기"
 
@@ -2398,15 +2399,16 @@ msgstr ""
 "데이트를 봅니다."
 
 #: kram/app/notifier.py:100 kram/gtk/dialogs/notifier.py:70
-#: kram/qt/notifier_dialog.py:122
+#: kram/qt/notifier_dialog.py:122 kram/tui/dialogs/notifier.py:72
+#: kram/tui/dialogs/notifier.py:200
 msgid "Update Notifications"
 msgstr "업데이트 알림"
 
-#: kram/app/preferences.py:63
+#: kram/app/preferences.py:64
 msgid "Clicking the status icon marks the likely action"
 msgstr "상태 아이콘을 클릭하면 가장 가능성 높은 작업 표시"
 
-#: kram/app/preferences.py:64
+#: kram/app/preferences.py:65
 msgid ""
 "A click on the status icon unmarks a marked package, marks one that is not "
 "installed for installation and one with an upgrade for upgrade. Otherwise it "
@@ -2416,111 +2418,115 @@ msgstr ""
 "는 설치로, 업데이트가 있는 패키지는 업그레이드로 표시합니다. 그 밖의 경우에"
 "는 오른쪽 클릭처럼 작업 메뉴를 엽니다."
 
-#: kram/app/preferences.py:67
+#: kram/app/preferences.py:68
 msgid "Watch Fedora Releases"
 msgstr "Fedora 릴리스 확인"
 
-#: kram/app/preferences.py:68
+#: kram/app/preferences.py:69
 msgid "On Reload, ask Fedora's Bodhi service whether a new release is out"
 msgstr "다시 불러올 때 Fedora의 Bodhi 서비스에 새 릴리스가 나왔는지 묻습니다"
 
-#: kram/app/preferences.py:70
+#: kram/app/preferences.py:71
 msgid "Toolbar"
 msgstr "도구 모음"
 
-#: kram/app/preferences.py:71
+#: kram/app/preferences.py:72
 msgid "Follow System Settings"
 msgstr "시스템 설정 따르기"
 
-#: kram/app/preferences.py:72
+#: kram/app/preferences.py:73
 msgid "Text Under Icons"
 msgstr "아이콘 아래에 텍스트"
 
-#: kram/app/preferences.py:73
+#: kram/app/preferences.py:74
 msgid "Compact: Text Beside Icons"
 msgstr "간결하게: 아이콘 옆에 텍스트"
 
-#: kram/app/preferences.py:74
+#: kram/app/preferences.py:75
 msgid "Icons Only"
 msgstr "아이콘만"
 
-#: kram/app/preferences.py:76
+#: kram/app/preferences.py:77
 msgid "Show Menu Bar"
 msgstr "메뉴 표시줄 표시"
 
-#: kram/app/preferences.py:77
+#: kram/app/preferences.py:78
 msgid "Warn when the package information is older than:"
 msgstr "패키지 정보가 다음보다 오래되면 경고:"
 
-#: kram/app/preferences.py:86
+#: kram/app/preferences.py:87
 msgid "Colour scheme"
 msgstr "색 구성표"
 
-#: kram/app/preferences.py:87
+#: kram/app/preferences.py:88
 msgid "Terminal: 16 colours, follows the terminal"
 msgstr "터미널: 16색, 터미널을 따름"
 
-#: kram/app/preferences.py:88
+#: kram/app/preferences.py:89
 msgid "Midnight: 16 colours, blue"
 msgstr "미드나이트: 16색, 파랑"
 
-#: kram/app/preferences.py:89
+#: kram/app/preferences.py:90
 msgid "Console: 16 colours, black"
 msgstr "콘솔: 16색, 검정"
 
-#: kram/app/preferences.py:98
+#: kram/app/preferences.py:99
 msgid "Centre the cursor when scrolling"
 msgstr "스크롤할 때 커서를 가운데에 두기"
 
-#: kram/app/preferences.py:99
+#: kram/app/preferences.py:100
 msgid "Status glyphs"
 msgstr "상태 기호"
 
-#: kram/app/preferences.py:100
+#: kram/app/preferences.py:101
 msgid "Symbols, or letters when the terminal is not UTF-8"
 msgstr "기호, 터미널이 UTF-8이 아니면 글자"
 
-#: kram/app/preferences.py:101
+#: kram/app/preferences.py:102
 msgid "Letters"
 msgstr "글자"
 
-#: kram/app/preferences.py:103
+#: kram/app/preferences.py:104
 msgid "Ask before quitting with changes not applied"
 msgstr "적용하지 않은 변경 사항이 있으면 끝내기 전에 묻기"
 
-#: kram/app/preferences.py:104
+#: kram/app/preferences.py:105
 msgid "Sidebar width"
 msgstr "사이드바 너비"
 
-#: kram/app/preferences.py:105
+#: kram/app/preferences.py:106
 msgid "Details height"
 msgstr "자세히 높이"
 
-#: kram/app/preferences.py:107
+#: kram/app/preferences.py:108
 msgid "Pinned panels"
 msgstr "고정된 패널"
 
-#: kram/app/preferences.py:108
+#: kram/app/preferences.py:109
 msgid "Sidebar and details"
 msgstr "사이드바와 자세히"
 
-#: kram/app/preferences.py:109 kram/tui/app.py:264
+#: kram/app/preferences.py:110 kram/tui/app.py:264
 msgid "Sidebar"
 msgstr "사이드바"
 
-#: kram/app/preferences.py:110 kram/gtk/dialogs/install.py:92
+#: kram/app/preferences.py:111 kram/gtk/dialogs/install.py:92
 #: kram/gtk/dialogs/progress.py:50 kram/gtk/ui_port.py:32
 #: kram/qt/install_dialog.py:112 kram/qt/progress_dialog.py:57
-#: kram/tui/app.py:265 kram/tui/app.py:332 kram/tui/dialogs/install.py:162
-#: kram/tui/dialogs/progress.py:230 kram/tui/package_list.py:273
+#: kram/tui/app.py:265 kram/tui/app.py:334 kram/tui/dialogs/install.py:165
+#: kram/tui/dialogs/progress.py:230 kram/tui/package_list.py:303
 msgid "Details"
 msgstr "자세히"
 
-#: kram/app/preferences.py:111
+#: kram/app/preferences.py:112
 msgid "Neither"
 msgstr "없음"
 
-#: kram/app/preferences.py:149
+#: kram/app/preferences.py:115 kram/tui/dialogs/columns.py:61
+msgid "Columns"
+msgstr "열"
+
+#: kram/app/preferences.py:152
 msgid "day"
 msgid_plural "days"
 msgstr[0] "일"
@@ -2752,7 +2758,7 @@ msgstr "오류:"
 msgid "ERROR: {message}"
 msgstr "오류: {message}"
 
-#: kram/app/release_watch.py:48
+#: kram/app/release_watch.py:48 kram/tui/app.py:277
 msgid "A new Fedora release"
 msgstr "새 Fedora 릴리스"
 
@@ -3116,7 +3122,7 @@ msgstr "PackageKit이 작업 중입니다. 끝난 뒤 다시 시도하세요."
 
 #: kram/core/custom_filters.py:48 kram/core/search.py:32
 #: kram/gtk/dialogs/repos.py:151 kram/qt/repos_dialog.py:67
-#: kram/tui/dialogs/repos.py:58
+#: kram/tui/dialogs/filters.py:204 kram/tui/dialogs/repos.py:58
 msgid "Name"
 msgstr "이름"
 
@@ -3419,7 +3425,7 @@ msgstr "적용하기 전에 목록을 확인하십시오."
 
 #: kram/gtk/dialogs/apply.py:211 kram/gtk/dialogs/install.py:117
 #: kram/qt/apply_dialog.py:209 kram/qt/install_dialog.py:139
-#: kram/tui/dialogs/apply.py:297 kram/tui/dialogs/install.py:150
+#: kram/tui/dialogs/apply.py:297 kram/tui/dialogs/install.py:153
 msgid "Equivalent command"
 msgstr "동등한 명령"
 
@@ -3463,7 +3469,7 @@ msgstr "더 이상 존재하지 않는 파일의 사본을 삭제합니다"
 #: kram/gtk/dialogs/repos.py:214 kram/gtk/files.py:130
 #: kram/qt/cache_dialog.py:255 kram/qt/file_list.py:328
 #: kram/qt/notifier_dialog.py:104 kram/qt/repos_dialog.py:206
-#: kram/tui/details.py:357
+#: kram/tui/details.py:357 kram/tui/dialogs/notifier.py:100
 msgid "Show in File Manager"
 msgstr "파일 관리자에서 보기"
 
@@ -3514,7 +3520,7 @@ msgid "Hub"
 msgstr "허브"
 
 #: kram/gtk/dialogs/copr.py:50 kram/gtk/dialogs/repos.py:152
-#: kram/qt/copr_dialog.py:51 kram/qt/repos_dialog.py:67 kram/tui/app.py:331
+#: kram/qt/copr_dialog.py:51 kram/qt/repos_dialog.py:67 kram/tui/app.py:333
 #: kram/tui/dialogs/copr.py:49 kram/tui/dialogs/copr.py:117
 #: kram/tui/dialogs/repos.py:59 kram/tui/dialogs/repos.py:123
 msgid "Packages"
@@ -3565,26 +3571,32 @@ msgid "Remove this condition"
 msgstr "이 조건 제거"
 
 #: kram/gtk/dialogs/filters.py:147 kram/qt/filters_dialog.py:141
+#: kram/tui/dialogs/filters.py:221
 msgid "New"
 msgstr "새로 만들기"
 
 #: kram/gtk/dialogs/filters.py:157 kram/qt/filters_dialog.py:156
+#: kram/tui/dialogs/filters.py:209
 msgid "Name:"
 msgstr "이름:"
 
 #: kram/gtk/dialogs/filters.py:161 kram/qt/filters_dialog.py:161
+#: kram/tui/dialogs/filters.py:212
 msgid "Show packages that match:"
 msgstr "다음과 일치하는 패키지 표시:"
 
 #: kram/gtk/dialogs/filters.py:162 kram/qt/filters_dialog.py:158
+#: kram/tui/dialogs/filters.py:213
 msgid "all conditions"
 msgstr "모든 조건"
 
 #: kram/gtk/dialogs/filters.py:162 kram/qt/filters_dialog.py:159
+#: kram/tui/dialogs/filters.py:213
 msgid "any condition"
 msgstr "아무 조건"
 
 #: kram/gtk/dialogs/filters.py:171 kram/qt/filters_dialog.py:172
+#: kram/tui/dialogs/filters.py:217
 msgid "Add condition"
 msgstr "조건 추가"
 
@@ -3640,12 +3652,12 @@ msgid "Install Package File"
 msgstr "패키지 파일 설치"
 
 #: kram/gtk/dialogs/install.py:81 kram/qt/install_dialog.py:103
-#: kram/tui/dialogs/install.py:142
+#: kram/tui/dialogs/install.py:145
 msgid "What installing it changes"
 msgstr "설치로 바뀌는 것"
 
 #: kram/gtk/dialogs/install.py:96 kram/qt/install_dialog.py:114
-#: kram/tui/dialogs/install.py:160
+#: kram/tui/dialogs/install.py:163
 msgid "Scripts"
 msgstr "스크립트"
 
@@ -3694,6 +3706,7 @@ msgid "Stop Test"
 msgstr "테스트 중지"
 
 #: kram/gtk/dialogs/notifier.py:77 kram/qt/notifier_dialog.py:130
+#: kram/tui/dialogs/notifier.py:80
 msgid ""
 "The icon is there only while updates are available. Kram downloads nothing "
 "in the background: Fedora's own service refreshes the package information, "
@@ -3704,10 +3717,12 @@ msgstr ""
 "할 때, 매시간, 설치할 때마다 그것을 읽기만 합니다."
 
 #: kram/gtk/dialogs/notifier.py:81 kram/qt/notifier_dialog.py:127
+#: kram/tui/dialogs/notifier.py:78
 msgid "Show an icon in the system tray when updates are available"
 msgstr "업데이트가 있을 때 시스템 트레이에 아이콘 표시"
 
 #: kram/gtk/dialogs/notifier.py:88 kram/qt/notifier_dialog.py:135
+#: kram/tui/dialogs/notifier.py:124
 msgid ""
 "This session has no system tray for such icons (GNOME without the "
 "AppIndicator extension, LXDE), so the icon cannot appear."
@@ -3716,18 +3731,22 @@ msgstr ""
 "없는 GNOME, LXDE) 아이콘이 나타날 수 없습니다."
 
 #: kram/gtk/dialogs/notifier.py:101 kram/qt/notifier_dialog.py:157
+#: kram/tui/dialogs/notifier.py:88
 msgid "Fedora's update check"
 msgstr "Fedora 업데이트 확인"
 
 #: kram/gtk/dialogs/notifier.py:107 kram/qt/notifier_dialog.py:166
+#: kram/tui/dialogs/notifier.py:92
 msgid "Turn On Fedora's Update Check…"
 msgstr "Fedora 업데이트 확인 켜기…"
 
 #: kram/gtk/dialogs/notifier.py:108 kram/qt/notifier_dialog.py:167
+#: kram/tui/dialogs/notifier.py:93
 msgid "Asks for your password"
 msgstr "암호를 묻습니다"
 
 #: kram/gtk/dialogs/notifier.py:115 kram/qt/notifier_dialog.py:176
+#: kram/tui/dialogs/notifier.py:95
 msgid "Other update notifiers"
 msgstr "다른 업데이트 알림 프로그램"
 
@@ -3780,27 +3799,33 @@ msgid "Copy Path"
 msgstr "경로 복사"
 
 #: kram/gtk/dialogs/upgrade.py:28 kram/qt/upgrade_dialog.py:71
+#: kram/tui/dialogs/upgrade.py:50
 msgid "COPR projects: checking…"
 msgstr "COPR 프로젝트: 확인 중…"
 
 #: kram/gtk/dialogs/upgrade.py:36 kram/qt/upgrade_dialog.py:45
+#: kram/tui/dialogs/upgrade.py:128
 #, python-brace-format
 msgid "Fedora {version} is available"
 msgstr "Fedora {version} 사용 가능"
 
 #: kram/gtk/dialogs/upgrade.py:44 kram/qt/upgrade_dialog.py:51
+#: kram/tui/dialogs/upgrade.py:131
 msgid "Check"
 msgstr "확인"
 
 #: kram/gtk/dialogs/upgrade.py:71 kram/qt/upgrade_dialog.py:91
+#: kram/tui/dialogs/upgrade.py:138
 msgid "Release notes"
 msgstr "릴리스 노트"
 
 #: kram/gtk/dialogs/upgrade.py:73 kram/qt/upgrade_dialog.py:94
+#: kram/tui/dialogs/upgrade.py:140
 msgid "Upgrade guide"
 msgstr "업그레이드 안내서"
 
 #: kram/gtk/dialogs/upgrade.py:80 kram/qt/upgrade_dialog.py:100
+#: kram/tui/dialogs/upgrade.py:147
 #, python-brace-format
 msgid "Open {program}"
 msgstr "{program} 열기"
@@ -3855,12 +3880,12 @@ msgstr "패키지 관리자"
 msgid "Open Package File"
 msgstr "패키지 파일 열기"
 
-#: kram/gtk/window.py:465 kram/qt/main_window.py:536 kram/tui/window.py:389
+#: kram/gtk/window.py:465 kram/qt/main_window.py:536 kram/tui/window.py:438
 msgid "RPM packages (*.rpm)"
 msgstr "RPM 패키지 (*.rpm)"
 
 #: kram/gtk/window.py:538 kram/qt/main_window.py:425
-#: kram/tui/dialogs/about.py:67
+#: kram/tui/dialogs/about.py:71
 msgid "A Synaptic-style package manager for Fedora."
 msgstr "Synaptic 스타일의 Fedora용 패키지 관리자입니다."
 
@@ -3893,17 +3918,18 @@ msgid "{n} of them is a security update"
 msgid_plural "{n} of them are security updates"
 msgstr[0] "그중 {n}개는 보안 업데이트"
 
-#: kram/notifier/tray.py:237 kram/tui/window.py:230
+#: kram/notifier/tray.py:237 kram/tui/window.py:276
 #, python-brace-format
 msgid "The package information is {days} day old"
 msgid_plural "The package information is {days} days old"
 msgstr[0] "패키지 정보가 {days}일 전 것입니다"
 
-#: kram/qt/about_dialog.py:29 kram/tui/dialogs/about.py:72
+#: kram/qt/about_dialog.py:29 kram/tui/dialogs/about.py:76
+#: kram/tui/dialogs/about.py:115
 msgid "What's New"
 msgstr "새로운 기능"
 
-#: kram/qt/main_window.py:427 kram/tui/dialogs/about.py:70
+#: kram/qt/main_window.py:427 kram/tui/dialogs/about.py:74
 msgid "Released under the MIT License."
 msgstr "MIT 라이선스로 배포됩니다."
 
@@ -3912,7 +3938,8 @@ msgid "Main toolbar"
 msgstr "주 도구 모음"
 
 #: kram/qt/upgrade_dialog.py:55 kram/tui/dialogs/apply.py:301
-#: kram/tui/dialogs/path.py:85 kram/tui/dialogs/question.py:22
+#: kram/tui/dialogs/filters.py:225 kram/tui/dialogs/path.py:85
+#: kram/tui/dialogs/question.py:22 kram/tui/dialogs/upgrade.py:132
 msgid "Cancel"
 msgstr "취소"
 
@@ -3946,7 +3973,7 @@ msgstr "변경 시 암호 불필요"
 msgid "Make the terminal larger: Kram needs {size}"
 msgstr "터미널을 키우십시오: Kram에는 {size}이(가) 필요합니다"
 
-#: kram/tui/app.py:248 kram/tui/window.py:217
+#: kram/tui/app.py:248 kram/tui/window.py:251
 msgid "quit"
 msgstr "끝내기"
 
@@ -3954,7 +3981,7 @@ msgstr "끝내기"
 msgid "Search"
 msgstr "검색"
 
-#: kram/tui/app.py:267 kram/tui/menu.py:89 kram/tui/sidebar.py:289
+#: kram/tui/app.py:267 kram/tui/menu.py:90 kram/tui/sidebar.py:289
 msgid "Menu"
 msgstr "메뉴"
 
@@ -3966,12 +3993,12 @@ msgstr "키"
 msgid "Focus the list"
 msgstr "목록으로 이동"
 
-#: kram/tui/app.py:383 kram/tui/dialogs/apply.py:284
-#: kram/tui/dialogs/install.py:182
+#: kram/tui/app.py:389 kram/tui/dialogs/apply.py:284
+#: kram/tui/dialogs/install.py:185 kram/tui/dialogs/upgrade.py:207
 msgid "copy"
 msgstr "복사"
 
-#: kram/tui/app.py:383
+#: kram/tui/app.py:389
 msgid "sort"
 msgstr "정렬"
 
@@ -4041,7 +4068,7 @@ msgstr "이전 또는 다음 탭"
 msgid "A tab by its number"
 msgstr "번호로 탭 선택"
 
-#: kram/tui/details.py:353 kram/tui/details.py:492
+#: kram/tui/details.py:353 kram/tui/details.py:497
 msgid "Tabs"
 msgstr "탭"
 
@@ -4057,54 +4084,66 @@ msgstr "파일 거르기"
 msgid "Copy the selected paths"
 msgstr "선택한 경로 복사"
 
-#: kram/tui/details.py:440
+#: kram/tui/details.py:359 kram/tui/details.py:361 kram/tui/sidebar.py:294
+#: kram/tui/sidebar.py:296
+msgid "Make the panel smaller or larger"
+msgstr "패널 줄이기 또는 늘리기"
+
+#: kram/tui/details.py:445
 msgctxt "details tab strip"
 msgid "advisories"
 msgstr "권고문"
 
-#: kram/tui/details.py:542
+#: kram/tui/details.py:547
 msgid "No desktop to show it in"
 msgstr "보여 줄 데스크톱이 없습니다"
 
-#: kram/tui/details.py:544
+#: kram/tui/details.py:549
 msgid "The file is not on this system: its package is not installed"
 msgstr "이 파일은 이 시스템에 없습니다: 패키지가 설치되어 있지 않습니다"
 
-#: kram/tui/dialogs/about.py:22
+#: kram/tui/dialogs/about.py:26
 #, python-brace-format
 msgid "Terminal front end, Textual {version}"
 msgstr "터미널 프런트엔드, Textual {version}"
 
-#: kram/tui/dialogs/about.py:63 kram/tui/dialogs/path.py:79
-#: kram/tui/dialogs/question.py:59
+#: kram/tui/dialogs/about.py:67 kram/tui/dialogs/notifier.py:73
+#: kram/tui/dialogs/path.py:79 kram/tui/dialogs/question.py:59
 msgid "choose"
 msgstr "선택"
 
-#: kram/tui/dialogs/about.py:63 kram/tui/dialogs/cache.py:97
-#: kram/tui/dialogs/cache.py:199 kram/tui/dialogs/copr.py:104
-#: kram/tui/dialogs/history.py:92 kram/tui/dialogs/install.py:185
+#: kram/tui/dialogs/about.py:67 kram/tui/dialogs/about.py:117
+#: kram/tui/dialogs/cache.py:97 kram/tui/dialogs/cache.py:199
+#: kram/tui/dialogs/columns.py:63 kram/tui/dialogs/copr.py:104
+#: kram/tui/dialogs/history.py:92 kram/tui/dialogs/install.py:188
 #: kram/tui/dialogs/keys.py:87 kram/tui/dialogs/mirrors.py:79
-#: kram/tui/dialogs/progress.py:68 kram/tui/dialogs/progress.py:204
-#: kram/tui/dialogs/question.py:60 kram/tui/dialogs/repos.py:114
-#: kram/tui/menu.py:90 kram/tui/search.py:186 kram/tui/widgets.py:200
-#: kram/tui/widgets.py:262
+#: kram/tui/dialogs/notifier.py:73 kram/tui/dialogs/progress.py:68
+#: kram/tui/dialogs/progress.py:204 kram/tui/dialogs/question.py:60
+#: kram/tui/dialogs/repos.py:114 kram/tui/dialogs/upgrade.py:208
+#: kram/tui/menu.py:91 kram/tui/search.py:186 kram/tui/widgets.py:203
+#: kram/tui/widgets.py:409
 msgid "close"
 msgstr "닫기"
 
-#: kram/tui/dialogs/about.py:63 kram/tui/dialogs/cache.py:194
-#: kram/tui/dialogs/history.py:92 kram/tui/dialogs/question.py:58
+#: kram/tui/dialogs/about.py:67 kram/tui/dialogs/cache.py:194
+#: kram/tui/dialogs/filters.py:202 kram/tui/dialogs/history.py:92
+#: kram/tui/dialogs/notifier.py:73 kram/tui/dialogs/question.py:58
+#: kram/tui/dialogs/upgrade.py:207
 msgid "next"
 msgstr "다음"
 
-#: kram/tui/dialogs/about.py:73 kram/tui/dialogs/cache.py:106
-#: kram/tui/dialogs/cache.py:184 kram/tui/dialogs/install.py:168
-#: kram/tui/dialogs/progress.py:165 kram/tui/dialogs/question.py:22
+#: kram/tui/dialogs/about.py:77 kram/tui/dialogs/about.py:122
+#: kram/tui/dialogs/cache.py:106 kram/tui/dialogs/cache.py:184
+#: kram/tui/dialogs/columns.py:70 kram/tui/dialogs/install.py:171
+#: kram/tui/dialogs/notifier.py:103 kram/tui/dialogs/progress.py:165
+#: kram/tui/dialogs/question.py:22 kram/tui/dialogs/upgrade.py:149
 msgid "Close"
 msgstr "닫기"
 
-#: kram/tui/dialogs/about.py:81 kram/tui/window.py:269
-msgid "Not in this version yet"
-msgstr "이 버전에는 아직 없습니다"
+#: kram/tui/dialogs/about.py:117 kram/tui/dialogs/cache.py:97
+#: kram/tui/dialogs/keys.py:87 kram/tui/dialogs/progress.py:68
+msgid "scroll"
+msgstr "스크롤"
 
 #: kram/tui/dialogs/apply.py:69
 #, python-brace-format
@@ -4115,12 +4154,12 @@ msgstr "{mount}에 {size} 사용 가능."
 msgid "apply"
 msgstr "적용"
 
-#: kram/tui/dialogs/apply.py:284 kram/tui/dialogs/install.py:180
+#: kram/tui/dialogs/apply.py:284 kram/tui/dialogs/install.py:183
 msgid "tick"
 msgstr "체크"
 
-#: kram/tui/dialogs/apply.py:285 kram/tui/dialogs/path.py:79
-#: kram/tui/dialogs/question.py:60
+#: kram/tui/dialogs/apply.py:285 kram/tui/dialogs/filters.py:202
+#: kram/tui/dialogs/path.py:79 kram/tui/dialogs/question.py:60
 msgid "cancel"
 msgstr "취소"
 
@@ -4136,11 +4175,6 @@ msgstr "위치"
 msgid "Download again…"
 msgstr "다시 내려받기…"
 
-#: kram/tui/dialogs/cache.py:97 kram/tui/dialogs/keys.py:87
-#: kram/tui/dialogs/progress.py:68
-msgid "scroll"
-msgstr "스크롤"
-
 #: kram/tui/dialogs/cache.py:180
 msgid "Delete unused…"
 msgstr "사용하지 않는 파일 삭제…"
@@ -4153,10 +4187,42 @@ msgstr "모든 폴더 검색…"
 msgid "compare"
 msgstr "비교"
 
-#: kram/tui/dialogs/copr.py:47 kram/tui/dialogs/repos.py:56
+#: kram/tui/dialogs/columns.py:31
+msgid "Columns…"
+msgstr "열…"
+
+#: kram/tui/dialogs/columns.py:62 kram/tui/menu.py:91
+msgid "move"
+msgstr "이동"
+
+#: kram/tui/dialogs/columns.py:62
+msgid "show"
+msgstr "표시"
+
+#: kram/tui/dialogs/columns.py:63
+msgid "width"
+msgstr "너비"
+
+#: kram/tui/dialogs/columns.py:65 kram/tui/dialogs/copr.py:47
+#: kram/tui/dialogs/repos.py:56
 msgctxt "short column header"
 msgid "On"
 msgstr "사용"
+
+#: kram/tui/dialogs/columns.py:66
+msgctxt "column of the list"
+msgid "Column"
+msgstr "열"
+
+#: kram/tui/dialogs/columns.py:67
+msgctxt "column width"
+msgid "Width"
+msgstr "너비"
+
+#: kram/tui/dialogs/columns.py:95
+msgctxt "column width"
+msgid "auto"
+msgstr "자동"
 
 #: kram/tui/dialogs/copr.py:103
 msgid "enable"
@@ -4184,17 +4250,33 @@ msgstr "{project}은(는) 이미 활성화되어 있습니다"
 msgid "No COPR projects yet. Search for one below."
 msgstr "아직 COPR 프로젝트가 없습니다. 아래에서 검색하세요."
 
+#: kram/tui/dialogs/filters.py:202
+msgid "save"
+msgstr "저장"
+
+#: kram/tui/dialogs/filters.py:214
+msgid "Conditions"
+msgstr "조건"
+
+#: kram/tui/dialogs/filters.py:224 kram/tui/dialogs/question.py:22
+msgid "OK"
+msgstr "확인"
+
+#: kram/tui/dialogs/filters.py:265
+msgid "No filters yet. New makes one."
+msgstr "아직 필터가 없습니다. \"새로 만들기\"로 만듭니다."
+
 #: kram/tui/dialogs/history.py:92
 msgid "show package"
 msgstr "패키지 보기"
 
-#: kram/tui/dialogs/install.py:135
+#: kram/tui/dialogs/install.py:138
 msgid "Install package file"
 msgstr "패키지 파일 설치"
 
 #. TRANSLATORS: the terminal's Install package file dialog: the files `rpm -V` found missing or
 #. changed in the installed copy, which a reinstall puts back
-#: kram/tui/dialogs/install.py:148
+#: kram/tui/dialogs/install.py:151
 msgid "What reinstalling repairs"
 msgstr "다시 설치로 고쳐지는 것"
 
@@ -4271,17 +4353,13 @@ msgstr "로그"
 msgid "stop"
 msgstr "중지"
 
-#: kram/tui/dialogs/progress.py:208
+#: kram/tui/dialogs/progress.py:208 kram/tui/dialogs/upgrade.py:208
 msgid "not while it runs"
 msgstr "실행 중에는 불가"
 
 #: kram/tui/dialogs/question.py:22
 msgid "No"
 msgstr "아니요"
-
-#: kram/tui/dialogs/question.py:22
-msgid "OK"
-msgstr "확인"
 
 #: kram/tui/dialogs/question.py:22
 msgid "Yes"
@@ -4356,17 +4434,21 @@ msgstr "저장소 변경 사항이 아직 적용되지 않았습니다."
 msgid "Close without applying"
 msgstr "적용하지 않고 닫기"
 
-#: kram/tui/menu.py:49
+#: kram/tui/dialogs/upgrade.py:142
+msgid "To upgrade, run in a terminal:"
+msgstr "업그레이드하려면 터미널에서 다음을 실행하세요:"
+
+#: kram/tui/menu.py:50
 msgid "Colours…"
 msgstr "색상…"
 
-#: kram/tui/menu.py:90
-msgid "move"
-msgstr "이동"
-
-#: kram/tui/menu.py:90
+#: kram/tui/menu.py:91
 msgid "run"
 msgstr "실행"
+
+#: kram/tui/menu.py:170
+msgid "Which columns the package list shows, their order and their widths"
+msgstr "패키지 목록에 표시할 열, 그 순서와 너비"
 
 #: kram/tui/package_list.py:67
 msgid "Move the cursor"
@@ -4380,51 +4462,51 @@ msgstr "선택 확장"
 msgid "Scroll sideways"
 msgstr "옆으로 스크롤"
 
-#: kram/tui/package_list.py:79
+#: kram/tui/package_list.py:83
 msgctxt "short column header"
 msgid "Installed"
 msgstr "설치됨"
 
-#: kram/tui/package_list.py:80
+#: kram/tui/package_list.py:84
 msgctxt "short column header"
 msgid "Latest"
 msgstr "최신"
 
-#: kram/tui/package_list.py:81
+#: kram/tui/package_list.py:85
 msgctxt "short column header"
 msgid "Size"
 msgstr "크기"
 
-#: kram/tui/package_list.py:82
+#: kram/tui/package_list.py:86
 msgctxt "short column header"
 msgid "Download"
 msgstr "다운로드"
 
-#: kram/tui/package_list.py:259
+#: kram/tui/package_list.py:289
 msgid "Sort"
 msgstr "정렬"
 
-#: kram/tui/package_list.py:260
+#: kram/tui/package_list.py:290
 msgid "Reverse the sort"
 msgstr "정렬 뒤집기"
 
-#: kram/tui/package_list.py:262
+#: kram/tui/package_list.py:292
 msgid "Mark the likely action"
 msgstr "가장 가능성 높은 작업 표시"
 
-#: kram/tui/package_list.py:265
+#: kram/tui/package_list.py:295
 msgid "Mark for installation or upgrade"
 msgstr "설치 또는 업그레이드로 표시"
 
-#: kram/tui/package_list.py:269
+#: kram/tui/package_list.py:299
 msgid "Lock or unlock the version"
 msgstr "버전 잠금 또는 잠금 해제"
 
-#: kram/tui/package_list.py:272
+#: kram/tui/package_list.py:302
 msgid "Context menu"
 msgstr "컨텍스트 메뉴"
 
-#: kram/tui/package_list.py:274
+#: kram/tui/package_list.py:304
 msgid "Clear the selection"
 msgstr "선택 해제"
 
@@ -4534,91 +4616,100 @@ msgstr "항목으로 목록 거르기"
 msgid "Previous or next view"
 msgstr "이전 또는 다음 보기"
 
-#: kram/tui/sidebar.py:288 kram/tui/sidebar.py:361
+#: kram/tui/sidebar.py:288 kram/tui/sidebar.py:366
 msgid "Views"
 msgstr "보기"
 
-#: kram/tui/sidebar.py:334
+#: kram/tui/sidebar.py:339
 msgctxt "sidebar key hint"
 msgid "next"
 msgstr "다음"
 
-#: kram/tui/sidebar.py:334
+#: kram/tui/sidebar.py:339
 msgctxt "sidebar key hint"
 msgid "prev"
 msgstr "이전"
 
-#: kram/tui/sidebar.py:335
+#: kram/tui/sidebar.py:340
 msgctxt "sidebar key hint"
 msgid "all"
 msgstr "전체"
 
-#: kram/tui/ui_port.py:78
+#: kram/tui/ui_port.py:106
 msgid "No desktop to open it in: the address is copied"
 msgstr "열 데스크톱이 없습니다: 주소를 복사했습니다"
 
-#: kram/tui/ui_port.py:85
+#: kram/tui/ui_port.py:113
 msgid "No desktop to show it in: the path is copied"
 msgstr "보여 줄 데스크톱이 없습니다: 경로를 복사했습니다"
 
-#: kram/tui/ui_port.py:89
+#: kram/tui/ui_port.py:117
 msgid "Copied"
 msgstr "복사했습니다"
 
-#: kram/tui/widgets.py:200 kram/tui/widgets.py:262
+#: kram/tui/widgets.py:203 kram/tui/widgets.py:409
 msgid "pick"
 msgstr "선택"
 
-#: kram/tui/window.py:216
+#: kram/tui/window.py:250
 msgid "Another package manager is running: waiting"
 msgstr "다른 패키지 관리자가 실행 중입니다: 기다리는 중"
 
-#: kram/tui/window.py:246
+#. TRANSLATORS: on the top line of the terminal front end; the key that opens its dialog follows
+#: kram/tui/window.py:283
+#, python-brace-format
+msgid "Fedora {version} is out"
+msgstr "Fedora {version} 출시됨"
+
+#: kram/tui/window.py:298
 #, python-brace-format
 msgid "“{text}” in {filter}"
 msgstr "{filter}의 “{text}”"
 
-#: kram/tui/window.py:251
+#: kram/tui/window.py:303
 #, python-brace-format
 msgid "{n} change marked"
 msgid_plural "{n} changes marked"
 msgstr[0] "{n}개 변경 표시됨"
 
-#: kram/tui/window.py:388
+#: kram/tui/window.py:437
 msgid "Open package file"
 msgstr "패키지 파일 열기"
 
-#: kram/tui/window.py:470
+#: kram/tui/window.py:550
 msgid "Nothing is marked"
 msgstr "표시된 항목이 없습니다"
 
-#: kram/tui/window.py:472
+#: kram/tui/window.py:552
 msgid "No package has an upgrade"
 msgstr "업그레이드가 있는 패키지가 없습니다"
 
-#: kram/tui/window.py:474
+#: kram/tui/window.py:554
 msgid "No upgrade of this kind"
 msgstr "이 종류의 업그레이드가 없습니다"
 
-#: kram/tui/window.py:476
+#: kram/tui/window.py:556
 msgid "No unneeded dependencies"
 msgstr "불필요한 의존성이 없습니다"
 
-#: kram/tui/window.py:478
+#: kram/tui/window.py:558
 msgid "Only for one package at a time"
 msgstr "한 번에 패키지 하나만"
 
-#: kram/tui/window.py:479 kram/tui/window.py:482
+#: kram/tui/window.py:559 kram/tui/window.py:562
 msgid "Not for this package"
 msgstr "이 패키지에는 해당하지 않습니다"
 
-#: kram/tui/window.py:481
+#: kram/tui/window.py:561
 msgid "Not marked"
 msgstr "표시되지 않음"
 
-#: kram/tui/window.py:560
+#: kram/tui/window.py:637
 msgid "Sort by"
 msgstr "정렬 기준"
+
+#~ msgid "Not in this version yet"
+#~ msgstr "이 버전에는 아직 없습니다"
 
 #~ msgid "hide"
 #~ msgstr "숨기기"

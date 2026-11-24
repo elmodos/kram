@@ -32,6 +32,7 @@ TUI_CONFIRM_QUIT = "tui/confirm_quit"
 TUI_SIDEBAR_WIDTH = "tui/sidebar_width"
 TUI_DETAILS_HEIGHT = "tui/details_height"
 TUI_PINNED = "tui/pinned"
+TUI_COLUMNS = "tui/columns"
 # the terminal's colour schemes: Textual's theme names, ours ("kram-…") made of the terminal's 16 colours only
 TUI_SCHEME_DEFAULT = "textual-ansi"
 TUI_ANSI_SCHEMES = frozenset({"textual-ansi", "kram-midnight", "kram-console"})
@@ -40,7 +41,7 @@ TUI_ANSI_SCHEMES = frozenset({"textual-ansi", "kram-midnight", "kram-console"})
 @dataclass(frozen=True)
 class Pref:
     key: str                                    # the settings key
-    kind: Literal["bool", "choice", "int"]
+    kind: Literal["bool", "choice", "int", "text"]  # "text": kept as the front end writes it (JSON, …)
     default: Any
     label: str                                  # translated, as the menu or dialog shows it
     tip: str = ""
@@ -75,7 +76,7 @@ def _prefs() -> tuple[Pref, ...]:
         )),
         Pref(MENU_BAR, "bool", False, _("Show Menu Bar"), toolkits=frozenset({"gtk"})),
         Pref(STALE_DAYS, "int", STALE_DAYS_DEFAULT, _("Warn when the package information is older than:"), range=(1, 365),
-             section="notifications"),
+             section="notifications", toolkits=ALL),
         *_tui_prefs(),
     )
 
@@ -110,6 +111,8 @@ def _tui_prefs() -> tuple[Pref, ...]:
             ("details", _("Details")),
             ("none", _("Neither")),
         )),
+        # the package list's columns (docs/TUI_SPEC.md §10.18): {"order", "hidden", "widths"} as JSON
+        Pref(TUI_COLUMNS, "text", "{}", _("Columns"), toolkits=TUI, section="layout"),
     )
 
 

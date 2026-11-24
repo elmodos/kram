@@ -8,7 +8,7 @@ each with its key in the terminal (kram.tui.keymap, not the GUIs' shortcuts, §6
 entry that is off is dim and can still get the cursor, so that the status line under the entries can say why it is
 off; for one that is on it shows the action's tooltip. The Settings menu's preferences come from the registry for
 the toolkit "tui" (kram.app.preferences): a bool is a `[x]` entry ticked in place, a choice a submenu of `(•)`
-entries; Colours… follows them (§7.7.3).
+entries; Colours… and Columns… follow them (§7.7.3).
 
 An entry that runs something closes the popup first and runs from its dismissal callback (the screen's result is
 what to run), so that a dialog it opens is pushed once the popup is gone (§11.3.8).
@@ -31,6 +31,7 @@ from ..app import preferences
 from ..app.actions import DynamicItem, Menu, MenuItem, menu_bar, table_menu
 from ..app.preferences import Pref
 from ..i18n import _
+from .dialogs.columns import columns_label
 from .keymap import action_key
 from .palette import role
 from .widgets import PopupMenu, hint
@@ -52,7 +53,7 @@ def colours_label() -> str:
 @dataclass
 class Entry:
     """A line of the entries' column. `kind`: "action", "submenu", "dynamic" (a DynamicItem), "bool" and "choice"
-    (preferences), "value" (one choice of a choice preference), "colours", "back"."""
+    (preferences), "value" (one choice of a choice preference), "colours", "columns", "back"."""
     kind: str
     label: str
     key: str = ""
@@ -165,6 +166,8 @@ class MenuPopup(ModalScreen):
         if section == "settings":
             scheme = preferences.pref(preferences.TUI_SCHEME)
             out.append(Entry("colours", colours_label(), note=dict(scheme.choices).get(self.app.scheme, scheme.label)))
+            out.append(Entry("columns", columns_label(),
+                             note=_("Which columns the package list shows, their order and their widths")))
         return out
 
     def _choice_entries(self, pref: Pref) -> list[Entry | None]:
@@ -264,6 +267,8 @@ class MenuPopup(ModalScreen):
             self.dismiss(e.item.run)
         elif e.kind == "colours":
             self.dismiss(self.app.open_colours)
+        elif e.kind == "columns":
+            self.dismiss(main.open_columns)
         elif e.kind == "bool":
             preferences.set_value(e.pref, not preferences.value(e.pref))
             self._redraw(e)

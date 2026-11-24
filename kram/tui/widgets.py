@@ -6,6 +6,9 @@
 - `CheckBox`: `[x] Label`, the one checkbox look everywhere (T21); Textual's Checkbox and SelectionList each look
   different.
 - `ChoiceList`: a short modal list (views, tabs, sort columns, schemes) that returns the chosen value.
+- `Choice`: a value from a list in one line of a form (`Name ↓`), the list a ChoiceList: what a drop-down is in the
+  GUIs. Textual's Select draws a box three lines high.
+- `Radio`: one of a few values side by side, `(•) all  ( ) any`, as RadioSet would, in one line.
 - `PopupMenu`: a context menu, with separators and disabled items.
 - `hint`: key hints for a panel's or a dialog's bottom border (§4.5).
 
@@ -14,7 +17,7 @@ the same in every scheme.
 """
 from collections.abc import Hashable, Sequence
 
-from rich.cells import cell_len
+from rich.cells import cell_len, set_cell_size
 from rich.style import Style
 from rich.text import Text
 from textual.app import ComposeResult
@@ -214,6 +217,150 @@ class ChoiceList(ModalScreen):
 
     def action_close(self) -> None:
         self.dismiss(None)
+
+
+class Choice(Widget, can_focus=True):
+    """A value of `options` ((value, label) pairs) in one line: the label, cut with the ellipsis, and an arrow after
+    it. Enter, space or a click lists the values (ChoiceList, `title` in its frame); ← → step through them in
+    place. `Changed` after the user changed it."""
+
+    class Changed(Message):
+        def __init__(self, choice: "Choice", value: Hashable):
+            super().__init__()
+            self.choice, self.value = choice, value
+
+        @property
+        def control(self) -> "Choice":
+            return self.choice
+
+    BINDINGS = [
+        Binding("enter,space", "open", show=False),
+        Binding("left", "step(-1)", show=False),
+        Binding("right", "step(1)", show=False),
+    ]
+    DEFAULT_CSS = """
+    Choice { width: auto; height: 1; background: transparent; color: $foreground; }
+    Choice:focus { text-style: reverse; }
+    """
+
+    def __init__(self, options: Sequence[tuple[Hashable, str]], value: Hashable | None = None, title: str = "",
+                 id: str | None = None, classes: str = ""):
+        super().__init__(id=id, classes=classes)
+        self.options = list(options)
+        self.title_text = title
+        values = [v for v, _label in self.options]
+        self.value = value if value in values else (values[0] if values else None)
+
+    @property
+    def label(self) -> str:
+        return next((label for v, label in self.options if v == self.value), "")
+
+    def get_content_width(self, container, viewport) -> int:
+        return max((cell_len(label) for _v, label in self.options), default=1) + 2
+
+    def render(self) -> Text:
+        g = self.app.glyphs
+        room = max(1, self.size.width - 1 - cell_len(g.down))
+        label = self.label
+        if cell_len(label) > room:
+            cut = room - cell_len(g.ellipsis)
+            label = set_cell_size(label, cut) + g.ellipsis if cut > 0 else set_cell_size(label, room)
+        # the arrow right after the label, where it reads as this one's and not as the next field's
+        text = Text(label + " ", no_wrap=True)
+        text.append(g.down, role("muted"))
+        text.append(" " * (room - cell_len(label)))
+        return text
+
+    def set_value(self, value: Hashable, tell: bool = False) -> None:
+        if value == self.value:
+            return
+        self.value = value
+        self.refresh()
+        if tell:
+            self.post_message(self.Changed(self, value))
+
+    def action_step(self, d: int) -> None:
+        values = [v for v, _label in self.options]
+        if values:
+            i = values.index(self.value) if self.value in values else 0
+            self.set_value(values[max(0, min(len(values) - 1, i + d))], tell=True)
+
+    def action_open(self) -> None:
+        def chosen(value: Hashable | None) -> None:
+            if value is not None:
+                self.set_value(value, tell=True)
+        self.app.push_screen(ChoiceList(self.title_text, self.options, self.value), chosen)
+
+    def on_click(self) -> None:
+        self.action_open()
+
+
+class Radio(Widget, can_focus=True):
+    """One of `options` ((value, label) pairs) side by side: `(•) all conditions  ( ) any condition`. ← → or space
+    move the choice, a click picks one; `Changed` after the user changed it."""
+
+    class Changed(Message):
+        def __init__(self, radio: "Radio", value: Hashable):
+            super().__init__()
+            self.radio, self.value = radio, value
+
+        @property
+        def control(self) -> "Radio":
+            return self.radio
+
+    BINDINGS = [
+        Binding("space", "step(1)", show=False),
+        Binding("left", "step(-1)", show=False),
+        Binding("right", "step(1)", show=False),
+    ]
+    DEFAULT_CSS = """
+    Radio { width: auto; height: 1; background: transparent; color: $foreground; }
+    Radio:focus { text-style: reverse; }
+    """
+    GAP = "  "
+
+    def __init__(self, options: Sequence[tuple[Hashable, str]], value: Hashable, id: str | None = None,
+                 classes: str = ""):
+        super().__init__(id=id, classes=classes)
+        self.options = list(options)
+        self.value = value
+
+    def _parts(self) -> list[str]:
+        item = self.app.glyphs.item
+        return [f"({item if v == self.value else ' '}) {label}" for v, label in self.options]
+
+    def get_content_width(self, container, viewport) -> int:
+        return cell_len(self.GAP.join(self._parts()))
+
+    def render(self) -> Text:
+        text = Text(no_wrap=True, overflow="ellipsis")
+        for i, (part, (v, _label)) in enumerate(zip(self._parts(), self.options, strict=True)):
+            if i:
+                text.append(self.GAP)
+            text.append(part[:3], role("marked") if v == self.value else Style())
+            text.append(part[3:])
+        return text
+
+    def set_value(self, value: Hashable, tell: bool = False) -> None:
+        if value == self.value:
+            return
+        self.value = value
+        self.refresh()
+        if tell:
+            self.post_message(self.Changed(self, value))
+
+    def action_step(self, d: int) -> None:
+        values = [v for v, _label in self.options]
+        i = values.index(self.value) if self.value in values else 0
+        self.set_value(values[(i + d) % len(values)], tell=True)
+
+    def on_click(self, event) -> None:
+        x = 0
+        for part, (v, _label) in zip(self._parts(), self.options, strict=True):
+            if event.x < x + cell_len(part) + len(self.GAP):
+                self.set_value(v, tell=True)
+                return
+            x += cell_len(part) + len(self.GAP)
 
 
 class PopupMenu(ModalScreen):

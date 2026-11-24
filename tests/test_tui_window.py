@@ -11,7 +11,7 @@ import pytest
 
 pytest.importorskip("textual")
 
-from kram.app import preferences  # noqa: E402
+from kram.app import preferences, release_watch  # noqa: E402
 from kram.app.browser import Browser  # noqa: E402
 from kram.app.columns import COL_ADVISORY, COL_DOWNLOAD, COL_NAME, COL_REASON, COL_SIZE, COL_SUMMARY  # noqa: E402
 from kram.app.parity import Feature  # noqa: E402
@@ -28,7 +28,6 @@ from kram.core.model import (  # noqa: E402
 from kram.core.search import Mode  # noqa: E402
 from kram.tui import window as window_module  # noqa: E402
 from kram.tui.app import KramApp  # noqa: E402
-from kram.tui.dialogs.question import QuestionDialog  # noqa: E402
 from kram.tui.package_list import Columns, name_lengths, name_width  # noqa: E402
 from kram.tui.palette import role  # noqa: E402
 from kram.tui.widgets import ChoiceList  # noqa: E402
@@ -53,6 +52,8 @@ def use_catalog(monkeypatch, snap: CatalogSnapshot | None = None, load=None, blo
     """The window's Browser over a made-up catalog, as tests/test_gtk.py does it; `more`: what else the catalog
     answers (`resolve` for the Apply dialog, …)."""
     snap = snap or snapshot()
+    # a Reload does not ask Bodhi whether a new release is out (tests/test_tui_dialogs.py puts the check back)
+    monkeypatch.setattr(release_watch.ReleaseWatcher, "check", lambda self: None)
     catalog = SimpleNamespace(load=load or (lambda *a, **k: snap), blocked_upgrades=lambda: blocked or {},
                               details=lambda key: (_ for _ in ()).throw(LookupError(key)), **more)
     monkeypatch.setattr(window_module, "Browser",
@@ -552,15 +553,3 @@ def test_the_top_line_drops_what_does_not_fit_from_the_right(monkeypatch):
         assert top(app).startswith("Kram  Copied")
     run(test)
 
-
-def test_dialogs_of_later_steps_say_so(monkeypatch):
-    use_catalog(monkeypatch)
-
-    async def test(app, pilot):
-        app.main.run_action("notifications")  # the Update notifications dialog comes in a later step (§10.11)
-        await pilot.pause()
-        assert isinstance(app.screen, QuestionDialog) and app.screen.question.text == "Not in this version yet"
-        await pilot.press("enter")
-        await pilot.pause()
-        assert len(app.screen_stack) == 1
-    run(test)

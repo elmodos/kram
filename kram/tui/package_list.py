@@ -74,6 +74,10 @@ ORDER = (COL_INSTALLED, COL_REASON, COL_CANDIDATE, COL_ADVISORY, COL_REPO, COL_S
 HIDDEN = frozenset({COL_REASON, COL_ADVISORY, COL_DOWNLOAD})
 WIDTHS = {COL_INSTALLED: 16, COL_CANDIDATE: 16, COL_REPO: 12, COL_SIZE: 9, COL_DOWNLOAD: 9, COL_REASON: 12,
           COL_ADVISORY: 14}
+# the widths the Columns dialog gives (§10.18): every column but S, which is its two glyphs, and the summary, which
+# takes the room left
+RESIZABLE = frozenset({COL_NAME, *WIDTHS})
+WIDTH_RANGE = (4, 64)
 # a terminal has no room for the GUIs' long headers
 SHORT_HEADERS = {
     COL_INSTALLED: pgettext("short column header", "Installed"),
@@ -102,6 +106,32 @@ class Columns:
 
     def __post_init__(self) -> None:
         assert set(self.order) == set(HIDEABLE)
+
+    def to_dict(self) -> dict:
+        """As the setting keeps it (kram.app.preferences.TUI_COLUMNS)."""
+        return {"order": list(self.order), "hidden": sorted(self.hidden),
+                "widths": {str(c): w for c, w in sorted(self.widths.items())}}
+
+    @classmethod
+    def from_dict(cls, data) -> "Columns":
+        """What the setting holds; whatever does not fit the columns of this version (a column added or dropped since,
+        a hand-edited file) is left at its default."""
+        columns = cls()
+        if not isinstance(data, dict):
+            return columns
+        order = data.get("order")
+        if isinstance(order, list) and sorted(order) == sorted(HIDEABLE):
+            columns.order = list(order)
+        hidden = data.get("hidden")
+        if isinstance(hidden, list) and all(c in HIDEABLE for c in hidden):
+            columns.hidden = set(hidden)
+        widths = data.get("widths")
+        if isinstance(widths, dict):
+            for key, w in widths.items():
+                col = int(key) if str(key).isdigit() else None
+                if col in RESIZABLE and isinstance(w, int) and WIDTH_RANGE[0] <= w <= WIDTH_RANGE[1]:
+                    columns.widths[col] = w
+        return columns
 
     def shown(self) -> list[int]:
         return [COL_STATUS, COL_NAME, *(c for c in self.order if c not in self.hidden)]

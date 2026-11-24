@@ -1,20 +1,24 @@
 """About Kram (docs/TUI_SPEC.md §10.13): the version, the toolkit it runs on (`DIALOG_ABOUT_TOOLKIT`), so that a bug
-report says which front end it is about, the homepage as a link, and What's New (§10.14, a later step).
+report says which front end it is about, the homepage as a link, and What's New (§10.14) over it.
 """
 import textual
 from rich.style import Style
 from rich.text import Text
 from textual.app import ComposeResult
 from textual.binding import Binding
-from textual.containers import Horizontal, Vertical
+from textual.containers import Horizontal, Vertical, VerticalScroll
 from textual.screen import ModalScreen
 from textual.widget import Widget
 from textual.widgets import Static
 
 from ... import HOMEPAGE, __version__
+from ...app.whats_new import whats_new_doc
+from ...core import releases
+from ...core.releases import Release
 from ...i18n import _
 from ..palette import role
 from ..widgets import Button, hint
+from .install import DocBlock
 
 
 def toolkit_version() -> str:
@@ -78,9 +82,56 @@ class AboutDialog(ModalScreen):
     def on_button_pressed(self, event: Button.Pressed) -> None:
         event.stop()
         if event.button.id == "whats-new":
-            self.ui.info("Kram", _("Not in this version yet"))  # What's New over About comes with §10.14
+            self.app.push_screen(WhatsNewDialog())  # over About, which stays under it (DIALOG_WHATS_NEW_OVER_ABOUT)
         else:
             self.dismiss(None)
+
+    def action_close(self) -> None:
+        self.dismiss(None)
+
+
+class WhatsNewDialog(ModalScreen):
+    """What's New (§10.14): the release notes of the metainfo (kram.core.releases), newest first, as the document
+    of kram.app.whats_new, scrolling."""
+
+    BINDINGS = [
+        Binding("escape", "close", show=False),
+        Binding("pageup", "page(-1)", show=False),
+        Binding("pagedown", "page(1)", show=False),
+    ]
+    DEFAULT_CSS = """
+    WhatsNewDialog { align: center middle; }
+    WhatsNewDialog #whats-new-box { height: 90%; }
+    WhatsNewDialog #whats-new-scroll { height: 1fr; margin-top: 1; background: $surface; }
+    App:ansi WhatsNewDialog #whats-new-scroll { background: $background; }
+    """
+
+    def __init__(self, notes: list[Release] | None = None):
+        super().__init__()
+        self.notes = releases.load() if notes is None else notes
+
+    def compose(self) -> ComposeResult:
+        box = Vertical(classes="window dialog whats-new", id="whats-new-box")
+        box.border_title = _("What's New")
+        g = self.app.glyphs
+        box.border_subtitle = hint((f"{g.up} {g.down}", _("scroll")), ("esc", _("close")))
+        with box:
+            with VerticalScroll(id="whats-new-scroll"):
+                yield DocBlock(id="whats-new")
+            with Horizontal(classes="buttons"):
+                yield Button(_("Close"), id="close", variant="primary")
+
+    def on_mount(self) -> None:
+        self.query_one(DocBlock).show(whats_new_doc(self.notes))
+        self.query_one("#whats-new-scroll").focus()
+
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        event.stop()
+        self.action_close()
+
+    def action_page(self, step: int) -> None:
+        scroll = self.query_one("#whats-new-scroll", VerticalScroll)
+        scroll.scroll_to(y=scroll.scroll_y + step * max(1, scroll.size.height - 1), animate=False)
 
     def action_close(self) -> None:
         self.dismiss(None)

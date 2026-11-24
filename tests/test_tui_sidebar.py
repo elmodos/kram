@@ -17,6 +17,7 @@ from kram.core.custom_filters import Condition, CustomFilter, Field, Op  # noqa:
 from kram.core.marks import Action  # noqa: E402
 from kram.core.model import CatalogSnapshot, GroupInfo  # noqa: E402
 from kram.core.settings import store as settings  # noqa: E402
+from kram.tui.dialogs.filters import FiltersDialog  # noqa: E402
 from kram.tui.dialogs.question import QuestionDialog  # noqa: E402
 from kram.tui.palette import role  # noqa: E402
 from kram.tui.sidebar import PLACEHOLDERS  # noqa: E402
@@ -419,10 +420,10 @@ def test_a_custom_filter_s_menu_edits_and_deletes_it(monkeypatch):
                                     "Custom Filters…"]
         await pilot.press("escape")
         await pilot.pause()
-        await pilot.press("e")  # the Custom Filters dialog comes in a later step
+        await pilot.press("e")  # Edit Filter…: the Custom Filters dialog at it (tests/test_tui_dialogs.py)
         await pilot.pause()
-        assert isinstance(app.screen, QuestionDialog)
-        await pilot.press("enter")
+        assert isinstance(app.screen, FiltersDialog) and app.screen.edit.current_name() == "Big"
+        await pilot.press("escape")
         await pilot.pause()
         await pilot.press("full_stop", "down", "enter")  # Delete Filter
         await pilot.pause()

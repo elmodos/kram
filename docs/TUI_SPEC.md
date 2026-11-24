@@ -165,6 +165,8 @@ panel stays). Focus moving to the list in any way closes a slide-over. Only one 
 | `y` / `Y` | list | copy name / name-version-release.arch (§12.3) | `copy_name`, `copy_nevra` |
 | `Enter` | list | focus the details | |
 | `alt+←` | window | back to the previous filter | `back` |
+| `r` | window, while `Fedora N is out` shows | the Fedora N dialog (§10.12) | `RELEASE_BUTTON` |
+| `<` `>` | sidebar, details (pinned) | narrower / wider sidebar, lower / higher details; saved | `WINDOW_PANES_SAVED` |
 | `[ ]`, `v` | sidebar | previous / next view, list of views | `SIDEBAR_VIEWS` |
 | `← →` | sidebar | fold / unfold (Environments) | `SIDEBAR_ENVIRONMENTS_TREE` |
 | `Enter` | sidebar | filter the list by the entry | |
@@ -696,7 +698,7 @@ N or P here that are PLANNED there change with the note given.
 | TRANSLATIONS_CATALOGS | §14.5 | S |
 | WINDOW_CLOSE_PENDING | §10.19 | S |
 | WINDOW_FRACTIONAL_SCALE | — | N (already) |
-| WINDOW_HEADER_BUTTONS | the footer's keys `f5 a U` and the menu | P: keys, not buttons |
+| WINDOW_HEADER_BUTTONS | the keys `f5 a U` (in the menu and the Keys dialog) | P: keys, not buttons |
 | WINDOW_KEYBOARD_ONLY | everything | S |
 | WINDOW_PANES_SAVED | panel sizes and pins saved | S |
 | WINDOW_STATUS_BAR | the top line (§5.4) | S |

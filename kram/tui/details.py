@@ -355,6 +355,11 @@ class Details(Vertical):
         Binding("slash", "filter", _("Filter the files"), show=False),
         Binding("y", "copy", _("Copy the selected paths"), show=False),
         Binding("o", "show_file", _("Show in File Manager"), show=False),
+        # a pinned details panel lower or higher (WINDOW_PANES_SAVED)
+        Binding("less_than_sign", "app.resize_panel('details', -1)", _("Make the panel smaller or larger"),
+                show=False),
+        Binding("greater_than_sign", "app.resize_panel('details', 1)", _("Make the panel smaller or larger"),
+                show=False),
     ]
 
     def __init__(self, main, glyphs: Glyphs, **kw):

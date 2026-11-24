@@ -290,6 +290,11 @@ class Sidebar(Vertical):
         Binding("plus", "group(True)", _("Install Group…"), show=False),
         Binding("minus", "group(False)", _("Remove Group…"), show=False),
         Binding("e", "edit", _("Edit Filter…"), show=False),
+        # a pinned sidebar narrower or wider (WINDOW_PANES_SAVED)
+        Binding("less_than_sign", "app.resize_panel('sidebar', -2)", _("Make the panel smaller or larger"),
+                show=False),
+        Binding("greater_than_sign", "app.resize_panel('sidebar', 2)", _("Make the panel smaller or larger"),
+                show=False),
     ]
 
     def __init__(self, main, glyphs: Glyphs, **kw):

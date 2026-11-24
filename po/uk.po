@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kram\n"
 "Report-Msgid-Bugs-To: https://github.com/elmodos/kram/issues\n"
-"POT-Creation-Date: 2026-11-24 12:25+0200\n"
+"POT-Creation-Date: 2026-11-24 15:00+0200\n"
 "PO-Revision-Date: 2026-11-03 21:09+0200\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -161,7 +161,7 @@ msgstr "Іконка в системному треї, коли є оновле�
 msgid "Find"
 msgstr "Знайти"
 
-#: kram/app/actions.py:88 kram/tui/menu.py:184
+#: kram/app/actions.py:88 kram/tui/menu.py:187
 msgid "Back"
 msgstr "Назад"
 
@@ -210,12 +210,12 @@ msgid "Install a downloaded .rpm file (you can also drop it on the window)"
 msgstr ""
 "Встановити завантажений файл .rpm (його можна також перетягнути на вікно)"
 
-#: kram/app/actions.py:100 kram/tui/app.py:275 kram/tui/app.py:580
+#: kram/app/actions.py:100 kram/tui/app.py:275 kram/tui/app.py:604
 msgid "Quit"
 msgstr "Вихід"
 
 #: kram/app/actions.py:101 kram/qt/about_dialog.py:14
-#: kram/tui/dialogs/about.py:62
+#: kram/tui/dialogs/about.py:66
 msgid "About Kram"
 msgstr "Про Kram"
 
@@ -1130,7 +1130,7 @@ msgid "Delete leftover files"
 msgstr "Видалення залишків"
 
 #: kram/app/cache.py:238 kram/gtk/dialogs/filters.py:149
-#: kram/qt/filters_dialog.py:143
+#: kram/qt/filters_dialog.py:143 kram/tui/dialogs/filters.py:222
 msgid "Delete"
 msgstr "Видалити"
 
@@ -1419,13 +1419,14 @@ msgstr ""
 "{project} не має збірок для Fedora {release} ({arch}). Все одно підключити?"
 
 #: kram/app/custom_filters.py:120 kram/gtk/dialogs/filters.py:148
-#: kram/qt/filters_dialog.py:142
+#: kram/qt/filters_dialog.py:142 kram/tui/dialogs/filters.py:361
 msgid "New filter"
 msgstr "Новий фільтр"
 
 #: kram/app/custom_filters.py:129 kram/gtk/dialogs/filters.py:125
 #: kram/gtk/dialogs/filters.py:283 kram/qt/filters_dialog.py:126
-#: kram/qt/filters_dialog.py:275
+#: kram/qt/filters_dialog.py:275 kram/tui/dialogs/filters.py:201
+#: kram/tui/dialogs/filters.py:373
 msgid "Custom Filters"
 msgstr "Власні фільтри"
 
@@ -1449,7 +1450,7 @@ msgstr "Бюлетені"
 #: kram/app/details.py:30 kram/gtk/dialogs/copr.py:88
 #: kram/gtk/dialogs/install.py:91 kram/qt/copr_dialog.py:92
 #: kram/qt/install_dialog.py:112 kram/tui/dialogs/copr.py:58
-#: kram/tui/dialogs/install.py:152
+#: kram/tui/dialogs/install.py:155
 msgid "Description"
 msgstr "Опис"
 
@@ -1458,13 +1459,13 @@ msgid "General"
 msgstr "Загальне"
 
 #: kram/app/details.py:31 kram/gtk/dialogs/install.py:93
-#: kram/qt/install_dialog.py:113 kram/tui/dialogs/install.py:154
+#: kram/qt/install_dialog.py:113 kram/tui/dialogs/install.py:157
 msgid "Dependencies"
 msgstr "Залежності"
 
 #: kram/app/details.py:31 kram/gtk/dialogs/install.py:94
 #: kram/qt/install_dialog.py:113 kram/tui/dialogs/cache.py:45
-#: kram/tui/dialogs/install.py:156
+#: kram/tui/dialogs/install.py:159
 msgid "Files"
 msgstr "Файли"
 
@@ -1473,7 +1474,7 @@ msgid "Versions"
 msgstr "Версії"
 
 #: kram/app/details.py:32 kram/gtk/dialogs/install.py:95
-#: kram/qt/install_dialog.py:114 kram/tui/dialogs/install.py:158
+#: kram/qt/install_dialog.py:114 kram/tui/dialogs/install.py:161
 msgid "Changelog"
 msgstr "Changelog"
 
@@ -1664,7 +1665,7 @@ msgstr[1] ""
 msgstr[2] ""
 "{n} репозиторіїв не мають метаданих, тому їхніх пакунків немає в списку."
 
-#: kram/app/empty_list.py:58 kram/tui/window.py:466
+#: kram/app/empty_list.py:58 kram/tui/window.py:546
 msgid "Loading the package catalog…"
 msgstr "Завантаження каталогу пакунків…"
 
@@ -1928,8 +1929,8 @@ msgid "Unknown origin"
 msgstr "Невідоме"
 
 #: kram/app/install.py:44 kram/gtk/dialogs/install.py:52
-#: kram/qt/install_dialog.py:148 kram/tui/dialogs/install.py:120
-#: kram/tui/dialogs/install.py:167
+#: kram/qt/install_dialog.py:148 kram/tui/dialogs/install.py:122
+#: kram/tui/dialogs/install.py:170
 msgid "Install"
 msgstr "Встановити"
 
@@ -2553,7 +2554,7 @@ msgstr ""
 msgid "Only for you: stops it now and at every login"
 msgstr "Лише для вас: зупиняє його зараз і при кожному вході"
 
-#: kram/app/notifier.py:70
+#: kram/app/notifier.py:70 kram/tui/dialogs/notifier.py:99
 msgid "Turn Off"
 msgstr "Вимкнути"
 
@@ -2574,15 +2575,16 @@ msgstr ""
 "після «Перечитати»."
 
 #: kram/app/notifier.py:100 kram/gtk/dialogs/notifier.py:70
-#: kram/qt/notifier_dialog.py:122
+#: kram/qt/notifier_dialog.py:122 kram/tui/dialogs/notifier.py:72
+#: kram/tui/dialogs/notifier.py:200
 msgid "Update Notifications"
 msgstr "Сповіщення про оновлення"
 
-#: kram/app/preferences.py:63
+#: kram/app/preferences.py:64
 msgid "Clicking the status icon marks the likely action"
 msgstr "Клік по значку стану позначає очікувану дію"
 
-#: kram/app/preferences.py:64
+#: kram/app/preferences.py:65
 msgid ""
 "A click on the status icon unmarks a marked package, marks one that is not "
 "installed for installation and one with an upgrade for upgrade. Otherwise it "
@@ -2592,113 +2594,117 @@ msgstr ""
 "невстановлений для встановлення, а той, що має оновлення, — для оновлення. "
 "Інакше відкриває меню дій, як правий клік."
 
-#: kram/app/preferences.py:67
+#: kram/app/preferences.py:68
 msgid "Watch Fedora Releases"
 msgstr "Стежити за релізами Fedora"
 
-#: kram/app/preferences.py:68
+#: kram/app/preferences.py:69
 msgid "On Reload, ask Fedora's Bodhi service whether a new release is out"
 msgstr ""
 "Під час «Перечитати» запитувати в сервісу Bodhi від Fedora, чи вийшов новий "
 "реліз"
 
-#: kram/app/preferences.py:70
+#: kram/app/preferences.py:71
 msgid "Toolbar"
 msgstr "Панель інструментів"
 
-#: kram/app/preferences.py:71
+#: kram/app/preferences.py:72
 msgid "Follow System Settings"
 msgstr "Як у системних налаштуваннях"
 
-#: kram/app/preferences.py:72
+#: kram/app/preferences.py:73
 msgid "Text Under Icons"
 msgstr "Підписи під піктограмами"
 
-#: kram/app/preferences.py:73
+#: kram/app/preferences.py:74
 msgid "Compact: Text Beside Icons"
 msgstr "Компактно: підписи біля піктограм"
 
-#: kram/app/preferences.py:74
+#: kram/app/preferences.py:75
 msgid "Icons Only"
 msgstr "Лише піктограми"
 
-#: kram/app/preferences.py:76
+#: kram/app/preferences.py:77
 msgid "Show Menu Bar"
 msgstr "Показувати смужку меню"
 
-#: kram/app/preferences.py:77
+#: kram/app/preferences.py:78
 msgid "Warn when the package information is older than:"
 msgstr "Попереджати, якщо інформація про пакунки старша за:"
 
-#: kram/app/preferences.py:86
+#: kram/app/preferences.py:87
 msgid "Colour scheme"
 msgstr "Колірна схема"
 
-#: kram/app/preferences.py:87
+#: kram/app/preferences.py:88
 msgid "Terminal: 16 colours, follows the terminal"
 msgstr "Термінал: 16 кольорів, як у терміналі"
 
-#: kram/app/preferences.py:88
+#: kram/app/preferences.py:89
 msgid "Midnight: 16 colours, blue"
 msgstr "Північ: 16 кольорів, синя"
 
-#: kram/app/preferences.py:89
+#: kram/app/preferences.py:90
 msgid "Console: 16 colours, black"
 msgstr "Консоль: 16 кольорів, чорна"
 
-#: kram/app/preferences.py:98
+#: kram/app/preferences.py:99
 msgid "Centre the cursor when scrolling"
 msgstr "Тримати курсор посередині під час прокручування"
 
-#: kram/app/preferences.py:99
+#: kram/app/preferences.py:100
 msgid "Status glyphs"
 msgstr "Позначки стану"
 
-#: kram/app/preferences.py:100
+#: kram/app/preferences.py:101
 msgid "Symbols, or letters when the terminal is not UTF-8"
 msgstr "Символи, або літери, коли термінал не UTF-8"
 
-#: kram/app/preferences.py:101
+#: kram/app/preferences.py:102
 msgid "Letters"
 msgstr "Літери"
 
-#: kram/app/preferences.py:103
+#: kram/app/preferences.py:104
 msgid "Ask before quitting with changes not applied"
 msgstr "Питати перед виходом, якщо зміни не застосовано"
 
-#: kram/app/preferences.py:104
+#: kram/app/preferences.py:105
 msgid "Sidebar width"
 msgstr "Ширина бічної панелі"
 
-#: kram/app/preferences.py:105
+#: kram/app/preferences.py:106
 msgid "Details height"
 msgstr "Висота панелі подробиць"
 
-#: kram/app/preferences.py:107
+#: kram/app/preferences.py:108
 msgid "Pinned panels"
 msgstr "Закріплені панелі"
 
-#: kram/app/preferences.py:108
+#: kram/app/preferences.py:109
 msgid "Sidebar and details"
 msgstr "Бічна панель і подробиці"
 
-#: kram/app/preferences.py:109 kram/tui/app.py:264
+#: kram/app/preferences.py:110 kram/tui/app.py:264
 msgid "Sidebar"
 msgstr "Бічна панель"
 
-#: kram/app/preferences.py:110 kram/gtk/dialogs/install.py:92
+#: kram/app/preferences.py:111 kram/gtk/dialogs/install.py:92
 #: kram/gtk/dialogs/progress.py:50 kram/gtk/ui_port.py:32
 #: kram/qt/install_dialog.py:112 kram/qt/progress_dialog.py:57
-#: kram/tui/app.py:265 kram/tui/app.py:332 kram/tui/dialogs/install.py:162
-#: kram/tui/dialogs/progress.py:230 kram/tui/package_list.py:273
+#: kram/tui/app.py:265 kram/tui/app.py:334 kram/tui/dialogs/install.py:165
+#: kram/tui/dialogs/progress.py:230 kram/tui/package_list.py:303
 msgid "Details"
 msgstr "Подробиці"
 
-#: kram/app/preferences.py:111
+#: kram/app/preferences.py:112
 msgid "Neither"
 msgstr "Жодної"
 
-#: kram/app/preferences.py:149
+#: kram/app/preferences.py:115 kram/tui/dialogs/columns.py:61
+msgid "Columns"
+msgstr "Стовпці"
+
+#: kram/app/preferences.py:152
 msgid "day"
 msgid_plural "days"
 msgstr[0] "день"
@@ -2936,7 +2942,7 @@ msgstr "Помилка:"
 msgid "ERROR: {message}"
 msgstr "ПОМИЛКА: {message}"
 
-#: kram/app/release_watch.py:48
+#: kram/app/release_watch.py:48 kram/tui/app.py:277
 msgid "A new Fedora release"
 msgstr "Новий реліз Fedora"
 
@@ -3318,7 +3324,7 @@ msgstr "PackageKit зараз працює. Спробуйте ще раз, ко
 
 #: kram/core/custom_filters.py:48 kram/core/search.py:32
 #: kram/gtk/dialogs/repos.py:151 kram/qt/repos_dialog.py:67
-#: kram/tui/dialogs/repos.py:58
+#: kram/tui/dialogs/filters.py:204 kram/tui/dialogs/repos.py:58
 msgid "Name"
 msgstr "Назва"
 
@@ -3623,7 +3629,7 @@ msgstr "Перевірте список перед застосуванням."
 
 #: kram/gtk/dialogs/apply.py:211 kram/gtk/dialogs/install.py:117
 #: kram/qt/apply_dialog.py:209 kram/qt/install_dialog.py:139
-#: kram/tui/dialogs/apply.py:297 kram/tui/dialogs/install.py:150
+#: kram/tui/dialogs/apply.py:297 kram/tui/dialogs/install.py:153
 msgid "Equivalent command"
 msgstr "Еквівалентна команда"
 
@@ -3668,7 +3674,7 @@ msgstr "Видалити копії файлів, яких уже немає"
 #: kram/gtk/dialogs/repos.py:214 kram/gtk/files.py:130
 #: kram/qt/cache_dialog.py:255 kram/qt/file_list.py:328
 #: kram/qt/notifier_dialog.py:104 kram/qt/repos_dialog.py:206
-#: kram/tui/details.py:357
+#: kram/tui/details.py:357 kram/tui/dialogs/notifier.py:100
 msgid "Show in File Manager"
 msgstr "Показати у файловому менеджері"
 
@@ -3720,7 +3726,7 @@ msgid "Hub"
 msgstr "Хаб"
 
 #: kram/gtk/dialogs/copr.py:50 kram/gtk/dialogs/repos.py:152
-#: kram/qt/copr_dialog.py:51 kram/qt/repos_dialog.py:67 kram/tui/app.py:331
+#: kram/qt/copr_dialog.py:51 kram/qt/repos_dialog.py:67 kram/tui/app.py:333
 #: kram/tui/dialogs/copr.py:49 kram/tui/dialogs/copr.py:117
 #: kram/tui/dialogs/repos.py:59 kram/tui/dialogs/repos.py:123
 msgid "Packages"
@@ -3771,26 +3777,32 @@ msgid "Remove this condition"
 msgstr "Вилучити цю умову"
 
 #: kram/gtk/dialogs/filters.py:147 kram/qt/filters_dialog.py:141
+#: kram/tui/dialogs/filters.py:221
 msgid "New"
 msgstr "Новий"
 
 #: kram/gtk/dialogs/filters.py:157 kram/qt/filters_dialog.py:156
+#: kram/tui/dialogs/filters.py:209
 msgid "Name:"
 msgstr "Назва:"
 
 #: kram/gtk/dialogs/filters.py:161 kram/qt/filters_dialog.py:161
+#: kram/tui/dialogs/filters.py:212
 msgid "Show packages that match:"
 msgstr "Показувати пакунки, що відповідають:"
 
 #: kram/gtk/dialogs/filters.py:162 kram/qt/filters_dialog.py:158
+#: kram/tui/dialogs/filters.py:213
 msgid "all conditions"
 msgstr "усім умовам"
 
 #: kram/gtk/dialogs/filters.py:162 kram/qt/filters_dialog.py:159
+#: kram/tui/dialogs/filters.py:213
 msgid "any condition"
 msgstr "будь-якій умові"
 
 #: kram/gtk/dialogs/filters.py:171 kram/qt/filters_dialog.py:172
+#: kram/tui/dialogs/filters.py:217
 msgid "Add condition"
 msgstr "Додати умову"
 
@@ -3847,12 +3859,12 @@ msgid "Install Package File"
 msgstr "Встановлення файлу пакунка"
 
 #: kram/gtk/dialogs/install.py:81 kram/qt/install_dialog.py:103
-#: kram/tui/dialogs/install.py:142
+#: kram/tui/dialogs/install.py:145
 msgid "What installing it changes"
 msgstr "Що зміниться після встановлення"
 
 #: kram/gtk/dialogs/install.py:96 kram/qt/install_dialog.py:114
-#: kram/tui/dialogs/install.py:160
+#: kram/tui/dialogs/install.py:163
 msgid "Scripts"
 msgstr "Скрипти"
 
@@ -3901,6 +3913,7 @@ msgid "Stop Test"
 msgstr "Зупинити перевірку"
 
 #: kram/gtk/dialogs/notifier.py:77 kram/qt/notifier_dialog.py:130
+#: kram/tui/dialogs/notifier.py:80
 msgid ""
 "The icon is there only while updates are available. Kram downloads nothing "
 "in the background: Fedora's own service refreshes the package information, "
@@ -3911,10 +3924,12 @@ msgstr ""
 "при вході, щогодини і після кожного встановлення."
 
 #: kram/gtk/dialogs/notifier.py:81 kram/qt/notifier_dialog.py:127
+#: kram/tui/dialogs/notifier.py:78
 msgid "Show an icon in the system tray when updates are available"
 msgstr "Показувати іконку в системному треї, коли є оновлення"
 
 #: kram/gtk/dialogs/notifier.py:88 kram/qt/notifier_dialog.py:135
+#: kram/tui/dialogs/notifier.py:124
 msgid ""
 "This session has no system tray for such icons (GNOME without the "
 "AppIndicator extension, LXDE), so the icon cannot appear."
@@ -3923,18 +3938,22 @@ msgstr ""
 "AppIndicator, LXDE), тож іконка не з'явиться."
 
 #: kram/gtk/dialogs/notifier.py:101 kram/qt/notifier_dialog.py:157
+#: kram/tui/dialogs/notifier.py:88
 msgid "Fedora's update check"
 msgstr "Перевірка оновлень Fedora"
 
 #: kram/gtk/dialogs/notifier.py:107 kram/qt/notifier_dialog.py:166
+#: kram/tui/dialogs/notifier.py:92
 msgid "Turn On Fedora's Update Check…"
 msgstr "Увімкнути перевірку оновлень Fedora…"
 
 #: kram/gtk/dialogs/notifier.py:108 kram/qt/notifier_dialog.py:167
+#: kram/tui/dialogs/notifier.py:93
 msgid "Asks for your password"
 msgstr "Потрібен ваш пароль"
 
 #: kram/gtk/dialogs/notifier.py:115 kram/qt/notifier_dialog.py:176
+#: kram/tui/dialogs/notifier.py:95
 msgid "Other update notifiers"
 msgstr "Інші засоби сповіщення про оновлення"
 
@@ -3987,27 +4006,33 @@ msgid "Copy Path"
 msgstr "Копіювати шлях"
 
 #: kram/gtk/dialogs/upgrade.py:28 kram/qt/upgrade_dialog.py:71
+#: kram/tui/dialogs/upgrade.py:50
 msgid "COPR projects: checking…"
 msgstr "Проєкти COPR: перевірка…"
 
 #: kram/gtk/dialogs/upgrade.py:36 kram/qt/upgrade_dialog.py:45
+#: kram/tui/dialogs/upgrade.py:128
 #, python-brace-format
 msgid "Fedora {version} is available"
 msgstr "Доступна Fedora {version}"
 
 #: kram/gtk/dialogs/upgrade.py:44 kram/qt/upgrade_dialog.py:51
+#: kram/tui/dialogs/upgrade.py:131
 msgid "Check"
 msgstr "Перевірити"
 
 #: kram/gtk/dialogs/upgrade.py:71 kram/qt/upgrade_dialog.py:91
+#: kram/tui/dialogs/upgrade.py:138
 msgid "Release notes"
 msgstr "Нотатки до випуску"
 
 #: kram/gtk/dialogs/upgrade.py:73 kram/qt/upgrade_dialog.py:94
+#: kram/tui/dialogs/upgrade.py:140
 msgid "Upgrade guide"
 msgstr "Посібник з оновлення"
 
 #: kram/gtk/dialogs/upgrade.py:80 kram/qt/upgrade_dialog.py:100
+#: kram/tui/dialogs/upgrade.py:147
 #, python-brace-format
 msgid "Open {program}"
 msgstr "Відкрити {program}"
@@ -4062,12 +4087,12 @@ msgstr "Менеджер пакунків"
 msgid "Open Package File"
 msgstr "Відкрити файл пакунка"
 
-#: kram/gtk/window.py:465 kram/qt/main_window.py:536 kram/tui/window.py:389
+#: kram/gtk/window.py:465 kram/qt/main_window.py:536 kram/tui/window.py:438
 msgid "RPM packages (*.rpm)"
 msgstr "Пакунки RPM (*.rpm)"
 
 #: kram/gtk/window.py:538 kram/qt/main_window.py:425
-#: kram/tui/dialogs/about.py:67
+#: kram/tui/dialogs/about.py:71
 msgid "A Synaptic-style package manager for Fedora."
 msgstr "Менеджер пакунків для Fedora в дусі Synaptic."
 
@@ -4104,7 +4129,7 @@ msgstr[0] "з них {n} — оновлення безпеки"
 msgstr[1] "з них {n} — оновлення безпеки"
 msgstr[2] "з них {n} — оновлень безпеки"
 
-#: kram/notifier/tray.py:237 kram/tui/window.py:230
+#: kram/notifier/tray.py:237 kram/tui/window.py:276
 #, python-brace-format
 msgid "The package information is {days} day old"
 msgid_plural "The package information is {days} days old"
@@ -4112,11 +4137,12 @@ msgstr[0] "Інформації про пакунки {days} день"
 msgstr[1] "Інформації про пакунки {days} дні"
 msgstr[2] "Інформації про пакунки {days} днів"
 
-#: kram/qt/about_dialog.py:29 kram/tui/dialogs/about.py:72
+#: kram/qt/about_dialog.py:29 kram/tui/dialogs/about.py:76
+#: kram/tui/dialogs/about.py:115
 msgid "What's New"
 msgstr "Що нового"
 
-#: kram/qt/main_window.py:427 kram/tui/dialogs/about.py:70
+#: kram/qt/main_window.py:427 kram/tui/dialogs/about.py:74
 msgid "Released under the MIT License."
 msgstr "Поширюється за ліцензією MIT."
 
@@ -4125,7 +4151,8 @@ msgid "Main toolbar"
 msgstr "Головна панель"
 
 #: kram/qt/upgrade_dialog.py:55 kram/tui/dialogs/apply.py:301
-#: kram/tui/dialogs/path.py:85 kram/tui/dialogs/question.py:22
+#: kram/tui/dialogs/filters.py:225 kram/tui/dialogs/path.py:85
+#: kram/tui/dialogs/question.py:22 kram/tui/dialogs/upgrade.py:132
 msgid "Cancel"
 msgstr "Скасувати"
 
@@ -4159,7 +4186,7 @@ msgstr "зміни без пароля"
 msgid "Make the terminal larger: Kram needs {size}"
 msgstr "Збільште термінал: Kram потрібно {size}"
 
-#: kram/tui/app.py:248 kram/tui/window.py:217
+#: kram/tui/app.py:248 kram/tui/window.py:251
 msgid "quit"
 msgstr "вийти"
 
@@ -4167,7 +4194,7 @@ msgstr "вийти"
 msgid "Search"
 msgstr "Пошук"
 
-#: kram/tui/app.py:267 kram/tui/menu.py:89 kram/tui/sidebar.py:289
+#: kram/tui/app.py:267 kram/tui/menu.py:90 kram/tui/sidebar.py:289
 msgid "Menu"
 msgstr "Меню"
 
@@ -4179,12 +4206,12 @@ msgstr "Клавіші"
 msgid "Focus the list"
 msgstr "Перейти до списку"
 
-#: kram/tui/app.py:383 kram/tui/dialogs/apply.py:284
-#: kram/tui/dialogs/install.py:182
+#: kram/tui/app.py:389 kram/tui/dialogs/apply.py:284
+#: kram/tui/dialogs/install.py:185 kram/tui/dialogs/upgrade.py:207
 msgid "copy"
 msgstr "копіювати"
 
-#: kram/tui/app.py:383
+#: kram/tui/app.py:389
 msgid "sort"
 msgstr "сортувати"
 
@@ -4254,7 +4281,7 @@ msgstr "Попередня або наступна вкладка"
 msgid "A tab by its number"
 msgstr "Вкладка за номером"
 
-#: kram/tui/details.py:353 kram/tui/details.py:492
+#: kram/tui/details.py:353 kram/tui/details.py:497
 msgid "Tabs"
 msgstr "Вкладки"
 
@@ -4270,54 +4297,66 @@ msgstr "Фільтрувати файли"
 msgid "Copy the selected paths"
 msgstr "Копіювати вибрані шляхи"
 
-#: kram/tui/details.py:440
+#: kram/tui/details.py:359 kram/tui/details.py:361 kram/tui/sidebar.py:294
+#: kram/tui/sidebar.py:296
+msgid "Make the panel smaller or larger"
+msgstr "Зменшити або збільшити панель"
+
+#: kram/tui/details.py:445
 msgctxt "details tab strip"
 msgid "advisories"
 msgstr "бюлетені"
 
-#: kram/tui/details.py:542
+#: kram/tui/details.py:547
 msgid "No desktop to show it in"
 msgstr "Немає робочого середовища, щоб показати"
 
-#: kram/tui/details.py:544
+#: kram/tui/details.py:549
 msgid "The file is not on this system: its package is not installed"
 msgstr "Цього файлу немає в системі: його пакунок не встановлено"
 
-#: kram/tui/dialogs/about.py:22
+#: kram/tui/dialogs/about.py:26
 #, python-brace-format
 msgid "Terminal front end, Textual {version}"
 msgstr "Термінальний інтерфейс, Textual {version}"
 
-#: kram/tui/dialogs/about.py:63 kram/tui/dialogs/path.py:79
-#: kram/tui/dialogs/question.py:59
+#: kram/tui/dialogs/about.py:67 kram/tui/dialogs/notifier.py:73
+#: kram/tui/dialogs/path.py:79 kram/tui/dialogs/question.py:59
 msgid "choose"
 msgstr "вибрати"
 
-#: kram/tui/dialogs/about.py:63 kram/tui/dialogs/cache.py:97
-#: kram/tui/dialogs/cache.py:199 kram/tui/dialogs/copr.py:104
-#: kram/tui/dialogs/history.py:92 kram/tui/dialogs/install.py:185
+#: kram/tui/dialogs/about.py:67 kram/tui/dialogs/about.py:117
+#: kram/tui/dialogs/cache.py:97 kram/tui/dialogs/cache.py:199
+#: kram/tui/dialogs/columns.py:63 kram/tui/dialogs/copr.py:104
+#: kram/tui/dialogs/history.py:92 kram/tui/dialogs/install.py:188
 #: kram/tui/dialogs/keys.py:87 kram/tui/dialogs/mirrors.py:79
-#: kram/tui/dialogs/progress.py:68 kram/tui/dialogs/progress.py:204
-#: kram/tui/dialogs/question.py:60 kram/tui/dialogs/repos.py:114
-#: kram/tui/menu.py:90 kram/tui/search.py:186 kram/tui/widgets.py:200
-#: kram/tui/widgets.py:262
+#: kram/tui/dialogs/notifier.py:73 kram/tui/dialogs/progress.py:68
+#: kram/tui/dialogs/progress.py:204 kram/tui/dialogs/question.py:60
+#: kram/tui/dialogs/repos.py:114 kram/tui/dialogs/upgrade.py:208
+#: kram/tui/menu.py:91 kram/tui/search.py:186 kram/tui/widgets.py:203
+#: kram/tui/widgets.py:409
 msgid "close"
 msgstr "закрити"
 
-#: kram/tui/dialogs/about.py:63 kram/tui/dialogs/cache.py:194
-#: kram/tui/dialogs/history.py:92 kram/tui/dialogs/question.py:58
+#: kram/tui/dialogs/about.py:67 kram/tui/dialogs/cache.py:194
+#: kram/tui/dialogs/filters.py:202 kram/tui/dialogs/history.py:92
+#: kram/tui/dialogs/notifier.py:73 kram/tui/dialogs/question.py:58
+#: kram/tui/dialogs/upgrade.py:207
 msgid "next"
 msgstr "далі"
 
-#: kram/tui/dialogs/about.py:73 kram/tui/dialogs/cache.py:106
-#: kram/tui/dialogs/cache.py:184 kram/tui/dialogs/install.py:168
-#: kram/tui/dialogs/progress.py:165 kram/tui/dialogs/question.py:22
+#: kram/tui/dialogs/about.py:77 kram/tui/dialogs/about.py:122
+#: kram/tui/dialogs/cache.py:106 kram/tui/dialogs/cache.py:184
+#: kram/tui/dialogs/columns.py:70 kram/tui/dialogs/install.py:171
+#: kram/tui/dialogs/notifier.py:103 kram/tui/dialogs/progress.py:165
+#: kram/tui/dialogs/question.py:22 kram/tui/dialogs/upgrade.py:149
 msgid "Close"
 msgstr "Закрити"
 
-#: kram/tui/dialogs/about.py:81 kram/tui/window.py:269
-msgid "Not in this version yet"
-msgstr "У цій версії ще немає"
+#: kram/tui/dialogs/about.py:117 kram/tui/dialogs/cache.py:97
+#: kram/tui/dialogs/keys.py:87 kram/tui/dialogs/progress.py:68
+msgid "scroll"
+msgstr "гортати"
 
 #: kram/tui/dialogs/apply.py:69
 #, python-brace-format
@@ -4328,12 +4367,12 @@ msgstr "{size} вільно на {mount}."
 msgid "apply"
 msgstr "застосувати"
 
-#: kram/tui/dialogs/apply.py:284 kram/tui/dialogs/install.py:180
+#: kram/tui/dialogs/apply.py:284 kram/tui/dialogs/install.py:183
 msgid "tick"
 msgstr "позначити"
 
-#: kram/tui/dialogs/apply.py:285 kram/tui/dialogs/path.py:79
-#: kram/tui/dialogs/question.py:60
+#: kram/tui/dialogs/apply.py:285 kram/tui/dialogs/filters.py:202
+#: kram/tui/dialogs/path.py:79 kram/tui/dialogs/question.py:60
 msgid "cancel"
 msgstr "скасувати"
 
@@ -4349,11 +4388,6 @@ msgstr "Розташування"
 msgid "Download again…"
 msgstr "Завантажити знову…"
 
-#: kram/tui/dialogs/cache.py:97 kram/tui/dialogs/keys.py:87
-#: kram/tui/dialogs/progress.py:68
-msgid "scroll"
-msgstr "гортати"
-
 #: kram/tui/dialogs/cache.py:180
 msgid "Delete unused…"
 msgstr "Видалити непотрібні…"
@@ -4366,10 +4400,42 @@ msgstr "Шукати в усіх каталогах…"
 msgid "compare"
 msgstr "порівняти"
 
-#: kram/tui/dialogs/copr.py:47 kram/tui/dialogs/repos.py:56
+#: kram/tui/dialogs/columns.py:31
+msgid "Columns…"
+msgstr "Стовпці…"
+
+#: kram/tui/dialogs/columns.py:62 kram/tui/menu.py:91
+msgid "move"
+msgstr "перейти"
+
+#: kram/tui/dialogs/columns.py:62
+msgid "show"
+msgstr "показати"
+
+#: kram/tui/dialogs/columns.py:63
+msgid "width"
+msgstr "ширина"
+
+#: kram/tui/dialogs/columns.py:65 kram/tui/dialogs/copr.py:47
+#: kram/tui/dialogs/repos.py:56
 msgctxt "short column header"
 msgid "On"
 msgstr "Увімк."
+
+#: kram/tui/dialogs/columns.py:66
+msgctxt "column of the list"
+msgid "Column"
+msgstr "Стовпець"
+
+#: kram/tui/dialogs/columns.py:67
+msgctxt "column width"
+msgid "Width"
+msgstr "Ширина"
+
+#: kram/tui/dialogs/columns.py:95
+msgctxt "column width"
+msgid "auto"
+msgstr "авто"
 
 #: kram/tui/dialogs/copr.py:103
 msgid "enable"
@@ -4397,17 +4463,33 @@ msgstr "{project} вже увімкнено"
 msgid "No COPR projects yet. Search for one below."
 msgstr "Ще немає проєктів COPR. Знайдіть проєкт нижче."
 
+#: kram/tui/dialogs/filters.py:202
+msgid "save"
+msgstr "зберегти"
+
+#: kram/tui/dialogs/filters.py:214
+msgid "Conditions"
+msgstr "Умови"
+
+#: kram/tui/dialogs/filters.py:224 kram/tui/dialogs/question.py:22
+msgid "OK"
+msgstr "Гаразд"
+
+#: kram/tui/dialogs/filters.py:265
+msgid "No filters yet. New makes one."
+msgstr "Фільтрів ще немає. «Новий» створює фільтр."
+
 #: kram/tui/dialogs/history.py:92
 msgid "show package"
 msgstr "показати пакунок"
 
-#: kram/tui/dialogs/install.py:135
+#: kram/tui/dialogs/install.py:138
 msgid "Install package file"
 msgstr "Встановлення файлу пакунка"
 
 #. TRANSLATORS: the terminal's Install package file dialog: the files `rpm -V` found missing or
 #. changed in the installed copy, which a reinstall puts back
-#: kram/tui/dialogs/install.py:148
+#: kram/tui/dialogs/install.py:151
 msgid "What reinstalling repairs"
 msgstr "Що виправить перевстановлення"
 
@@ -4484,17 +4566,13 @@ msgstr "журнал"
 msgid "stop"
 msgstr "зупинити"
 
-#: kram/tui/dialogs/progress.py:208
+#: kram/tui/dialogs/progress.py:208 kram/tui/dialogs/upgrade.py:208
 msgid "not while it runs"
 msgstr "не під час роботи"
 
 #: kram/tui/dialogs/question.py:22
 msgid "No"
 msgstr "Ні"
-
-#: kram/tui/dialogs/question.py:22
-msgid "OK"
-msgstr "Гаразд"
 
 #: kram/tui/dialogs/question.py:22
 msgid "Yes"
@@ -4569,17 +4647,21 @@ msgstr "Зміни в репозиторіях ще не застосовано.
 msgid "Close without applying"
 msgstr "Закрити без застосування"
 
-#: kram/tui/menu.py:49
+#: kram/tui/dialogs/upgrade.py:142
+msgid "To upgrade, run in a terminal:"
+msgstr "Щоб оновити систему, виконайте в терміналі:"
+
+#: kram/tui/menu.py:50
 msgid "Colours…"
 msgstr "Кольори…"
 
-#: kram/tui/menu.py:90
-msgid "move"
-msgstr "перейти"
-
-#: kram/tui/menu.py:90
+#: kram/tui/menu.py:91
 msgid "run"
 msgstr "виконати"
+
+#: kram/tui/menu.py:170
+msgid "Which columns the package list shows, their order and their widths"
+msgstr "Які стовпці показує список пакунків, їхній порядок і ширина"
 
 #: kram/tui/package_list.py:67
 msgid "Move the cursor"
@@ -4593,51 +4675,51 @@ msgstr "Розширити виділення"
 msgid "Scroll sideways"
 msgstr "Гортати вбік"
 
-#: kram/tui/package_list.py:79
+#: kram/tui/package_list.py:83
 msgctxt "short column header"
 msgid "Installed"
 msgstr "Встановлена"
 
-#: kram/tui/package_list.py:80
+#: kram/tui/package_list.py:84
 msgctxt "short column header"
 msgid "Latest"
 msgstr "Остання"
 
-#: kram/tui/package_list.py:81
+#: kram/tui/package_list.py:85
 msgctxt "short column header"
 msgid "Size"
 msgstr "Розмір"
 
-#: kram/tui/package_list.py:82
+#: kram/tui/package_list.py:86
 msgctxt "short column header"
 msgid "Download"
 msgstr "Завантаження"
 
-#: kram/tui/package_list.py:259
+#: kram/tui/package_list.py:289
 msgid "Sort"
 msgstr "Сортувати"
 
-#: kram/tui/package_list.py:260
+#: kram/tui/package_list.py:290
 msgid "Reverse the sort"
 msgstr "Обернути сортування"
 
-#: kram/tui/package_list.py:262
+#: kram/tui/package_list.py:292
 msgid "Mark the likely action"
 msgstr "Позначити очікувану дію"
 
-#: kram/tui/package_list.py:265
+#: kram/tui/package_list.py:295
 msgid "Mark for installation or upgrade"
 msgstr "Позначити для встановлення або оновлення"
 
-#: kram/tui/package_list.py:269
+#: kram/tui/package_list.py:299
 msgid "Lock or unlock the version"
 msgstr "Заблокувати або розблокувати версію"
 
-#: kram/tui/package_list.py:272
+#: kram/tui/package_list.py:302
 msgid "Context menu"
 msgstr "Контекстне меню"
 
-#: kram/tui/package_list.py:274
+#: kram/tui/package_list.py:304
 msgid "Clear the selection"
 msgstr "Зняти виділення"
 
@@ -4751,51 +4833,57 @@ msgstr "Фільтрувати список за пунктом"
 msgid "Previous or next view"
 msgstr "Попередній або наступний вигляд"
 
-#: kram/tui/sidebar.py:288 kram/tui/sidebar.py:361
+#: kram/tui/sidebar.py:288 kram/tui/sidebar.py:366
 msgid "Views"
 msgstr "Вигляди"
 
-#: kram/tui/sidebar.py:334
+#: kram/tui/sidebar.py:339
 msgctxt "sidebar key hint"
 msgid "next"
 msgstr "далі"
 
-#: kram/tui/sidebar.py:334
+#: kram/tui/sidebar.py:339
 msgctxt "sidebar key hint"
 msgid "prev"
 msgstr "назад"
 
-#: kram/tui/sidebar.py:335
+#: kram/tui/sidebar.py:340
 msgctxt "sidebar key hint"
 msgid "all"
 msgstr "усі"
 
-#: kram/tui/ui_port.py:78
+#: kram/tui/ui_port.py:106
 msgid "No desktop to open it in: the address is copied"
 msgstr "Немає робочого середовища, щоб відкрити: адресу скопійовано"
 
-#: kram/tui/ui_port.py:85
+#: kram/tui/ui_port.py:113
 msgid "No desktop to show it in: the path is copied"
 msgstr "Немає робочого середовища, щоб показати: шлях скопійовано"
 
-#: kram/tui/ui_port.py:89
+#: kram/tui/ui_port.py:117
 msgid "Copied"
 msgstr "Скопійовано"
 
-#: kram/tui/widgets.py:200 kram/tui/widgets.py:262
+#: kram/tui/widgets.py:203 kram/tui/widgets.py:409
 msgid "pick"
 msgstr "вибрати"
 
-#: kram/tui/window.py:216
+#: kram/tui/window.py:250
 msgid "Another package manager is running: waiting"
 msgstr "Працює інший менеджер пакунків: чекаємо"
 
-#: kram/tui/window.py:246
+#. TRANSLATORS: on the top line of the terminal front end; the key that opens its dialog follows
+#: kram/tui/window.py:283
+#, python-brace-format
+msgid "Fedora {version} is out"
+msgstr "Вийшла Fedora {version}"
+
+#: kram/tui/window.py:298
 #, python-brace-format
 msgid "“{text}” in {filter}"
 msgstr "«{text}» у {filter}"
 
-#: kram/tui/window.py:251
+#: kram/tui/window.py:303
 #, python-brace-format
 msgid "{n} change marked"
 msgid_plural "{n} changes marked"
@@ -4803,41 +4891,44 @@ msgstr[0] "{n} зміну позначено"
 msgstr[1] "{n} зміни позначено"
 msgstr[2] "{n} змін позначено"
 
-#: kram/tui/window.py:388
+#: kram/tui/window.py:437
 msgid "Open package file"
 msgstr "Відкрити файл пакунка"
 
-#: kram/tui/window.py:470
+#: kram/tui/window.py:550
 msgid "Nothing is marked"
 msgstr "Нічого не позначено"
 
-#: kram/tui/window.py:472
+#: kram/tui/window.py:552
 msgid "No package has an upgrade"
 msgstr "Жоден пакунок не має оновлення"
 
-#: kram/tui/window.py:474
+#: kram/tui/window.py:554
 msgid "No upgrade of this kind"
 msgstr "Немає оновлень такого виду"
 
-#: kram/tui/window.py:476
+#: kram/tui/window.py:556
 msgid "No unneeded dependencies"
 msgstr "Немає непотрібних залежностей"
 
-#: kram/tui/window.py:478
+#: kram/tui/window.py:558
 msgid "Only for one package at a time"
 msgstr "Лише для одного пакунка за раз"
 
-#: kram/tui/window.py:479 kram/tui/window.py:482
+#: kram/tui/window.py:559 kram/tui/window.py:562
 msgid "Not for this package"
 msgstr "Не для цього пакунка"
 
-#: kram/tui/window.py:481
+#: kram/tui/window.py:561
 msgid "Not marked"
 msgstr "Не позначено"
 
-#: kram/tui/window.py:560
+#: kram/tui/window.py:637
 msgid "Sort by"
 msgstr "Сортувати за"
+
+#~ msgid "Not in this version yet"
+#~ msgstr "У цій версії ще немає"
 
 #~ msgid "hide"
 #~ msgstr "сховати"

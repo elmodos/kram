@@ -46,7 +46,7 @@ PANELS = ("sidebar", "details")
 PINNED = {"both": {"sidebar", "details"}, "sidebar": {"sidebar"}, "details": {"details"}, "none": set()}
 # the window's own keys: off while another screen is up or a text field has the focus (the module's docstring)
 WINDOW_ACTIONS = frozenset({"toggle_panel", "find", "back_to_list", "quit", "back", "menu", "keys", "run",
-                            "mark_upgrades"})
+                            "mark_upgrades", "release"})
 
 CSS = PALETTE_CSS + """
 /* 16 colours: Textual draws some widgets in colours blended with transparency, which a 16-colour terminal cannot
@@ -92,6 +92,7 @@ App:ansi .window { background: $background; }
 .dialog .gap { margin-top: 1; }
 .dialog.about { max-width: 64; }
 .dialog.keys { max-width: 80; }
+.dialog.columns { max-width: 60; }
 /* modal windows in the middle of the screen (the question and path dialogs of step 1.1 were left at the top left) */
 QuestionDialog, PathDialog, AboutDialog, KeysDialog { align: center middle; }
 .keys #keys-list { height: auto; max-height: 100%; background: $surface; }
@@ -273,6 +274,8 @@ def _window_bindings() -> list[Binding]:
         # with advisories, the list of Edit → Mark Upgrades first (§7.5.2)
         Binding(bindings_key("mark_upgrades"), "mark_upgrades", labels["mark_upgrades"], show=False),
         Binding(bindings_key("quit"), "quit", _("Quit")),
+        # the Fedora N dialog, while the top line says a new release is out (§5.4)
+        Binding("r", "release", _("A new Fedora release"), show=False),
         # Textual's own: says how to quit, instead of quitting at a reflex ctrl+c
         Binding("ctrl+c", "help_quit", show=False, system=True),
     ]
@@ -334,6 +337,10 @@ class KramApp(App, inherit_bindings=False):
         self.window.query_one("#list").focus()
         self.apply_layout()
         self.main.start()
+
+    def on_unmount(self) -> None:
+        if self.main is not None:
+            self.main.detach()
 
     @property
     def window(self) -> Screen:
@@ -493,6 +500,18 @@ class KramApp(App, inherit_bindings=False):
         self.focus_target(name).focus()
         self.update_list_inset()
 
+    def action_resize_panel(self, name: str, step: int) -> None:
+        """`<` `>` in a pinned panel (WINDOW_PANES_SAVED): the sidebar narrower or wider, the details lower or higher,
+        saved at once (§13.3). The list keeps room for its header and a few rows; a slide-over keeps its size."""
+        if self.narrow:
+            return
+        key = preferences.TUI_SIDEBAR_WIDTH if name == "sidebar" else preferences.TUI_DETAILS_HEIGHT
+        low, high = preferences.pref(key).range
+        body = self.window.query_one(Body).size
+        high = min(high, body.width // 2 if name == "sidebar" else body.height - 6)
+        preferences.set_value(key, max(low, min(high, preferences.value(key) + step)))
+        self.apply_layout()
+
     def action_find(self) -> None:
         """`/`, ctrl+f: the search dialog (§7.6)."""
         self.main.find()
@@ -511,6 +530,10 @@ class KramApp(App, inherit_bindings=False):
     def action_mark_upgrades(self) -> None:
         """`U`, ctrl+u: all upgrades, or by advisory kind (MainWindow.mark_upgrades)."""
         self.main.mark_upgrades()
+
+    def action_release(self) -> None:
+        """`r`: the Fedora N dialog (§10.12)."""
+        self.main.open_upgrade()
 
     def action_menu(self) -> None:
         """`m`, `f9`: the menu popup (§7.7.1)."""
@@ -544,6 +567,8 @@ class KramApp(App, inherit_bindings=False):
         else reacts either, Textual's command palette included."""
         if action in WINDOW_ACTIONS and (len(self.screen_stack) > 1 or isinstance(self.focused, Input)):
             return False
+        if action == "release" and (self.main is None or self.main.releases.target() is None):
+            return False  # only while the top line offers it
         if action == "command_palette" and isinstance(self.screen, TooSmall):
             return False
         return True
