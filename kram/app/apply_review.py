@@ -2,6 +2,7 @@
 grouped; what it costs on disk and whether that fits; warnings for removals that hurt; the recommendations the user
 may leave out, resolving again for each; and the equivalent dnf5 command. The front end draws what `ApplyReview`
 tells its `ApplyReviewView`."""
+import os
 import re
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -11,7 +12,7 @@ from ..core.marks import dnf5_command
 from ..core.model import PreviewItem, Recommendation, TransactionPreview
 from ..core.origin import display_repo
 from ..core.session import current_session
-from ..helper.kram_helper import space_shortfall
+from ..helper.kram_helper import mount_point, space_shortfall
 from ..i18n import N_, _, ngettext
 from .columns import human_size
 from .doc import Span, bold, filled
@@ -117,6 +118,23 @@ def shortfall(preview: TransactionPreview, download_only: bool) -> list[tuple[st
         return space_shortfall(preview.to_download, 0 if download_only else preview.size_change, preview.cache_dir)
     except OSError:  # cannot tell: rpm still checks
         return []
+
+
+def free_space(preview: TransactionPreview, download_only: bool) -> list[tuple[str, int]]:
+    """[(mount point, bytes free)] of the filesystems applying the preview (or only downloading its packages) takes
+    room on, as `shortfall` counts them: for a front end that shows the free space next to the sizes (the terminal's
+    summary line, docs/TUI_SPEC.md §10.1). [] when there is nothing to check against or it cannot tell."""
+    if not preview.cache_dir:
+        return []
+    free: dict[str, int] = {}
+    try:
+        for path, n in ((preview.cache_dir, preview.to_download), ("/", 0 if download_only else preview.size_change)):
+            if n > 0 and (mount := mount_point(path)) not in free:
+                st = os.statvfs(mount)
+                free[mount] = st.f_bavail * st.f_frsize
+    except OSError:
+        return []
+    return list(free.items())
 
 
 def groups_only_note(preview: TransactionPreview) -> str:

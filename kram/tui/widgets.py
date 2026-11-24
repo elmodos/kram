@@ -97,7 +97,9 @@ class Button(Widget, can_focus=True):
 
 
 class CheckBox(Widget, can_focus=True):
-    """`[x] Label` / `[ ] Label`; space, Enter or a click ticks it. The tick is in the marked role."""
+    """`[x] Label` / `[ ] Label`; space, Enter or a click ticks it. The tick is in the marked role. A disabled one is
+    dim and deaf to keys and clicks, but keeps the focus: it is off only for a moment (the Apply dialog resolving
+    again), and the focus jumping away from the box just ticked would lose the user's place."""
 
     class Changed(Message):
         def __init__(self, checkbox: "CheckBox", value: bool):
@@ -112,12 +114,15 @@ class CheckBox(Widget, can_focus=True):
     DEFAULT_CSS = """
     CheckBox { width: auto; height: 1; background: transparent; color: $foreground; }
     CheckBox:focus { text-style: reverse; }
+    CheckBox.-off { text-style: dim; }
+    CheckBox.-off:focus { text-style: reverse dim; }
     """
 
     def __init__(self, label: str, value: bool = False, id: str | None = None, classes: str = ""):
         super().__init__(id=id, classes=classes)
         self.label = label
         self.value = value
+        self.enabled = True
 
     def render(self) -> Text:
         t = Text()
@@ -130,7 +135,18 @@ class CheckBox(Widget, can_focus=True):
         self.value = value
         self.refresh()
 
+    def set_label(self, label: str) -> None:
+        self.label = label
+        self.refresh(layout=True)
+
+    def set_enabled(self, on: bool) -> None:
+        # not Textual's `disabled`: that dims by blending, which a 16-colour terminal cannot show, and drops the focus
+        self.enabled = on
+        self.set_class(not on, "-off")
+
     def action_toggle(self) -> None:
+        if not self.enabled:
+            return
         self.value = not self.value
         self.refresh()
         self.post_message(self.Changed(self, self.value))

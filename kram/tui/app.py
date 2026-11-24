@@ -44,7 +44,8 @@ SLIDE_HEIGHT = 11  # the details slide-over; at most 3/5 of the body, so that ro
 PANELS = ("sidebar", "details")
 PINNED = {"both": {"sidebar", "details"}, "sidebar": {"sidebar"}, "details": {"details"}, "none": set()}
 # the window's own keys: off while another screen is up or a text field has the focus (the module's docstring)
-WINDOW_ACTIONS = frozenset({"toggle_panel", "find", "back_to_list", "quit", "back", "menu", "keys", "run"})
+WINDOW_ACTIONS = frozenset({"toggle_panel", "find", "back_to_list", "quit", "back", "menu", "keys", "run",
+                            "mark_upgrades"})
 
 CSS = PALETTE_CSS + """
 /* 16 colours: Textual draws some widgets in colours blended with transparency, which a 16-colour terminal cannot
@@ -258,7 +259,10 @@ def _window_bindings() -> list[Binding]:
         Binding(",".join(KEYS_KEYS), "keys", _("Keys")),
         Binding("escape", "back_to_list", _("Focus the list"), show=False),
         Binding(bindings_key("back"), "back", labels["back"], show=False),
-        *[Binding(bindings_key(a), f"run('{a}')", labels[a], show=False) for a in WINDOW_RUN],
+        *[Binding(bindings_key(a), f"run('{a}')", labels[a], show=False)
+          for a in WINDOW_RUN if a != "mark_upgrades"],
+        # with advisories, the list of Edit → Mark Upgrades first (§7.5.2)
+        Binding(bindings_key("mark_upgrades"), "mark_upgrades", labels["mark_upgrades"], show=False),
         Binding(bindings_key("quit"), "quit", _("Quit")),
         # Textual's own: says how to quit, instead of quitting at a reflex ctrl+c
         Binding("ctrl+c", "help_quit", show=False, system=True),
@@ -488,6 +492,10 @@ class KramApp(App, inherit_bindings=False):
     def action_run(self, action_id: str) -> None:
         """A key of kram.tui.keymap: what the menu's entry does (MainWindow.run_action)."""
         self.main.run_action(action_id)
+
+    def action_mark_upgrades(self) -> None:
+        """`U`, ctrl+u: all upgrades, or by advisory kind (MainWindow.mark_upgrades)."""
+        self.main.mark_upgrades()
 
     def action_menu(self) -> None:
         """`m`, `f9`: the menu popup (§7.7.1)."""

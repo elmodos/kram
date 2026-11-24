@@ -4,8 +4,10 @@ docs/TUI_SPEC.md §11 where no polkit agent runs: f5 → pkexec without a termin
 Continue → Kram steps aside → polkit's text agent asks → the answer → Kram comes back.
 
 Scenarios: the right password (the reload runs, the helper runs as root, a second f5 asks nothing), a wrong one
-(Not authorized, Try again offered), Ctrl+C at the prompt (Kram survives and quits cleanly). Exit status 1 when one
-did not go as §11 says.
+(Not authorized, Try again offered), Ctrl+C at the prompt (Kram survives and quits cleanly), and a real transaction
+(§7.5, §10.1): search a small package that is not installed, mark it with +, review it with a, apply with ctrl+a,
+authenticate, and check with rpm that it is installed; then mark it with - and apply again (no password the second
+time), and check that it is gone. Exit status 1 when one did not go as the spec says.
 """
 import fcntl
 import os
@@ -19,7 +21,8 @@ import termios
 import time
 
 ANSI = re.compile(rb"\x1b\[[0-9;?<>=]*[ -/]*[@-~]|\x1b[()][0-9A-B]|\x1b[=>]|\x1b\][^\x07\x1b]*(\x07|\x1b\\)")
-F5, ENTER, ESC, CTRL_C = b"\x1b[15~", b"\r", b"\x1b", b"\x03"
+F5, ENTER, ESC, CTRL_C, CTRL_A = b"\x1b[15~", b"\r", b"\x1b", b"\x03", b"\x01"
+PACKAGE = os.environ.get("KRAM_CHECK_PACKAGE", "tree")  # small, no dependencies beyond glibc, not in the image
 REFRESH_SECONDS = int(os.environ.get("KRAM_CHECK_REFRESH_SECONDS", "600"))  # a metadata refresh over the network
 
 
@@ -86,7 +89,8 @@ def start() -> Term:
     return Term(["su", "-l", "user", "--pty", "-c", f"cd /src && {env} python3 -m kram.tui"])
 
 
-def run(name: str, scenario) -> bool:
+def run(name: str, scenario, reload: bool = True) -> bool:
+    """`reload`: the scenario starts at the Administrator rights of f5; else at the loaded window."""
     t = start()
     ok = True
 
@@ -100,14 +104,15 @@ def run(name: str, scenario) -> bool:
     if not check(t.wait_for("Packages", 90), "the window is up"):
         print("  the terminal:", repr(t.text()[-800:]))
         return False
-    # f5 does nothing until the catalog is loaded: press it until the dialog comes
-    mark = len(t.raw)
-    end = time.monotonic() + 180
-    while time.monotonic() < end and not t.seen("Administrator rights", mark):
-        t.send(F5, 2)
-    check(t.seen("Administrator rights", mark), "f5: no agent, so Kram says why it steps aside")
-    check(t.seen("needs administrator rights", mark), "…with what needs them")
-    t.read(1)  # let the dialog take the focus before the key
+    if reload:
+        # f5 does nothing until the catalog is loaded: press it until the dialog comes
+        mark = len(t.raw)
+        end = time.monotonic() + 180
+        while time.monotonic() < end and not t.seen("Administrator rights", mark):
+            t.send(F5, 2)
+        check(t.seen("Administrator rights", mark), "f5: no agent, so Kram says why it steps aside")
+        check(t.seen("needs administrator rights", mark), "…with what needs them")
+        t.read(1)  # let the dialog take the focus before the key
     scenario(t, check)
     t.send(ESC, 0.6)
     t.send(b"q", 1)
@@ -177,9 +182,64 @@ def ctrl_c(t: Term, check) -> None:
     t.send(ENTER, 1)  # Close
 
 
+def installed(name: str) -> bool:
+    return subprocess.run(["rpm", "-q", name], capture_output=True).returncode == 0
+
+
+def apply_marked(t: Term, check, what: str, authenticate: bool) -> None:
+    """`a`, the review, ctrl+a, the password when asked, the transaction to its end, Close."""
+    mark = len(t.raw)
+    t.send(b"a", 0.5)
+    check(t.wait_for("Apply changes", 120, mark), f"a: the Apply changes dialog reviews {what}")
+    check(t.seen(f"{what} (1)", mark) and t.seen(PACKAGE, mark), f"…{what}: {PACKAGE}")
+    check(t.seen("sudo dnf5", mark), "…with the dnf5 command")
+    t.read(1)
+    mark = len(t.raw)
+    t.send(CTRL_A, 1)
+    if authenticate:
+        check(t.wait_for("Administrator rights", 30, mark), "ctrl+a: the transaction needs administrator rights")
+        t.read(1)
+        to_prompt(t, check)
+        t.send(b"secret\r", 0.5)
+    else:
+        check(not t.wait_for("Administrator rights", 3, mark), "ctrl+a: no password asked again")
+    check(t.wait_for("Applying changes", 60, mark), "the progress dialog shows the transaction")
+    end = time.monotonic() + REFRESH_SECONDS
+    while time.monotonic() < end and not t.seen("Done.", mark) and not t.seen("Error:", mark):
+        if t.seen("Import key", mark):  # a repository's key, the first time (§10.2): Yes is focused
+            t.send(ENTER, 1)
+            mark = len(t.raw)
+        t.read(1)
+    check(t.seen("Done.", mark), "the transaction ran to its end")
+    mark = len(t.raw)
+    t.send(ENTER, 2)  # Close; the catalog loads again
+    check(t.wait_for("Metadata:", 120, mark), "…and Kram reloaded the catalog")
+
+
+def transaction(t: Term, check) -> None:
+    check(not installed(PACKAGE), f"{PACKAGE} is not installed before")
+    check(t.wait_for("Metadata:", 120), "the catalog is loaded")
+    t.read(1)
+    mark = len(t.raw)
+    t.send(b"/", 1)
+    t.send(PACKAGE.encode(), 1.5)
+    t.send(ENTER, 1)
+    check(t.wait_for(f"“{PACKAGE}” in All", 20, mark), f"the search for {PACKAGE} filters the list")
+    mark = len(t.raw)
+    t.send(b"+", 1)
+    check(t.wait_for("1 change marked", 10, mark), "+: marked for installation, the top line counts it")
+    apply_marked(t, check, "To be installed", authenticate=True)
+    check(installed(PACKAGE), f"rpm -q {PACKAGE}: installed")
+    mark = len(t.raw)
+    t.send(b"-", 2)
+    check(t.wait_for("1 change marked", 10, mark), "-: marked for removal")
+    apply_marked(t, check, "To be removed", authenticate=False)
+    check(not installed(PACKAGE), f"rpm -q {PACKAGE}: removed")
+
+
 def main() -> None:
     results = [run("right password", right_password), run("wrong password", wrong_password),
-               run("Ctrl+C at the prompt", ctrl_c)]
+               run("Ctrl+C at the prompt", ctrl_c), run("a transaction: install, then remove", transaction, False)]
     print("### result:", "all scenarios ok" if all(results) else "FAILED", flush=True)
     sys.exit(0 if all(results) else 1)
 

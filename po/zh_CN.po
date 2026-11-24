@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kram\n"
 "Report-Msgid-Bugs-To: https://github.com/elmodos/kram/issues\n"
-"POT-Creation-Date: 2026-11-24 05:48+0200\n"
+"POT-Creation-Date: 2026-11-24 09:42+0200\n"
 "PO-Revision-Date: 2026-11-04 14:07+0200\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -79,7 +79,7 @@ msgid ""
 msgstr "像 dnf autoremove 一样，将不再被任何软件包需要的依赖标记为删除"
 
 #: kram/app/actions.py:70 kram/gtk/dialogs/apply.py:172
-#: kram/qt/apply_dialog.py:218
+#: kram/qt/apply_dialog.py:218 kram/tui/dialogs/apply.py:214
 msgid "Apply"
 msgstr "应用"
 
@@ -200,7 +200,7 @@ msgstr "打开软件包文件…"
 msgid "Install a downloaded .rpm file (you can also drop it on the window)"
 msgstr "安装已下载的 .rpm 文件（也可以把它拖放到窗口上）"
 
-#: kram/app/actions.py:100 kram/tui/app.py:262 kram/tui/app.py:549
+#: kram/app/actions.py:100 kram/tui/app.py:266 kram/tui/app.py:557
 msgid "Quit"
 msgstr "退出"
 
@@ -321,84 +321,84 @@ msgstr "（正在加载…）"
 msgid "No older versions in the repositories"
 msgstr "软件源中没有更旧的版本"
 
-#: kram/app/apply_review.py:28
+#: kram/app/apply_review.py:29
 msgid "To be installed"
 msgstr "将安装"
 
-#: kram/app/apply_review.py:29
+#: kram/app/apply_review.py:30
 msgid "To be installed with groups"
 msgstr "将随组安装"
 
-#: kram/app/apply_review.py:30
+#: kram/app/apply_review.py:31
 msgid "To be installed as dependencies"
 msgstr "将作为依赖安装"
 
-#: kram/app/apply_review.py:31
+#: kram/app/apply_review.py:32
 msgid "To be upgraded"
 msgstr "将升级"
 
-#: kram/app/apply_review.py:32
+#: kram/app/apply_review.py:33
 msgid "To be downgraded"
 msgstr "将降级"
 
-#: kram/app/apply_review.py:33
+#: kram/app/apply_review.py:34
 msgid "To be reinstalled"
 msgstr "将重新安装"
 
-#: kram/app/apply_review.py:34
+#: kram/app/apply_review.py:35
 msgid "To be removed"
 msgstr "将删除"
 
-#: kram/app/apply_review.py:35
+#: kram/app/apply_review.py:36
 msgid "To be removed with groups"
 msgstr "将随组删除"
 
-#: kram/app/apply_review.py:36
+#: kram/app/apply_review.py:37
 msgid "To be removed as dependent or no longer needed"
 msgstr "因依赖关系或不再需要而将删除"
 
-#: kram/app/apply_review.py:38
+#: kram/app/apply_review.py:39
 msgid "Oldest kernels removed to stay within the limit of kept versions"
 msgstr "删除最旧的内核，以保持在保留版本数量的限制内"
 
-#: kram/app/apply_review.py:39
+#: kram/app/apply_review.py:40
 msgid "Install reason changes"
 msgstr "安装原因变更"
 
-#: kram/app/apply_review.py:41 kram/app/columns.py:71
+#: kram/app/apply_review.py:42 kram/app/columns.py:71
 msgid "dependency"
 msgstr "依赖"
 
-#: kram/app/apply_review.py:41 kram/app/columns.py:69 kram/app/history.py:256
+#: kram/app/apply_review.py:42 kram/app/columns.py:69 kram/app/history.py:256
 #: kram/app/install.py:51
 msgid "group"
 msgstr "组"
 
-#: kram/app/apply_review.py:41 kram/app/columns.py:68
+#: kram/app/apply_review.py:42 kram/app/columns.py:68
 msgid "user"
 msgstr "用户"
 
-#: kram/app/apply_review.py:41 kram/app/columns.py:72
+#: kram/app/apply_review.py:42 kram/app/columns.py:72
 msgid "weak dependency"
 msgstr "弱依赖"
 
-#: kram/app/apply_review.py:42
+#: kram/app/apply_review.py:43
 msgid "unneeded"
 msgstr "不再需要"
 
-#: kram/app/apply_review.py:45
+#: kram/app/apply_review.py:46
 msgid "Groups to be installed"
 msgstr "将安装的组"
 
-#: kram/app/apply_review.py:46
+#: kram/app/apply_review.py:47
 msgid "Groups to be upgraded"
 msgstr "将升级的组"
 
-#: kram/app/apply_review.py:47
+#: kram/app/apply_review.py:48
 msgid "Groups to be removed"
 msgstr "将删除的组"
 
-#: kram/app/apply_review.py:104
+#: kram/app/apply_review.py:105
 #, python-brace-format
 msgid ""
 "Installed before “{group}”: it was there with the system or for something "
@@ -406,7 +406,7 @@ msgid ""
 msgstr ""
 "在“{group}”之前安装：它随系统而来或为其他用途安装，删除该组也会把它一起删除。"
 
-#: kram/app/apply_review.py:128
+#: kram/app/apply_review.py:146
 msgid ""
 "All packages of the group are already installed: dnf only records the group "
 "as installed."
@@ -415,7 +415,7 @@ msgid_plural ""
 "groups as installed."
 msgstr[0] "该组的所有软件包都已安装：dnf 只会将该组记录为已安装。"
 
-#: kram/app/apply_review.py:132
+#: kram/app/apply_review.py:150
 msgid ""
 "No package goes with the group (you installed them yourself, or something "
 "else needs them): dnf only records the group as removed."
@@ -426,11 +426,11 @@ msgstr[0] ""
 "没有软件包随该组一起删除（是您自己安装的，或其他软件需要它们）：dnf 只会将该"
 "组记录为已删除。"
 
-#: kram/app/apply_review.py:136
+#: kram/app/apply_review.py:154
 msgid "No package changes: dnf only updates its record of the groups."
 msgstr "软件包没有变化：dnf 只会更新它对这些组的记录。"
 
-#: kram/app/apply_review.py:150
+#: kram/app/apply_review.py:168
 #, python-brace-format
 msgid ""
 "This removes the desktop you are using now ({desktop}: {names}): the session "
@@ -439,12 +439,12 @@ msgstr ""
 "这会删除您当前正在使用的桌面（{desktop}：{names}）：会话可能停止工作，并且可"
 "能无法再次登录。"
 
-#: kram/app/apply_review.py:154
+#: kram/app/apply_review.py:172
 #, python-brace-format
 msgid "Essential system packages will be removed: {names}."
 msgstr "将删除必要的系统软件包：{names}。"
 
-#: kram/app/apply_review.py:159
+#: kram/app/apply_review.py:177
 #, python-brace-format
 msgid ""
 "{n} package was installed before the group that takes it, with the system or "
@@ -455,81 +455,81 @@ msgid_plural ""
 msgstr[0] ""
 "{n} 个软件包在删除它们的组之前就已安装（随系统或为其他用途）：{names}。"
 
-#: kram/app/apply_review.py:163
+#: kram/app/apply_review.py:181
 #, python-brace-format
 msgid "{n} package will be removed."
 msgid_plural "{n} packages will be removed."
 msgstr[0] "将删除 {n} 个软件包。"
 
-#: kram/app/apply_review.py:164
+#: kram/app/apply_review.py:182
 msgid "Make sure this is what you want."
 msgstr "请确认这正是您想要的。"
 
-#: kram/app/apply_review.py:168 kram/app/install.py:508
+#: kram/app/apply_review.py:186 kram/app/install.py:508
 #, python-brace-format
 msgid "To download: {size}."
 msgstr "需下载：{size}。"
 
-#: kram/app/apply_review.py:169 kram/app/install.py:509
+#: kram/app/apply_review.py:187 kram/app/install.py:509
 #, python-brace-format
 msgid "Disk space change: {size}."
 msgstr "磁盘空间变化：{size}。"
 
-#: kram/app/apply_review.py:176
+#: kram/app/apply_review.py:194
 msgid "⚠ None of the marked changes can be carried out:"
 msgstr "⚠ 所有标记的更改都无法执行："
 
-#: kram/app/apply_review.py:177
+#: kram/app/apply_review.py:195
 msgid ""
 "⚠ Some marked changes cannot be carried out and are left out; the rest can "
 "be applied:"
 msgstr "⚠ 部分标记的更改无法执行，已被跳过；其余更改可以应用："
 
-#: kram/app/apply_review.py:178
+#: kram/app/apply_review.py:196
 msgid "Nothing to do: the marked changes are already in place."
 msgstr "无需操作：标记的更改已经生效。"
 
-#: kram/app/apply_review.py:187
+#: kram/app/apply_review.py:205
 #, python-brace-format
 msgid "Not enough disk space on {mount}: {size} more is needed."
 msgstr "{mount} 上的磁盘空间不足：还需要 {size}。"
 
-#: kram/app/apply_review.py:190
+#: kram/app/apply_review.py:208
 msgid ""
 "The download alone fits: “Download packages only” can fetch the packages now."
 msgstr "仅下载可以容纳：“仅下载软件包”现在就能获取这些软件包。"
 
-#: kram/app/apply_review.py:228
+#: kram/app/apply_review.py:246
 msgid ""
 "Pulled in because it complements packages being installed (language support, "
 "plugins)."
 msgstr "因补充正在安装的软件包（语言支持、插件）而被带入。"
 
-#: kram/app/apply_review.py:236
+#: kram/app/apply_review.py:254
 #, python-brace-format
 msgid "Recommended by dependencies ({n})"
 msgstr "由依赖推荐（{n}）"
 
-#: kram/app/apply_review.py:240
+#: kram/app/apply_review.py:258
 msgid "still installed: something else requires it"
 msgstr "仍会安装：其他软件包需要它"
 
-#: kram/app/apply_review.py:247
+#: kram/app/apply_review.py:265
 #, python-brace-format
 msgid "+{size}, {n} package"
 msgid_plural "+{size}, {n} packages"
 msgstr[0] "+{size}，{n} 个软件包"
 
-#: kram/app/apply_review.py:321 kram/app/browser.py:647 kram/app/install.py:303
+#: kram/app/apply_review.py:339 kram/app/browser.py:647 kram/app/install.py:303
 #: kram/app/install.py:337 kram/app/install.py:397
 msgid "Resolving dependencies…"
 msgstr "正在解析依赖关系…"
 
-#: kram/app/apply_review.py:330 kram/app/install.py:411
+#: kram/app/apply_review.py:348 kram/app/install.py:411
 msgid "These choices cannot be carried out:"
 msgstr "无法执行这些选择："
 
-#: kram/app/apply_review.py:334 kram/app/browser.py:656 kram/app/install.py:384
+#: kram/app/apply_review.py:352 kram/app/browser.py:656 kram/app/install.py:384
 #: kram/app/install.py:418
 #, python-brace-format
 msgid ""
@@ -1530,7 +1530,7 @@ msgid_plural ""
 "list."
 msgstr[0] "{n} 个软件源没有元数据，因此其软件包不在列表中。"
 
-#: kram/app/empty_list.py:58 kram/tui/window.py:259
+#: kram/app/empty_list.py:58 kram/tui/window.py:278
 msgid "Loading the package catalog…"
 msgstr "正在加载软件包目录…"
 
@@ -2443,15 +2443,15 @@ msgstr "固定的面板"
 msgid "Sidebar and details"
 msgstr "侧栏和详细信息"
 
-#: kram/app/preferences.py:109 kram/tui/app.py:254
+#: kram/app/preferences.py:109 kram/tui/app.py:255
 msgid "Sidebar"
 msgstr "侧栏"
 
 #: kram/app/preferences.py:110 kram/gtk/dialogs/install.py:92
 #: kram/gtk/dialogs/progress.py:50 kram/gtk/ui_port.py:32
 #: kram/qt/install_dialog.py:112 kram/qt/progress_dialog.py:57
-#: kram/tui/app.py:255 kram/tui/app.py:314 kram/tui/dialogs/progress.py:229
-#: kram/tui/package_list.py:271
+#: kram/tui/app.py:256 kram/tui/app.py:318 kram/tui/dialogs/progress.py:230
+#: kram/tui/package_list.py:273
 msgid "Details"
 msgstr "详细信息"
 
@@ -2842,7 +2842,7 @@ msgid "{shown} listed, {installed} installed, {upgrades}."
 msgid_plural "{shown} listed, {installed} installed, {upgrades}."
 msgstr[0] "显示 {shown} 个，已安装 {installed} 个，{upgrades}。"
 
-#: kram/app/status.py:21
+#: kram/app/status.py:21 kram/tui/dialogs/apply.py:63
 #, python-brace-format
 msgid "{install} to install/upgrade, {remove} to remove."
 msgid_plural "{install} to install/upgrade, {remove} to remove."
@@ -3308,29 +3308,35 @@ msgid "Size"
 msgstr "大小"
 
 #: kram/gtk/dialogs/apply.py:91 kram/qt/apply_dialog.py:101
+#: kram/tui/dialogs/apply.py:282
 msgid "Recommended packages."
 msgstr "推荐的软件包。"
 
 #: kram/gtk/dialogs/apply.py:92 kram/qt/apply_dialog.py:102
+#: kram/tui/dialogs/apply.py:283
 msgid ""
 "Not required, but suggested by the packages being installed. Uncheck what "
 "you do not want."
 msgstr "不是必需的，但正在安装的软件包推荐安装它们。取消勾选您不需要的项。"
 
 #: kram/gtk/dialogs/apply.py:128 kram/qt/apply_dialog.py:106
+#: kram/tui/dialogs/apply.py:294 kram/tui/dialogs/apply.py:312
 msgid "Recommended package"
 msgstr "推荐的软件包"
 
 #: kram/gtk/dialogs/apply.py:129 kram/qt/apply_dialog.py:106
+#: kram/tui/dialogs/apply.py:295 kram/tui/dialogs/apply.py:313
 msgid "Recommended by"
 msgstr "推荐者"
 
 #: kram/gtk/dialogs/apply.py:130 kram/qt/apply_dialog.py:106
+#: kram/tui/dialogs/apply.py:313
 msgid "Adds"
 msgstr "增加"
 
 #: kram/gtk/dialogs/apply.py:163 kram/gtk/dialogs/repos.py:38
 #: kram/qt/apply_dialog.py:156 kram/qt/repos_dialog.py:116
+#: kram/tui/dialogs/apply.py:195
 msgid "Apply changes"
 msgstr "应用更改"
 
@@ -3344,10 +3350,12 @@ msgstr "应用前请检查列表。"
 
 #: kram/gtk/dialogs/apply.py:211 kram/gtk/dialogs/install.py:117
 #: kram/qt/apply_dialog.py:209 kram/qt/install_dialog.py:139
+#: kram/tui/dialogs/apply.py:211
 msgid "Equivalent command"
 msgstr "等效命令"
 
 #: kram/gtk/dialogs/apply.py:218 kram/qt/apply_dialog.py:213
+#: kram/tui/dialogs/apply.py:210
 msgid "Download packages only"
 msgstr "仅下载软件包"
 
@@ -3430,7 +3438,7 @@ msgid "Hub"
 msgstr "中心"
 
 #: kram/gtk/dialogs/copr.py:50 kram/gtk/dialogs/repos.py:152
-#: kram/qt/copr_dialog.py:51 kram/qt/repos_dialog.py:67 kram/tui/app.py:313
+#: kram/qt/copr_dialog.py:51 kram/qt/repos_dialog.py:67 kram/tui/app.py:317
 msgid "Packages"
 msgstr "软件包"
 
@@ -3623,17 +3631,17 @@ msgid "Other update notifiers"
 msgstr "其他更新通知程序"
 
 #: kram/gtk/dialogs/progress.py:38 kram/qt/progress_dialog.py:42
-#: kram/tui/dialogs/progress.py:98
+#: kram/tui/dialogs/progress.py:99
 msgid "Download"
 msgstr "下载"
 
 #: kram/gtk/dialogs/progress.py:40 kram/qt/progress_dialog.py:44
-#: kram/tui/dialogs/progress.py:99
+#: kram/tui/dialogs/progress.py:100
 msgid "Installation"
 msgstr "安装"
 
 #: kram/gtk/dialogs/progress.py:57 kram/qt/progress_dialog.py:61
-#: kram/tui/dialogs/progress.py:162
+#: kram/tui/dialogs/progress.py:163
 msgid "Close when finished successfully"
 msgstr "成功完成后关闭"
 
@@ -3780,7 +3788,7 @@ msgid "{n} of them is a security update"
 msgid_plural "{n} of them are security updates"
 msgstr[0] "其中 {n} 个是安全更新"
 
-#: kram/notifier/tray.py:237 kram/tui/window.py:150
+#: kram/notifier/tray.py:237 kram/tui/window.py:168
 #, python-brace-format
 msgid "The package information is {days} day old"
 msgid_plural "The package information is {days} days old"
@@ -3798,8 +3806,8 @@ msgstr "以 MIT 许可证发布。"
 msgid "Main toolbar"
 msgstr "主工具栏"
 
-#: kram/qt/upgrade_dialog.py:55 kram/tui/dialogs/path.py:85
-#: kram/tui/dialogs/question.py:22
+#: kram/qt/upgrade_dialog.py:55 kram/tui/dialogs/apply.py:215
+#: kram/tui/dialogs/path.py:85 kram/tui/dialogs/question.py:22
 msgid "Cancel"
 msgstr "取消"
 
@@ -3820,44 +3828,44 @@ msgid "install a package file"
 msgstr "安装软件包文件"
 
 #. TRANSLATORS: the badge on the top line of the terminal front end when it runs as root
-#: kram/tui/app.py:188
+#: kram/tui/app.py:189
 msgid "ROOT"
 msgstr "ROOT"
 
-#: kram/tui/app.py:189
+#: kram/tui/app.py:190
 msgid "changes need no password"
 msgstr "更改无需密码"
 
-#: kram/tui/app.py:237
+#: kram/tui/app.py:238
 #, python-brace-format
 msgid "Make the terminal larger: Kram needs {size}"
 msgstr "请把终端调大：Kram 需要 {size}"
 
-#: kram/tui/app.py:238 kram/tui/window.py:137
+#: kram/tui/app.py:239 kram/tui/window.py:155
 msgid "quit"
 msgstr "退出"
 
-#: kram/tui/app.py:256 kram/tui/search.py:156
+#: kram/tui/app.py:257 kram/tui/search.py:156
 msgid "Search"
 msgstr "搜索"
 
-#: kram/tui/app.py:257 kram/tui/menu.py:89 kram/tui/sidebar.py:289
+#: kram/tui/app.py:258 kram/tui/menu.py:89 kram/tui/sidebar.py:289
 msgid "Menu"
 msgstr "菜单"
 
-#: kram/tui/app.py:258 kram/tui/dialogs/keys.py:85
+#: kram/tui/app.py:259 kram/tui/dialogs/keys.py:85
 msgid "Keys"
 msgstr "按键"
 
-#: kram/tui/app.py:259
+#: kram/tui/app.py:260
 msgid "Focus the list"
 msgstr "转到列表"
 
-#: kram/tui/app.py:364
+#: kram/tui/app.py:368 kram/tui/dialogs/apply.py:196
 msgid "copy"
 msgstr "复制"
 
-#: kram/tui/app.py:364
+#: kram/tui/app.py:368
 msgid "sort"
 msgstr "排序"
 
@@ -3967,9 +3975,9 @@ msgid "choose"
 msgstr "选择"
 
 #: kram/tui/dialogs/about.py:63 kram/tui/dialogs/keys.py:87
-#: kram/tui/dialogs/progress.py:67 kram/tui/dialogs/progress.py:203
+#: kram/tui/dialogs/progress.py:68 kram/tui/dialogs/progress.py:204
 #: kram/tui/dialogs/question.py:60 kram/tui/menu.py:90 kram/tui/search.py:186
-#: kram/tui/widgets.py:163 kram/tui/widgets.py:225
+#: kram/tui/widgets.py:179 kram/tui/widgets.py:241
 msgid "close"
 msgstr "关闭"
 
@@ -3977,26 +3985,40 @@ msgstr "关闭"
 msgid "next"
 msgstr "下一个"
 
-#: kram/tui/dialogs/about.py:73 kram/tui/dialogs/progress.py:164
+#: kram/tui/dialogs/about.py:73 kram/tui/dialogs/progress.py:165
 #: kram/tui/dialogs/question.py:22
 msgid "Close"
 msgstr "关闭"
 
-#: kram/tui/dialogs/about.py:81 kram/tui/window.py:189
+#: kram/tui/dialogs/about.py:81 kram/tui/window.py:207
 msgid "Not in this version yet"
 msgstr "此版本中尚不可用"
+
+#: kram/tui/dialogs/apply.py:69
+#, python-brace-format
+msgid "{size} free on {mount}."
+msgstr "{mount} 上可用 {size}。"
+
+#: kram/tui/dialogs/apply.py:196
+msgid "apply"
+msgstr "应用"
+
+#: kram/tui/dialogs/apply.py:196
+msgid "tick"
+msgstr "勾选"
+
+#: kram/tui/dialogs/apply.py:197 kram/tui/dialogs/path.py:79
+#: kram/tui/dialogs/question.py:60
+msgid "cancel"
+msgstr "取消"
 
 #: kram/tui/dialogs/keys.py:56
 msgid "Window"
 msgstr "窗口"
 
-#: kram/tui/dialogs/keys.py:87 kram/tui/dialogs/progress.py:67
+#: kram/tui/dialogs/keys.py:87 kram/tui/dialogs/progress.py:68
 msgid "scroll"
 msgstr "滚动"
-
-#: kram/tui/dialogs/path.py:79 kram/tui/dialogs/question.py:60
-msgid "cancel"
-msgstr "取消"
 
 #: kram/tui/dialogs/path.py:79
 msgid "complete"
@@ -4034,20 +4056,20 @@ msgstr "“{name}”已存在。要替换吗？"
 msgid "Replace"
 msgstr "替换"
 
-#: kram/tui/dialogs/progress.py:188
+#: kram/tui/dialogs/progress.py:189
 msgid "Your desktop asks for the password in its own window."
 msgstr "您的桌面会在其自己的窗口中询问密码。"
 
-#: kram/tui/dialogs/progress.py:203 kram/tui/dialogs/progress.py:205
-#: kram/tui/dialogs/progress.py:207
+#: kram/tui/dialogs/progress.py:204 kram/tui/dialogs/progress.py:206
+#: kram/tui/dialogs/progress.py:208
 msgid "log"
 msgstr "日志"
 
-#: kram/tui/dialogs/progress.py:205
+#: kram/tui/dialogs/progress.py:206
 msgid "stop"
 msgstr "停止"
 
-#: kram/tui/dialogs/progress.py:207
+#: kram/tui/dialogs/progress.py:208
 msgid "not while it runs"
 msgstr "运行时不可"
 
@@ -4115,19 +4137,23 @@ msgstr "排序"
 msgid "Reverse the sort"
 msgstr "反转排序"
 
-#: kram/tui/package_list.py:263
+#: kram/tui/package_list.py:262
+msgid "Mark the likely action"
+msgstr "标记最可能的操作"
+
+#: kram/tui/package_list.py:265
 msgid "Mark for installation or upgrade"
 msgstr "标记为安装或升级"
 
-#: kram/tui/package_list.py:267
+#: kram/tui/package_list.py:269
 msgid "Lock or unlock the version"
 msgstr "锁定或解锁版本"
 
-#: kram/tui/package_list.py:270
+#: kram/tui/package_list.py:272
 msgid "Context menu"
 msgstr "上下文菜单"
 
-#: kram/tui/package_list.py:272
+#: kram/tui/package_list.py:274
 msgid "Clear the selection"
 msgstr "清除选择"
 
@@ -4155,7 +4181,9 @@ msgid ""
 "Kram steps aside for a moment: polkit asks for your password in this "
 "terminal, and Kram comes back when you have answered. It asks once for the "
 "whole session."
-msgstr "这里没有密码窗口（没有桌面，或其中没有 polkit 代理），所以 Kram 会暂时让开：polkit 在此终端中询问您的密码，您回答后 Kram 会回来。整个会话只询问一次。"
+msgstr ""
+"这里没有密码窗口（没有桌面，或其中没有 polkit 代理），所以 Kram 会暂时让开："
+"polkit 在此终端中询问您的密码，您回答后 Kram 会回来。整个会话只询问一次。"
 
 #: kram/tui/root.py:269
 msgid "Continue"
@@ -4269,54 +4297,54 @@ msgstr "没有可以显示它的桌面：已复制路径"
 msgid "Copied"
 msgstr "已复制"
 
-#: kram/tui/widgets.py:163 kram/tui/widgets.py:225
+#: kram/tui/widgets.py:179 kram/tui/widgets.py:241
 msgid "pick"
 msgstr "选择"
 
-#: kram/tui/window.py:136
+#: kram/tui/window.py:154
 msgid "Another package manager is running: waiting"
 msgstr "另一个软件包管理器正在运行：等待中"
 
-#: kram/tui/window.py:166
+#: kram/tui/window.py:184
 #, python-brace-format
 msgid "“{text}” in {filter}"
 msgstr "{filter}中的“{text}”"
 
-#: kram/tui/window.py:171
+#: kram/tui/window.py:189
 #, python-brace-format
 msgid "{n} change marked"
 msgid_plural "{n} changes marked"
 msgstr[0] "已标记 {n} 项更改"
 
-#: kram/tui/window.py:263
+#: kram/tui/window.py:282
 msgid "Nothing is marked"
 msgstr "没有标记任何内容"
 
-#: kram/tui/window.py:265
+#: kram/tui/window.py:284
 msgid "No package has an upgrade"
 msgstr "没有软件包可升级"
 
-#: kram/tui/window.py:267
+#: kram/tui/window.py:286
 msgid "No upgrade of this kind"
 msgstr "没有此类升级"
 
-#: kram/tui/window.py:269
+#: kram/tui/window.py:288
 msgid "No unneeded dependencies"
 msgstr "没有不需要的依赖"
 
-#: kram/tui/window.py:271
+#: kram/tui/window.py:290
 msgid "Only for one package at a time"
 msgstr "一次只能用于一个软件包"
 
-#: kram/tui/window.py:272 kram/tui/window.py:275
+#: kram/tui/window.py:291 kram/tui/window.py:294
 msgid "Not for this package"
 msgstr "不适用于此软件包"
 
-#: kram/tui/window.py:274
+#: kram/tui/window.py:293
 msgid "Not marked"
 msgstr "未标记"
 
-#: kram/tui/window.py:350
+#: kram/tui/window.py:370
 msgid "Sort by"
 msgstr "排序依据"
 

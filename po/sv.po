@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kram\n"
 "Report-Msgid-Bugs-To: https://github.com/elmodos/kram/issues\n"
-"POT-Creation-Date: 2026-11-24 05:48+0200\n"
+"POT-Creation-Date: 2026-11-24 09:42+0200\n"
 "PO-Revision-Date: 2026-11-05 18:05+0200\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -87,7 +87,7 @@ msgstr ""
 "autoremove"
 
 #: kram/app/actions.py:70 kram/gtk/dialogs/apply.py:172
-#: kram/qt/apply_dialog.py:218
+#: kram/qt/apply_dialog.py:218 kram/tui/dialogs/apply.py:214
 msgid "Apply"
 msgstr "Verkställ"
 
@@ -210,7 +210,7 @@ msgstr "Öppna paketfil…"
 msgid "Install a downloaded .rpm file (you can also drop it on the window)"
 msgstr "Installera en nedladdad .rpm-fil (du kan också släppa den på fönstret)"
 
-#: kram/app/actions.py:100 kram/tui/app.py:262 kram/tui/app.py:549
+#: kram/app/actions.py:100 kram/tui/app.py:266 kram/tui/app.py:557
 msgid "Quit"
 msgstr "Avsluta"
 
@@ -334,84 +334,84 @@ msgstr "(läser in…)"
 msgid "No older versions in the repositories"
 msgstr "Inga äldre versioner i förråden"
 
-#: kram/app/apply_review.py:28
+#: kram/app/apply_review.py:29
 msgid "To be installed"
 msgstr "Kommer att installeras"
 
-#: kram/app/apply_review.py:29
+#: kram/app/apply_review.py:30
 msgid "To be installed with groups"
 msgstr "Kommer att installeras med grupper"
 
-#: kram/app/apply_review.py:30
+#: kram/app/apply_review.py:31
 msgid "To be installed as dependencies"
 msgstr "Kommer att installeras som beroenden"
 
-#: kram/app/apply_review.py:31
+#: kram/app/apply_review.py:32
 msgid "To be upgraded"
 msgstr "Kommer att uppgraderas"
 
-#: kram/app/apply_review.py:32
+#: kram/app/apply_review.py:33
 msgid "To be downgraded"
 msgstr "Kommer att nedgraderas"
 
-#: kram/app/apply_review.py:33
+#: kram/app/apply_review.py:34
 msgid "To be reinstalled"
 msgstr "Kommer att installeras om"
 
-#: kram/app/apply_review.py:34
+#: kram/app/apply_review.py:35
 msgid "To be removed"
 msgstr "Kommer att tas bort"
 
-#: kram/app/apply_review.py:35
+#: kram/app/apply_review.py:36
 msgid "To be removed with groups"
 msgstr "Kommer att tas bort med grupper"
 
-#: kram/app/apply_review.py:36
+#: kram/app/apply_review.py:37
 msgid "To be removed as dependent or no longer needed"
 msgstr "Kommer att tas bort som beroende eller inte längre behövt"
 
-#: kram/app/apply_review.py:38
+#: kram/app/apply_review.py:39
 msgid "Oldest kernels removed to stay within the limit of kept versions"
 msgstr "Äldsta kärnorna tas bort för att hålla gränsen för sparade versioner"
 
-#: kram/app/apply_review.py:39
+#: kram/app/apply_review.py:40
 msgid "Install reason changes"
 msgstr "Ändrade installationsorsaker"
 
-#: kram/app/apply_review.py:41 kram/app/columns.py:71
+#: kram/app/apply_review.py:42 kram/app/columns.py:71
 msgid "dependency"
 msgstr "beroende"
 
-#: kram/app/apply_review.py:41 kram/app/columns.py:69 kram/app/history.py:256
+#: kram/app/apply_review.py:42 kram/app/columns.py:69 kram/app/history.py:256
 #: kram/app/install.py:51
 msgid "group"
 msgstr "grupp"
 
-#: kram/app/apply_review.py:41 kram/app/columns.py:68
+#: kram/app/apply_review.py:42 kram/app/columns.py:68
 msgid "user"
 msgstr "användare"
 
-#: kram/app/apply_review.py:41 kram/app/columns.py:72
+#: kram/app/apply_review.py:42 kram/app/columns.py:72
 msgid "weak dependency"
 msgstr "svagt beroende"
 
-#: kram/app/apply_review.py:42
+#: kram/app/apply_review.py:43
 msgid "unneeded"
 msgstr "onödigt"
 
-#: kram/app/apply_review.py:45
+#: kram/app/apply_review.py:46
 msgid "Groups to be installed"
 msgstr "Grupper som installeras"
 
-#: kram/app/apply_review.py:46
+#: kram/app/apply_review.py:47
 msgid "Groups to be upgraded"
 msgstr "Grupper som uppgraderas"
 
-#: kram/app/apply_review.py:47
+#: kram/app/apply_review.py:48
 msgid "Groups to be removed"
 msgstr "Grupper som tas bort"
 
-#: kram/app/apply_review.py:104
+#: kram/app/apply_review.py:105
 #, python-brace-format
 msgid ""
 "Installed before “{group}”: it was there with the system or for something "
@@ -420,7 +420,7 @@ msgstr ""
 "Installerat före ”{group}”: det kom med systemet eller för något annat, och "
 "att ta bort gruppen tar det också."
 
-#: kram/app/apply_review.py:128
+#: kram/app/apply_review.py:146
 msgid ""
 "All packages of the group are already installed: dnf only records the group "
 "as installed."
@@ -434,7 +434,7 @@ msgstr[1] ""
 "Alla paket i grupperna är redan installerade: dnf registrerar bara grupperna "
 "som installerade."
 
-#: kram/app/apply_review.py:132
+#: kram/app/apply_review.py:150
 msgid ""
 "No package goes with the group (you installed them yourself, or something "
 "else needs them): dnf only records the group as removed."
@@ -448,11 +448,11 @@ msgstr[1] ""
 "Inget paket försvinner med grupperna (du installerade dem själv, eller något "
 "annat behöver dem): dnf registrerar bara grupperna som borttagna."
 
-#: kram/app/apply_review.py:136
+#: kram/app/apply_review.py:154
 msgid "No package changes: dnf only updates its record of the groups."
 msgstr "Inga paket ändras: dnf uppdaterar bara sin registrering av grupperna."
 
-#: kram/app/apply_review.py:150
+#: kram/app/apply_review.py:168
 #, python-brace-format
 msgid ""
 "This removes the desktop you are using now ({desktop}: {names}): the session "
@@ -461,12 +461,12 @@ msgstr ""
 "Detta tar bort skrivbordsmiljön du använder nu ({desktop}: {names}): "
 "sessionen kan sluta fungera och du kanske inte kan logga in i den igen."
 
-#: kram/app/apply_review.py:154
+#: kram/app/apply_review.py:172
 #, python-brace-format
 msgid "Essential system packages will be removed: {names}."
 msgstr "Nödvändiga systempaket kommer att tas bort: {names}."
 
-#: kram/app/apply_review.py:159
+#: kram/app/apply_review.py:177
 #, python-brace-format
 msgid ""
 "{n} package was installed before the group that takes it, with the system or "
@@ -481,32 +481,32 @@ msgstr[1] ""
 "{n} paket installerades före gruppen som tar dem (med systemet eller för "
 "något annat): {names}."
 
-#: kram/app/apply_review.py:163
+#: kram/app/apply_review.py:181
 #, python-brace-format
 msgid "{n} package will be removed."
 msgid_plural "{n} packages will be removed."
 msgstr[0] "{n} paket kommer att tas bort."
 msgstr[1] "{n} paket kommer att tas bort."
 
-#: kram/app/apply_review.py:164
+#: kram/app/apply_review.py:182
 msgid "Make sure this is what you want."
 msgstr "Se till att det är detta du vill."
 
-#: kram/app/apply_review.py:168 kram/app/install.py:508
+#: kram/app/apply_review.py:186 kram/app/install.py:508
 #, python-brace-format
 msgid "To download: {size}."
 msgstr "Att hämta: {size}."
 
-#: kram/app/apply_review.py:169 kram/app/install.py:509
+#: kram/app/apply_review.py:187 kram/app/install.py:509
 #, python-brace-format
 msgid "Disk space change: {size}."
 msgstr "Ändring av diskutrymme: {size}."
 
-#: kram/app/apply_review.py:176
+#: kram/app/apply_review.py:194
 msgid "⚠ None of the marked changes can be carried out:"
 msgstr "⚠ Ingen av de markerade ändringarna kan genomföras:"
 
-#: kram/app/apply_review.py:177
+#: kram/app/apply_review.py:195
 msgid ""
 "⚠ Some marked changes cannot be carried out and are left out; the rest can "
 "be applied:"
@@ -514,22 +514,22 @@ msgstr ""
 "⚠ Vissa markerade ändringar kan inte genomföras och utelämnas; resten kan "
 "tillämpas:"
 
-#: kram/app/apply_review.py:178
+#: kram/app/apply_review.py:196
 msgid "Nothing to do: the marked changes are already in place."
 msgstr "Inget att göra: de markerade ändringarna är redan genomförda."
 
-#: kram/app/apply_review.py:187
+#: kram/app/apply_review.py:205
 #, python-brace-format
 msgid "Not enough disk space on {mount}: {size} more is needed."
 msgstr "Inte tillräckligt med diskutrymme på {mount}: {size} till behövs."
 
-#: kram/app/apply_review.py:190
+#: kram/app/apply_review.py:208
 msgid ""
 "The download alone fits: “Download packages only” can fetch the packages now."
 msgstr ""
 "Bara nedladdningen får plats: ”Hämta endast paketen” kan hämta paketen nu."
 
-#: kram/app/apply_review.py:228
+#: kram/app/apply_review.py:246
 msgid ""
 "Pulled in because it complements packages being installed (language support, "
 "plugins)."
@@ -537,32 +537,32 @@ msgstr ""
 "Dras in eftersom det kompletterar paket som installeras (språkstöd, "
 "insticksmoduler)."
 
-#: kram/app/apply_review.py:236
+#: kram/app/apply_review.py:254
 #, python-brace-format
 msgid "Recommended by dependencies ({n})"
 msgstr "Rekommenderade av beroenden ({n})"
 
-#: kram/app/apply_review.py:240
+#: kram/app/apply_review.py:258
 msgid "still installed: something else requires it"
 msgstr "installeras ändå: ett annat paket kräver det"
 
-#: kram/app/apply_review.py:247
+#: kram/app/apply_review.py:265
 #, python-brace-format
 msgid "+{size}, {n} package"
 msgid_plural "+{size}, {n} packages"
 msgstr[0] "+{size}, {n} paket"
 msgstr[1] "+{size}, {n} paket"
 
-#: kram/app/apply_review.py:321 kram/app/browser.py:647 kram/app/install.py:303
+#: kram/app/apply_review.py:339 kram/app/browser.py:647 kram/app/install.py:303
 #: kram/app/install.py:337 kram/app/install.py:397
 msgid "Resolving dependencies…"
 msgstr "Löser beroenden…"
 
-#: kram/app/apply_review.py:330 kram/app/install.py:411
+#: kram/app/apply_review.py:348 kram/app/install.py:411
 msgid "These choices cannot be carried out:"
 msgstr "Dessa val går inte att genomföra:"
 
-#: kram/app/apply_review.py:334 kram/app/browser.py:656 kram/app/install.py:384
+#: kram/app/apply_review.py:352 kram/app/browser.py:656 kram/app/install.py:384
 #: kram/app/install.py:418
 #, python-brace-format
 msgid ""
@@ -1617,7 +1617,7 @@ msgid_plural ""
 msgstr[0] "{n} förråd saknar metadata, så dess paket saknas i listan."
 msgstr[1] "{n} förråd saknar metadata, så deras paket saknas i listan."
 
-#: kram/app/empty_list.py:58 kram/tui/window.py:259
+#: kram/app/empty_list.py:58 kram/tui/window.py:278
 msgid "Loading the package catalog…"
 msgstr "Läser in paketkatalogen…"
 
@@ -2591,15 +2591,15 @@ msgstr "Fästa paneler"
 msgid "Sidebar and details"
 msgstr "Sidopanel och detaljer"
 
-#: kram/app/preferences.py:109 kram/tui/app.py:254
+#: kram/app/preferences.py:109 kram/tui/app.py:255
 msgid "Sidebar"
 msgstr "Sidopanel"
 
 #: kram/app/preferences.py:110 kram/gtk/dialogs/install.py:92
 #: kram/gtk/dialogs/progress.py:50 kram/gtk/ui_port.py:32
 #: kram/qt/install_dialog.py:112 kram/qt/progress_dialog.py:57
-#: kram/tui/app.py:255 kram/tui/app.py:314 kram/tui/dialogs/progress.py:229
-#: kram/tui/package_list.py:271
+#: kram/tui/app.py:256 kram/tui/app.py:318 kram/tui/dialogs/progress.py:230
+#: kram/tui/package_list.py:273
 msgid "Details"
 msgstr "Detaljer"
 
@@ -3000,7 +3000,7 @@ msgid_plural "{shown} listed, {installed} installed, {upgrades}."
 msgstr[0] "{shown} visas, {installed} installerade, {upgrades}."
 msgstr[1] "{shown} visas, {installed} installerade, {upgrades}."
 
-#: kram/app/status.py:21
+#: kram/app/status.py:21 kram/tui/dialogs/apply.py:63
 #, python-brace-format
 msgid "{install} to install/upgrade, {remove} to remove."
 msgid_plural "{install} to install/upgrade, {remove} to remove."
@@ -3471,10 +3471,12 @@ msgid "Size"
 msgstr "Storlek"
 
 #: kram/gtk/dialogs/apply.py:91 kram/qt/apply_dialog.py:101
+#: kram/tui/dialogs/apply.py:282
 msgid "Recommended packages."
 msgstr "Rekommenderade paket."
 
 #: kram/gtk/dialogs/apply.py:92 kram/qt/apply_dialog.py:102
+#: kram/tui/dialogs/apply.py:283
 msgid ""
 "Not required, but suggested by the packages being installed. Uncheck what "
 "you do not want."
@@ -3483,19 +3485,23 @@ msgstr ""
 "det du inte vill ha."
 
 #: kram/gtk/dialogs/apply.py:128 kram/qt/apply_dialog.py:106
+#: kram/tui/dialogs/apply.py:294 kram/tui/dialogs/apply.py:312
 msgid "Recommended package"
 msgstr "Rekommenderat paket"
 
 #: kram/gtk/dialogs/apply.py:129 kram/qt/apply_dialog.py:106
+#: kram/tui/dialogs/apply.py:295 kram/tui/dialogs/apply.py:313
 msgid "Recommended by"
 msgstr "Rekommenderas av"
 
 #: kram/gtk/dialogs/apply.py:130 kram/qt/apply_dialog.py:106
+#: kram/tui/dialogs/apply.py:313
 msgid "Adds"
 msgstr "Lägger till"
 
 #: kram/gtk/dialogs/apply.py:163 kram/gtk/dialogs/repos.py:38
 #: kram/qt/apply_dialog.py:156 kram/qt/repos_dialog.py:116
+#: kram/tui/dialogs/apply.py:195
 msgid "Apply changes"
 msgstr "Verkställ ändringar"
 
@@ -3509,10 +3515,12 @@ msgstr "Granska listan innan du verkställer."
 
 #: kram/gtk/dialogs/apply.py:211 kram/gtk/dialogs/install.py:117
 #: kram/qt/apply_dialog.py:209 kram/qt/install_dialog.py:139
+#: kram/tui/dialogs/apply.py:211
 msgid "Equivalent command"
 msgstr "Motsvarande kommando"
 
 #: kram/gtk/dialogs/apply.py:218 kram/qt/apply_dialog.py:213
+#: kram/tui/dialogs/apply.py:210
 msgid "Download packages only"
 msgstr "Hämta endast paketen"
 
@@ -3598,7 +3606,7 @@ msgid "Hub"
 msgstr "Hubb"
 
 #: kram/gtk/dialogs/copr.py:50 kram/gtk/dialogs/repos.py:152
-#: kram/qt/copr_dialog.py:51 kram/qt/repos_dialog.py:67 kram/tui/app.py:313
+#: kram/qt/copr_dialog.py:51 kram/qt/repos_dialog.py:67 kram/tui/app.py:317
 msgid "Packages"
 msgstr "Paket"
 
@@ -3794,17 +3802,17 @@ msgid "Other update notifiers"
 msgstr "Andra uppdateringsaviserare"
 
 #: kram/gtk/dialogs/progress.py:38 kram/qt/progress_dialog.py:42
-#: kram/tui/dialogs/progress.py:98
+#: kram/tui/dialogs/progress.py:99
 msgid "Download"
 msgstr "Hämtning"
 
 #: kram/gtk/dialogs/progress.py:40 kram/qt/progress_dialog.py:44
-#: kram/tui/dialogs/progress.py:99
+#: kram/tui/dialogs/progress.py:100
 msgid "Installation"
 msgstr "Installation"
 
 #: kram/gtk/dialogs/progress.py:57 kram/qt/progress_dialog.py:61
-#: kram/tui/dialogs/progress.py:162
+#: kram/tui/dialogs/progress.py:163
 msgid "Close when finished successfully"
 msgstr "Stäng när det har slutförts"
 
@@ -3954,7 +3962,7 @@ msgid_plural "{n} of them are security updates"
 msgstr[0] "varav {n} säkerhetsuppdatering"
 msgstr[1] "varav {n} säkerhetsuppdateringar"
 
-#: kram/notifier/tray.py:237 kram/tui/window.py:150
+#: kram/notifier/tray.py:237 kram/tui/window.py:168
 #, python-brace-format
 msgid "The package information is {days} day old"
 msgid_plural "The package information is {days} days old"
@@ -3973,8 +3981,8 @@ msgstr "Utgiven under MIT-licensen."
 msgid "Main toolbar"
 msgstr "Huvudverktygsfält"
 
-#: kram/qt/upgrade_dialog.py:55 kram/tui/dialogs/path.py:85
-#: kram/tui/dialogs/question.py:22
+#: kram/qt/upgrade_dialog.py:55 kram/tui/dialogs/apply.py:215
+#: kram/tui/dialogs/path.py:85 kram/tui/dialogs/question.py:22
 msgid "Cancel"
 msgstr "Avbryt"
 
@@ -3995,44 +4003,44 @@ msgid "install a package file"
 msgstr "installera en paketfil"
 
 #. TRANSLATORS: the badge on the top line of the terminal front end when it runs as root
-#: kram/tui/app.py:188
+#: kram/tui/app.py:189
 msgid "ROOT"
 msgstr "ROOT"
 
-#: kram/tui/app.py:189
+#: kram/tui/app.py:190
 msgid "changes need no password"
 msgstr "ändringar utan lösenord"
 
-#: kram/tui/app.py:237
+#: kram/tui/app.py:238
 #, python-brace-format
 msgid "Make the terminal larger: Kram needs {size}"
 msgstr "Gör terminalen större: Kram behöver {size}"
 
-#: kram/tui/app.py:238 kram/tui/window.py:137
+#: kram/tui/app.py:239 kram/tui/window.py:155
 msgid "quit"
 msgstr "avsluta"
 
-#: kram/tui/app.py:256 kram/tui/search.py:156
+#: kram/tui/app.py:257 kram/tui/search.py:156
 msgid "Search"
 msgstr "Sök"
 
-#: kram/tui/app.py:257 kram/tui/menu.py:89 kram/tui/sidebar.py:289
+#: kram/tui/app.py:258 kram/tui/menu.py:89 kram/tui/sidebar.py:289
 msgid "Menu"
 msgstr "Meny"
 
-#: kram/tui/app.py:258 kram/tui/dialogs/keys.py:85
+#: kram/tui/app.py:259 kram/tui/dialogs/keys.py:85
 msgid "Keys"
 msgstr "Tangenter"
 
-#: kram/tui/app.py:259
+#: kram/tui/app.py:260
 msgid "Focus the list"
 msgstr "Gå till listan"
 
-#: kram/tui/app.py:364
+#: kram/tui/app.py:368 kram/tui/dialogs/apply.py:196
 msgid "copy"
 msgstr "kopiera"
 
-#: kram/tui/app.py:364
+#: kram/tui/app.py:368
 msgid "sort"
 msgstr "sortera"
 
@@ -4142,9 +4150,9 @@ msgid "choose"
 msgstr "välj"
 
 #: kram/tui/dialogs/about.py:63 kram/tui/dialogs/keys.py:87
-#: kram/tui/dialogs/progress.py:67 kram/tui/dialogs/progress.py:203
+#: kram/tui/dialogs/progress.py:68 kram/tui/dialogs/progress.py:204
 #: kram/tui/dialogs/question.py:60 kram/tui/menu.py:90 kram/tui/search.py:186
-#: kram/tui/widgets.py:163 kram/tui/widgets.py:225
+#: kram/tui/widgets.py:179 kram/tui/widgets.py:241
 msgid "close"
 msgstr "stäng"
 
@@ -4152,26 +4160,40 @@ msgstr "stäng"
 msgid "next"
 msgstr "nästa"
 
-#: kram/tui/dialogs/about.py:73 kram/tui/dialogs/progress.py:164
+#: kram/tui/dialogs/about.py:73 kram/tui/dialogs/progress.py:165
 #: kram/tui/dialogs/question.py:22
 msgid "Close"
 msgstr "Stäng"
 
-#: kram/tui/dialogs/about.py:81 kram/tui/window.py:189
+#: kram/tui/dialogs/about.py:81 kram/tui/window.py:207
 msgid "Not in this version yet"
 msgstr "Inte i den här versionen än"
+
+#: kram/tui/dialogs/apply.py:69
+#, python-brace-format
+msgid "{size} free on {mount}."
+msgstr "{size} ledigt på {mount}."
+
+#: kram/tui/dialogs/apply.py:196
+msgid "apply"
+msgstr "verkställ"
+
+#: kram/tui/dialogs/apply.py:196
+msgid "tick"
+msgstr "kryssa"
+
+#: kram/tui/dialogs/apply.py:197 kram/tui/dialogs/path.py:79
+#: kram/tui/dialogs/question.py:60
+msgid "cancel"
+msgstr "avbryt"
 
 #: kram/tui/dialogs/keys.py:56
 msgid "Window"
 msgstr "Fönster"
 
-#: kram/tui/dialogs/keys.py:87 kram/tui/dialogs/progress.py:67
+#: kram/tui/dialogs/keys.py:87 kram/tui/dialogs/progress.py:68
 msgid "scroll"
 msgstr "rulla"
-
-#: kram/tui/dialogs/path.py:79 kram/tui/dialogs/question.py:60
-msgid "cancel"
-msgstr "avbryt"
 
 #: kram/tui/dialogs/path.py:79
 msgid "complete"
@@ -4209,20 +4231,20 @@ msgstr "”{name}” finns redan. Ersätta den?"
 msgid "Replace"
 msgstr "Ersätt"
 
-#: kram/tui/dialogs/progress.py:188
+#: kram/tui/dialogs/progress.py:189
 msgid "Your desktop asks for the password in its own window."
 msgstr "Skrivbordet frågar efter lösenordet i ett eget fönster."
 
-#: kram/tui/dialogs/progress.py:203 kram/tui/dialogs/progress.py:205
-#: kram/tui/dialogs/progress.py:207
+#: kram/tui/dialogs/progress.py:204 kram/tui/dialogs/progress.py:206
+#: kram/tui/dialogs/progress.py:208
 msgid "log"
 msgstr "logg"
 
-#: kram/tui/dialogs/progress.py:205
+#: kram/tui/dialogs/progress.py:206
 msgid "stop"
 msgstr "stoppa"
 
-#: kram/tui/dialogs/progress.py:207
+#: kram/tui/dialogs/progress.py:208
 msgid "not while it runs"
 msgstr "inte medan det körs"
 
@@ -4290,19 +4312,23 @@ msgstr "Sortera"
 msgid "Reverse the sort"
 msgstr "Vänd sorteringen"
 
-#: kram/tui/package_list.py:263
+#: kram/tui/package_list.py:262
+msgid "Mark the likely action"
+msgstr "Markera den troliga åtgärden"
+
+#: kram/tui/package_list.py:265
 msgid "Mark for installation or upgrade"
 msgstr "Markera för installation eller uppgradering"
 
-#: kram/tui/package_list.py:267
+#: kram/tui/package_list.py:269
 msgid "Lock or unlock the version"
 msgstr "Lås eller lås upp versionen"
 
-#: kram/tui/package_list.py:270
+#: kram/tui/package_list.py:272
 msgid "Context menu"
 msgstr "Snabbmeny"
 
-#: kram/tui/package_list.py:272
+#: kram/tui/package_list.py:274
 msgid "Clear the selection"
 msgstr "Rensa urvalet"
 
@@ -4313,7 +4339,9 @@ msgstr "Auktoriseringen avbröts."
 #: kram/tui/root.py:54
 msgid ""
 "Kram needs administrator rights. Kram comes back when you have answered."
-msgstr "Kram behöver administratörsrättigheter. Kram kommer tillbaka när du har svarat."
+msgstr ""
+"Kram behöver administratörsrättigheter. Kram kommer tillbaka när du har "
+"svarat."
 
 #: kram/tui/root.py:262 kram/tui/root.py:264
 msgid "Administrator rights"
@@ -4330,7 +4358,11 @@ msgid ""
 "Kram steps aside for a moment: polkit asks for your password in this "
 "terminal, and Kram comes back when you have answered. It asks once for the "
 "whole session."
-msgstr "Det finns inget lösenordsfönster här (inget skrivbord, eller ingen polkit-agent i det), så Kram kliver åt sidan en stund: polkit frågar efter ditt lösenord i den här terminalen, och Kram kommer tillbaka när du har svarat. Det frågas en gång för hela sessionen."
+msgstr ""
+"Det finns inget lösenordsfönster här (inget skrivbord, eller ingen polkit-"
+"agent i det), så Kram kliver åt sidan en stund: polkit frågar efter ditt "
+"lösenord i den här terminalen, och Kram kommer tillbaka när du har svarat. "
+"Det frågas en gång för hela sessionen."
 
 #: kram/tui/root.py:269
 msgid "Continue"
@@ -4338,7 +4370,8 @@ msgstr "Fortsätt"
 
 #: kram/tui/root.py:270
 msgid "Started as root (sudo kram-tui), Kram asks no password at all."
-msgstr "Startat som root (sudo kram-tui) frågar Kram inte efter något lösenord."
+msgstr ""
+"Startat som root (sudo kram-tui) frågar Kram inte efter något lösenord."
 
 #: kram/tui/root.py:304
 msgid "Not authorized"
@@ -4346,7 +4379,8 @@ msgstr "Inte auktoriserad"
 
 #: kram/tui/root.py:305
 msgid "The password was not accepted, or this user may not change the system."
-msgstr "Lösenordet godtogs inte, eller så får den här användaren inte ändra systemet."
+msgstr ""
+"Lösenordet godtogs inte, eller så får den här användaren inte ändra systemet."
 
 #: kram/tui/search.py:41
 msgid "A part of the package name"
@@ -4445,55 +4479,55 @@ msgstr "Inget skrivbord att visa den i: sökvägen har kopierats"
 msgid "Copied"
 msgstr "Kopierat"
 
-#: kram/tui/widgets.py:163 kram/tui/widgets.py:225
+#: kram/tui/widgets.py:179 kram/tui/widgets.py:241
 msgid "pick"
 msgstr "välj"
 
-#: kram/tui/window.py:136
+#: kram/tui/window.py:154
 msgid "Another package manager is running: waiting"
 msgstr "En annan pakethanterare körs: väntar"
 
-#: kram/tui/window.py:166
+#: kram/tui/window.py:184
 #, python-brace-format
 msgid "“{text}” in {filter}"
 msgstr "”{text}” i {filter}"
 
-#: kram/tui/window.py:171
+#: kram/tui/window.py:189
 #, python-brace-format
 msgid "{n} change marked"
 msgid_plural "{n} changes marked"
 msgstr[0] "{n} ändring markerad"
 msgstr[1] "{n} ändringar markerade"
 
-#: kram/tui/window.py:263
+#: kram/tui/window.py:282
 msgid "Nothing is marked"
 msgstr "Inget är markerat"
 
-#: kram/tui/window.py:265
+#: kram/tui/window.py:284
 msgid "No package has an upgrade"
 msgstr "Inget paket har en uppgradering"
 
-#: kram/tui/window.py:267
+#: kram/tui/window.py:286
 msgid "No upgrade of this kind"
 msgstr "Inga uppgraderingar av det här slaget"
 
-#: kram/tui/window.py:269
+#: kram/tui/window.py:288
 msgid "No unneeded dependencies"
 msgstr "Inga onödiga beroenden"
 
-#: kram/tui/window.py:271
+#: kram/tui/window.py:290
 msgid "Only for one package at a time"
 msgstr "Bara för ett paket i taget"
 
-#: kram/tui/window.py:272 kram/tui/window.py:275
+#: kram/tui/window.py:291 kram/tui/window.py:294
 msgid "Not for this package"
 msgstr "Inte för det här paketet"
 
-#: kram/tui/window.py:274
+#: kram/tui/window.py:293
 msgid "Not marked"
 msgstr "Inte markerad"
 
-#: kram/tui/window.py:350
+#: kram/tui/window.py:370
 msgid "Sort by"
 msgstr "Sortera efter"
 

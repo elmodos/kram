@@ -3,8 +3,10 @@
 # container booted with systemd, with polkit and a user "user" in wheel (password "secret"), scripts/tui_root_pty.py
 # runs `python3 -m kram.tui` from this source tree as that user in a pseudo-terminal, as SSH gives one, and presses
 # f5: Administrator rights, Continue, polkit's prompt, the password, Kram comes back and the metadata refresh runs as
-# root. Also a wrong password (Try again offered) and Ctrl+C at the prompt (Kram survives).
-# The refresh downloads the metadata: the container has the network, and the dnf metadata cache is a volume
+# root. Also a wrong password (Try again offered), Ctrl+C at the prompt (Kram survives), and a real transaction:
+# the user searches a small package (tree), marks it, reviews and applies it, authenticates, and rpm says it is
+# installed; then it is marked for removal and applied again, and rpm says it is gone.
+# The refresh and the transaction download: the container has the network, and the dnf cache is a volume
 # (kram-dnf-cache-<release>), so it is quick after the first run.
 # Usage: scripts/tui_root_check.sh [release, default 44]   (44: Textual 4.0, 45: Textual 8.1)
 set -euo pipefail

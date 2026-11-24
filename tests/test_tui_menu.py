@@ -417,7 +417,9 @@ def test_question_mark_lists_the_keys_of_the_focused_panel_and_the_window(monkey
 
 
 def test_ctrl_p_is_apply_and_textual_s_command_palette_is_off(monkeypatch):
-    use_catalog(monkeypatch)
+    from kram.core.model import TransactionPreview
+    from kram.tui.dialogs.apply import ApplyDialog
+    use_catalog(monkeypatch, resolve=lambda request, sizes=True: TransactionPreview([], [], 0, 0))
 
     async def test(app, pilot):
         assert app.ENABLE_COMMAND_PALETTE is False
@@ -428,8 +430,11 @@ def test_ctrl_p_is_apply_and_textual_s_command_palette_is_off(monkeypatch):
         b.packages.marks.set(b.snapshot.rows[1], Action.INSTALL)
         b.update_actions()
         await pilot.press("ctrl+p")
-        await pilot.pause()
-        assert isinstance(app.screen, QuestionDialog) and app.screen.question.text == "Not in this version yet"
+        for _ in range(100):
+            if isinstance(app.screen, ApplyDialog):
+                break
+            await pilot.pause(0.02)
+        assert isinstance(app.screen, ApplyDialog)
     run(test)
 
 

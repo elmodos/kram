@@ -258,6 +258,8 @@ class PackageTable(ScrollView, can_focus=True):
         Binding("right,l", f"side({SIDE_STEP})", SIDEWAYS, show=False),
         Binding("s", "sort", _("Sort")),
         Binding("S", "reverse_sort", _("Reverse the sort"), show=False),
+        # the status cell's click (§6.5, LIST_STATUS_CLICK): the likely mark or the row's menu, as the setting says
+        Binding("space", "status_click", _("Mark the likely action"), show=False),
         # the actions of the rows (kram.tui.keymap), as the Package menu runs them
         Binding(bindings_key(mark_id(Action.INSTALL)), "run_either('mark.install', 'mark.upgrade')",
                 _("Mark for installation or upgrade"), show=False),
@@ -622,13 +624,27 @@ class PackageTable(ScrollView, can_focus=True):
         if len(self.packages):
             self.commands.run_either(*action_ids)
 
+    def _beside_cursor(self, x: int) -> tuple[int, int]:
+        """The screen cell under the cursor's row, `x` cells into the list: where its menus open."""
+        region = self.content_region
+        line = 1 + self.cursor - self.scroll_offset.y
+        return region.x + x, region.y + max(1, min(line, region.height - 1)) + 1
+
     def action_context_menu(self, at: tuple[int, int] | None = None) -> None:
         """`.`, the Menu key, Shift+F10, a right click: the row's menu (§7.7.2), next to the cursor's row."""
-        if at is None:
-            region = self.content_region
-            line = 1 + self.cursor - self.scroll_offset.y
-            at = (region.x + 4, region.y + max(1, min(line, region.height - 1)) + 1)
-        self.commands.context_menu(at)
+        self.commands.context_menu(at if at is not None else self._beside_cursor(4))
+
+    def action_status_click(self, at: tuple[int, int] | None = None) -> None:
+        """`space`, a click on the status cell: what a click on the status icon does in the GUIs."""
+        if len(self.packages):
+            self.commands.status_click(at if at is not None else self._beside_cursor(1))
+
+    def in_status_cell(self, x: int) -> bool:
+        """Whether the list's cell `x` (of the widget, as a click gives it) is in the status column."""
+        sx = self.scroll_offset.x
+        frozen = self.frozen
+        x = x if frozen and x < frozen else x + sx
+        return 1 <= x < 1 + STATUS_WIDTH  # 1: the margin
 
     def check_action(self, action: str, parameters: tuple[object, ...]) -> bool | None:
         if action == "link":
@@ -636,7 +652,9 @@ class PackageTable(ScrollView, can_focus=True):
         return True
 
     def on_click(self, event: Click) -> None:
-        """A click picks the row; a right click also opens its menu, keeping a selection the row is in."""
+        """A click picks the row; a right click also opens its menu, keeping a selection the row is in. A click on
+        the status cell is the status click (LIST_STATUS_CLICK), a double click elsewhere on the row the likely mark
+        (LIST_DOUBLE_CLICK_MARK), as in the GUIs."""
         line = event.y
         if line >= 1 and len(self.packages):
             pos = self.scroll_offset.y + line - 1
@@ -645,6 +663,11 @@ class PackageTable(ScrollView, can_focus=True):
                     self._go(pos, scroll=False)
                 if event.button == 3:
                     self.action_context_menu((event.screen_x, event.screen_y + 1))
+                elif event.button == 1 and self.in_status_cell(event.x):
+                    if event.chain == 1:  # the second click of a double one would undo the first
+                        self.action_status_click((event.screen_x, event.screen_y + 1))
+                elif event.button == 1 and event.chain == 2:
+                    self.commands.likely_mark()
 
     def on_focus(self) -> None:
         self.refresh()

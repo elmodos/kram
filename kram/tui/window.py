@@ -6,9 +6,15 @@ and decides who gets a key.
 The helper is the terminal's own client (kram.tui.root, §11): it gets root before the first request, and the
 progress of every request is the dialog of kram.tui.dialogs.progress (§10.2).
 
-The parts of `BrowserView` that later steps bring (the Apply dialog, the repositories, the mirrors) say so through
-the Ui port meanwhile, each with the section that replaces it. So do the actions of the menu whose dialogs come
-later (`NOT_YET`).
+The changes are reviewed in the Apply changes dialog (kram.tui.dialogs.apply, §10.1) and run in the progress dialog;
+Browser does the rest of the flow (the conflicts offer, the form when nothing can be done, the reload, closing Kram
+when the transaction removed kram-tui), as it does for the GUIs. The parts of `BrowserView` that later steps bring
+(the repositories, the mirrors) say so through the Ui port meanwhile, each with the section that replaces it. So do
+the actions of the menu whose dialogs come later (`NOT_YET`).
+
+Marking (§7.5) is the GUIs': `space` and a click on the status cell are the status click (the likely mark, or the
+row's menu, as the setting says), a double click is the likely mark, and the keys of kram.tui.keymap run the Package
+menu's actions.
 
 The actions of kram.app.actions run here, by id (`run_action`), whether from the menu, a context menu or a key: what
 each runs is what the GUIs connect to it (kram.gtk.window._connect_actions). Whether one is enabled comes from
@@ -19,7 +25,18 @@ from collections.abc import Callable
 from rich.text import Text
 
 from .. import instance
-from ..app.actions import MARK_ACTIONS, ActionDef, ActionState, DynamicItem, action_defs, mark_id, mark_upgrades_id
+from ..app import preferences
+from ..app.actions import (
+    MARK_ACTIONS,
+    ActionDef,
+    ActionState,
+    DynamicItem,
+    action_defs,
+    mark_id,
+    mark_upgrades_id,
+    mark_upgrades_menu,
+    package_menu_items,
+)
 from ..app.browser import STATUS_MESSAGE_MS, UPGRADE_KINDS, Browser, ReposChoice
 from ..app.custom_filters import CustomFilters
 from ..app.details import DETAILS_TAB_KEY
@@ -37,8 +54,9 @@ from ..notifier import stale_days
 from . import loop
 from .details import Details
 from .dialogs.about import AboutDialog
+from .dialogs.apply import ApplyDialog
 from .dialogs.progress import ProgressDialog
-from .menu import open_table_menu
+from .menu import menu_title, open_table_menu
 from .package_list import PackageTable, column_label
 from .palette import role
 from .root import RootAccess, TuiHelperClient, is_root
@@ -48,7 +66,7 @@ from .widgets import ChoiceList
 
 FRONT_PACKAGE = "kram-tui"
 # the actions whose dialogs come in later steps (docs/TUI_SPEC.md §17): "Not in this version yet"
-NOT_YET = frozenset({"apply", "history", "show_in_history", "open_file", "repos", "copr", "cache", "notifications"})
+NOT_YET = frozenset({"history", "show_in_history", "open_file", "repos", "copr", "cache", "notifications"})
 # Browser says this while the catalog load waits for the system repo lock (Browser._waiting_for_lock)
 LOCK_STATUS = "Waiting for another package manager to finish…"
 
@@ -183,15 +201,16 @@ class MainWindow:
     def set_apply_enabled(self, on: bool) -> None:
         self.apply_enabled = on
 
-    # ---------------------------------------------------------------- BrowserView: dialogs of later steps
+    # ---------------------------------------------------------------- BrowserView: dialogs
 
     def _not_yet(self) -> None:
         self.ui.info("Kram", _("Not in this version yet"))
 
     def review_changes(self, preview: TransactionPreview, request: dict, basearch: str, resolve,
                        done: Callable[[dict | None], None]) -> None:
-        self._not_yet()  # replaced by the Apply changes dialog, §10.1
-        done(None)
+        """The Apply changes dialog (§10.1); `done` from its dismissal, so that the progress dialog the transaction
+        opens comes after it (kram.tui.root)."""
+        self.app.push_screen(ApplyDialog(preview, request, basearch, resolve), done)
 
     def run_helper(self, request: dict, title: str, done: Callable[[dict | None], None]) -> None:
         """The request with its progress dialog, shown by the root flow: at once, or when the authentication has
@@ -290,6 +309,7 @@ class MainWindow:
         b, marker = self.browser, self.browser.marker
         return {
             "reload": b.refresh_metadata, "reload_cache": b.reload, "mark_upgrades": marker.mark_all_upgrades,
+            "apply": b.apply,
             "lock": lambda: b.set_version_lock(True), "unlock": lambda: b.set_version_lock(False),
             "mark_unneeded": marker.mark_unneeded, "unmark_all": marker.unmark_all,
             "properties": lambda: self.show_tab("general"), "why_blocked": lambda: self.show_tab("dependencies"),
@@ -363,6 +383,32 @@ class MainWindow:
     def context_menu(self, at: tuple[int, int]) -> None:
         """The row's menu (§7.7.2) at the screen cell `at`."""
         open_table_menu(self, at)
+
+    def status_click(self, at: tuple[int, int]) -> None:
+        """`space`, a click on the status cell (LIST_STATUS_CLICK), as in the GUIs: with the setting, the likely mark
+        of the selected rows (kram.gtk.window._status_click); without it, or for rows that have none, the Package
+        menu at the screen cell `at`."""
+        if preferences.value(preferences.STATUS_CLICK) and self.likely_mark():
+            return
+        open_table_menu(self, at, package_menu_items())
+
+    def likely_mark(self) -> bool:
+        """A double click (LIST_DOUBLE_CLICK_MARK): unmark a marked row, mark one for installation or upgrade
+        (Marker.toggle_likely), each selected row; False when none of them has one."""
+        marker = self.browser.marker
+        return any([marker.toggle_likely(row) for row in self.selected_rows()])
+
+    def mark_upgrades(self) -> None:
+        """`U`, ctrl+u: with upgrades that have advisories, the list of Edit → Mark Upgrades (all, or by advisory
+        kind: MARK_UPGRADE_BY_ADVISORY), which the GUIs' split button offers; else all upgrades at once."""
+        marker = self.browser.marker
+        kinds = [mark_upgrades_id(kind) for kind in UPGRADE_KINDS if marker.upgrades_of(kind)]
+        if not kinds or not self.action_enabled("mark_upgrades"):
+            self.run_action("mark_upgrades")
+            return
+        items = [(a, self.defs[a].label) for a in ("mark_upgrades", *kinds)]
+        self.app.push_screen(ChoiceList(menu_title(mark_upgrades_menu()), items, "mark_upgrades"),
+                             lambda action_id: action_id is not None and self.run_action(action_id))
 
     def find(self) -> None:
         """`/`, ctrl+f and the menu's Find (§7.6): the search dialog, once there is a catalog to search."""

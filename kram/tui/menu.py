@@ -330,12 +330,12 @@ class MenuPopup(ModalScreen):
 
 # ---------------------------------------------------------------- the package list's context menu (§7.7.2)
 
-def open_table_menu(main, at: tuple[int, int]) -> None:
-    """`table_menu()` as a popup at the screen cell `at`; Downgrade to Version opens a second one there with the
-    package's older versions."""
+def open_table_menu(main, at: tuple[int, int], items: tuple[MenuItem, ...] | None = None) -> None:
+    """`table_menu()` as a popup at the screen cell `at`, or `items` (the status cell's menu, the Package menu's
+    items); Downgrade to Version opens a second one there with the package's older versions."""
     g = main.app.glyphs
     lines: list[tuple[MenuItem | None, tuple[str, bool, str] | None]] = []
-    for item in table_menu().items:
+    for item in items if items is not None else table_menu().items:
         if item.separator:
             lines.append((None, None))
         elif item.action is not None and main.action_visible(item.action):

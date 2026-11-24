@@ -49,11 +49,12 @@ def snapshot(n: int = 300, **kw) -> CatalogSnapshot:
                            descriptions=[f"Description {i}" for i in range(n)], **kw)
 
 
-def use_catalog(monkeypatch, snap: CatalogSnapshot | None = None, load=None, blocked=None) -> None:
-    """The window's Browser over a made-up catalog, as tests/test_gtk.py does it."""
+def use_catalog(monkeypatch, snap: CatalogSnapshot | None = None, load=None, blocked=None, **more) -> None:
+    """The window's Browser over a made-up catalog, as tests/test_gtk.py does it; `more`: what else the catalog
+    answers (`resolve` for the Apply dialog, …)."""
     snap = snap or snapshot()
     catalog = SimpleNamespace(load=load or (lambda *a, **k: snap), blocked_upgrades=lambda: blocked or {},
-                              details=lambda key: (_ for _ in ()).throw(LookupError(key)))
+                              details=lambda key: (_ for _ in ()).throw(LookupError(key)), **more)
     monkeypatch.setattr(window_module, "Browser",
                         lambda view, ui, scheduler, details, post, **kw: Browser(view, ui, scheduler, details, post,
                                                                                  catalog=catalog, **kw))
@@ -557,7 +558,7 @@ def test_dialogs_of_later_steps_say_so(monkeypatch):
     results = []
 
     async def test(app, pilot):
-        app.main.review_changes(None, {"op": "transaction"}, "x86_64", None, results.append)
+        app.main.show_repos(None, results.append)  # the Repositories dialog comes in a later step (§10.4)
         await pilot.pause()
         assert isinstance(app.screen, QuestionDialog) and results == [None]
         await pilot.press("enter")
