@@ -29,6 +29,7 @@ from . import loop
 from .details import Details
 from .package_list import PackageTable, column_label
 from .palette import role
+from .search import open_search
 from .sidebar import Sidebar
 from .widgets import ChoiceList
 
@@ -141,7 +142,9 @@ class MainWindow:
         """The left of the top line: the filter or the search, its rows, the marks."""
         b = self.browser
         label = b.filter.label if b.filter is not None else ""
-        if text := b.search.text():
+        text = b.search.text()
+        # an entry of Search results is labelled with its search already
+        if text and (b.filter is None or b.filter.query != (text, int(b.search.mode()))):
             label = _("“{text}” in {filter}").format(text=text, filter=label)
         line = Text(label)
         line.append(f"  {shown}", role("muted"))
@@ -259,6 +262,11 @@ class MainWindow:
         b.user_sorted(column, descending)
         self.show_sort((column, descending))
         b.packages.sort(column, descending)
+
+    def find(self) -> None:
+        """`/`, ctrl+f and the menu's Find (§7.6): the search dialog, once there is a catalog to search."""
+        if self.browser.snapshot is not None:
+            open_search(self)
 
     def copy_names(self) -> None:
         self.browser.copy_names()

@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kram\n"
 "Report-Msgid-Bugs-To: https://github.com/elmodos/kram/issues\n"
-"POT-Creation-Date: 2026-11-24 02:35+0200\n"
+"POT-Creation-Date: 2026-11-24 04:15+0200\n"
 "PO-Revision-Date: 2026-11-04 14:07+0200\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -213,7 +213,7 @@ msgstr "Abrir arquivo de pacote…"
 msgid "Install a downloaded .rpm file (you can also drop it on the window)"
 msgstr "Instalar um arquivo .rpm baixado (você também pode soltá-lo na janela)"
 
-#: kram/app/actions.py:100 kram/tui/app.py:193
+#: kram/app/actions.py:100 kram/tui/app.py:202
 msgid "Quit"
 msgstr "Sair"
 
@@ -2610,14 +2610,14 @@ msgstr "Painéis fixados"
 msgid "Sidebar and details"
 msgstr "Barra lateral e detalhes"
 
-#: kram/app/preferences.py:107 kram/tui/app.py:189
+#: kram/app/preferences.py:107 kram/tui/app.py:197
 msgid "Sidebar"
 msgstr "Barra lateral"
 
 #: kram/app/preferences.py:108 kram/gtk/dialogs/install.py:92
 #: kram/gtk/dialogs/progress.py:50 kram/gtk/ui_port.py:32
 #: kram/qt/install_dialog.py:112 kram/qt/progress_dialog.py:57
-#: kram/tui/app.py:190 kram/tui/app.py:236
+#: kram/tui/app.py:198 kram/tui/app.py:245
 msgid "Details"
 msgstr "Detalhes"
 
@@ -2971,7 +2971,7 @@ msgstr "Resultados da pesquisa"
 msgid "Custom filters"
 msgstr "Filtros personalizados"
 
-#: kram/app/sidebar.py:176
+#: kram/app/sidebar.py:176 kram/tui/search.py:198
 #, python-brace-format
 msgid "“{text}” — {mode}"
 msgstr "“{text}” — {mode}"
@@ -3624,7 +3624,7 @@ msgid "Hub"
 msgstr "Hub"
 
 #: kram/gtk/dialogs/copr.py:50 kram/gtk/dialogs/repos.py:152
-#: kram/qt/copr_dialog.py:51 kram/qt/repos_dialog.py:67 kram/tui/app.py:235
+#: kram/qt/copr_dialog.py:51 kram/qt/repos_dialog.py:67 kram/tui/app.py:244
 msgid "Packages"
 msgstr "Pacotes"
 
@@ -3980,7 +3980,7 @@ msgid_plural "{n} of them are security updates"
 msgstr[0] "{n} delas é de segurança"
 msgstr[1] "{n} delas são de segurança"
 
-#: kram/notifier/tray.py:237 kram/tui/window.py:131
+#: kram/notifier/tray.py:237 kram/tui/window.py:132
 #, python-brace-format
 msgid "The package information is {days} day old"
 msgid_plural "The package information is {days} days old"
@@ -4020,20 +4020,24 @@ msgstr "abrir nos pacotes com atualização"
 msgid "install a package file"
 msgstr "instalar um arquivo de pacote"
 
-#: kram/tui/app.py:175
+#: kram/tui/app.py:183
 #, python-brace-format
 msgid "Make the terminal larger: Kram needs {size}"
 msgstr "Aumente o terminal: o Kram precisa de {size}"
 
-#: kram/tui/app.py:176 kram/tui/window.py:118
+#: kram/tui/app.py:184 kram/tui/window.py:119
 msgid "quit"
 msgstr "sair"
 
-#: kram/tui/app.py:278
+#: kram/tui/app.py:199 kram/tui/search.py:156
+msgid "Search"
+msgstr "Pesquisar"
+
+#: kram/tui/app.py:287
 msgid "copy"
 msgstr "copiar"
 
-#: kram/tui/app.py:278
+#: kram/tui/app.py:287
 msgid "sort"
 msgstr "ordenar"
 
@@ -4168,8 +4172,8 @@ msgstr "Sim"
 msgid "next"
 msgstr "próximo"
 
-#: kram/tui/dialogs/question.py:60 kram/tui/widgets.py:163
-#: kram/tui/widgets.py:212
+#: kram/tui/dialogs/question.py:60 kram/tui/search.py:186
+#: kram/tui/widgets.py:163 kram/tui/widgets.py:212
 msgid "close"
 msgstr "fechar"
 
@@ -4196,6 +4200,52 @@ msgstr "Download"
 #: kram/tui/package_list.py:252
 msgid "Sort"
 msgstr "Ordenar"
+
+#: kram/tui/search.py:41
+msgid "A part of the package name"
+msgstr "Uma parte do nome do pacote"
+
+#: kram/tui/search.py:42
+msgid "Words of the name or the summary"
+msgstr "Palavras do nome ou do resumo"
+
+#: kram/tui/search.py:43
+msgid "Words of the name, the summary or the description"
+msgstr "Palavras do nome, do resumo ou da descrição"
+
+#: kram/tui/search.py:44
+msgid "A capability: libvulkan.so.1, python3dist(requests)"
+msgstr "Uma capacidade: libvulkan.so.1, python3dist(requests)"
+
+#: kram/tui/search.py:45
+msgid "A file: /usr/bin/7z or just 7z"
+msgstr "Um arquivo: /usr/bin/7z ou só 7z"
+
+#: kram/tui/search.py:183
+msgctxt "search key hint"
+msgid "what"
+msgstr "o quê"
+
+#: kram/tui/search.py:185
+msgctxt "search key hint"
+msgid "earlier"
+msgstr "anteriores"
+
+#: kram/tui/search.py:186
+msgctxt "search key hint"
+msgid "search"
+msgstr "pesquisar"
+
+#: kram/tui/search.py:213
+#, python-brace-format
+msgid "Filtering as you type: {n} package"
+msgid_plural "Filtering as you type: {n} packages"
+msgstr[0] "Filtrando ao digitar: {n} pacote"
+msgstr[1] "Filtrando ao digitar: {n} pacotes"
+
+#: kram/tui/search.py:216
+msgid "dnf looks this up when you press Enter"
+msgstr "O dnf procura isso quando você pressiona Enter"
 
 #: kram/tui/sidebar.py:34
 msgid "No searches yet. Press / to search."
@@ -4246,27 +4296,27 @@ msgstr "Copiado"
 msgid "pick"
 msgstr "escolher"
 
-#: kram/tui/window.py:117
+#: kram/tui/window.py:118
 msgid "Another package manager is running: waiting"
 msgstr "Outro gerenciador de pacotes está em execução: aguardando"
 
-#: kram/tui/window.py:145
+#: kram/tui/window.py:148
 #, python-brace-format
 msgid "“{text}” in {filter}"
 msgstr "“{text}” em {filter}"
 
-#: kram/tui/window.py:150
+#: kram/tui/window.py:153
 #, python-brace-format
 msgid "{n} change marked"
 msgid_plural "{n} changes marked"
 msgstr[0] "{n} alteração marcada"
 msgstr[1] "{n} alterações marcadas"
 
-#: kram/tui/window.py:168
+#: kram/tui/window.py:171
 msgid "Not in this version yet"
 msgstr "Ainda não disponível nesta versão"
 
-#: kram/tui/window.py:250
+#: kram/tui/window.py:253
 msgid "Sort by"
 msgstr "Ordenar por"
 

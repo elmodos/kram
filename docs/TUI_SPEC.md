@@ -317,10 +317,15 @@ line over the list): a text line, the modes of `kram.core.search`
 modes, as `NarrowingSearch` does; the status line says "Filtering as you type: 132 packages". Provides and File ask
 dnf, only on `Enter` ("dnf looks this up when you press Enter").
 
-7.6.3 `Enter` keeps the search: the sidebar goes to Search results with it selected, the popup closes, the list
-keeps the ranked order. `Esc` closes and puts back the list as it was before the popup opened.
+7.6.3 `Enter` keeps the search, as the GUIs' search field does (`Browser._on_search_enter`): the list stays
+filtered by the sidebar's entry and the search together (a search typed in Installed stays within Installed), the
+search goes into the history (Search results), the sidebar stays on its entry, the dialog closes, the list keeps
+the ranked order and gets the focus. `Enter` on an empty field drops the search. `Esc` closes and puts back the
+list as it was before the dialog opened. While the dialog is open nothing goes into the history by itself: only
+`Enter` keeps a search, so that `Esc` can undo everything.
 
-7.6.4 The search text and mode of the GUIs' `kram/app/search.py` (history of 30, per mode) apply.
+7.6.4 The search text, the mode and the history of the GUIs (`kram/app/search.py`; one history of 30 searches,
+each with its mode) apply, under the GUIs' settings keys.
 
 ### 7.7 Menus (`MENU_*`)
 

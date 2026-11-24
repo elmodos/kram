@@ -38,7 +38,7 @@ SLIDE_HEIGHT = 11  # the details slide-over; at most 3/5 of the body, so that ro
 PANELS = ("sidebar", "details")
 PINNED = {"both": {"sidebar", "details"}, "sidebar": {"sidebar"}, "details": {"details"}, "none": set()}
 # the window's own keys: off while another screen is up or a text field has the focus (the module's docstring)
-WINDOW_ACTIONS = frozenset({"toggle_panel", "back_to_list", "quit", "back"})
+WINDOW_ACTIONS = frozenset({"toggle_panel", "find", "back_to_list", "quit", "back"})
 
 CSS = PALETTE_CSS + """
 /* 16 colours: Textual draws some widgets in colours blended with transparency, which a 16-colour terminal cannot
@@ -100,6 +100,14 @@ App:ansi #views { color: $foreground; }
 /* a narrow terminal: the panels slide over the list instead of taking room from it */
 #body.narrow #sidebar { layer: overlay; position: absolute; max-width: 85%; }
 #body.narrow #details { layer: overlay; dock: bottom; width: 100%; }
+
+/* the search (§7.6): at the top, under the top line, which keeps showing the list's filter and count */
+.dialog.search { max-width: 84; margin-top: 1; }
+.search #search-status { height: 1; color: $text-muted; }
+App:ansi .search #search-status { color: $foreground; text-style: dim; }
+.search History, .search History:focus { height: auto; max-height: 8; border: none; padding: 0;
+                                         border-top: $panel-border $border-blurred; background: $surface; }
+App:ansi .search History, App:ansi .search History:focus { background: $background; }
 
 TooSmall { align: center middle; }
 TooSmall > Static { width: 100%; height: auto; }
@@ -188,6 +196,7 @@ class KramApp(App):
     BINDINGS = [
         Binding("g", "toggle_panel('sidebar')", _("Sidebar")),
         Binding("d", "toggle_panel('details')", _("Details")),
+        Binding("slash,ctrl+f", "find", _("Search")),
         Binding("escape", "back_to_list", show=False),
         Binding("alt+left", "back", show=False),
         Binding("q", "quit", _("Quit")),
@@ -387,6 +396,10 @@ class KramApp(App):
         panel.remove_class("hidden")
         self.focus_target(name).focus()
         self.update_list_inset()
+
+    def action_find(self) -> None:
+        """`/`, ctrl+f: the search dialog (§7.6)."""
+        self.main.find()
 
     def action_back_to_list(self) -> None:
         self.list_widget.focus()
