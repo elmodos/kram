@@ -1,6 +1,6 @@
 """The main window of the terminal front end: a view of kram.app.browser.Browser (docs/TUI_SPEC.md §7), as
-kram.gtk.window.MainWindow is. It wires the package list (kram.tui.package_list) and the top line (§5.4) to the
-Browser; the app (kram.tui.app) lays out the panels and decides who gets a key.
+kram.gtk.window.MainWindow is. It wires the sidebar (kram.tui.sidebar), the package list (kram.tui.package_list) and
+the top line (§5.4) to the Browser; the app (kram.tui.app) lays out the panels and decides who gets a key.
 
 The parts of `BrowserView` that later steps bring (the Apply dialog, the progress of the helper, the repositories,
 the mirrors) say so through the Ui port meanwhile, each with the section that replaces it.
@@ -10,18 +10,22 @@ from collections.abc import Callable
 from rich.text import Text
 
 from .. import instance
-from ..app.actions import ActionState
-from ..app.browser import Browser, ReposChoice
+from ..app.actions import ActionState, DynamicItem, action_defs
+from ..app.browser import STATUS_MESSAGE_MS, Browser, ReposChoice
+from ..app.custom_filters import CustomFilters
 from ..app.doc import Doc, para
+from ..app.marking import group_menu
 from ..app.mirrors import MirrorChoice
 from ..app.package_list import Sort
 from ..app.status import error_text, metadata_age, missing_repos
-from ..core.model import CatalogSnapshot, PkgDetails, PkgRow, TransactionPreview
+from ..core.marks import Action
+from ..core.model import CatalogSnapshot, GroupInfo, PkgDetails, PkgRow, TransactionPreview
 from ..i18n import _, ngettext
 from ..notifier import stale_days
 from . import loop
 from .package_list import PackageTable, column_label
 from .palette import role
+from .sidebar import Sidebar
 from .widgets import ChoiceList
 
 FRONT_PACKAGE = "kram-tui"
@@ -55,6 +59,9 @@ class MainWindow:
         self.scheduler = loop.TuiScheduler()
         self.browser = b = Browser(self, self.ui, self.scheduler, self.details, loop.post,
                                    front_package=FRONT_PACKAGE)
+        # the user's filters show and can be deleted; editing them waits for the Custom Filters dialog (§10.10)
+        b.custom_filters = CustomFilters(b.sidebar, b.catalog, b.dnf, lambda: b.snapshot, self.ui, self._edit_filters)
+        self.sidebar = Sidebar(self, app.glyphs, id="sidebar", classes="panel")
         self.list = PackageTable(b.packages, self, app.glyphs, app.utf8, id="list")
         self.list.on_current = lambda _pos: b.current_changed(self.list.current_row())
         self.list.on_selection = b.update_actions
@@ -67,6 +74,7 @@ class MainWindow:
         """Once the app runs (its loop takes what the worker posts): the settings, then the catalog."""
         b = self.browser
         b.restore_settings()
+        b.custom_filters.restore()
         if self.app.upgradable:
             b.show_view(instance.UPGRADABLE)
         b.reload()
@@ -188,6 +196,57 @@ class MainWindow:
 
     def quit(self) -> None:
         self.app.request_quit()
+
+    def _edit_filters(self, filters, snap, select, new, resolve_provides, done) -> None:
+        self._not_yet()  # replaced by the Custom Filters dialog, §10.10
+        done(None)
+
+    # ---------------------------------------------------------------- the sidebar's menu and keys (§7.2.6)
+
+    def sidebar_menu(self, entry) -> list[DynamicItem | str | None]:
+        return self.browser.sidebar_menu(entry)
+
+    def menu_item(self, item: DynamicItem | str) -> tuple[str, bool]:
+        """(label, enabled) of an item of a menu built when it opens: a dynamic item, or an action by its id."""
+        if isinstance(item, DynamicItem):
+            return item.label, item.enabled and item.run is not None
+        action = next(a for a in action_defs() if a.id == item)
+        enabled = self.actions.enabled.get(item, action.enabled) if self.actions is not None else action.enabled
+        return action.label, enabled
+
+    def run_menu_item(self, item: DynamicItem | str) -> None:
+        if not self.menu_item(item)[1]:
+            return
+        if isinstance(item, DynamicItem):
+            item.run()
+            return
+        b = self.browser
+        run = {"mark_unneeded": b.marker.mark_unneeded, "filters": b.custom_filters.edit,
+               "new_filter": lambda: b.custom_filters.new_from_view(b.filter, b.search.text(), b.search.mode())}
+        run.get(item, self._not_yet)()
+
+    def change_group(self, key: str, action: Action) -> None:
+        """`+` / `-` on a group or an environment of the sidebar: what its menu's first item of that kind does
+        (Install, or Upgrade when it is installed; Remove), through Browser.change_group. When that item is off,
+        the top line says why, as its tooltip does in the GUIs."""
+        b = self.browser
+        group = b.marker.group(key)
+        if group is None:
+            return
+        picked: list[tuple[Action, bool]] = []
+
+        def note(_group: GroupInfo, act: Action, optional: bool) -> None:
+            picked.append((act, optional))
+        for item in group_menu(group, busy=b.busy(), run=note):
+            item.run()
+            act, optional = picked.pop()
+            if optional or (act is Action.REMOVE) != (action is Action.REMOVE):
+                continue
+            if item.enabled:
+                b.change_group(group, act, False)
+            elif item.tip:
+                self.ui.status(item.tip, STATUS_MESSAGE_MS)
+            return
 
     # ---------------------------------------------------------------- the list's keys (PackageTable.commands)
 

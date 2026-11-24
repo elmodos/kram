@@ -211,7 +211,7 @@ class Browser:
     def save_settings(self) -> None:
         settings.set("search/history", json.dumps(self.sidebar.history, ensure_ascii=False))
         settings.set("search/mode", int(self.search.mode()))
-        settings.set("sidebar/view", self.sidebar.current_view)
+        settings.set("sidebar/view", self.sidebar.filter_view)
         if entry := self.sidebar.current_entry_id:
             settings.set("sidebar/entry", entry)
 
@@ -276,7 +276,7 @@ class Browser:
         self.catalog_loaded.emit(snap)
         self.view.show_catalog(snap)
         view, entry = self._restore_filter if self.filter is None else (
-            self.sidebar.current_view, self.sidebar.current_entry_id)
+            self.sidebar.filter_view, self.sidebar.current_entry_id)
         self.sidebar.set_snapshot(snap)
         self.sidebar.select(view, entry)  # emits filter_changed -> apply_filter
         if keep:

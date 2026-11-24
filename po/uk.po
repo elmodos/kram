@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kram\n"
 "Report-Msgid-Bugs-To: https://github.com/elmodos/kram/issues\n"
-"POT-Creation-Date: 2026-11-24 01:38+0200\n"
+"POT-Creation-Date: 2026-11-24 02:11+0200\n"
 "PO-Revision-Date: 2026-11-03 21:09+0200\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -208,7 +208,7 @@ msgid "Install a downloaded .rpm file (you can also drop it on the window)"
 msgstr ""
 "Встановити завантажений файл .rpm (його можна також перетягнути на вікно)"
 
-#: kram/app/actions.py:100 kram/tui/app.py:199
+#: kram/app/actions.py:100 kram/tui/app.py:201
 msgid "Quit"
 msgstr "Вихід"
 
@@ -2655,14 +2655,14 @@ msgstr "Закріплені панелі"
 msgid "Sidebar and details"
 msgstr "Бічна панель і подробиці"
 
-#: kram/app/preferences.py:107 kram/tui/app.py:195
+#: kram/app/preferences.py:107 kram/tui/app.py:197
 msgid "Sidebar"
 msgstr "Бічна панель"
 
 #: kram/app/preferences.py:108 kram/gtk/dialogs/install.py:92
 #: kram/gtk/dialogs/progress.py:50 kram/gtk/ui_port.py:32
 #: kram/qt/install_dialog.py:112 kram/qt/progress_dialog.py:57
-#: kram/tui/app.py:196 kram/tui/app.py:246
+#: kram/tui/app.py:198 kram/tui/app.py:245
 msgid "Details"
 msgstr "Подробиці"
 
@@ -3021,16 +3021,16 @@ msgstr "Результати пошуку"
 msgid "Custom filters"
 msgstr "Власні фільтри"
 
-#: kram/app/sidebar.py:161
+#: kram/app/sidebar.py:176
 #, python-brace-format
 msgid "“{text}” — {mode}"
 msgstr "«{text}» — {mode}"
 
-#: kram/app/sidebar.py:223
+#: kram/app/sidebar.py:242
 msgid "Search history is empty"
 msgstr "Історія пошуку порожня"
 
-#: kram/app/sidebar.py:224
+#: kram/app/sidebar.py:243
 msgid ""
 "No custom filters yet.\n"
 "Right-click to create one."
@@ -3673,7 +3673,7 @@ msgid "Hub"
 msgstr "Хаб"
 
 #: kram/gtk/dialogs/copr.py:50 kram/gtk/dialogs/repos.py:152
-#: kram/qt/copr_dialog.py:51 kram/qt/repos_dialog.py:67 kram/tui/app.py:245
+#: kram/qt/copr_dialog.py:51 kram/qt/repos_dialog.py:67 kram/tui/app.py:244
 msgid "Packages"
 msgstr "Пакунки"
 
@@ -4043,7 +4043,7 @@ msgstr[0] "з них {n} — оновлення безпеки"
 msgstr[1] "з них {n} — оновлення безпеки"
 msgstr[2] "з них {n} — оновлень безпеки"
 
-#: kram/notifier/tray.py:237 kram/tui/window.py:134
+#: kram/notifier/tray.py:237 kram/tui/window.py:142
 #, python-brace-format
 msgid "The package information is {days} day old"
 msgid_plural "The package information is {days} days old"
@@ -4084,28 +4084,28 @@ msgstr "відкрити на пакунках з оновленням"
 msgid "install a package file"
 msgstr "встановити файл пакунка"
 
-#: kram/tui/app.py:181
+#: kram/tui/app.py:183
 #, python-brace-format
 msgid "Make the terminal larger: Kram needs {size}"
 msgstr "Збільште термінал: Kram потрібно {size}"
 
-#: kram/tui/app.py:182 kram/tui/window.py:121
+#: kram/tui/app.py:184 kram/tui/window.py:129
 msgid "quit"
 msgstr "вийти"
 
-#: kram/tui/app.py:282 kram/tui/app.py:283
+#: kram/tui/app.py:281
 msgid "hide"
 msgstr "сховати"
 
-#: kram/tui/app.py:282 kram/tui/app.py:283
+#: kram/tui/app.py:281
 msgid "list"
 msgstr "список"
 
-#: kram/tui/app.py:284
+#: kram/tui/app.py:282
 msgid "copy"
 msgstr "копіювати"
 
-#: kram/tui/app.py:284
+#: kram/tui/app.py:282
 msgid "sort"
 msgstr "сортувати"
 
@@ -4173,7 +4173,8 @@ msgstr "Так"
 msgid "next"
 msgstr "далі"
 
-#: kram/tui/dialogs/question.py:60 kram/tui/widgets.py:160
+#: kram/tui/dialogs/question.py:60 kram/tui/widgets.py:163
+#: kram/tui/widgets.py:212
 msgid "close"
 msgstr "закрити"
 
@@ -4197,9 +4198,40 @@ msgctxt "short column header"
 msgid "Download"
 msgstr "Завантаження"
 
-#: kram/tui/package_list.py:235
+#: kram/tui/package_list.py:252
 msgid "Sort"
 msgstr "Сортувати"
+
+#: kram/tui/sidebar.py:34
+msgid "No searches yet. Press / to search."
+msgstr "Пошуків ще немає. Натисніть /, щоб шукати."
+
+#: kram/tui/sidebar.py:35
+msgid "No custom filters. New Filter from Current View is in the menu."
+msgstr "Власних фільтрів немає. «Новий фільтр з поточного вигляду…» є в меню."
+
+#: kram/tui/sidebar.py:284 kram/tui/sidebar.py:357
+msgid "Views"
+msgstr "Вигляди"
+
+#: kram/tui/sidebar.py:285
+msgid "Menu"
+msgstr "Меню"
+
+#: kram/tui/sidebar.py:330
+msgctxt "sidebar key hint"
+msgid "next"
+msgstr "далі"
+
+#: kram/tui/sidebar.py:330
+msgctxt "sidebar key hint"
+msgid "prev"
+msgstr "назад"
+
+#: kram/tui/sidebar.py:331
+msgctxt "sidebar key hint"
+msgid "all"
+msgstr "усі"
 
 #: kram/tui/ui_port.py:78
 msgid "No desktop to open it in: the address is copied"
@@ -4213,20 +4245,20 @@ msgstr "Немає робочого середовища, щоб показат�
 msgid "Copied"
 msgstr "Скопійовано"
 
-#: kram/tui/widgets.py:160
+#: kram/tui/widgets.py:163 kram/tui/widgets.py:212
 msgid "pick"
 msgstr "вибрати"
 
-#: kram/tui/window.py:120
+#: kram/tui/window.py:128
 msgid "Another package manager is running: waiting"
 msgstr "Працює інший менеджер пакунків: чекаємо"
 
-#: kram/tui/window.py:148
+#: kram/tui/window.py:156
 #, python-brace-format
 msgid "“{text}” in {filter}"
 msgstr "«{text}» у {filter}"
 
-#: kram/tui/window.py:153
+#: kram/tui/window.py:161
 #, python-brace-format
 msgid "{n} change marked"
 msgid_plural "{n} changes marked"
@@ -4234,10 +4266,10 @@ msgstr[0] "{n} зміну позначено"
 msgstr[1] "{n} зміни позначено"
 msgstr[2] "{n} змін позначено"
 
-#: kram/tui/window.py:171
+#: kram/tui/window.py:179
 msgid "Not in this version yet"
 msgstr "У цій версії ще немає"
 
-#: kram/tui/window.py:202
+#: kram/tui/window.py:261
 msgid "Sort by"
 msgstr "Сортувати за"

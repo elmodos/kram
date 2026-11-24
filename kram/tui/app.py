@@ -23,7 +23,6 @@ from textual.widget import Widget
 from textual.widgets import Footer, Input, Static
 
 from ..app import preferences
-from ..app.sidebar import VIEWS
 from ..i18n import _
 from . import loop
 from .glyphs import glyphs, is_utf8
@@ -49,6 +48,9 @@ App:ansi Footer, App:ansi FooterKey { background: $background; color: $text; }
 App:ansi FooterKey .footer-key--key { background: $background; color: $warning; text-style: bold; }
 App:ansi FooterKey .footer-key--description { background: $background; color: $text; }
 ModalScreen { background: $background 50%; }
+/* popups' lists (ChoiceList, PopupMenu): in 16 colours a blended separator or disabled item would vanish */
+App:ansi OptionList > .option-list--separator { color: $border-blurred; }
+App:ansi OptionList > .option-list--option-disabled { color: $foreground; text-style: dim; }
 /* in 16 colours a modal screen does not dim (it could only be a solid fill): the window stays in sight under it.
    "$background 0%" stays opaque in ANSI mode */
 App:ansi ModalScreen { background: transparent; }
@@ -113,7 +115,7 @@ class Body(Horizontal):
 
 
 class PanelBody(Widget, can_focus=True):
-    """What a panel focuses until its real content (the sidebar's entries, the details) is built."""
+    """What a panel focuses until its real content (the details) is built."""
 
     def render(self) -> str:
         return ""
@@ -227,9 +229,7 @@ class KramApp(App):
         yield Palette()
         yield TopLine(id="top")
         with Body(id="body"):
-            with Vertical(id="sidebar", classes="panel"):
-                yield PanelBody(id="sidebar-body")
-                yield Static("", id="views")
+            yield self.main.sidebar
             with Vertical(id="main"):
                 with Vertical(id="packages", classes="panel"):
                     yield self.main.list
@@ -241,7 +241,6 @@ class KramApp(App):
         loop.attach(self)
         self.theme_changed_signal.subscribe(self, self._theme_changed)
         self.set_scheme(self._scheme, save=False)
-        self.window.query_one("#sidebar").border_title = VIEWS[0][1]
         self.window.query_one("#packages").border_title = _("Packages")
         self.window.query_one("#details").border_title = _("Details")
         self.refresh_colours()
@@ -278,11 +277,9 @@ class KramApp(App):
         self.call_after_refresh(self.refresh_colours)
 
     def refresh_colours(self) -> None:
-        """Draw again what took its colours from `role` in Python: the hints, the views, every widget's text."""
-        self.window.query_one("#sidebar").border_subtitle = hint(("g", _("hide")), ("esc", _("list")))
+        """Draw again what took its colours from `role` in Python: the hints, every widget's text."""
         self.window.query_one("#details").border_subtitle = hint(("d", _("hide")), ("esc", _("list")))
         self.window.query_one("#packages").border_subtitle = hint(("s", _("sort")), ("y", _("copy")))
-        self.show_views()
         for screen in self.screen_stack:
             for widget in screen.query("*"):
                 refresh = getattr(widget, "refresh_colours", None)
@@ -322,15 +319,6 @@ class KramApp(App):
 
     def shown_panels(self) -> list[str]:
         return [name for name in PANELS if not self.panel(name).has_class("hidden")]
-
-    def show_views(self) -> None:
-        """The sidebar's list of views, in a wide and tall terminal."""
-        views = Text()
-        for i, (_view, label, _builder) in enumerate(VIEWS):
-            current = i == 0
-            views.append(("\n" if i else "") + (self.glyphs.bullet if current else " ") + " " + label,
-                         "bold" if current else "")
-        self.window.query_one("#views", Static).update(views)
 
     def is_too_small(self) -> bool:
         width, height = self.size

@@ -89,6 +89,9 @@ class SidebarModel:
         self._view = "status"
         self._selected: dict[str, str] = {}  # view -> selected entry id
         self._current: str | None = None
+        # the view of the entry the list is filtered by: the view shown unless the terminal front end steps through
+        # the views without filtering (`browse`)
+        self._filter_view = self._view
         self._expanded: set[str] = set()  # ids of the unfolded entries of the collapsible views
         self.history: list[tuple[str, int, int]] = []  # (text, mode, result count), newest first
         self.marked = None  # the MarkSet: marked keys for the "Marked" status entry
@@ -107,6 +110,12 @@ class SidebarModel:
     def set_view(self, view_id: str) -> None:
         self._view = view_id
         self._rebuild()
+
+    def browse(self, view_id: str) -> None:
+        """Show `view_id`'s entries without filtering by one: the terminal front end steps through the views and
+        filters only when an entry is picked (docs/TUI_SPEC.md §7.2.3). The filter, its view and entry stay."""
+        self._view = view_id
+        self._rebuild(emit=False)
 
     def select(self, view_id: str, entry_id: str) -> None:
         self._selected[view_id] = entry_id
@@ -131,7 +140,13 @@ class SidebarModel:
 
     @property
     def current_entry_id(self) -> str | None:
+        """The entry the list is filtered by."""
         return self._current
+
+    @property
+    def filter_view(self) -> str:
+        """The view `current_entry_id` is in: `current_view` but while `browse` shows another one."""
+        return self._filter_view
 
     # ---------------------------------------------------------------- search history
 
@@ -171,6 +186,7 @@ class SidebarModel:
             left = self._selected.get(self._view)
             self._selected[self._view] = e.id
             self._current = e.id
+            self._filter_view = self._view
             self.filter_changed.emit(e)
             # an empty entry that stayed only because it was selected (a restored "Cannot be upgraded now"): gone once
             # the selection leaves it. After this signal, not in the middle of the list's own selection change
@@ -178,6 +194,7 @@ class SidebarModel:
                 self._scheduler.later(lambda: self._rebuild(emit=False))
         elif not self.entries:
             self._current = None
+            self._filter_view = self._view
             self.filter_changed.emit(FilterEntry("empty", "", lambda _r: True))
 
     def folded(self, index: int, expanded: bool) -> None:
@@ -219,10 +236,12 @@ class SidebarModel:
             self._expanded.add(entries[parents[current]].id)
         if current is None and entries:
             current = 0
-        self._current = entries[current].id if current is not None else None
+        current_id = entries[current].id if current is not None else None
+        if self._view == self._filter_view:  # a view browsed to does not filter until an entry is picked
+            self._current = current_id
         placeholder = (_("Search history is empty") if self._view == "search" else
                        _("No custom filters yet.\nRight-click to create one.")) if not entries else ""
-        self.listed.emit(Listing(self._view, entries, parents, self._current, set(self._expanded), collapsible,
+        self.listed.emit(Listing(self._view, entries, parents, current_id, set(self._expanded), collapsible,
                                  placeholder))
         if emit:
             self.chosen(current)

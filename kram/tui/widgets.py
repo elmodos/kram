@@ -5,6 +5,7 @@
 - `CheckBox`: `[x] Label`, the one checkbox look everywhere (T21); Textual's Checkbox and SelectionList each look
   different.
 - `ChoiceList`: a short modal list (views, tabs, sort columns, schemes) that returns the chosen value.
+- `PopupMenu`: a context menu, with separators and disabled items.
 - `hint`: key hints for a panel's or a dialog's bottom border (§4.5).
 
 They draw with the styles of a 16-colour terminal only (reverse, bold, dim) and take colours from roles, so they read
@@ -12,6 +13,7 @@ the same in every scheme.
 """
 from collections.abc import Hashable, Sequence
 
+from rich.cells import cell_len
 from rich.style import Style
 from rich.text import Text
 from textual.app import ComposeResult
@@ -20,6 +22,7 @@ from textual.message import Message
 from textual.screen import ModalScreen
 from textual.widget import Widget
 from textual.widgets import OptionList
+from textual.widgets.option_list import Option
 
 from ..i18n import _
 from .palette import role
@@ -171,6 +174,60 @@ class ChoiceList(ModalScreen):
     def on_option_list_option_selected(self, event: OptionList.OptionSelected) -> None:
         event.stop()
         self.dismiss(self.values[event.option_index])
+
+    def action_close(self) -> None:
+        self.dismiss(None)
+
+
+class PopupMenu(ModalScreen):
+    """A small menu next to what it is about (a context menu): `items` are (label, enabled) pairs, None between
+    groups of them for a separator. The screen's result is the index in `items` of the one run, None when closed.
+    Disabled items are dim and cannot be run; the cursor skips them. `at` is the screen cell to open at; the menu
+    moves left and up as far as it must to stay on the screen."""
+
+    BINDINGS = [Binding("escape", "close", show=False)]
+    DEFAULT_CSS = """
+    PopupMenu { align: left top; }
+    PopupMenu > OptionList { width: auto; max-width: 90%; height: auto; max-height: 90%; padding: 0 1; }
+    """
+
+    def __init__(self, title: str, items: Sequence[tuple[str, bool] | None], at: tuple[int, int] = (0, 0)):
+        super().__init__()
+        self.title_text = title
+        self.items = list(items)
+        self.at = at
+
+    def compose(self) -> ComposeResult:
+        options: list[Option | None] = []
+        for i, item in enumerate(self.items):
+            if item is None:
+                if options and options[-1] is not None:  # never two separators in a row, nor one first
+                    options.append(None)
+            else:
+                options.append(Option(Text(item[0]), id=str(i), disabled=not item[1]))
+        while options and options[-1] is None:
+            options.pop()
+        menu = OptionList(*options, classes="window")
+        menu.border_title = self.title_text
+        menu.border_subtitle = hint(("enter", _("pick")), ("esc", _("close")))
+        yield menu
+
+    def on_mount(self) -> None:
+        menu = self.query_one(OptionList)
+        labels = [item[0] for item in self.items if item is not None]
+        # the frame and the padding: 4 cells across, 2 lines down; one line for each separator
+        width = max([cell_len(label) for label in labels] + [cell_len(self.title_text) + 2, 20]) + 4
+        height = len(menu.options) + 2 + sum(1 for item in self.items if item is None)
+        screen_w, screen_h = self.app.size
+        x, y = self.at
+        menu.styles.offset = (max(0, min(x, screen_w - width)), max(0, min(y, screen_h - height)))
+        first = next((i for i, option in enumerate(menu.options) if not option.disabled), None)
+        menu.highlighted = first
+        menu.focus()
+
+    def on_option_list_option_selected(self, event: OptionList.OptionSelected) -> None:
+        event.stop()
+        self.dismiss(int(event.option.id))
 
     def action_close(self) -> None:
         self.dismiss(None)

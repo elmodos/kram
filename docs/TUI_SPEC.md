@@ -179,7 +179,8 @@ panel stays). Focus moving to the list in any way closes a slide-over. Only one 
 
 6.6 Terminals cannot tell some keys apart (`ctrl+shift+z` from `ctrl+z`, `ctrl+h` from Backspace on some, `Ins`
 missing on laptops, `F10`/`F11` taken by the emulator). Every action must also be in the menu, and every key of the
-GUIs that a terminal cannot send has a letter in §6.5. The menu shows the TUI's keys, not the GUIs'
+GUIs that a terminal cannot send has a letter in §6.5. The Menu key arrives as `f16` and `Shift+F10` as `f22` in
+xterm's encoding: bind both names. The menu shows the TUI's keys, not the GUIs'
 (`MENU_ACCELERATORS`).
 
 6.7 A key never acts on something not in sight: no list key works while the list is covered by a slide-over that
@@ -209,8 +210,11 @@ muted (`SIDEBAR_COUNTS`). Labels are cut with `…`; counts never are. Bold: an 
 italic: optional groups of an environment.
 
 7.2.3 Changing the view does not filter; `Enter` on an entry does. In a slide-over, `Enter` also closes it.
+`SidebarModel.browse(view)` shows a view without filtering, and `filter_view` is the view of the entry the list is
+filtered by (the GUIs filter on a view change, so for them the two are the same).
 
-7.2.4 Environments fold: `←` folds, `→` unfolds, `▸`/`▾` before a parent (`SIDEBAR_ENVIRONMENTS_TREE`).
+7.2.4 Environments fold: `←` folds, `→` unfolds, `+`/`-` before a parent, on every terminal: no triangles (§4.4)
+(`SIDEBAR_ENVIRONMENTS_TREE`).
 
 7.2.5 Empty views say how to fill them, muted and italic: "No searches yet. Press / to search." / "No custom
 filters. New Filter from Current View is in the menu."
