@@ -112,9 +112,17 @@ App:ansi .dialog .note { color: $foreground; text-style: dim; }
 .dialog .details { height: auto; max-height: 10; margin-top: 1; }
 .dialog .buttons { height: 1; align-horizontal: right; margin-top: 1; }
 .dialog Button { margin-left: 2; }
+/* buttons in groups (ButtonBar): a line per group when they do not fit on one */
+.dialog .buttons > Horizontal { width: auto; height: 1; }
+.dialog .buttons.-stacked { layout: vertical; height: auto; }
+.dialog .buttons.-stacked > Horizontal { width: 100%; align-horizontal: right; }
 /* a text field: one line, no border, the window's background (§4.3) */
 .dialog Input { border: none; height: 1; padding: 0; background: $surface; }
 App:ansi .dialog Input { background: $background; }
+/* a dialog's table (kram.tui.table): the window's background; a line-drawn widget left transparent shows the
+   screen's dimmed one instead */
+.dialog Table { background: $surface; }
+App:ansi .dialog Table { background: $background; }
 
 #sidebar { height: 1fr; }
 #main { width: 1fr; }

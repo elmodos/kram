@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kram\n"
 "Report-Msgid-Bugs-To: https://github.com/elmodos/kram/issues\n"
-"POT-Creation-Date: 2026-11-24 09:42+0200\n"
+"POT-Creation-Date: 2026-11-24 10:31+0200\n"
 "PO-Revision-Date: 2026-11-04 14:07+0200\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -89,6 +89,7 @@ msgstr ""
 
 #: kram/app/actions.py:70 kram/gtk/dialogs/apply.py:172
 #: kram/qt/apply_dialog.py:218 kram/tui/dialogs/apply.py:214
+#: kram/tui/dialogs/repos.py:127 kram/tui/dialogs/repos.py:267
 msgid "Apply"
 msgstr "Aplicar"
 
@@ -114,6 +115,7 @@ msgstr "Activar o desactivar repositorios de software"
 
 #: kram/app/actions.py:75 kram/app/empty_list.py:53
 #: kram/gtk/dialogs/repos.py:28 kram/qt/repos_dialog.py:49
+#: kram/tui/dialogs/repos.py:112 kram/tui/dialogs/repos.py:266
 msgid "Repositories"
 msgstr "Repositorios"
 
@@ -215,7 +217,7 @@ msgid "Install a downloaded .rpm file (you can also drop it on the window)"
 msgstr ""
 "Instalar un archivo .rpm descargado (también puede soltarlo sobre la ventana)"
 
-#: kram/app/actions.py:100 kram/tui/app.py:266 kram/tui/app.py:557
+#: kram/app/actions.py:100 kram/tui/app.py:274 kram/tui/app.py:565
 msgid "Quit"
 msgstr "Salir"
 
@@ -1145,6 +1147,7 @@ msgstr "Motivo"
 #: kram/gtk/details.py:160 kram/gtk/dialogs/apply.py:72
 #: kram/gtk/dialogs/history.py:87 kram/qt/apply_dialog.py:52
 #: kram/qt/details.py:56 kram/qt/history_dialog.py:63 kram/tui/details.py:75
+#: kram/tui/dialogs/repos.py:57
 msgid "Repository"
 msgstr "Repositorio"
 
@@ -1171,7 +1174,7 @@ msgstr "Tipo de actualización"
 
 #: kram/app/columns.py:28 kram/app/details.py:96 kram/app/sidebar.py:31
 #: kram/core/custom_filters.py:53 kram/gtk/dialogs/repos.py:154
-#: kram/qt/repos_dialog.py:67
+#: kram/qt/repos_dialog.py:67 kram/tui/dialogs/repos.py:61
 msgid "Origin"
 msgstr "Origen"
 
@@ -1636,7 +1639,7 @@ msgstr[1] ""
 "{n} repositorios no tienen metadatos, así que sus paquetes faltan en la "
 "lista."
 
-#: kram/app/empty_list.py:58 kram/tui/window.py:278
+#: kram/app/empty_list.py:58 kram/tui/window.py:306
 msgid "Loading the package catalog…"
 msgstr "Cargando el catálogo de paquetes…"
 
@@ -2619,14 +2622,14 @@ msgstr "Paneles fijados"
 msgid "Sidebar and details"
 msgstr "Barra lateral y detalles"
 
-#: kram/app/preferences.py:109 kram/tui/app.py:255
+#: kram/app/preferences.py:109 kram/tui/app.py:263
 msgid "Sidebar"
 msgstr "Barra lateral"
 
 #: kram/app/preferences.py:110 kram/gtk/dialogs/install.py:92
 #: kram/gtk/dialogs/progress.py:50 kram/gtk/ui_port.py:32
 #: kram/qt/install_dialog.py:112 kram/qt/progress_dialog.py:57
-#: kram/tui/app.py:256 kram/tui/app.py:318 kram/tui/dialogs/progress.py:230
+#: kram/tui/app.py:264 kram/tui/app.py:326 kram/tui/dialogs/progress.py:230
 #: kram/tui/package_list.py:273
 msgid "Details"
 msgstr "Detalles"
@@ -2886,7 +2889,7 @@ msgid "No metadata yet: use Reload"
 msgstr "Aún no hay metadatos: use Recargar"
 
 #: kram/app/repos.py:113 kram/gtk/dialogs/mirrors.py:57
-#: kram/qt/mirrors_dialog.py:67
+#: kram/qt/mirrors_dialog.py:67 kram/tui/dialogs/mirrors.py:92
 msgid "Automatic"
 msgstr "Automático"
 
@@ -3255,6 +3258,7 @@ msgstr ""
 
 #: kram/core/custom_filters.py:48 kram/core/search.py:32
 #: kram/gtk/dialogs/repos.py:151 kram/qt/repos_dialog.py:67
+#: kram/tui/dialogs/repos.py:58
 msgid "Name"
 msgstr "Nombre"
 
@@ -3648,7 +3652,8 @@ msgid "Hub"
 msgstr "Hub"
 
 #: kram/gtk/dialogs/copr.py:50 kram/gtk/dialogs/repos.py:152
-#: kram/qt/copr_dialog.py:51 kram/qt/repos_dialog.py:67 kram/tui/app.py:317
+#: kram/qt/copr_dialog.py:51 kram/qt/repos_dialog.py:67 kram/tui/app.py:325
+#: kram/tui/dialogs/repos.py:59 kram/tui/dialogs/repos.py:123
 msgid "Packages"
 msgstr "Paquetes"
 
@@ -3771,26 +3776,32 @@ msgstr "Scripts"
 
 #: kram/gtk/dialogs/mirrors.py:44 kram/gtk/dialogs/repos.py:155
 #: kram/qt/mirrors_dialog.py:45 kram/qt/repos_dialog.py:68
+#: kram/tui/dialogs/mirrors.py:40 kram/tui/dialogs/repos.py:62
 msgid "Mirror"
 msgstr "Espejo"
 
 #: kram/gtk/dialogs/mirrors.py:45 kram/qt/mirrors_dialog.py:45
+#: kram/tui/dialogs/mirrors.py:41
 msgid "Country"
 msgstr "País"
 
 #: kram/gtk/dialogs/mirrors.py:46 kram/qt/mirrors_dialog.py:45
+#: kram/tui/dialogs/mirrors.py:42
 msgid "Protocol"
 msgstr "Protocolo"
 
 #: kram/gtk/dialogs/mirrors.py:47 kram/qt/mirrors_dialog.py:45
+#: kram/tui/dialogs/mirrors.py:43
 msgid "Response"
 msgstr "Respuesta"
 
 #: kram/gtk/dialogs/mirrors.py:48 kram/qt/mirrors_dialog.py:45
+#: kram/tui/dialogs/mirrors.py:44
 msgid "Speed"
 msgstr "Velocidad"
 
 #: kram/gtk/dialogs/mirrors.py:49 kram/qt/mirrors_dialog.py:45
+#: kram/tui/dialogs/mirrors.py:45
 msgid "Note"
 msgstr "Nota"
 
@@ -3862,15 +3873,18 @@ msgid "Close when finished successfully"
 msgstr "Cerrar al terminar correctamente"
 
 #: kram/gtk/dialogs/repos.py:44 kram/qt/repos_dialog.py:57
+#: kram/tui/dialogs/repos.py:116
 msgid "Filter…"
 msgstr "Filtrar…"
 
 #: kram/gtk/dialogs/repos.py:47 kram/qt/repos_dialog.py:61
+#: kram/tui/dialogs/repos.py:120
 msgid "Show debuginfo and source repositories"
 msgstr "Mostrar repositorios debuginfo y de fuentes"
 
 #: kram/gtk/dialogs/repos.py:69 kram/gtk/dialogs/repos.py:208
 #: kram/qt/repos_dialog.py:105 kram/qt/repos_dialog.py:217
+#: kram/tui/dialogs/repos.py:124
 msgid "Mirrors…"
 msgstr "Espejos…"
 
@@ -4009,7 +4023,7 @@ msgid_plural "{n} of them are security updates"
 msgstr[0] "{n} de ellas es de seguridad"
 msgstr[1] "{n} de ellas son de seguridad"
 
-#: kram/notifier/tray.py:237 kram/tui/window.py:168
+#: kram/notifier/tray.py:237 kram/tui/window.py:173
 #, python-brace-format
 msgid "The package information is {days} day old"
 msgid_plural "The package information is {days} days old"
@@ -4050,44 +4064,44 @@ msgid "install a package file"
 msgstr "instalar un archivo de paquete"
 
 #. TRANSLATORS: the badge on the top line of the terminal front end when it runs as root
-#: kram/tui/app.py:189
+#: kram/tui/app.py:197
 msgid "ROOT"
 msgstr "ROOT"
 
-#: kram/tui/app.py:190
+#: kram/tui/app.py:198
 msgid "changes need no password"
 msgstr "los cambios no piden contraseña"
 
-#: kram/tui/app.py:238
+#: kram/tui/app.py:246
 #, python-brace-format
 msgid "Make the terminal larger: Kram needs {size}"
 msgstr "Agrande el terminal: Kram necesita {size}"
 
-#: kram/tui/app.py:239 kram/tui/window.py:155
+#: kram/tui/app.py:247 kram/tui/window.py:160
 msgid "quit"
 msgstr "salir"
 
-#: kram/tui/app.py:257 kram/tui/search.py:156
+#: kram/tui/app.py:265 kram/tui/search.py:156
 msgid "Search"
 msgstr "Buscar"
 
-#: kram/tui/app.py:258 kram/tui/menu.py:89 kram/tui/sidebar.py:289
+#: kram/tui/app.py:266 kram/tui/menu.py:89 kram/tui/sidebar.py:289
 msgid "Menu"
 msgstr "Menú"
 
-#: kram/tui/app.py:259 kram/tui/dialogs/keys.py:85
+#: kram/tui/app.py:267 kram/tui/dialogs/keys.py:85
 msgid "Keys"
 msgstr "Teclas"
 
-#: kram/tui/app.py:260
+#: kram/tui/app.py:268
 msgid "Focus the list"
 msgstr "Ir a la lista"
 
-#: kram/tui/app.py:368 kram/tui/dialogs/apply.py:196
+#: kram/tui/app.py:376 kram/tui/dialogs/apply.py:196
 msgid "copy"
 msgstr "copiar"
 
-#: kram/tui/app.py:368
+#: kram/tui/app.py:376
 msgid "sort"
 msgstr "ordenar"
 
@@ -4197,9 +4211,10 @@ msgid "choose"
 msgstr "elegir"
 
 #: kram/tui/dialogs/about.py:63 kram/tui/dialogs/keys.py:87
-#: kram/tui/dialogs/progress.py:68 kram/tui/dialogs/progress.py:204
-#: kram/tui/dialogs/question.py:60 kram/tui/menu.py:90 kram/tui/search.py:186
-#: kram/tui/widgets.py:179 kram/tui/widgets.py:241
+#: kram/tui/dialogs/mirrors.py:79 kram/tui/dialogs/progress.py:68
+#: kram/tui/dialogs/progress.py:204 kram/tui/dialogs/question.py:60
+#: kram/tui/dialogs/repos.py:114 kram/tui/menu.py:90 kram/tui/search.py:186
+#: kram/tui/widgets.py:200 kram/tui/widgets.py:262
 msgid "close"
 msgstr "cerrar"
 
@@ -4212,7 +4227,7 @@ msgstr "siguiente"
 msgid "Close"
 msgstr "Cerrar"
 
-#: kram/tui/dialogs/about.py:81 kram/tui/window.py:207
+#: kram/tui/dialogs/about.py:81 kram/tui/window.py:212
 msgid "Not in this version yet"
 msgstr "Aún no está en esta versión"
 
@@ -4221,7 +4236,7 @@ msgstr "Aún no está en esta versión"
 msgid "{size} free on {mount}."
 msgstr "{size} libres en {mount}."
 
-#: kram/tui/dialogs/apply.py:196
+#: kram/tui/dialogs/apply.py:196 kram/tui/dialogs/repos.py:113
 msgid "apply"
 msgstr "aplicar"
 
@@ -4241,6 +4256,26 @@ msgstr "Ventana"
 #: kram/tui/dialogs/keys.py:87 kram/tui/dialogs/progress.py:68
 msgid "scroll"
 msgstr "desplazar"
+
+#: kram/tui/dialogs/mirrors.py:79
+msgid "use"
+msgstr "usar"
+
+#: kram/tui/dialogs/mirrors.py:84
+msgid "Fastest mirror for every repository"
+msgstr "El espejo más rápido para cada repositorio"
+
+#: kram/tui/dialogs/mirrors.py:89 kram/tui/dialogs/mirrors.py:130
+msgid "Test speed"
+msgstr "Probar velocidad"
+
+#: kram/tui/dialogs/mirrors.py:91
+msgid "Use selected mirror"
+msgstr "Usar el espejo seleccionado"
+
+#: kram/tui/dialogs/mirrors.py:130
+msgid "Stop"
+msgstr "Detener"
 
 #: kram/tui/dialogs/path.py:79
 msgid "complete"
@@ -4306,6 +4341,80 @@ msgstr "Aceptar"
 #: kram/tui/dialogs/question.py:22
 msgid "Yes"
 msgstr "Sí"
+
+#. TRANSLATORS: the age of a repository's metadata in the terminal's Repositories table
+#: kram/tui/dialogs/repos.py:46
+#, python-brace-format
+msgid "{minutes} min"
+msgstr "{minutes} min"
+
+#. TRANSLATORS: the age of a repository's metadata in the terminal's Repositories table; h: hours
+#: kram/tui/dialogs/repos.py:49
+#, python-brace-format
+msgid "{hours} h"
+msgstr "{hours} h"
+
+#. TRANSLATORS: the age of a repository's metadata in the terminal's Repositories table; d: days
+#: kram/tui/dialogs/repos.py:51
+#, python-brace-format
+msgid "{days} d"
+msgstr "{days} d"
+
+#: kram/tui/dialogs/repos.py:56
+msgctxt "short column header"
+msgid "On"
+msgstr "Act."
+
+#: kram/tui/dialogs/repos.py:60
+msgctxt "short column header"
+msgid "Prio"
+msgstr "Prio."
+
+#: kram/tui/dialogs/repos.py:63
+msgctxt "short column header"
+msgid "Metadata"
+msgstr "Metadatos"
+
+#. TRANSLATORS: why a button of a terminal dialog is off: "Mirrors: This repository has a single address…"
+#: kram/tui/dialogs/repos.py:76
+#, python-brace-format
+msgid "{action}: {reason}"
+msgstr "{action}: {reason}"
+
+#: kram/tui/dialogs/repos.py:113
+msgid "debug/source"
+msgstr "debuginfo/fuentes"
+
+#: kram/tui/dialogs/repos.py:113
+msgid "on/off"
+msgstr "activar/desactivar"
+
+#: kram/tui/dialogs/repos.py:125
+msgid "Remove file…"
+msgstr "Eliminar archivo…"
+
+#: kram/tui/dialogs/repos.py:179
+#, python-brace-format
+msgid "turn on {repos}"
+msgstr "activar {repos}"
+
+#: kram/tui/dialogs/repos.py:180
+#, python-brace-format
+msgid "turn off {repos}"
+msgstr "desactivar {repos}"
+
+#: kram/tui/dialogs/repos.py:181
+#, python-brace-format
+msgid "Not applied yet: {changes}"
+msgstr "Aún sin aplicar: {changes}"
+
+#: kram/tui/dialogs/repos.py:266
+msgid "The changes to the repositories are not applied yet."
+msgstr "Los cambios en los repositorios aún no se han aplicado."
+
+#: kram/tui/dialogs/repos.py:268
+msgid "Close without applying"
+msgstr "Cerrar sin aplicar"
 
 #: kram/tui/menu.py:49
 msgid "Colours…"
@@ -4526,55 +4635,55 @@ msgstr "No hay escritorio donde mostrarla: la ruta se ha copiado"
 msgid "Copied"
 msgstr "Copiado"
 
-#: kram/tui/widgets.py:179 kram/tui/widgets.py:241
+#: kram/tui/widgets.py:200 kram/tui/widgets.py:262
 msgid "pick"
 msgstr "elegir"
 
-#: kram/tui/window.py:154
+#: kram/tui/window.py:159
 msgid "Another package manager is running: waiting"
 msgstr "Otro gestor de paquetes está en marcha: esperando"
 
-#: kram/tui/window.py:184
+#: kram/tui/window.py:189
 #, python-brace-format
 msgid "“{text}” in {filter}"
 msgstr "«{text}» en {filter}"
 
-#: kram/tui/window.py:189
+#: kram/tui/window.py:194
 #, python-brace-format
 msgid "{n} change marked"
 msgid_plural "{n} changes marked"
 msgstr[0] "{n} cambio marcado"
 msgstr[1] "{n} cambios marcados"
 
-#: kram/tui/window.py:282
+#: kram/tui/window.py:310
 msgid "Nothing is marked"
 msgstr "No hay nada marcado"
 
-#: kram/tui/window.py:284
+#: kram/tui/window.py:312
 msgid "No package has an upgrade"
 msgstr "Ningún paquete tiene actualización"
 
-#: kram/tui/window.py:286
+#: kram/tui/window.py:314
 msgid "No upgrade of this kind"
 msgstr "No hay actualizaciones de este tipo"
 
-#: kram/tui/window.py:288
+#: kram/tui/window.py:316
 msgid "No unneeded dependencies"
 msgstr "No hay dependencias innecesarias"
 
-#: kram/tui/window.py:290
+#: kram/tui/window.py:318
 msgid "Only for one package at a time"
 msgstr "Solo para un paquete a la vez"
 
-#: kram/tui/window.py:291 kram/tui/window.py:294
+#: kram/tui/window.py:319 kram/tui/window.py:322
 msgid "Not for this package"
 msgstr "No para este paquete"
 
-#: kram/tui/window.py:293
+#: kram/tui/window.py:321
 msgid "Not marked"
 msgstr "No marcado"
 
-#: kram/tui/window.py:370
+#: kram/tui/window.py:398
 msgid "Sort by"
 msgstr "Ordenar por"
 

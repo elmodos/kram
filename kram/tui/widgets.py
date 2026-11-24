@@ -2,6 +2,7 @@
 
 - `Button`: `< Apply >`, one line, as dialog(1) and whiptail draw it. Textual's own Button is three lines high and
   does not fit a narrow terminal (T14).
+- `ButtonBar`: a dialog's buttons, on as many lines as they need.
 - `CheckBox`: `[x] Label`, the one checkbox look everywhere (T21); Textual's Checkbox and SelectionList each look
   different.
 - `ChoiceList`: a short modal list (views, tabs, sort columns, schemes) that returns the chosen value.
@@ -18,6 +19,7 @@ from rich.style import Style
 from rich.text import Text
 from textual.app import ComposeResult
 from textual.binding import Binding
+from textual.containers import Horizontal
 from textual.message import Message
 from textual.screen import ModalScreen
 from textual.widget import Widget
@@ -75,6 +77,10 @@ class Button(Widget, can_focus=True):
     def render(self) -> Text:
         return Text(f"< {self.label} >")
 
+    def get_content_width(self, container, viewport) -> int:
+        # its label's, whatever the container's width (a container of `width: auto` gave it a few cells only)
+        return cell_len(f"< {self.label} >")
+
     def set_label(self, label: str) -> None:
         self.label = label
         self.refresh(layout=True)
@@ -94,6 +100,21 @@ class Button(Widget, can_focus=True):
 
     def on_click(self) -> None:
         self.action_press()
+
+
+class ButtonBar(Horizontal):
+    """A dialog's buttons at the bottom right (§10), in groups (Horizontal containers of Buttons): all on one line,
+    or one line per group when the line is too narrow for all of them (a narrow terminal, a long translation), so
+    that no button is cut. `fit()` after a label changed; a resize fits by itself. Its look is the app's
+    `.dialog .buttons` rules."""
+
+    def on_resize(self) -> None:
+        self.fit()
+
+    def fit(self) -> None:
+        needed = sum(cell_len(f"< {b.label} >") + b.styles.margin.left + b.styles.margin.right
+                     for b in self.query(Button) if b.display)
+        self.set_class(needed > self.size.width > 0, "-stacked")
 
 
 class CheckBox(Widget, can_focus=True):

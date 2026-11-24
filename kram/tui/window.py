@@ -8,9 +8,12 @@ progress of every request is the dialog of kram.tui.dialogs.progress (§10.2).
 
 The changes are reviewed in the Apply changes dialog (kram.tui.dialogs.apply, §10.1) and run in the progress dialog;
 Browser does the rest of the flow (the conflicts offer, the form when nothing can be done, the reload, closing Kram
-when the transaction removed kram-tui), as it does for the GUIs. The parts of `BrowserView` that later steps bring
-(the repositories, the mirrors) say so through the Ui port meanwhile, each with the section that replaces it. So do
-the actions of the menu whose dialogs come later (`NOT_YET`).
+when the transaction removed kram-tui), as it does for the GUIs. The actions of the menu whose dialogs come in later
+steps say so through the Ui port meanwhile (`NOT_YET`).
+
+The Repositories dialog (kram.tui.dialogs.repos, §10.4) and the Mirrors dialog over it (kram.tui.dialogs.mirrors,
+§10.5) stay open while what is done from them runs: while each is open, every new catalog gives it the new state,
+as the GUIs' windows do.
 
 Marking (§7.5) is the GUIs': `space` and a click on the status cell are the status click (the likely mark, or the
 row's menu, as the setting says), a double click is the likely mark, and the keys of kram.tui.keymap run the Package
@@ -55,7 +58,9 @@ from . import loop
 from .details import Details
 from .dialogs.about import AboutDialog
 from .dialogs.apply import ApplyDialog
+from .dialogs.mirrors import MirrorsDialog
 from .dialogs.progress import ProgressDialog
+from .dialogs.repos import ReposDialog
 from .menu import menu_title, open_table_menu
 from .package_list import PackageTable, column_label
 from .palette import role
@@ -66,7 +71,7 @@ from .widgets import ChoiceList
 
 FRONT_PACKAGE = "kram-tui"
 # the actions whose dialogs come in later steps (docs/TUI_SPEC.md §17): "Not in this version yet"
-NOT_YET = frozenset({"history", "show_in_history", "open_file", "repos", "copr", "cache", "notifications"})
+NOT_YET = frozenset({"history", "show_in_history", "open_file", "copr", "cache", "notifications"})
 # Browser says this while the catalog load waits for the system repo lock (Browser._waiting_for_lock)
 LOCK_STATUS = "Waiting for another package manager to finish…"
 
@@ -224,11 +229,34 @@ class MainWindow:
         self.root.present(dialog)
 
     def show_repos(self, data, done: Callable[[ReposChoice | None], None]) -> None:
-        self._not_yet()  # replaced by the Repositories dialog, §10.4
-        done(None)
+        """The Repositories dialog; `done(choice)` from its dismissal, so that the progress dialog of Apply comes
+        after it. A removal or a mirror change made from it reloads the catalog: the dialog then shows the new
+        state."""
+        b = self.browser
+        dialog = ReposDialog(data, self.ui, on_remove=b.remove_repos, on_mirrors=b.open_mirrors)
+        shown = [True]
+
+        def refresh(snap) -> None:
+            b.repos_data(snap, lambda new: shown[0] and dialog.set_data(new))
+
+        def closed(choice: ReposChoice | None) -> None:
+            shown[0] = False  # data read for it later is dropped
+            b.catalog_loaded.disconnect(refresh)
+            done(choice)
+        b.catalog_loaded.connect(refresh)
+        self.app.push_screen(dialog, closed)
 
     def show_mirrors(self, repo, source, fastestmirror: bool, apply: Callable[[MirrorChoice], None]) -> None:
-        self._not_yet()  # replaced by the Mirrors dialog, §10.5
+        """Over the Repositories dialog, which stays open under it; a choice is applied while this one stays open
+        too, and the reload shows it the new state."""
+        b = self.browser
+        dialog = MirrorsDialog(repo, source, fastestmirror, self.ui, on_choice=apply)
+
+        def refresh(snap) -> None:
+            if (state := b.mirror_state(snap, repo.id)) is not None:
+                dialog.set_state(*state)
+        b.catalog_loaded.connect(refresh)
+        self.app.push_screen(dialog, lambda _result: b.catalog_loaded.disconnect(refresh))
 
     def quit(self) -> None:
         self.app.request_quit()
@@ -309,7 +337,7 @@ class MainWindow:
         b, marker = self.browser, self.browser.marker
         return {
             "reload": b.refresh_metadata, "reload_cache": b.reload, "mark_upgrades": marker.mark_all_upgrades,
-            "apply": b.apply,
+            "apply": b.apply, "repos": b.open_repos,
             "lock": lambda: b.set_version_lock(True), "unlock": lambda: b.set_version_lock(False),
             "mark_unneeded": marker.mark_unneeded, "unmark_all": marker.unmark_all,
             "properties": lambda: self.show_tab("general"), "why_blocked": lambda: self.show_tab("dependencies"),

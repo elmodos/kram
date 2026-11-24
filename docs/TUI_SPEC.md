@@ -404,7 +404,8 @@ letters (§7.3.4), ellipsis `...`.
 
 General: modal screens (§6.1), double border, title top-left, hints bottom-right, buttons bottom-right in the
 order of the GUIs, the default one focused. Width 90% up to 110 columns unless said; height to content up to 90%;
-what does not fit scrolls as one area between the header lines and the buttons. Narrow terminals drop columns,
+what does not fit scrolls as one area between the header lines and the buttons. Buttons that do not fit on one
+line wrap by group onto a second line (`ButtonBar`). Narrow terminals drop columns,
 not words: each dialog says which. Each dialog is the view of a presenter of `kram/app` through its view protocol;
 it holds no logic of its own.
 
@@ -463,8 +464,8 @@ names every repository of the file and the packages from them), `< Apply >` (`ct
 mirror changes run over the dialog, which then shows the new state (`*_IN_PLACE`). Closing with changes not applied
 asks first. Narrow: Name and Metadata are dropped.
 
-10.5 **Mirrors** (over Repositories): the mirrors of the metalink, In use bold; `< Test speed >` / `< Stop >` sorts
-by speed while it runs; `< Use selected mirror >` (asks about an out-of-date or plain http mirror), `< Automatic >`,
+10.5 **Mirrors** (over Repositories): the mirrors of the metalink, In use bold; `< Test speed >` / `< Stop >`, sorted by speed once the test is
+done (as `Mirrors.lines` does: rows do not move under the cursor meanwhile); `< Use selected mirror >` (asks about an out-of-date or plain http mirror), `< Automatic >`,
 `[ ] Fastest mirror for every repository`. All run over the dialog, which stays open.
 
 10.6 **COPR.** "On this system" table (On, Project, Packages, Installed), or "No COPR projects yet. Search for one

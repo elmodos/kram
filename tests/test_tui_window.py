@@ -555,12 +555,11 @@ def test_the_top_line_drops_what_does_not_fit_from_the_right(monkeypatch):
 
 def test_dialogs_of_later_steps_say_so(monkeypatch):
     use_catalog(monkeypatch)
-    results = []
 
     async def test(app, pilot):
-        app.main.show_repos(None, results.append)  # the Repositories dialog comes in a later step (§10.4)
+        app.main.run_action("copr")  # the COPR dialog comes in a later step (§10.6)
         await pilot.pause()
-        assert isinstance(app.screen, QuestionDialog) and results == [None]
+        assert isinstance(app.screen, QuestionDialog) and app.screen.question.text == "Not in this version yet"
         await pilot.press("enter")
         await pilot.pause()
         assert len(app.screen_stack) == 1

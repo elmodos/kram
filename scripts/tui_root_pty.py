@@ -22,7 +22,9 @@ import time
 
 ANSI = re.compile(rb"\x1b\[[0-9;?<>=]*[ -/]*[@-~]|\x1b[()][0-9A-B]|\x1b[=>]|\x1b\][^\x07\x1b]*(\x07|\x1b\\)")
 F5, ENTER, ESC, CTRL_C, CTRL_A = b"\x1b[15~", b"\r", b"\x1b", b"\x03", b"\x01"
+DOWN, RIGHT, TAB, SHIFT_TAB = b"\x1b[B", b"\x1b[C", b"\t", b"\x1b[Z"
 PACKAGE = os.environ.get("KRAM_CHECK_PACKAGE", "tree")  # small, no dependencies beyond glibc, not in the image
+REPO = os.environ.get("KRAM_CHECK_REPO", "updates-testing")  # a repository of the image's own files
 REFRESH_SECONDS = int(os.environ.get("KRAM_CHECK_REFRESH_SECONDS", "600"))  # a metadata refresh over the network
 
 
@@ -237,9 +239,58 @@ def transaction(t: Term, check) -> None:
     check(not installed(PACKAGE), f"rpm -q {PACKAGE}: removed")
 
 
+def repo_enabled(repo: str) -> bool:
+    out = subprocess.run(["dnf5", "repolist", "--enabled"], capture_output=True, text=True).stdout
+    return any(line.split()[:1] == [repo] for line in out.splitlines())
+
+
+def switch_repo(t: Term, check, on: bool, authenticate: bool) -> None:
+    """Settings → Repositories, the filter, `space` on the repository, ctrl+a, the password when asked, the
+    request to its end, Close; then dnf5 says whether it is on."""
+    mark = len(t.raw)
+    t.send(b"m", 1)
+    for _ in range(3):  # File, Edit, Package, Settings
+        t.send(DOWN, 0.3)
+    t.send(RIGHT, 0.5)
+    t.send(ENTER, 1)  # Repositories: the first entry of Settings
+    check(t.wait_for("Show debuginfo and source repositories", 60, mark), "Settings → Repositories: the dialog")
+    t.read(1)
+    t.send(SHIFT_TAB, 0.5)  # from the table to the filter line
+    t.send(REPO.encode(), 1)
+    t.send(TAB, 0.5)  # back to the table: the repository is the only row
+    mark = len(t.raw)
+    t.send(b" ", 1)
+    word = "on" if on else "off"
+    check(t.wait_for(f"turn {word} {REPO}", 10, mark), f"space: {REPO} to be turned {word}, said under the table")
+    mark = len(t.raw)
+    t.send(CTRL_A, 1)
+    if authenticate:
+        check(t.wait_for("Administrator rights", 30, mark), "ctrl+a: changing repositories needs administrator rights")
+        t.read(1)
+        to_prompt(t, check)
+        t.send(b"secret\r", 0.5)
+    else:
+        check(not t.wait_for("Administrator rights", 3, mark), "ctrl+a: no password asked again")
+    check(t.wait_for("Changing repositories", 60, mark), "the progress dialog shows the request")
+    check(t.wait_for("Done.", 120, mark), "…which ran to its end")
+    mark = len(t.raw)
+    t.send(ENTER, 2)  # Close; the catalog loads again
+    check(t.wait_for("Metadata:", 300, mark), "…and Kram reloaded the catalog")
+    check(repo_enabled(REPO) == on, f"dnf5 repolist: {REPO} is {word}")
+
+
+def repositories(t: Term, check) -> None:
+    before = repo_enabled(REPO)
+    check(t.wait_for("Metadata:", 120), "the catalog is loaded")
+    t.read(1)
+    switch_repo(t, check, not before, authenticate=True)
+    switch_repo(t, check, before, authenticate=False)
+
+
 def main() -> None:
     results = [run("right password", right_password), run("wrong password", wrong_password),
-               run("Ctrl+C at the prompt", ctrl_c), run("a transaction: install, then remove", transaction, False)]
+               run("Ctrl+C at the prompt", ctrl_c), run("a transaction: install, then remove", transaction, False),
+               run(f"repositories: {REPO} on and off", repositories, False)]
     print("### result:", "all scenarios ok" if all(results) else "FAILED", flush=True)
     sys.exit(0 if all(results) else 1)
 

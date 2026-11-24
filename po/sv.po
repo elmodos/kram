@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kram\n"
 "Report-Msgid-Bugs-To: https://github.com/elmodos/kram/issues\n"
-"POT-Creation-Date: 2026-11-24 09:42+0200\n"
+"POT-Creation-Date: 2026-11-24 10:31+0200\n"
 "PO-Revision-Date: 2026-11-05 18:05+0200\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -88,6 +88,7 @@ msgstr ""
 
 #: kram/app/actions.py:70 kram/gtk/dialogs/apply.py:172
 #: kram/qt/apply_dialog.py:218 kram/tui/dialogs/apply.py:214
+#: kram/tui/dialogs/repos.py:127 kram/tui/dialogs/repos.py:267
 msgid "Apply"
 msgstr "Verkställ"
 
@@ -113,6 +114,7 @@ msgstr "Aktivera eller inaktivera programvaruförråd"
 
 #: kram/app/actions.py:75 kram/app/empty_list.py:53
 #: kram/gtk/dialogs/repos.py:28 kram/qt/repos_dialog.py:49
+#: kram/tui/dialogs/repos.py:112 kram/tui/dialogs/repos.py:266
 msgid "Repositories"
 msgstr "Förråd"
 
@@ -210,7 +212,7 @@ msgstr "Öppna paketfil…"
 msgid "Install a downloaded .rpm file (you can also drop it on the window)"
 msgstr "Installera en nedladdad .rpm-fil (du kan också släppa den på fönstret)"
 
-#: kram/app/actions.py:100 kram/tui/app.py:266 kram/tui/app.py:557
+#: kram/app/actions.py:100 kram/tui/app.py:274 kram/tui/app.py:565
 msgid "Quit"
 msgstr "Avsluta"
 
@@ -1129,6 +1131,7 @@ msgstr "Orsak"
 #: kram/gtk/details.py:160 kram/gtk/dialogs/apply.py:72
 #: kram/gtk/dialogs/history.py:87 kram/qt/apply_dialog.py:52
 #: kram/qt/details.py:56 kram/qt/history_dialog.py:63 kram/tui/details.py:75
+#: kram/tui/dialogs/repos.py:57
 msgid "Repository"
 msgstr "Förråd"
 
@@ -1155,7 +1158,7 @@ msgstr "Uppdateringstyp"
 
 #: kram/app/columns.py:28 kram/app/details.py:96 kram/app/sidebar.py:31
 #: kram/core/custom_filters.py:53 kram/gtk/dialogs/repos.py:154
-#: kram/qt/repos_dialog.py:67
+#: kram/qt/repos_dialog.py:67 kram/tui/dialogs/repos.py:61
 msgid "Origin"
 msgstr "Ursprung"
 
@@ -1617,7 +1620,7 @@ msgid_plural ""
 msgstr[0] "{n} förråd saknar metadata, så dess paket saknas i listan."
 msgstr[1] "{n} förråd saknar metadata, så deras paket saknas i listan."
 
-#: kram/app/empty_list.py:58 kram/tui/window.py:278
+#: kram/app/empty_list.py:58 kram/tui/window.py:306
 msgid "Loading the package catalog…"
 msgstr "Läser in paketkatalogen…"
 
@@ -2591,14 +2594,14 @@ msgstr "Fästa paneler"
 msgid "Sidebar and details"
 msgstr "Sidopanel och detaljer"
 
-#: kram/app/preferences.py:109 kram/tui/app.py:255
+#: kram/app/preferences.py:109 kram/tui/app.py:263
 msgid "Sidebar"
 msgstr "Sidopanel"
 
 #: kram/app/preferences.py:110 kram/gtk/dialogs/install.py:92
 #: kram/gtk/dialogs/progress.py:50 kram/gtk/ui_port.py:32
 #: kram/qt/install_dialog.py:112 kram/qt/progress_dialog.py:57
-#: kram/tui/app.py:256 kram/tui/app.py:318 kram/tui/dialogs/progress.py:230
+#: kram/tui/app.py:264 kram/tui/app.py:326 kram/tui/dialogs/progress.py:230
 #: kram/tui/package_list.py:273
 msgid "Details"
 msgstr "Detaljer"
@@ -2855,7 +2858,7 @@ msgid "No metadata yet: use Reload"
 msgstr "Ingen metadata ännu: använd Läs in igen"
 
 #: kram/app/repos.py:113 kram/gtk/dialogs/mirrors.py:57
-#: kram/qt/mirrors_dialog.py:67
+#: kram/qt/mirrors_dialog.py:67 kram/tui/dialogs/mirrors.py:92
 msgid "Automatic"
 msgstr "Automatiskt"
 
@@ -3214,6 +3217,7 @@ msgstr "PackageKit arbetar just nu. Försök igen när det är klart."
 
 #: kram/core/custom_filters.py:48 kram/core/search.py:32
 #: kram/gtk/dialogs/repos.py:151 kram/qt/repos_dialog.py:67
+#: kram/tui/dialogs/repos.py:58
 msgid "Name"
 msgstr "Namn"
 
@@ -3606,7 +3610,8 @@ msgid "Hub"
 msgstr "Hubb"
 
 #: kram/gtk/dialogs/copr.py:50 kram/gtk/dialogs/repos.py:152
-#: kram/qt/copr_dialog.py:51 kram/qt/repos_dialog.py:67 kram/tui/app.py:317
+#: kram/qt/copr_dialog.py:51 kram/qt/repos_dialog.py:67 kram/tui/app.py:325
+#: kram/tui/dialogs/repos.py:59 kram/tui/dialogs/repos.py:123
 msgid "Packages"
 msgstr "Paket"
 
@@ -3727,26 +3732,32 @@ msgstr "Skript"
 
 #: kram/gtk/dialogs/mirrors.py:44 kram/gtk/dialogs/repos.py:155
 #: kram/qt/mirrors_dialog.py:45 kram/qt/repos_dialog.py:68
+#: kram/tui/dialogs/mirrors.py:40 kram/tui/dialogs/repos.py:62
 msgid "Mirror"
 msgstr "Spegel"
 
 #: kram/gtk/dialogs/mirrors.py:45 kram/qt/mirrors_dialog.py:45
+#: kram/tui/dialogs/mirrors.py:41
 msgid "Country"
 msgstr "Land"
 
 #: kram/gtk/dialogs/mirrors.py:46 kram/qt/mirrors_dialog.py:45
+#: kram/tui/dialogs/mirrors.py:42
 msgid "Protocol"
 msgstr "Protokoll"
 
 #: kram/gtk/dialogs/mirrors.py:47 kram/qt/mirrors_dialog.py:45
+#: kram/tui/dialogs/mirrors.py:43
 msgid "Response"
 msgstr "Svarstid"
 
 #: kram/gtk/dialogs/mirrors.py:48 kram/qt/mirrors_dialog.py:45
+#: kram/tui/dialogs/mirrors.py:44
 msgid "Speed"
 msgstr "Hastighet"
 
 #: kram/gtk/dialogs/mirrors.py:49 kram/qt/mirrors_dialog.py:45
+#: kram/tui/dialogs/mirrors.py:45
 msgid "Note"
 msgstr "Anmärkning"
 
@@ -3817,15 +3828,18 @@ msgid "Close when finished successfully"
 msgstr "Stäng när det har slutförts"
 
 #: kram/gtk/dialogs/repos.py:44 kram/qt/repos_dialog.py:57
+#: kram/tui/dialogs/repos.py:116
 msgid "Filter…"
 msgstr "Filtrera…"
 
 #: kram/gtk/dialogs/repos.py:47 kram/qt/repos_dialog.py:61
+#: kram/tui/dialogs/repos.py:120
 msgid "Show debuginfo and source repositories"
 msgstr "Visa förråd för debuginfo och källkod"
 
 #: kram/gtk/dialogs/repos.py:69 kram/gtk/dialogs/repos.py:208
 #: kram/qt/repos_dialog.py:105 kram/qt/repos_dialog.py:217
+#: kram/tui/dialogs/repos.py:124
 msgid "Mirrors…"
 msgstr "Speglar…"
 
@@ -3962,7 +3976,7 @@ msgid_plural "{n} of them are security updates"
 msgstr[0] "varav {n} säkerhetsuppdatering"
 msgstr[1] "varav {n} säkerhetsuppdateringar"
 
-#: kram/notifier/tray.py:237 kram/tui/window.py:168
+#: kram/notifier/tray.py:237 kram/tui/window.py:173
 #, python-brace-format
 msgid "The package information is {days} day old"
 msgid_plural "The package information is {days} days old"
@@ -4003,44 +4017,44 @@ msgid "install a package file"
 msgstr "installera en paketfil"
 
 #. TRANSLATORS: the badge on the top line of the terminal front end when it runs as root
-#: kram/tui/app.py:189
+#: kram/tui/app.py:197
 msgid "ROOT"
 msgstr "ROOT"
 
-#: kram/tui/app.py:190
+#: kram/tui/app.py:198
 msgid "changes need no password"
 msgstr "ändringar utan lösenord"
 
-#: kram/tui/app.py:238
+#: kram/tui/app.py:246
 #, python-brace-format
 msgid "Make the terminal larger: Kram needs {size}"
 msgstr "Gör terminalen större: Kram behöver {size}"
 
-#: kram/tui/app.py:239 kram/tui/window.py:155
+#: kram/tui/app.py:247 kram/tui/window.py:160
 msgid "quit"
 msgstr "avsluta"
 
-#: kram/tui/app.py:257 kram/tui/search.py:156
+#: kram/tui/app.py:265 kram/tui/search.py:156
 msgid "Search"
 msgstr "Sök"
 
-#: kram/tui/app.py:258 kram/tui/menu.py:89 kram/tui/sidebar.py:289
+#: kram/tui/app.py:266 kram/tui/menu.py:89 kram/tui/sidebar.py:289
 msgid "Menu"
 msgstr "Meny"
 
-#: kram/tui/app.py:259 kram/tui/dialogs/keys.py:85
+#: kram/tui/app.py:267 kram/tui/dialogs/keys.py:85
 msgid "Keys"
 msgstr "Tangenter"
 
-#: kram/tui/app.py:260
+#: kram/tui/app.py:268
 msgid "Focus the list"
 msgstr "Gå till listan"
 
-#: kram/tui/app.py:368 kram/tui/dialogs/apply.py:196
+#: kram/tui/app.py:376 kram/tui/dialogs/apply.py:196
 msgid "copy"
 msgstr "kopiera"
 
-#: kram/tui/app.py:368
+#: kram/tui/app.py:376
 msgid "sort"
 msgstr "sortera"
 
@@ -4150,9 +4164,10 @@ msgid "choose"
 msgstr "välj"
 
 #: kram/tui/dialogs/about.py:63 kram/tui/dialogs/keys.py:87
-#: kram/tui/dialogs/progress.py:68 kram/tui/dialogs/progress.py:204
-#: kram/tui/dialogs/question.py:60 kram/tui/menu.py:90 kram/tui/search.py:186
-#: kram/tui/widgets.py:179 kram/tui/widgets.py:241
+#: kram/tui/dialogs/mirrors.py:79 kram/tui/dialogs/progress.py:68
+#: kram/tui/dialogs/progress.py:204 kram/tui/dialogs/question.py:60
+#: kram/tui/dialogs/repos.py:114 kram/tui/menu.py:90 kram/tui/search.py:186
+#: kram/tui/widgets.py:200 kram/tui/widgets.py:262
 msgid "close"
 msgstr "stäng"
 
@@ -4165,7 +4180,7 @@ msgstr "nästa"
 msgid "Close"
 msgstr "Stäng"
 
-#: kram/tui/dialogs/about.py:81 kram/tui/window.py:207
+#: kram/tui/dialogs/about.py:81 kram/tui/window.py:212
 msgid "Not in this version yet"
 msgstr "Inte i den här versionen än"
 
@@ -4174,7 +4189,7 @@ msgstr "Inte i den här versionen än"
 msgid "{size} free on {mount}."
 msgstr "{size} ledigt på {mount}."
 
-#: kram/tui/dialogs/apply.py:196
+#: kram/tui/dialogs/apply.py:196 kram/tui/dialogs/repos.py:113
 msgid "apply"
 msgstr "verkställ"
 
@@ -4194,6 +4209,26 @@ msgstr "Fönster"
 #: kram/tui/dialogs/keys.py:87 kram/tui/dialogs/progress.py:68
 msgid "scroll"
 msgstr "rulla"
+
+#: kram/tui/dialogs/mirrors.py:79
+msgid "use"
+msgstr "använd"
+
+#: kram/tui/dialogs/mirrors.py:84
+msgid "Fastest mirror for every repository"
+msgstr "Snabbaste spegeln för varje förråd"
+
+#: kram/tui/dialogs/mirrors.py:89 kram/tui/dialogs/mirrors.py:130
+msgid "Test speed"
+msgstr "Testa hastighet"
+
+#: kram/tui/dialogs/mirrors.py:91
+msgid "Use selected mirror"
+msgstr "Använd vald spegel"
+
+#: kram/tui/dialogs/mirrors.py:130
+msgid "Stop"
+msgstr "Stoppa"
 
 #: kram/tui/dialogs/path.py:79
 msgid "complete"
@@ -4259,6 +4294,80 @@ msgstr "OK"
 #: kram/tui/dialogs/question.py:22
 msgid "Yes"
 msgstr "Ja"
+
+#. TRANSLATORS: the age of a repository's metadata in the terminal's Repositories table
+#: kram/tui/dialogs/repos.py:46
+#, python-brace-format
+msgid "{minutes} min"
+msgstr "{minutes} min"
+
+#. TRANSLATORS: the age of a repository's metadata in the terminal's Repositories table; h: hours
+#: kram/tui/dialogs/repos.py:49
+#, python-brace-format
+msgid "{hours} h"
+msgstr "{hours} h"
+
+#. TRANSLATORS: the age of a repository's metadata in the terminal's Repositories table; d: days
+#: kram/tui/dialogs/repos.py:51
+#, python-brace-format
+msgid "{days} d"
+msgstr "{days} d"
+
+#: kram/tui/dialogs/repos.py:56
+msgctxt "short column header"
+msgid "On"
+msgstr "På"
+
+#: kram/tui/dialogs/repos.py:60
+msgctxt "short column header"
+msgid "Prio"
+msgstr "Prio"
+
+#: kram/tui/dialogs/repos.py:63
+msgctxt "short column header"
+msgid "Metadata"
+msgstr "Metadata"
+
+#. TRANSLATORS: why a button of a terminal dialog is off: "Mirrors: This repository has a single address…"
+#: kram/tui/dialogs/repos.py:76
+#, python-brace-format
+msgid "{action}: {reason}"
+msgstr "{action}: {reason}"
+
+#: kram/tui/dialogs/repos.py:113
+msgid "debug/source"
+msgstr "debuginfo/källkod"
+
+#: kram/tui/dialogs/repos.py:113
+msgid "on/off"
+msgstr "på/av"
+
+#: kram/tui/dialogs/repos.py:125
+msgid "Remove file…"
+msgstr "Ta bort fil…"
+
+#: kram/tui/dialogs/repos.py:179
+#, python-brace-format
+msgid "turn on {repos}"
+msgstr "slå på {repos}"
+
+#: kram/tui/dialogs/repos.py:180
+#, python-brace-format
+msgid "turn off {repos}"
+msgstr "slå av {repos}"
+
+#: kram/tui/dialogs/repos.py:181
+#, python-brace-format
+msgid "Not applied yet: {changes}"
+msgstr "Inte verkställt än: {changes}"
+
+#: kram/tui/dialogs/repos.py:266
+msgid "The changes to the repositories are not applied yet."
+msgstr "Ändringarna av förråden är inte verkställda än."
+
+#: kram/tui/dialogs/repos.py:268
+msgid "Close without applying"
+msgstr "Stäng utan att verkställa"
 
 #: kram/tui/menu.py:49
 msgid "Colours…"
@@ -4479,55 +4588,55 @@ msgstr "Inget skrivbord att visa den i: sökvägen har kopierats"
 msgid "Copied"
 msgstr "Kopierat"
 
-#: kram/tui/widgets.py:179 kram/tui/widgets.py:241
+#: kram/tui/widgets.py:200 kram/tui/widgets.py:262
 msgid "pick"
 msgstr "välj"
 
-#: kram/tui/window.py:154
+#: kram/tui/window.py:159
 msgid "Another package manager is running: waiting"
 msgstr "En annan pakethanterare körs: väntar"
 
-#: kram/tui/window.py:184
+#: kram/tui/window.py:189
 #, python-brace-format
 msgid "“{text}” in {filter}"
 msgstr "”{text}” i {filter}"
 
-#: kram/tui/window.py:189
+#: kram/tui/window.py:194
 #, python-brace-format
 msgid "{n} change marked"
 msgid_plural "{n} changes marked"
 msgstr[0] "{n} ändring markerad"
 msgstr[1] "{n} ändringar markerade"
 
-#: kram/tui/window.py:282
+#: kram/tui/window.py:310
 msgid "Nothing is marked"
 msgstr "Inget är markerat"
 
-#: kram/tui/window.py:284
+#: kram/tui/window.py:312
 msgid "No package has an upgrade"
 msgstr "Inget paket har en uppgradering"
 
-#: kram/tui/window.py:286
+#: kram/tui/window.py:314
 msgid "No upgrade of this kind"
 msgstr "Inga uppgraderingar av det här slaget"
 
-#: kram/tui/window.py:288
+#: kram/tui/window.py:316
 msgid "No unneeded dependencies"
 msgstr "Inga onödiga beroenden"
 
-#: kram/tui/window.py:290
+#: kram/tui/window.py:318
 msgid "Only for one package at a time"
 msgstr "Bara för ett paket i taget"
 
-#: kram/tui/window.py:291 kram/tui/window.py:294
+#: kram/tui/window.py:319 kram/tui/window.py:322
 msgid "Not for this package"
 msgstr "Inte för det här paketet"
 
-#: kram/tui/window.py:293
+#: kram/tui/window.py:321
 msgid "Not marked"
 msgstr "Inte markerad"
 
-#: kram/tui/window.py:370
+#: kram/tui/window.py:398
 msgid "Sort by"
 msgstr "Sortera efter"
 
