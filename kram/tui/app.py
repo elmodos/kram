@@ -23,7 +23,7 @@ from textual.screen import Screen
 from textual.theme import Theme
 from textual.timer import Timer
 from textual.widget import Widget
-from textual.widgets import Footer, Input, Static
+from textual.widgets import Input, Static
 
 from ..app import preferences
 from ..app.actions import action_defs
@@ -35,7 +35,7 @@ from .glyphs import glyphs, is_utf8
 from .keymap import KEYS_KEYS, MENU_KEYS, WINDOW_RUN, bindings_key
 from .palette import ANSI_THEMES, DEFAULT_SCHEME, PALETTE_CSS, Palette, is_ansi, role, schemes
 from .ui_port import TuiUi
-from .widgets import hint
+from .widgets import KeyFooter, hint
 
 WIDE = 100        # columns: from here on the panels are pinned beside and under the list, below it they slide over it
 TALL = 34         # lines: from here on (in a wide terminal) the sidebar also lists every view at its bottom
@@ -52,9 +52,8 @@ CSS = PALETTE_CSS + """
 /* 16 colours: Textual draws some widgets in colours blended with transparency, which a 16-colour terminal cannot
    show (the footer's words, a checkbox's label vanish): plain theme colours there (T19) */
 App:ansi Screen { background: $background; color: $foreground; }
-App:ansi Footer, App:ansi FooterKey { background: $background; color: $text; }
-App:ansi FooterKey .footer-key--key { background: $background; color: $warning; text-style: bold; }
-App:ansi FooterKey .footer-key--description { background: $background; color: $text; }
+KeyFooter { background: $panel; }
+App:ansi KeyFooter { background: transparent; }
 ModalScreen { background: $background 50%; }
 /* popups' lists (ChoiceList, PopupMenu): in 16 colours a blended separator or disabled item would vanish */
 App:ansi OptionList > .option-list--separator { color: $border-blurred; }
@@ -325,7 +324,7 @@ class KramApp(App, inherit_bindings=False):
                 with Vertical(id="packages", classes="panel"):
                     yield self.main.list
                 yield self.main.details
-        yield Footer()
+        yield KeyFooter()
 
     def on_mount(self) -> None:
         loop.attach(self)

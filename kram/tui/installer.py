@@ -12,7 +12,6 @@ from collections.abc import Callable
 from textual import events
 from textual.app import ComposeResult
 from textual.binding import Binding
-from textual.widgets import Footer
 
 from ..app.progress import BUSY
 from ..core.catalog import Catalog
@@ -24,6 +23,7 @@ from .dialogs.install import InstallDialog
 from .dialogs.progress import ProgressDialog
 from .palette import Palette
 from .root import RootAccess, TuiHelperClient, is_root
+from .widgets import KeyFooter
 
 
 class InstallerApp(KramApp, inherit_bindings=False):
@@ -47,7 +47,7 @@ class InstallerApp(KramApp, inherit_bindings=False):
         yield Palette()
         yield TopLine(id="top")
         yield Body(id="body")  # its resize tells of a terminal too small (§5.3)
-        yield Footer()
+        yield KeyFooter()
 
     def on_mount(self, event: events.Mount) -> None:
         event.prevent_default()  # KramApp's on_mount starts the main window, which is not here

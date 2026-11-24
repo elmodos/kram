@@ -86,7 +86,22 @@ def role(name: str) -> Style:
         return Style()
     if not palette.app.ansi_color:
         style = _blended(palette, name, style)
+    else:
+        style = _without_default(style)
     return style.without_color if palette.app.no_color else style
+
+
+def _without_default(style: Style) -> Style:
+    """The terminal's own colour ("default") left unset: Textual turns an explicit default colour that is dim into
+    #000000, black on a dark terminal (found on a real terminal: the top line's counts vanished); unset, the
+    terminal draws dim text in its own colour."""
+    color = None if style.color is not None and style.color.is_default else style.color
+    bgcolor = None if style.bgcolor is not None and style.bgcolor.is_default else style.bgcolor
+    if color is style.color and bgcolor is style.bgcolor:
+        return style
+    return Style(color=color, bgcolor=bgcolor, bold=style.bold, dim=style.dim, italic=style.italic,
+                 underline=style.underline, reverse=style.reverse, strike=style.strike, link=style.link,
+                 meta=style._meta and style.meta or None)
 
 
 _blends: dict[tuple[str, str, Style], Style] = {}  # by the scheme, the role and its rich style

@@ -269,8 +269,12 @@ its own 16-colour schemes too.
 - **A screen's `is_mounted` is still False inside its own `on_mount`.**
 - **`Screen.dismiss()` of a screen that is not on top** pops the top screen on Textual 8.1 (4.0 ignores it with a
   warning): dismiss only the top screen, and start what follows from the dismissal callback (TUI_SPEC §11.3.8).
-- **The SVG screenshots draw the terminal's default text colour as invisible** where it is set explicitly (the
-  footer's words in the Terminal scheme). In a terminal it is right (`default on default`, checked).
+- **Textual's `Footer` draws its words `#000000` on `#000000` with 16 colours**, on any terminal (its FooterKey turns
+  the terminal's default colours into truecolor black). The SVG screenshots showed it and were taken for an
+  artefact until the author saw it in WezTerm: the TUI has its own `KeyFooter`.
+- **A dim text in an explicit default colour becomes `#000000`** (`Style(color="default", dim=True)`); without the
+  colour it stays the terminal's own. `role()` leaves default colours unset in 16 colours. Check colours on the
+  drawn segments (`render_lines`), not on SVG screenshots.
 
 ## 11. Spike results
 

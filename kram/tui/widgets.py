@@ -45,6 +45,35 @@ def hint(*pairs: tuple[str, str]) -> Text:
     return t
 
 
+class KeyFooter(Widget):
+    """The footer: the keys of the focused widget, its parents and the window, as `key word` hints. Textual's own
+    Footer draws its words black on black with 16 colours (its FooterKey turns the terminal's default colours into
+    #000000, on any terminal: found on a real one), so this one draws the hints itself, in the key role and the
+    terminal's own colour. It follows the screen's bindings as Textual's Footer does."""
+
+    DEFAULT_CSS = "KeyFooter { dock: bottom; height: 1; padding: 0 1; }"
+
+    def on_mount(self) -> None:
+        self.screen.bindings_updated_signal.subscribe(self, self._changed)
+
+    def on_unmount(self) -> None:
+        self.screen.bindings_updated_signal.unsubscribe(self)
+
+    def _changed(self, _screen) -> None:
+        self.refresh()
+
+    def render(self) -> Text:
+        pairs, seen = [], set()
+        for _node, binding, enabled, _tooltip in self.screen.active_bindings.values():
+            if not binding.show or not enabled or binding.action in seen:
+                continue
+            seen.add(binding.action)
+            pairs.append((self.app.get_key_display(binding), binding.description))
+        line = Text(no_wrap=True, overflow="ellipsis")
+        line.append_text(hint(*pairs))
+        return line
+
+
 class Button(Widget, can_focus=True):
     """A one-line button. Focused: reverse; the default button (variant "primary"): bold; a dangerous one
     ("error"): the error colour; a disabled one: dim, not focusable (Tab skips it) and deaf to keys and clicks.

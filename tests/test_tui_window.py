@@ -495,9 +495,11 @@ def test_marked_rows_are_tinted_in_high_colour_and_coloured_in_16(monkeypatch):
         await pilot.pause()
         await pilot.pause()
         name = [s for s in table.render_line(3) if s.text.startswith("pkg0002")][0]
-        assert name.style.color == role("marked").color and name.style.bgcolor != role("tint-marked").bgcolor
+        # the terminal's colour numbers: the drawn colour and the role's may differ in Rich's bookkeeping only
+        assert name.style.color.number == role("marked").color.number
+        assert name.style.bgcolor is None or name.style.bgcolor.is_default  # no tint: the colour of the name
         removal = [s for s in table.render_line(4) if s.text.startswith("pkg0003")][0]
-        assert removal.style.color == role("danger").color
+        assert removal.style.color.number == role("danger").color.number
     run(test)
 
 
@@ -553,3 +555,34 @@ def test_the_top_line_drops_what_does_not_fit_from_the_right(monkeypatch):
         assert top(app).startswith("Kram  Copied")
     run(test)
 
+
+
+def _drawn(widget) -> list:
+    """The segments a widget draws, as the terminal gets them (not as an SVG screenshot paints them)."""
+    from textual.geometry import Region
+    return [s for strip in widget.render_lines(Region(0, 0, widget.size.width, widget.size.height))
+            for s in strip if s.text.strip()]
+
+
+def test_nothing_is_drawn_black_on_the_terminals_own_colours(monkeypatch):
+    """With 16 colours every word follows the terminal's own colours: Textual's Footer drew its words #000000 on
+    #000000, and a dim text in an explicit default colour became #000000 too (both seen on a real dark terminal).
+    The footer and the top line draw no truecolor black."""
+    use_catalog(monkeypatch)
+
+    async def test(app, pilot):
+        app.set_scheme("textual-ansi", save=False)
+        await pilot.pause()
+        app.main.browser.sidebar.select("status", "status:installed")
+        await pilot.pause(0.2)
+        from kram.tui.widgets import KeyFooter
+        for widget in (app.query_one(KeyFooter), app.query_one("#top")):
+            segments = _drawn(widget)
+            assert segments
+            for s in segments:
+                for colour in (s.style.color, s.style.bgcolor):
+                    assert colour is None or colour.is_default or colour.number is not None, (widget, s)
+        words = "".join(s.text for s in _drawn(app.query_one(KeyFooter)))
+        assert "Sidebar" in words or "Groups" in words or "Search" in words
+
+    run(test)
