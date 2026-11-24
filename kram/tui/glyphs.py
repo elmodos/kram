@@ -52,15 +52,17 @@ class Glyphs:
     through: str          # and under a child that has more after it, on the way down to them
     panel_border: str     # Textual border types: a panel's single line, a modal window's double one
     modal_border: str
+    yes: str              # a COPR project builds for this system (§10.6), or not: never told by colour alone
+    no: str
 
 
 # folding is `+`/`-` on every terminal, as trees in terminals always were: no triangles (T10, the author's wish)
 UNICODE = Glyphs(left="←", right="→", up="↑", down="↓", ellipsis="…", times="×", bullet="●", folded="+",
                  unfolded="-", selected="▌", warning="!", item="•", rule="─", separator="│", branch="├─ ", last="└─ ",
-                 through="│  ", panel_border="solid", modal_border="double")
+                 through="│  ", panel_border="solid", modal_border="double", yes="✓", no="✗")
 ASCII = Glyphs(left="<-", right="->", up="^", down="v", ellipsis="...", times="x", bullet="*", folded="+",
                unfolded="-", selected="|", warning="!", item="*", rule="-", separator="|", branch="|- ", last="\\- ",
-               through="|  ", panel_border="ascii", modal_border="ascii")
+               through="|  ", panel_border="ascii", modal_border="ascii", yes="+", no="-")
 
 
 @dataclass(frozen=True)

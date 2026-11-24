@@ -11,6 +11,10 @@ Browser does the rest of the flow (the conflicts offer, the form when nothing ca
 when the transaction removed kram-tui), as it does for the GUIs. The actions of the menu whose dialogs come in later
 steps say so through the Ui port meanwhile (`NOT_YET`).
 
+The COPR dialog (kram.tui.dialogs.copr, §10.6) stays open while its changes run, as the Repositories dialog does;
+the Transaction History (kram.tui.dialogs.history, §10.7) reads the history again after every new catalog while it
+is open, and a package chosen in it is selected in the list once it has closed.
+
 The Repositories dialog (kram.tui.dialogs.repos, §10.4) and the Mirrors dialog over it (kram.tui.dialogs.mirrors,
 §10.5) stay open while what is done from them runs: while each is open, every new catalog gives it the new state,
 as the GUIs' windows do.
@@ -58,6 +62,8 @@ from . import loop
 from .details import Details
 from .dialogs.about import AboutDialog
 from .dialogs.apply import ApplyDialog
+from .dialogs.copr import CoprDialog
+from .dialogs.history import HistoryDialog
 from .dialogs.mirrors import MirrorsDialog
 from .dialogs.progress import ProgressDialog
 from .dialogs.repos import ReposDialog
@@ -71,7 +77,7 @@ from .widgets import ChoiceList
 
 FRONT_PACKAGE = "kram-tui"
 # the actions whose dialogs come in later steps (docs/TUI_SPEC.md §17): "Not in this version yet"
-NOT_YET = frozenset({"history", "show_in_history", "open_file", "copr", "cache", "notifications"})
+NOT_YET = frozenset({"open_file", "cache", "notifications"})
 # Browser says this while the catalog load waits for the system repo lock (Browser._waiting_for_lock)
 LOCK_STATUS = "Waiting for another package manager to finish…"
 
@@ -261,6 +267,57 @@ class MainWindow:
     def quit(self) -> None:
         self.app.request_quit()
 
+    # ---------------------------------------------------------------- COPR and the history (§10.6, §10.7)
+
+    def open_copr(self) -> None:
+        """The COPR dialog (kram.gtk.window.open_copr): a change made from it runs over it and reloads the catalog,
+        after which it shows the new state; Packages closes it and shows the project's packages."""
+        b = self.browser
+        if not b.snapshot or b.busy():
+            return
+        dialog = CoprDialog(self.ui, lambda request, title: b.run_helper_and_reload(request, title))
+        shown = [True]
+
+        def refresh(snap) -> None:
+            b.dnf.submit(b.catalog.repo_package_counts, lambda counts: shown[0] and dialog.set_catalog(snap, counts),
+                         lambda _e: None)  # the dialog keeps the counts it has
+
+        def closed(repo_id: str | None) -> None:
+            shown[0] = False  # counts read for it later are dropped
+            b.catalog_loaded.disconnect(refresh)
+            if repo_id:
+                b.show_repo_packages(repo_id)
+        refresh(b.snapshot)
+        b.catalog_loaded.connect(refresh)  # after enabling, disabling or removing a project
+        self.app.push_screen(dialog, closed)
+
+    def open_history(self, name: str | None = None) -> None:
+        """File → Transaction History; with a package's name, filtered by it (Package → Show in History). A package
+        chosen in it closes it and is selected in the list (kram.gtk.window._show_from_history)."""
+        b = self.browser
+        if b.snapshot is None:
+            return
+        dialog = HistoryDialog(b.dnf, b.catalog, self.scheduler, name=name or "")
+        dialog.on_undo = lambda tid: b.undo_transaction(tid, dialog.rows_of(tid), dialog.close_history)
+
+        def refresh(snap) -> None:  # after Apply (an undo of groups runs from over it) the new transaction shows
+            dialog.reload()
+            dialog.set_marking(True, b.busy())
+
+        def closed(key: tuple[str, str] | None) -> None:
+            b.catalog_loaded.disconnect(refresh)
+            if key is not None:
+                b.navigate(key)
+                self.focus_list()
+        b.catalog_loaded.connect(refresh)
+        dialog.set_marking(True, b.busy())
+        self.app.push_screen(dialog, closed)
+
+    def show_in_history(self) -> None:
+        rows = self.selected_rows()
+        if len(rows) == 1:
+            self.open_history(rows[0].name)
+
     def _edit_filters(self, filters, snap, select, new, resolve_provides, done) -> None:
         self._not_yet()  # replaced by the Custom Filters dialog, §10.10
         done(None)
@@ -337,7 +394,8 @@ class MainWindow:
         b, marker = self.browser, self.browser.marker
         return {
             "reload": b.refresh_metadata, "reload_cache": b.reload, "mark_upgrades": marker.mark_all_upgrades,
-            "apply": b.apply, "repos": b.open_repos,
+            "apply": b.apply, "repos": b.open_repos, "copr": self.open_copr, "history": self.open_history,
+            "show_in_history": self.show_in_history,
             "lock": lambda: b.set_version_lock(True), "unlock": lambda: b.set_version_lock(False),
             "mark_unneeded": marker.mark_unneeded, "unmark_all": marker.unmark_all,
             "properties": lambda: self.show_tab("general"), "why_blocked": lambda: self.show_tab("dependencies"),

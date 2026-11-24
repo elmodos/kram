@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kram\n"
 "Report-Msgid-Bugs-To: https://github.com/elmodos/kram/issues\n"
-"POT-Creation-Date: 2026-11-24 10:31+0200\n"
+"POT-Creation-Date: 2026-11-24 11:45+0200\n"
 "PO-Revision-Date: 2026-11-04 14:07+0200\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -1159,11 +1159,12 @@ msgstr "Najnowsza wersja"
 #: kram/app/columns.py:25 kram/app/details.py:95 kram/app/install.py:148
 #: kram/gtk/dialogs/apply.py:68 kram/gtk/dialogs/history.py:85
 #: kram/qt/apply_dialog.py:52 kram/qt/history_dialog.py:63
+#: kram/tui/dialogs/history.py:49
 msgid "Package"
 msgstr "Pakiet"
 
 #: kram/app/columns.py:25 kram/gtk/dialogs/history.py:88
-#: kram/qt/history_dialog.py:63
+#: kram/qt/history_dialog.py:63 kram/tui/dialogs/history.py:52
 msgid "Reason"
 msgstr "Powód"
 
@@ -1171,7 +1172,7 @@ msgstr "Powód"
 #: kram/gtk/details.py:160 kram/gtk/dialogs/apply.py:72
 #: kram/gtk/dialogs/history.py:87 kram/qt/apply_dialog.py:52
 #: kram/qt/details.py:56 kram/qt/history_dialog.py:63 kram/tui/details.py:75
-#: kram/tui/dialogs/repos.py:57
+#: kram/tui/dialogs/history.py:51 kram/tui/dialogs/repos.py:57
 msgid "Repository"
 msgstr "Repozytorium"
 
@@ -1457,7 +1458,7 @@ msgstr "Biuletyny"
 
 #: kram/app/details.py:30 kram/gtk/dialogs/copr.py:88
 #: kram/gtk/dialogs/install.py:91 kram/qt/copr_dialog.py:92
-#: kram/qt/install_dialog.py:112
+#: kram/qt/install_dialog.py:112 kram/tui/dialogs/copr.py:58
 msgid "Description"
 msgstr "Opis"
 
@@ -1671,7 +1672,7 @@ msgstr[1] ""
 msgstr[2] ""
 "{n} repozytoriów nie ma metadanych, więc ich pakietów brakuje na liście."
 
-#: kram/app/empty_list.py:58 kram/tui/window.py:306
+#: kram/app/empty_list.py:58 kram/tui/window.py:363
 msgid "Loading the package catalog…"
 msgstr "Wczytywanie katalogu pakietów…"
 
@@ -3449,7 +3450,7 @@ msgid "Unknown (not recorded)"
 msgstr "Nieznane (niezapisane)"
 
 #: kram/core/filters.py:83 kram/gtk/dialogs/copr.py:51
-#: kram/qt/copr_dialog.py:51
+#: kram/qt/copr_dialog.py:51 kram/tui/dialogs/copr.py:50
 msgid "Installed"
 msgstr "Zainstalowane"
 
@@ -3582,6 +3583,7 @@ msgstr "Opis"
 #: kram/gtk/details.py:159 kram/gtk/dialogs/apply.py:70
 #: kram/gtk/dialogs/history.py:86 kram/qt/apply_dialog.py:52
 #: kram/qt/details.py:56 kram/qt/history_dialog.py:63 kram/tui/details.py:75
+#: kram/tui/dialogs/history.py:50
 msgid "Version"
 msgstr "Wersja"
 
@@ -3702,6 +3704,7 @@ msgstr ""
 "Wiersze z „-” są w bieżącym pliku {current}; wiersze z „+” tylko w {path}."
 
 #: kram/gtk/dialogs/copr.py:30 kram/qt/copr_dialog.py:44
+#: kram/tui/dialogs/copr.py:102
 msgid "COPR repositories"
 msgstr "Repozytoria COPR"
 
@@ -3720,6 +3723,7 @@ msgstr "Włączone"
 
 #: kram/gtk/dialogs/copr.py:48 kram/gtk/dialogs/copr.py:87
 #: kram/qt/copr_dialog.py:51 kram/qt/copr_dialog.py:92
+#: kram/tui/dialogs/copr.py:48 kram/tui/dialogs/copr.py:56
 msgid "Project"
 msgstr "Projekt"
 
@@ -3729,20 +3733,25 @@ msgstr "Hub"
 
 #: kram/gtk/dialogs/copr.py:50 kram/gtk/dialogs/repos.py:152
 #: kram/qt/copr_dialog.py:51 kram/qt/repos_dialog.py:67 kram/tui/app.py:325
+#: kram/tui/dialogs/copr.py:49 kram/tui/dialogs/copr.py:117
 #: kram/tui/dialogs/repos.py:59 kram/tui/dialogs/repos.py:123
 msgid "Packages"
 msgstr "Pakiety"
 
 #: kram/gtk/dialogs/copr.py:57 kram/qt/copr_dialog.py:64
+#: kram/tui/dialogs/copr.py:121 kram/tui/dialogs/copr.py:205
+#: kram/tui/dialogs/copr.py:213
 msgid "Enable"
 msgstr "Włącz"
 
 #: kram/gtk/dialogs/copr.py:58 kram/qt/copr_dialog.py:65
+#: kram/tui/dialogs/copr.py:118 kram/tui/dialogs/copr.py:205
 msgid "Disable"
 msgstr "Wyłącz"
 
 #: kram/gtk/dialogs/copr.py:59 kram/gtk/dialogs/repos.py:67
 #: kram/qt/copr_dialog.py:66 kram/qt/repos_dialog.py:103
+#: kram/tui/dialogs/copr.py:119
 msgid "Remove…"
 msgstr "Usuń…"
 
@@ -3751,6 +3760,7 @@ msgid "Add a project"
 msgstr "Dodaj projekt"
 
 #: kram/gtk/dialogs/copr.py:73 kram/qt/copr_dialog.py:81
+#: kram/tui/dialogs/copr.py:109
 msgid "owner/project, or words to search for"
 msgstr "właściciel/projekt lub słowa do wyszukania"
 
@@ -3759,10 +3769,12 @@ msgid "Search Copr"
 msgstr "Szukaj w Copr"
 
 #: kram/gtk/dialogs/copr.py:90 kram/qt/copr_dialog.py:92
+#: kram/tui/dialogs/copr.py:57
 msgid "Builds for this system"
 msgstr "Kompilacje dla tego systemu"
 
 #: kram/gtk/dialogs/copr.py:95 kram/qt/copr_dialog.py:106
+#: kram/tui/dialogs/copr.py:113
 msgid ""
 "COPR projects are built by community members and are not reviewed by Fedora."
 msgstr ""
@@ -3798,31 +3810,38 @@ msgid "Add condition"
 msgstr "Dodaj warunek"
 
 #: kram/gtk/dialogs/history.py:33 kram/qt/history_dialog.py:45
+#: kram/tui/dialogs/history.py:91
 msgid "Transaction History"
 msgstr "Historia transakcji"
 
 #: kram/gtk/dialogs/history.py:57 kram/qt/history_dialog.py:53
+#: kram/tui/dialogs/history.py:94
 msgid "Filter by package name"
 msgstr "Filtruj według nazwy pakietu"
 
 #: kram/gtk/dialogs/history.py:72 kram/gtk/dialogs/repos.py:150
 #: kram/qt/history_dialog.py:61 kram/qt/repos_dialog.py:67
+#: kram/tui/dialogs/history.py:38
 msgid "ID"
 msgstr "ID"
 
 #: kram/gtk/dialogs/history.py:73 kram/qt/history_dialog.py:61
+#: kram/tui/dialogs/history.py:39
 msgid "Date"
 msgstr "Data"
 
 #: kram/gtk/dialogs/history.py:74 kram/qt/history_dialog.py:61
+#: kram/tui/dialogs/history.py:40
 msgid "Changes"
 msgstr "Zmiany"
 
 #: kram/gtk/dialogs/history.py:75 kram/qt/history_dialog.py:61
+#: kram/tui/dialogs/history.py:41
 msgid "User"
 msgstr "Użytkownik"
 
 #: kram/gtk/dialogs/history.py:76 kram/qt/history_dialog.py:61
+#: kram/tui/dialogs/history.py:42
 msgid "Command"
 msgstr "Polecenie"
 
@@ -3833,6 +3852,7 @@ msgstr ""
 "Kliknij dwukrotnie pakiet, aby zamknąć historię i pokazać pakiet na liście"
 
 #: kram/gtk/dialogs/history.py:84 kram/qt/history_dialog.py:63
+#: kram/tui/dialogs/history.py:48
 msgid "Action"
 msgstr "Działanie"
 
@@ -4100,7 +4120,7 @@ msgstr[0] "w tym {n} aktualizacja bezpieczeństwa"
 msgstr[1] "w tym {n} aktualizacje bezpieczeństwa"
 msgstr[2] "w tym {n} aktualizacji bezpieczeństwa"
 
-#: kram/notifier/tray.py:237 kram/tui/window.py:173
+#: kram/notifier/tray.py:237 kram/tui/window.py:179
 #, python-brace-format
 msgid "The package information is {days} day old"
 msgid_plural "The package information is {days} days old"
@@ -4155,7 +4175,7 @@ msgstr "zmiany bez hasła"
 msgid "Make the terminal larger: Kram needs {size}"
 msgstr "Powiększ terminal: Kram potrzebuje {size}"
 
-#: kram/tui/app.py:247 kram/tui/window.py:160
+#: kram/tui/app.py:247 kram/tui/window.py:166
 msgid "quit"
 msgstr "zakończ"
 
@@ -4288,7 +4308,8 @@ msgstr "Interfejs terminalowy, Textual {version}"
 msgid "choose"
 msgstr "wybierz"
 
-#: kram/tui/dialogs/about.py:63 kram/tui/dialogs/keys.py:87
+#: kram/tui/dialogs/about.py:63 kram/tui/dialogs/copr.py:104
+#: kram/tui/dialogs/history.py:92 kram/tui/dialogs/keys.py:87
 #: kram/tui/dialogs/mirrors.py:79 kram/tui/dialogs/progress.py:68
 #: kram/tui/dialogs/progress.py:204 kram/tui/dialogs/question.py:60
 #: kram/tui/dialogs/repos.py:114 kram/tui/menu.py:90 kram/tui/search.py:186
@@ -4296,7 +4317,8 @@ msgstr "wybierz"
 msgid "close"
 msgstr "zamknij"
 
-#: kram/tui/dialogs/about.py:63 kram/tui/dialogs/question.py:58
+#: kram/tui/dialogs/about.py:63 kram/tui/dialogs/history.py:92
+#: kram/tui/dialogs/question.py:58
 msgid "next"
 msgstr "dalej"
 
@@ -4305,7 +4327,7 @@ msgstr "dalej"
 msgid "Close"
 msgstr "Zamknij"
 
-#: kram/tui/dialogs/about.py:81 kram/tui/window.py:212
+#: kram/tui/dialogs/about.py:81 kram/tui/window.py:218
 msgid "Not in this version yet"
 msgstr "Jeszcze nie w tej wersji"
 
@@ -4326,6 +4348,41 @@ msgstr "zaznacz"
 #: kram/tui/dialogs/question.py:60
 msgid "cancel"
 msgstr "anuluj"
+
+#: kram/tui/dialogs/copr.py:47 kram/tui/dialogs/repos.py:56
+msgctxt "short column header"
+msgid "On"
+msgstr "Wł."
+
+#: kram/tui/dialogs/copr.py:103
+msgid "enable"
+msgstr "włącz"
+
+#: kram/tui/dialogs/copr.py:103 kram/tui/search.py:186
+msgctxt "search key hint"
+msgid "search"
+msgstr "szukaj"
+
+#: kram/tui/dialogs/copr.py:106
+msgid "On this system"
+msgstr "W tym systemie"
+
+#: kram/tui/dialogs/copr.py:177
+msgid "try again"
+msgstr "spróbuj ponownie"
+
+#: kram/tui/dialogs/copr.py:223 kram/tui/dialogs/copr.py:226
+#, python-brace-format
+msgid "{project} is already enabled"
+msgstr "{project} jest już włączony"
+
+#: kram/tui/dialogs/copr.py:237
+msgid "No COPR projects yet. Search for one below."
+msgstr "Brak projektów COPR. Wyszukaj projekt poniżej."
+
+#: kram/tui/dialogs/history.py:92
+msgid "show package"
+msgstr "pokaż pakiet"
 
 #: kram/tui/dialogs/keys.py:56
 msgid "Window"
@@ -4437,11 +4494,6 @@ msgstr "{hours} godz."
 #, python-brace-format
 msgid "{days} d"
 msgstr "{days} d"
-
-#: kram/tui/dialogs/repos.py:56
-msgctxt "short column header"
-msgid "On"
-msgstr "Wł."
 
 #: kram/tui/dialogs/repos.py:60
 msgctxt "short column header"
@@ -4642,11 +4694,6 @@ msgctxt "search key hint"
 msgid "earlier"
 msgstr "wcześniejsze"
 
-#: kram/tui/search.py:186
-msgctxt "search key hint"
-msgid "search"
-msgstr "szukaj"
-
 #: kram/tui/search.py:213
 #, python-brace-format
 msgid "Filtering as you type: {n} package"
@@ -4714,16 +4761,16 @@ msgstr "Skopiowano"
 msgid "pick"
 msgstr "wybierz"
 
-#: kram/tui/window.py:159
+#: kram/tui/window.py:165
 msgid "Another package manager is running: waiting"
 msgstr "Działa inny menedżer pakietów: oczekiwanie"
 
-#: kram/tui/window.py:189
+#: kram/tui/window.py:195
 #, python-brace-format
 msgid "“{text}” in {filter}"
 msgstr "„{text}” w {filter}"
 
-#: kram/tui/window.py:194
+#: kram/tui/window.py:200
 #, python-brace-format
 msgid "{n} change marked"
 msgid_plural "{n} changes marked"
@@ -4731,35 +4778,35 @@ msgstr[0] "{n} zmiana zaznaczona"
 msgstr[1] "{n} zmiany zaznaczone"
 msgstr[2] "{n} zmian zaznaczonych"
 
-#: kram/tui/window.py:310
+#: kram/tui/window.py:367
 msgid "Nothing is marked"
 msgstr "Nic nie jest zaznaczone"
 
-#: kram/tui/window.py:312
+#: kram/tui/window.py:369
 msgid "No package has an upgrade"
 msgstr "Żaden pakiet nie ma aktualizacji"
 
-#: kram/tui/window.py:314
+#: kram/tui/window.py:371
 msgid "No upgrade of this kind"
 msgstr "Brak aktualizacji tego rodzaju"
 
-#: kram/tui/window.py:316
+#: kram/tui/window.py:373
 msgid "No unneeded dependencies"
 msgstr "Brak zbędnych zależności"
 
-#: kram/tui/window.py:318
+#: kram/tui/window.py:375
 msgid "Only for one package at a time"
 msgstr "Tylko dla jednego pakietu naraz"
 
-#: kram/tui/window.py:319 kram/tui/window.py:322
+#: kram/tui/window.py:376 kram/tui/window.py:379
 msgid "Not for this package"
 msgstr "Nie dla tego pakietu"
 
-#: kram/tui/window.py:321
+#: kram/tui/window.py:378
 msgid "Not marked"
 msgstr "Niezaznaczony"
 
-#: kram/tui/window.py:398
+#: kram/tui/window.py:456
 msgid "Sort by"
 msgstr "Sortuj według"
 
