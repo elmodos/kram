@@ -358,12 +358,16 @@ class KramApp(App, inherit_bindings=False):
             name = DEFAULT_SCHEME
         self._scheme = name
         self.theme = name
-        # Textual turns ANSI colours on only for its own "textual-ansi"; ours are 16-colour schemes as well
-        self.ansi_color = is_ansi(name)
         # Textual applies the new theme's CSS on its next turn, its colour filter at once: a frame drawn in between
         # (the window under the Colours preview) had a 16-colour scheme's colours under the true-colour filter,
-        # which failed on them. The CSS now, before any frame
+        # which failed on them. The CSS now, before any frame. `refresh_css` lays out the screen on top before it
+        # restyles the screens under it: the window under a dialog is drawn there with the old scheme's styles, and
+        # the true-colour filter failed on a 16-colour scheme's dim text (opening Colours… in a true-colour scheme).
+        # No filter until every screen has the new styles: without it nothing fails, whatever the colours
+        self.ansi_color = True
         self.refresh_css(animate=False)
+        # Textual turns ANSI colours on only for its own "textual-ansi"; ours are 16-colour schemes as well
+        self.ansi_color = is_ansi(name)
         if save:
             preferences.set_value(preferences.TUI_SCHEME, name)
 
@@ -374,6 +378,10 @@ class KramApp(App, inherit_bindings=False):
         self.ansi_color = is_ansi(theme_name)
 
     def _theme_changed(self, theme: Theme) -> None:
+        if theme.name != self.theme:
+            # a late signal: Textual publishes on its next turn, and the theme changed again since (the Colours
+            # preview steps through schemes); taking it as a change made elsewhere put the stale scheme back
+            return
         if theme.name != self._scheme:  # changed elsewhere (Textual's command palette, off now; App.theme set)
             self._scheme = theme.name
             if theme.name in {value for value, _label in schemes()}:

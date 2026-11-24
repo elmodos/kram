@@ -325,6 +325,29 @@ def test_colours_previews_the_scheme_and_esc_puts_it_back(monkeypatch):
     run(test)
 
 
+@pytest.mark.parametrize("start", ["textual-dark", "nord", "kram-console"])
+def test_colours_opens_and_walks_from_any_scheme(monkeypatch, start):
+    """Opening Colours… in a true-colour scheme stopped the app: the window under the dialog was drawn with a
+    16-colour scheme's styles under the true-colour filter. A late theme signal put the stale scheme back."""
+    use_catalog(monkeypatch)
+
+    async def test(app, pilot):
+        app.set_scheme(start)
+        await pilot.pause()
+        app.open_colours()
+        await pilot.pause()
+        assert isinstance(app.screen, ColoursDialog) and app.theme == app.scheme == start
+        count = len(app.screen.values)
+        for key in ["down"] * count + ["up"] * count:
+            await pilot.press(key)
+            await pilot.pause()
+        await pilot.press("escape")
+        await pilot.pause()
+        assert app.theme == app.scheme == start and app.ansi_color == (start == "kram-console")
+        assert preferences.value(preferences.TUI_SCHEME) == start
+    run(test)
+
+
 # ---------------------------------------------------------------- the context menu (§7.7.2)
 
 @pytest.mark.feature(Feature.LIST_CONTEXT_MENU, front="tui")
