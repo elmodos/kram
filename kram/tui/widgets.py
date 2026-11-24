@@ -180,10 +180,10 @@ class ChoiceList(ModalScreen):
 
 
 class PopupMenu(ModalScreen):
-    """A small menu next to what it is about (a context menu): `items` are (label, enabled) pairs, None between
-    groups of them for a separator. The screen's result is the index in `items` of the one run, None when closed.
-    Disabled items are dim and cannot be run; the cursor skips them. `at` is the screen cell to open at; the menu
-    moves left and up as far as it must to stay on the screen."""
+    """A small menu next to what it is about (a context menu): `items` are (label, enabled) or (label, enabled, key)
+    tuples, None between groups of them for a separator; a key is drawn at the right, muted. The screen's result is
+    the index in `items` of the one run, None when closed. Disabled items are dim and cannot be run; the cursor skips
+    them. `at` is the screen cell to open at; the menu moves left and up as far as it must to stay on the screen."""
 
     BINDINGS = [Binding("escape", "close", show=False)]
     DEFAULT_CSS = """
@@ -191,20 +191,33 @@ class PopupMenu(ModalScreen):
     PopupMenu > OptionList { width: auto; max-width: 90%; height: auto; max-height: 90%; padding: 0 1; }
     """
 
-    def __init__(self, title: str, items: Sequence[tuple[str, bool] | None], at: tuple[int, int] = (0, 0)):
+    def __init__(self, title: str, items: Sequence[tuple[str, bool] | tuple[str, bool, str] | None],
+                 at: tuple[int, int] = (0, 0)):
         super().__init__()
         self.title_text = title
         self.items = list(items)
         self.at = at
 
+    def _width(self) -> int:
+        """The items' width: the longest label, and the longest key two cells after it."""
+        shown = [item for item in self.items if item is not None]
+        labels = max([cell_len(item[0]) for item in shown] + [0])
+        keys = max([cell_len(item[2]) for item in shown if len(item) > 2 and item[2]] + [0])
+        return labels + (keys + 2 if keys else 0)
+
     def compose(self) -> ComposeResult:
+        width = self._width()
         options: list[Option | None] = []
         for i, item in enumerate(self.items):
             if item is None:
                 if options and options[-1] is not None:  # never two separators in a row, nor one first
                     options.append(None)
-            else:
-                options.append(Option(Text(item[0]), id=str(i), disabled=not item[1]))
+                continue
+            line = Text(item[0])
+            if len(item) > 2 and item[2]:
+                line.append(" " * (width - line.cell_len - cell_len(item[2])))
+                line.append(item[2], role("muted"))
+            options.append(Option(line, id=str(i), disabled=not item[1]))
         while options and options[-1] is None:
             options.pop()
         menu = OptionList(*options, classes="window")
@@ -214,9 +227,8 @@ class PopupMenu(ModalScreen):
 
     def on_mount(self) -> None:
         menu = self.query_one(OptionList)
-        labels = [item[0] for item in self.items if item is not None]
         # the frame and the padding: 4 cells across, 2 lines down; one line for each separator
-        width = max([cell_len(label) for label in labels] + [cell_len(self.title_text) + 2, 20]) + 4
+        width = max(self._width(), cell_len(self.title_text) + 2, 20) + 4
         height = len(menu.options) + 2 + sum(1 for item in self.items if item is None)
         screen_w, screen_h = self.app.size
         x, y = self.at

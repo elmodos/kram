@@ -17,6 +17,7 @@ from ..notifier import STALE_DAYS_DEFAULT, STALE_DAYS_KEY
 
 BOTH = frozenset({"qt", "gtk"})
 TUI = frozenset({"tui"})
+ALL = BOTH | TUI  # the settings the terminal front end has too (docs/TUI_SPEC.md §13.1)
 
 STATUS_CLICK = "table/status_click"
 WATCH_RELEASES = "distro/watch"
@@ -62,9 +63,10 @@ def _prefs() -> tuple[Pref, ...]:
         Pref(STATUS_CLICK, "bool", False, _("Clicking the status icon marks the likely action"),
              _("A click on the status icon unmarks a marked package, marks one that is not installed for "
                "installation and one with an upgrade for upgrade. Otherwise it opens the action menu, as "
-               "right-clicking does.")),
+               "right-clicking does."), toolkits=ALL),
         Pref(WATCH_RELEASES, "bool", True, _("Watch Fedora Releases"),
-             _("On Reload, ask Fedora's Bodhi service whether a new release is out"), visible=_on_fedora),
+             _("On Reload, ask Fedora's Bodhi service whether a new release is out"), visible=_on_fedora,
+             toolkits=ALL),
         Pref(TOOLBAR_STYLE, "choice", "system", _("Toolbar"), toolkits=frozenset({"qt"}), choices=(
             ("system", _("Follow System Settings")),
             ("under", _("Text Under Icons")),

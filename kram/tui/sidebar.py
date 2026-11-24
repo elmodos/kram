@@ -27,6 +27,8 @@ from ..core.filters import FilterEntry
 from ..core.marks import Action
 from ..i18n import _, pgettext
 from .glyphs import Glyphs
+from .keymap import CONTEXT_KEYS
+from .package_list import MOVE
 from .palette import role
 from .widgets import ChoiceList, PopupMenu, hint
 
@@ -60,15 +62,15 @@ class EntryList(ScrollView, can_focus=True):
     """The entries of the shown view; the cursor is a line of `lines` (the entries not folded away)."""
 
     BINDINGS = [
-        Binding("up,k", "move(-1)", show=False),
-        Binding("down,j", "move(1)", show=False),
-        Binding("pageup", "page(-1)", show=False),
-        Binding("pagedown", "page(1)", show=False),
-        Binding("home", "jump(0)", show=False),
-        Binding("end", "jump(-1)", show=False),
-        Binding("left,h", "fold(False)", show=False),
-        Binding("right,l", "fold(True)", show=False),
-        Binding("enter", "choose", show=False),
+        Binding("up,k", "move(-1)", MOVE, show=False),
+        Binding("down,j", "move(1)", MOVE, show=False),
+        Binding("pageup", "page(-1)", MOVE, show=False),
+        Binding("pagedown", "page(1)", MOVE, show=False),
+        Binding("home", "jump(0)", MOVE, show=False),
+        Binding("end", "jump(-1)", MOVE, show=False),
+        Binding("left,h", "fold(False)", _("Fold or unfold"), show=False),
+        Binding("right,l", "fold(True)", _("Fold or unfold"), show=False),
+        Binding("enter", "choose", _("Filter the list by the entry"), show=False),
     ]
     # the labels are cut to the width: nothing to scroll sideways to
     DEFAULT_CSS = "EntryList { height: 1fr; background: $background; overflow-x: hidden; }"
@@ -87,9 +89,11 @@ class EntryList(ScrollView, can_focus=True):
 
     def show(self, listing: Listing) -> None:
         """The model's listing. The same view drawn again (its counts, a restored entry) keeps the cursor on the
-        entry it was on; another view starts at its current entry."""
+        entry it was on; another view, or the same one with another current entry (`SidebarModel.select` from
+        code: a link, Esc in the search), starts at its current entry."""
         old = self.listing
-        keep = self.current_entry() if old is not None and old.view == listing.view else None
+        same = old is not None and old.view == listing.view and listing.current == self.current_id
+        keep = self.current_entry() if same else None
         self.listing = listing
         self.current_id = listing.current
         self.expanded = set(listing.expanded) if listing.collapsible else set()
@@ -97,7 +101,7 @@ class EntryList(ScrollView, can_focus=True):
         ids = [listing.entries[i].id for i in self.lines]
         target = keep.id if keep is not None and keep.id in ids else listing.current
         self.cursor = ids.index(target) if target in ids else 0
-        if keep is None:
+        if old is None or old.view != listing.view:
             self.scroll_to(y=0, animate=False, force=True)
         self.ensure_visible()
         self.refresh()
@@ -279,13 +283,13 @@ class Sidebar(Vertical):
     """The panel. `main` is the MainWindow: the Browser, the actions of the menu and the dialogs of later steps."""
 
     BINDINGS = [
-        Binding("left_square_bracket", "view(-1)", show=False),
-        Binding("right_square_bracket", "view(1)", show=False),
+        Binding("left_square_bracket", "view(-1)", _("Previous or next view"), show=False),
+        Binding("right_square_bracket", "view(1)", _("Previous or next view"), show=False),
         Binding("v", "views", _("Views")),
-        Binding("full_stop,menu,f16,shift+f10,f22", "menu", _("Menu")),
-        Binding("plus", "group(True)", show=False),
-        Binding("minus", "group(False)", show=False),
-        Binding("e", "edit", show=False),
+        Binding(",".join(CONTEXT_KEYS), "menu", _("Menu")),
+        Binding("plus", "group(True)", _("Install Group…"), show=False),
+        Binding("minus", "group(False)", _("Remove Group…"), show=False),
+        Binding("e", "edit", _("Edit Filter…"), show=False),
     ]
 
     def __init__(self, main, glyphs: Glyphs, **kw):

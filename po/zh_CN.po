@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kram\n"
 "Report-Msgid-Bugs-To: https://github.com/elmodos/kram/issues\n"
-"POT-Creation-Date: 2026-11-24 04:15+0200\n"
+"POT-Creation-Date: 2026-11-24 04:48+0200\n"
 "PO-Revision-Date: 2026-11-04 14:07+0200\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -152,7 +152,7 @@ msgstr "有更新时在系统托盘中显示图标"
 msgid "Find"
 msgstr "查找"
 
-#: kram/app/actions.py:88
+#: kram/app/actions.py:88 kram/tui/menu.py:184
 msgid "Back"
 msgstr "后退"
 
@@ -200,11 +200,12 @@ msgstr "打开软件包文件…"
 msgid "Install a downloaded .rpm file (you can also drop it on the window)"
 msgstr "安装已下载的 .rpm 文件（也可以把它拖放到窗口上）"
 
-#: kram/app/actions.py:100 kram/tui/app.py:202
+#: kram/app/actions.py:100 kram/tui/app.py:233 kram/tui/app.py:520
 msgid "Quit"
 msgstr "退出"
 
 #: kram/app/actions.py:101 kram/qt/about_dialog.py:14
+#: kram/tui/dialogs/about.py:62
 msgid "About Kram"
 msgstr "关于 Kram"
 
@@ -228,7 +229,7 @@ msgstr "标记为升级"
 msgid "Mark for Reinstallation"
 msgstr "标记为重新安装"
 
-#: kram/app/actions.py:109 kram/app/browser.py:727
+#: kram/app/actions.py:109 kram/app/browser.py:731
 msgid "Mark for Removal"
 msgstr "标记为删除"
 
@@ -519,7 +520,7 @@ msgid "+{size}, {n} package"
 msgid_plural "+{size}, {n} packages"
 msgstr[0] "+{size}，{n} 个软件包"
 
-#: kram/app/apply_review.py:321 kram/app/browser.py:643 kram/app/install.py:303
+#: kram/app/apply_review.py:321 kram/app/browser.py:647 kram/app/install.py:303
 #: kram/app/install.py:337 kram/app/install.py:397
 msgid "Resolving dependencies…"
 msgstr "正在解析依赖关系…"
@@ -528,7 +529,7 @@ msgstr "正在解析依赖关系…"
 msgid "These choices cannot be carried out:"
 msgstr "无法执行这些选择："
 
-#: kram/app/apply_review.py:334 kram/app/browser.py:652 kram/app/install.py:384
+#: kram/app/apply_review.py:334 kram/app/browser.py:656 kram/app/install.py:384
 #: kram/app/install.py:418
 #, python-brace-format
 msgid ""
@@ -548,21 +549,21 @@ msgstr ""
 "要让已安装的软件包保持当前版本，请选中它并选择 软件包 → 锁定版本：在解锁之"
 "前，升级会跳过它。"
 
-#: kram/app/browser.py:228
+#: kram/app/browser.py:232
 #, python-brace-format
 msgid "{n} marked change has not been applied. Quit anyway?"
 msgid_plural "{n} marked changes have not been applied. Quit anyway?"
 msgstr[0] "有 {n} 项已标记的更改尚未应用。仍要退出吗？"
 
-#: kram/app/browser.py:241 kram/app/install.py:300
+#: kram/app/browser.py:245 kram/app/install.py:300
 msgid "Loading metadata…"
 msgstr "正在加载元数据…"
 
-#: kram/app/browser.py:251
+#: kram/app/browser.py:255
 msgid "Waiting for another package manager to finish…"
 msgstr "正在等待另一个软件包管理器完成…"
 
-#: kram/app/browser.py:287 kram/app/install.py:345
+#: kram/app/browser.py:291 kram/app/install.py:345
 #, python-brace-format
 msgid ""
 "Could not load the package catalog:\n"
@@ -573,61 +574,61 @@ msgstr ""
 "\n"
 "{error}"
 
-#: kram/app/browser.py:355
+#: kram/app/browser.py:359
 #, python-brace-format
 msgid ""
 "Searching “{text}” ({mode}); the first search also indexes what packages "
 "provide…"
 msgstr "正在搜索“{text}”（{mode}）；首次搜索还会为软件包提供的内容建立索引…"
 
-#: kram/app/browser.py:358
+#: kram/app/browser.py:362
 #, python-brace-format
 msgid "Searching “{text}” ({mode})…"
 msgstr "正在搜索“{text}”（{mode}）…"
 
-#: kram/app/browser.py:375 kram/app/copr.py:168
+#: kram/app/browser.py:379 kram/app/copr.py:168
 #, python-brace-format
 msgid "Search failed: {error}"
 msgstr "搜索失败：{error}"
 
-#: kram/app/browser.py:467
+#: kram/app/browser.py:471
 #, python-brace-format
 msgid "Nothing provides “{what}”"
 msgstr "没有软件包提供“{what}”"
 
-#: kram/app/browser.py:469
+#: kram/app/browser.py:473
 #, python-brace-format
 msgid "Could not look up “{what}”: {error}"
 msgstr "无法查找“{what}”：{error}"
 
-#: kram/app/browser.py:483
+#: kram/app/browser.py:487
 #, python-brace-format
 msgid "Package {name} not found in the catalog"
 msgstr "在目录中未找到软件包 {name}"
 
-#: kram/app/browser.py:512
+#: kram/app/browser.py:516
 msgid "Refresh Metadata"
 msgstr "刷新元数据"
 
-#: kram/app/browser.py:519
+#: kram/app/browser.py:523
 msgid "Remove from History"
 msgstr "从历史记录中删除"
 
-#: kram/app/browser.py:521
+#: kram/app/browser.py:525
 msgid "Clear Search History"
 msgstr "清除搜索历史"
 
-#: kram/app/browser.py:568
+#: kram/app/browser.py:572
 #, python-brace-format
 msgid "{n} marking saved to {path}"
 msgid_plural "{n} markings saved to {path}"
 msgstr[0] "已将 {n} 项标记保存到 {path}"
 
-#: kram/app/browser.py:576
+#: kram/app/browser.py:580
 msgid "Export List as CSV"
 msgstr "将列表导出为 CSV"
 
-#: kram/app/browser.py:587 kram/app/markings.py:35
+#: kram/app/browser.py:591 kram/app/markings.py:35
 #, python-brace-format
 msgid ""
 "Could not save {path}:\n"
@@ -638,17 +639,17 @@ msgstr ""
 "\n"
 "{error}"
 
-#: kram/app/browser.py:590
+#: kram/app/browser.py:594
 #, python-brace-format
 msgid "{n} package exported to {path}"
 msgid_plural "{n} packages exported to {path}"
 msgstr[0] "已将 {n} 个软件包导出到 {path}"
 
-#: kram/app/browser.py:593
+#: kram/app/browser.py:597
 msgid "CSV files (*.csv);;All files (*)"
 msgstr "CSV 文件 (*.csv);;所有文件 (*)"
 
-#: kram/app/browser.py:612
+#: kram/app/browser.py:616
 #, python-brace-format
 msgid ""
 "{n} upgrade or downgrade unmarked: the version lock keeps the installed "
@@ -658,23 +659,23 @@ msgid_plural ""
 "versions"
 msgstr[0] "已取消 {n} 个升级或降级标记：版本锁定保留已安装的版本"
 
-#: kram/app/browser.py:615
+#: kram/app/browser.py:619
 #, python-brace-format
 msgid "Locking the version of {n} package"
 msgid_plural "Locking the versions of {n} packages"
 msgstr[0] "正在锁定 {n} 个软件包的版本"
 
-#: kram/app/browser.py:617
+#: kram/app/browser.py:621
 #, python-brace-format
 msgid "Unlocking the version of {n} package"
 msgid_plural "Unlocking the versions of {n} packages"
 msgstr[0] "正在解锁 {n} 个软件包的版本"
 
-#: kram/app/browser.py:697
+#: kram/app/browser.py:701
 msgid "Applying changes"
 msgstr "正在应用更改"
 
-#: kram/app/browser.py:720
+#: kram/app/browser.py:724
 #, python-brace-format
 msgid ""
 "This removes the front end of Kram you are using ({package}). Kram closes "
@@ -683,11 +684,11 @@ msgstr ""
 "这将删除您正在使用的 Kram 前端（{package}）。应用更改后 Kram 将关闭，请重新启"
 "动它。"
 
-#: kram/app/browser.py:723
+#: kram/app/browser.py:727
 msgid "Conflicting packages"
 msgstr "冲突的软件包"
 
-#: kram/app/browser.py:724
+#: kram/app/browser.py:728
 #, python-brace-format
 msgid ""
 "{n} installed package conflicts with the marked changes and has to be "
@@ -697,7 +698,7 @@ msgid_plural ""
 "removed for them:"
 msgstr[0] "{n} 个已安装的软件包与标记的更改冲突，必须删除才能应用这些更改："
 
-#: kram/app/browser.py:752
+#: kram/app/browser.py:756
 #, python-brace-format
 msgid ""
 "The changes are applied. They removed the front end of Kram you are using "
@@ -706,7 +707,7 @@ msgstr ""
 "更改已应用。它们删除了您正在使用的 Kram 前端（{package}），因此 Kram 现在将关"
 "闭。请重新启动它。"
 
-#: kram/app/browser.py:761
+#: kram/app/browser.py:765
 msgid ""
 "Undoing the whole transaction needs versions the repositories no longer "
 "have. What is still possible can be undone without them."
@@ -714,11 +715,11 @@ msgstr ""
 "撤销整个事务需要仓库中已不存在的版本。仍可撤销的部分可以在没有这些版本的情况"
 "下撤销。"
 
-#: kram/app/browser.py:763
+#: kram/app/browser.py:767
 msgid "Undo What Is Possible…"
 msgstr "撤销可撤销的部分…"
 
-#: kram/app/browser.py:765
+#: kram/app/browser.py:769
 msgid ""
 "They need a version the version lock excludes. Unlock the package (Package → "
 "Unlock Version) or unmark the change."
@@ -726,35 +727,35 @@ msgstr ""
 "它们需要一个被版本锁定排除的版本。请解锁该软件包（软件包 → 解锁版本）或取消该"
 "更改的标记。"
 
-#: kram/app/browser.py:767
+#: kram/app/browser.py:771
 msgid "Show Locked Packages"
 msgstr "显示已锁定的软件包"
 
-#: kram/app/browser.py:768
+#: kram/app/browser.py:772
 msgid "Cannot apply changes"
 msgstr "无法应用更改"
 
-#: kram/app/browser.py:769
+#: kram/app/browser.py:773
 msgid "The marked changes cannot be carried out. Unmark or change them."
 msgstr "无法执行已标记的更改。请取消标记或修改它们。"
 
-#: kram/app/browser.py:770
+#: kram/app/browser.py:774
 msgid "This change cannot be carried out."
 msgstr "无法执行此更改。"
 
-#: kram/app/browser.py:811 kram/app/browser.py:816
+#: kram/app/browser.py:815 kram/app/browser.py:820
 msgid "Refreshing metadata"
 msgstr "正在刷新元数据"
 
-#: kram/app/browser.py:822
+#: kram/app/browser.py:826
 msgid "Downloading metadata again"
 msgstr "正在重新下载元数据"
 
-#: kram/app/browser.py:824
+#: kram/app/browser.py:828
 msgid "Cleaning the package cache"
 msgstr "正在清理软件包缓存"
 
-#: kram/app/browser.py:842
+#: kram/app/browser.py:846
 #, python-brace-format
 msgid ""
 "Could not read the repositories:\n"
@@ -765,38 +766,38 @@ msgstr ""
 "\n"
 "{error}"
 
-#: kram/app/browser.py:851
+#: kram/app/browser.py:855
 msgid "Changing repositories"
 msgstr "正在更改软件源"
 
-#: kram/app/browser.py:857
+#: kram/app/browser.py:861
 #, python-brace-format
 msgid "Removing {n} repository"
 msgid_plural "Removing {n} repositories"
 msgstr[0] "正在删除 {n} 个软件源"
 
-#: kram/app/browser.py:886
+#: kram/app/browser.py:890
 msgid "Changing the mirror"
 msgstr "正在更改镜像"
 
-#: kram/app/browser.py:886
+#: kram/app/browser.py:890
 msgid "Changing the mirror settings"
 msgstr "正在更改镜像设置"
 
-#: kram/app/browser.py:903 kram/app/browser.py:933
+#: kram/app/browser.py:907 kram/app/browser.py:937
 #, python-brace-format
 msgid "Undo Transaction {id}"
 msgstr "撤销事务 {id}"
 
-#: kram/app/browser.py:904
+#: kram/app/browser.py:908
 msgid "The groups this transaction changed could not be read."
 msgstr "无法读取此事务更改的组。"
 
-#: kram/app/browser.py:918
+#: kram/app/browser.py:922
 msgid "cannot be marked"
 msgstr "无法标记"
 
-#: kram/app/browser.py:929
+#: kram/app/browser.py:933
 #, python-brace-format
 msgid ""
 "Could not read what the transaction changed:\n"
@@ -807,37 +808,37 @@ msgstr ""
 "\n"
 "{error}"
 
-#: kram/app/browser.py:929
+#: kram/app/browser.py:933
 msgid "Undo Transaction"
 msgstr "撤销事务"
 
-#: kram/app/browser.py:934
+#: kram/app/browser.py:938
 #, python-brace-format
 msgid "{n} change marked to undo transaction {id}."
 msgid_plural "{n} changes marked to undo transaction {id}."
 msgstr[0] "已标记 {n} 项变更以撤销事务 {id}。"
 
-#: kram/app/browser.py:936
+#: kram/app/browser.py:940
 #, python-brace-format
 msgid "{package}: installs {version}, {old} is no longer in the repositories"
 msgstr "{package}：将安装 {version}，{old} 已不在软件源中"
 
-#: kram/app/browser.py:941
+#: kram/app/browser.py:945
 msgid "Review them, then apply."
 msgstr "请检查后再应用。"
 
-#: kram/app/browser.py:944
+#: kram/app/browser.py:948
 #, python-brace-format
 msgid "Nothing of transaction {id} can be undone."
 msgstr "事务 {id} 中没有可撤销的内容。"
 
-#: kram/app/browser.py:948
+#: kram/app/browser.py:952
 #, python-brace-format
 msgid "{n} package cannot be undone:"
 msgid_plural "{n} packages cannot be undone:"
 msgstr[0] "{n} 个软件包无法撤销："
 
-#: kram/app/browser.py:952
+#: kram/app/browser.py:956
 #, python-brace-format
 msgid "{n} package comes back in another version:"
 msgid_plural "{n} packages come back in another version:"
@@ -1319,7 +1320,7 @@ msgstr "自定义过滤器"
 msgid "Delete the filter “{name}”?"
 msgstr "要删除过滤器“{name}”吗？"
 
-#: kram/app/custom_filters.py:136
+#: kram/app/custom_filters.py:136 kram/tui/sidebar.py:292
 msgid "Edit Filter…"
 msgstr "编辑过滤器…"
 
@@ -1529,7 +1530,7 @@ msgid_plural ""
 "list."
 msgstr[0] "{n} 个软件源没有元数据，因此其软件包不在列表中。"
 
-#: kram/app/empty_list.py:58
+#: kram/app/empty_list.py:58 kram/tui/window.py:246
 msgid "Loading the package catalog…"
 msgstr "正在加载软件包目录…"
 
@@ -2032,7 +2033,7 @@ msgid "Also changes {n} more package, see the Dependencies tab."
 msgid_plural "Also changes {n} more packages, see the Dependencies tab."
 msgstr[0] "还会更改另外 {n} 个软件包，见“依赖关系”标签页。"
 
-#: kram/app/marking.py:24
+#: kram/app/marking.py:24 kram/tui/sidebar.py:290
 msgid "Install Group…"
 msgstr "安装组…"
 
@@ -2044,7 +2045,7 @@ msgstr "安装组（含可选软件包）…"
 msgid "Upgrade Group…"
 msgstr "升级组…"
 
-#: kram/app/marking.py:27
+#: kram/app/marking.py:27 kram/tui/sidebar.py:291
 msgid "Remove Group…"
 msgstr "删除组…"
 
@@ -2341,11 +2342,11 @@ msgstr ""
 msgid "Update Notifications"
 msgstr "更新通知"
 
-#: kram/app/preferences.py:62
+#: kram/app/preferences.py:63
 msgid "Clicking the status icon marks the likely action"
 msgstr "单击状态图标标记最可能的操作"
 
-#: kram/app/preferences.py:63
+#: kram/app/preferences.py:64
 msgid ""
 "A click on the status icon unmarks a marked package, marks one that is not "
 "installed for installation and one with an upgrade for upgrade. Otherwise it "
@@ -2354,110 +2355,110 @@ msgstr ""
 "单击状态图标会取消已标记软件包的标记，将未安装的软件包标记为安装，将有更新的"
 "软件包标记为升级。否则会打开操作菜单，与右键单击相同。"
 
-#: kram/app/preferences.py:66
+#: kram/app/preferences.py:67
 msgid "Watch Fedora Releases"
 msgstr "关注 Fedora 发行版"
 
-#: kram/app/preferences.py:67
+#: kram/app/preferences.py:68
 msgid "On Reload, ask Fedora's Bodhi service whether a new release is out"
 msgstr "重新加载时向 Fedora 的 Bodhi 服务查询是否有新版本发布"
 
-#: kram/app/preferences.py:68
+#: kram/app/preferences.py:70
 msgid "Toolbar"
 msgstr "工具栏"
 
-#: kram/app/preferences.py:69
+#: kram/app/preferences.py:71
 msgid "Follow System Settings"
 msgstr "跟随系统设置"
 
-#: kram/app/preferences.py:70
+#: kram/app/preferences.py:72
 msgid "Text Under Icons"
 msgstr "文字在图标下方"
 
-#: kram/app/preferences.py:71
+#: kram/app/preferences.py:73
 msgid "Compact: Text Beside Icons"
 msgstr "紧凑：文字在图标旁边"
 
-#: kram/app/preferences.py:72
+#: kram/app/preferences.py:74
 msgid "Icons Only"
 msgstr "仅图标"
 
-#: kram/app/preferences.py:74
+#: kram/app/preferences.py:76
 msgid "Show Menu Bar"
 msgstr "显示菜单栏"
 
-#: kram/app/preferences.py:75
+#: kram/app/preferences.py:77
 msgid "Warn when the package information is older than:"
 msgstr "软件包信息超过以下时间时发出警告："
 
-#: kram/app/preferences.py:84
+#: kram/app/preferences.py:86
 msgid "Colour scheme"
 msgstr "配色方案"
 
-#: kram/app/preferences.py:85
+#: kram/app/preferences.py:87
 msgid "Terminal: 16 colours, follows the terminal"
 msgstr "终端：16 色，跟随终端"
 
-#: kram/app/preferences.py:86
+#: kram/app/preferences.py:88
 msgid "Midnight: 16 colours, blue"
 msgstr "午夜：16 色，蓝色"
 
-#: kram/app/preferences.py:87
+#: kram/app/preferences.py:89
 msgid "Console: 16 colours, black"
 msgstr "控制台：16 色，黑色"
 
-#: kram/app/preferences.py:96
+#: kram/app/preferences.py:98
 msgid "Centre the cursor when scrolling"
 msgstr "滚动时让光标保持居中"
 
-#: kram/app/preferences.py:97
+#: kram/app/preferences.py:99
 msgid "Status glyphs"
 msgstr "状态符号"
 
-#: kram/app/preferences.py:98
+#: kram/app/preferences.py:100
 msgid "Symbols, or letters when the terminal is not UTF-8"
 msgstr "符号；终端不是 UTF-8 时用字母"
 
-#: kram/app/preferences.py:99
+#: kram/app/preferences.py:101
 msgid "Letters"
 msgstr "字母"
 
-#: kram/app/preferences.py:101
+#: kram/app/preferences.py:103
 msgid "Ask before quitting with changes not applied"
 msgstr "有未应用的更改时，退出前询问"
 
-#: kram/app/preferences.py:102
+#: kram/app/preferences.py:104
 msgid "Sidebar width"
 msgstr "侧栏宽度"
 
-#: kram/app/preferences.py:103
+#: kram/app/preferences.py:105
 msgid "Details height"
 msgstr "详细信息高度"
 
-#: kram/app/preferences.py:105
+#: kram/app/preferences.py:107
 msgid "Pinned panels"
 msgstr "固定的面板"
 
-#: kram/app/preferences.py:106
+#: kram/app/preferences.py:108
 msgid "Sidebar and details"
 msgstr "侧栏和详细信息"
 
-#: kram/app/preferences.py:107 kram/tui/app.py:197
+#: kram/app/preferences.py:109 kram/tui/app.py:225
 msgid "Sidebar"
 msgstr "侧栏"
 
-#: kram/app/preferences.py:108 kram/gtk/dialogs/install.py:92
+#: kram/app/preferences.py:110 kram/gtk/dialogs/install.py:92
 #: kram/gtk/dialogs/progress.py:50 kram/gtk/ui_port.py:32
 #: kram/qt/install_dialog.py:112 kram/qt/progress_dialog.py:57
-#: kram/tui/app.py:198 kram/tui/app.py:245
+#: kram/tui/app.py:226 kram/tui/app.py:285 kram/tui/package_list.py:271
 msgid "Details"
 msgstr "详细信息"
 
-#: kram/app/preferences.py:109
+#: kram/app/preferences.py:111
 msgid "Neither"
 msgstr "都不固定"
 
-#: kram/app/preferences.py:147
+#: kram/app/preferences.py:149
 msgid "day"
 msgid_plural "days"
 msgstr[0] "天"
@@ -3382,6 +3383,7 @@ msgstr "删除已不存在的文件的副本"
 #: kram/gtk/dialogs/repos.py:214 kram/gtk/files.py:130
 #: kram/qt/cache_dialog.py:255 kram/qt/file_list.py:328
 #: kram/qt/notifier_dialog.py:104 kram/qt/repos_dialog.py:206
+#: kram/tui/details.py:357
 msgid "Show in File Manager"
 msgstr "在文件管理器中显示"
 
@@ -3427,7 +3429,7 @@ msgid "Hub"
 msgstr "中心"
 
 #: kram/gtk/dialogs/copr.py:50 kram/gtk/dialogs/repos.py:152
-#: kram/qt/copr_dialog.py:51 kram/qt/repos_dialog.py:67 kram/tui/app.py:244
+#: kram/qt/copr_dialog.py:51 kram/qt/repos_dialog.py:67 kram/tui/app.py:284
 msgid "Packages"
 msgstr "软件包"
 
@@ -3741,6 +3743,7 @@ msgid "RPM packages (*.rpm)"
 msgstr "RPM 软件包 (*.rpm)"
 
 #: kram/gtk/window.py:538 kram/qt/main_window.py:425
+#: kram/tui/dialogs/about.py:67
 msgid "A Synaptic-style package manager for Fedora."
 msgstr "一个 Synaptic 风格的 Fedora 软件包管理器。"
 
@@ -3773,17 +3776,17 @@ msgid "{n} of them is a security update"
 msgid_plural "{n} of them are security updates"
 msgstr[0] "其中 {n} 个是安全更新"
 
-#: kram/notifier/tray.py:237 kram/tui/window.py:132
+#: kram/notifier/tray.py:237 kram/tui/window.py:144
 #, python-brace-format
 msgid "The package information is {days} day old"
 msgid_plural "The package information is {days} days old"
 msgstr[0] "软件包信息已有 {days} 天"
 
-#: kram/qt/about_dialog.py:29
+#: kram/qt/about_dialog.py:29 kram/tui/dialogs/about.py:72
 msgid "What's New"
 msgstr "新功能"
 
-#: kram/qt/main_window.py:427
+#: kram/qt/main_window.py:427 kram/tui/dialogs/about.py:70
 msgid "Released under the MIT License."
 msgstr "以 MIT 许可证发布。"
 
@@ -3812,24 +3815,36 @@ msgstr "打开时显示可升级的软件包"
 msgid "install a package file"
 msgstr "安装软件包文件"
 
-#: kram/tui/app.py:183
+#: kram/tui/app.py:208
 #, python-brace-format
 msgid "Make the terminal larger: Kram needs {size}"
 msgstr "请把终端调大：Kram 需要 {size}"
 
-#: kram/tui/app.py:184 kram/tui/window.py:119
+#: kram/tui/app.py:209 kram/tui/window.py:131
 msgid "quit"
 msgstr "退出"
 
-#: kram/tui/app.py:199 kram/tui/search.py:156
+#: kram/tui/app.py:227 kram/tui/search.py:156
 msgid "Search"
 msgstr "搜索"
 
-#: kram/tui/app.py:287
+#: kram/tui/app.py:228 kram/tui/menu.py:89 kram/tui/sidebar.py:289
+msgid "Menu"
+msgstr "菜单"
+
+#: kram/tui/app.py:229 kram/tui/dialogs/keys.py:85
+msgid "Keys"
+msgstr "按键"
+
+#: kram/tui/app.py:230
+msgid "Focus the list"
+msgstr "转到列表"
+
+#: kram/tui/app.py:335
 msgid "copy"
 msgstr "复制"
 
-#: kram/tui/app.py:287
+#: kram/tui/app.py:335
 msgid "sort"
 msgstr "排序"
 
@@ -3883,9 +3898,37 @@ msgctxt "details key hint"
 msgid "show"
 msgstr "显示"
 
+#: kram/tui/details.py:144 kram/tui/details.py:145
+msgid "Next or previous link"
+msgstr "下一个或上一个链接"
+
+#: kram/tui/details.py:146
+msgid "Follow the link"
+msgstr "打开链接"
+
+#: kram/tui/details.py:350 kram/tui/details.py:351
+msgid "Previous or next tab"
+msgstr "上一个或下一个标签页"
+
+#: kram/tui/details.py:352
+msgid "A tab by its number"
+msgstr "按编号选择标签页"
+
 #: kram/tui/details.py:353 kram/tui/details.py:492
 msgid "Tabs"
 msgstr "标签页"
+
+#: kram/tui/details.py:354
+msgid "Tree or list"
+msgstr "树或列表"
+
+#: kram/tui/details.py:355
+msgid "Filter the files"
+msgstr "筛选文件"
+
+#: kram/tui/details.py:356
+msgid "Copy the selected paths"
+msgstr "复制所选路径"
 
 #: kram/tui/details.py:440
 msgctxt "details tab strip"
@@ -3900,13 +3943,45 @@ msgstr "没有可以显示它的桌面"
 msgid "The file is not on this system: its package is not installed"
 msgstr "此文件不在本系统中：它的软件包未安装"
 
+#: kram/tui/dialogs/about.py:22
+#, python-brace-format
+msgid "Terminal front end, Textual {version}"
+msgstr "终端前端，Textual {version}"
+
+#: kram/tui/dialogs/about.py:63 kram/tui/dialogs/path.py:79
+#: kram/tui/dialogs/question.py:59
+msgid "choose"
+msgstr "选择"
+
+#: kram/tui/dialogs/about.py:63 kram/tui/dialogs/keys.py:87
+#: kram/tui/dialogs/question.py:60 kram/tui/menu.py:90 kram/tui/search.py:186
+#: kram/tui/widgets.py:163 kram/tui/widgets.py:225
+msgid "close"
+msgstr "关闭"
+
+#: kram/tui/dialogs/about.py:63 kram/tui/dialogs/question.py:58
+msgid "next"
+msgstr "下一个"
+
+#: kram/tui/dialogs/about.py:73 kram/tui/dialogs/question.py:22
+msgid "Close"
+msgstr "关闭"
+
+#: kram/tui/dialogs/about.py:81 kram/tui/window.py:183
+msgid "Not in this version yet"
+msgstr "此版本中尚不可用"
+
+#: kram/tui/dialogs/keys.py:56
+msgid "Window"
+msgstr "窗口"
+
+#: kram/tui/dialogs/keys.py:87
+msgid "scroll"
+msgstr "滚动"
+
 #: kram/tui/dialogs/path.py:79 kram/tui/dialogs/question.py:60
 msgid "cancel"
 msgstr "取消"
-
-#: kram/tui/dialogs/path.py:79 kram/tui/dialogs/question.py:59
-msgid "choose"
-msgstr "选择"
 
 #: kram/tui/dialogs/path.py:79
 msgid "complete"
@@ -3945,10 +4020,6 @@ msgid "Replace"
 msgstr "替换"
 
 #: kram/tui/dialogs/question.py:22
-msgid "Close"
-msgstr "关闭"
-
-#: kram/tui/dialogs/question.py:22
 msgid "No"
 msgstr "否"
 
@@ -3960,38 +4031,73 @@ msgstr "确定"
 msgid "Yes"
 msgstr "是"
 
-#: kram/tui/dialogs/question.py:58
-msgid "next"
-msgstr "下一个"
+#: kram/tui/menu.py:49
+msgid "Colours…"
+msgstr "配色…"
 
-#: kram/tui/dialogs/question.py:60 kram/tui/search.py:186
-#: kram/tui/widgets.py:163 kram/tui/widgets.py:212
-msgid "close"
-msgstr "关闭"
+#: kram/tui/menu.py:90
+msgid "move"
+msgstr "移动"
 
-#: kram/tui/package_list.py:72
+#: kram/tui/menu.py:90
+msgid "run"
+msgstr "运行"
+
+#: kram/tui/package_list.py:67
+msgid "Move the cursor"
+msgstr "移动光标"
+
+#: kram/tui/package_list.py:68
+msgid "Extend the selection"
+msgstr "扩展选择"
+
+#: kram/tui/package_list.py:69
+msgid "Scroll sideways"
+msgstr "横向滚动"
+
+#: kram/tui/package_list.py:79
 msgctxt "short column header"
 msgid "Installed"
 msgstr "已安装"
 
-#: kram/tui/package_list.py:73
+#: kram/tui/package_list.py:80
 msgctxt "short column header"
 msgid "Latest"
 msgstr "最新"
 
-#: kram/tui/package_list.py:74
+#: kram/tui/package_list.py:81
 msgctxt "short column header"
 msgid "Size"
 msgstr "大小"
 
-#: kram/tui/package_list.py:75
+#: kram/tui/package_list.py:82
 msgctxt "short column header"
 msgid "Download"
 msgstr "下载"
 
-#: kram/tui/package_list.py:252
+#: kram/tui/package_list.py:259
 msgid "Sort"
 msgstr "排序"
+
+#: kram/tui/package_list.py:260
+msgid "Reverse the sort"
+msgstr "反转排序"
+
+#: kram/tui/package_list.py:263
+msgid "Mark for installation or upgrade"
+msgstr "标记为安装或升级"
+
+#: kram/tui/package_list.py:267
+msgid "Lock or unlock the version"
+msgstr "锁定或解锁版本"
+
+#: kram/tui/package_list.py:270
+msgid "Context menu"
+msgstr "上下文菜单"
+
+#: kram/tui/package_list.py:272
+msgid "Clear the selection"
+msgstr "清除选择"
 
 #: kram/tui/search.py:41
 msgid "A part of the package name"
@@ -4038,33 +4144,41 @@ msgstr[0] "输入时筛选：{n} 个软件包"
 msgid "dnf looks this up when you press Enter"
 msgstr "按 Enter 后由 dnf 查找"
 
-#: kram/tui/sidebar.py:34
+#: kram/tui/sidebar.py:36
 msgid "No searches yet. Press / to search."
 msgstr "还没有搜索。按 / 搜索。"
 
-#: kram/tui/sidebar.py:35
+#: kram/tui/sidebar.py:37
 msgid "No custom filters. New Filter from Current View is in the menu."
 msgstr "没有自定义过滤器。“从当前视图新建过滤器…”在菜单中。"
 
-#: kram/tui/sidebar.py:284 kram/tui/sidebar.py:357
+#: kram/tui/sidebar.py:71 kram/tui/sidebar.py:72
+msgid "Fold or unfold"
+msgstr "折叠或展开"
+
+#: kram/tui/sidebar.py:73
+msgid "Filter the list by the entry"
+msgstr "按条目筛选列表"
+
+#: kram/tui/sidebar.py:286 kram/tui/sidebar.py:287
+msgid "Previous or next view"
+msgstr "上一个或下一个视图"
+
+#: kram/tui/sidebar.py:288 kram/tui/sidebar.py:361
 msgid "Views"
 msgstr "视图"
 
-#: kram/tui/sidebar.py:285
-msgid "Menu"
-msgstr "菜单"
-
-#: kram/tui/sidebar.py:330
+#: kram/tui/sidebar.py:334
 msgctxt "sidebar key hint"
 msgid "next"
 msgstr "下一个"
 
-#: kram/tui/sidebar.py:330
+#: kram/tui/sidebar.py:334
 msgctxt "sidebar key hint"
 msgid "prev"
 msgstr "上一个"
 
-#: kram/tui/sidebar.py:331
+#: kram/tui/sidebar.py:335
 msgctxt "sidebar key hint"
 msgid "all"
 msgstr "全部"
@@ -4081,30 +4195,54 @@ msgstr "没有可以显示它的桌面：已复制路径"
 msgid "Copied"
 msgstr "已复制"
 
-#: kram/tui/widgets.py:163 kram/tui/widgets.py:212
+#: kram/tui/widgets.py:163 kram/tui/widgets.py:225
 msgid "pick"
 msgstr "选择"
 
-#: kram/tui/window.py:118
+#: kram/tui/window.py:130
 msgid "Another package manager is running: waiting"
 msgstr "另一个软件包管理器正在运行：等待中"
 
-#: kram/tui/window.py:148
+#: kram/tui/window.py:160
 #, python-brace-format
 msgid "“{text}” in {filter}"
 msgstr "{filter}中的“{text}”"
 
-#: kram/tui/window.py:153
+#: kram/tui/window.py:165
 #, python-brace-format
 msgid "{n} change marked"
 msgid_plural "{n} changes marked"
 msgstr[0] "已标记 {n} 项更改"
 
-#: kram/tui/window.py:171
-msgid "Not in this version yet"
-msgstr "此版本中尚不可用"
+#: kram/tui/window.py:250
+msgid "Nothing is marked"
+msgstr "没有标记任何内容"
 
-#: kram/tui/window.py:253
+#: kram/tui/window.py:252
+msgid "No package has an upgrade"
+msgstr "没有软件包可升级"
+
+#: kram/tui/window.py:254
+msgid "No upgrade of this kind"
+msgstr "没有此类升级"
+
+#: kram/tui/window.py:256
+msgid "No unneeded dependencies"
+msgstr "没有不需要的依赖"
+
+#: kram/tui/window.py:258
+msgid "Only for one package at a time"
+msgstr "一次只能用于一个软件包"
+
+#: kram/tui/window.py:259 kram/tui/window.py:262
+msgid "Not for this package"
+msgstr "不适用于此软件包"
+
+#: kram/tui/window.py:261
+msgid "Not marked"
+msgstr "未标记"
+
+#: kram/tui/window.py:336
 msgid "Sort by"
 msgstr "排序依据"
 

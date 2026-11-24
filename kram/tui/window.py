@@ -4,21 +4,27 @@ the details (kram.tui.details) and the top line (§5.4) to the Browser; the app 
 and decides who gets a key.
 
 The parts of `BrowserView` that later steps bring (the Apply dialog, the progress of the helper, the repositories,
-the mirrors) say so through the Ui port meanwhile, each with the section that replaces it.
+the mirrors) say so through the Ui port meanwhile, each with the section that replaces it. So do the actions of the
+menu whose dialogs come later (`NOT_YET`).
+
+The actions of kram.app.actions run here, by id (`run_action`), whether from the menu, a context menu or a key: what
+each runs is what the GUIs connect to it (kram.gtk.window._connect_actions). Whether one is enabled comes from
+`Browser.update_actions` (`apply_actions`), and the menu says why one is not (`disabled_reason`).
 """
 from collections.abc import Callable
 
 from rich.text import Text
 
 from .. import instance
-from ..app.actions import ActionState, DynamicItem, action_defs
-from ..app.browser import STATUS_MESSAGE_MS, Browser, ReposChoice
+from ..app.actions import MARK_ACTIONS, ActionDef, ActionState, DynamicItem, action_defs, mark_id, mark_upgrades_id
+from ..app.browser import STATUS_MESSAGE_MS, UPGRADE_KINDS, Browser, ReposChoice
 from ..app.custom_filters import CustomFilters
 from ..app.details import DETAILS_TAB_KEY
 from ..app.doc import Doc, para
 from ..app.marking import group_menu
 from ..app.mirrors import MirrorChoice
 from ..app.package_list import Sort
+from ..app.progress import BUSY
 from ..app.status import error_text, metadata_age, missing_repos
 from ..core.marks import Action
 from ..core.model import CatalogSnapshot, GroupInfo, PkgRow, TransactionPreview
@@ -27,6 +33,8 @@ from ..i18n import _, ngettext
 from ..notifier import stale_days
 from . import loop
 from .details import Details
+from .dialogs.about import AboutDialog
+from .menu import open_table_menu
 from .package_list import PackageTable, column_label
 from .palette import role
 from .search import open_search
@@ -34,6 +42,9 @@ from .sidebar import Sidebar
 from .widgets import ChoiceList
 
 FRONT_PACKAGE = "kram-tui"
+# the actions whose dialogs or progress come in later steps (docs/TUI_SPEC.md §17): "Not in this version yet"
+NOT_YET = frozenset({"reload", "apply", "lock", "unlock", "history", "show_in_history", "open_file", "repos", "copr",
+                     "cache", "notifications"})
 # Browser says this while the catalog load waits for the system repo lock (Browser._waiting_for_lock)
 LOCK_STATUS = "Waiting for another package manager to finish…"
 
@@ -56,7 +67,8 @@ class MainWindow:
         self.list.on_selection = b.update_actions
         self.list.show_sort(b.packages.sort_column)  # the sort the list starts with
         self.waiting_for_lock = False
-        self.actions: ActionState | None = None  # for the menu and the window's keys of later steps
+        self.defs: dict[str, ActionDef] = {d.id: d for d in action_defs()}
+        self.actions: ActionState | None = None  # from Browser.update_actions; None until it first says
         self.reload_enabled = self.apply_enabled = False
 
     def start(self) -> None:
@@ -157,7 +169,7 @@ class MainWindow:
         self.top.set_status(error_text(error))
 
     def apply_actions(self, state: ActionState, catalog: bool, busy: bool) -> None:
-        self.actions = state  # the menu (§7.7) and the marking keys (§6.5) read it when they come
+        self.actions = state  # the menus (§7.7) and the keys (§6.5) read it when used
 
     def set_reload_enabled(self, on: bool) -> None:
         self.reload_enabled = on
@@ -202,20 +214,91 @@ class MainWindow:
         """(label, enabled) of an item of a menu built when it opens: a dynamic item, or an action by its id."""
         if isinstance(item, DynamicItem):
             return item.label, item.enabled and item.run is not None
-        action = next(a for a in action_defs() if a.id == item)
-        enabled = self.actions.enabled.get(item, action.enabled) if self.actions is not None else action.enabled
-        return action.label, enabled
+        return self.defs[item].label, self.action_enabled(item)
 
     def run_menu_item(self, item: DynamicItem | str) -> None:
         if not self.menu_item(item)[1]:
             return
         if isinstance(item, DynamicItem):
             item.run()
-            return
+        else:
+            self.run_action(item)
+
+    # ---------------------------------------------------------------- the actions (kram.app.actions)
+
+    def action_enabled(self, action_id: str) -> bool:
+        """`action_id` is an action of kram.app.actions or one of the ids of `ActionState` ("downgrade",
+        "mark_upgrades_menu")."""
+        if action_id in ("reload", "reload_cache"):
+            return self.reload_enabled
+        default = self.defs[action_id].enabled if action_id in self.defs else False
+        return self.actions.enabled.get(action_id, default) if self.actions is not None else default
+
+    def action_visible(self, action_id: str) -> bool:
+        default = self.defs[action_id].visible
+        return self.actions.visible.get(action_id, default) if self.actions is not None else default
+
+    def disabled_reason(self, action_id: str) -> str:
+        """Why an action is off now, for the menu's status line (§7.7.1): the GUIs grey it out and say nothing,
+        a terminal has room for a line."""
         b = self.browser
-        run = {"mark_unneeded": b.marker.mark_unneeded, "filters": b.custom_filters.edit,
-               "new_filter": lambda: b.custom_filters.new_from_view(b.filter, b.search.text(), b.search.mode())}
-        run.get(item, self._not_yet)()
+        if b.snapshot is None or action_id in ("reload", "reload_cache"):
+            return _("Loading the package catalog…")
+        if b.busy():
+            return _(BUSY)
+        if action_id in ("apply", "unmark_all", "save_marks"):
+            return _("Nothing is marked")
+        if action_id in ("mark_upgrades", "mark_upgrades_menu"):
+            return _("No package has an upgrade")
+        if action_id.startswith("mark_upgrades."):
+            return _("No upgrade of this kind")
+        if action_id == "mark_unneeded":
+            return _("No unneeded dependencies")
+        if action_id in ("downgrade", "show_in_history"):
+            return _("Only for one package at a time") if len(self.selected_rows()) != 1 else \
+                _("Not for this package")
+        if action_id == "unmark":
+            return _("Not marked")
+        return _("Not for this package") if self.selected_rows() else ""
+
+    def run_action(self, action_id: str) -> None:
+        """What the action does, as the GUIs' menus run it; an action that is off says why on the top line."""
+        if not self.action_enabled(action_id):
+            if reason := self.disabled_reason(action_id):
+                self.ui.status(reason, STATUS_MESSAGE_MS)
+            return
+        if action_id in NOT_YET:
+            self._not_yet()
+            return
+        self.action_runs()[action_id]()
+
+    def action_runs(self) -> dict[str, Callable[[], None]]:
+        """What each action runs, but those of NOT_YET."""
+        b, marker = self.browser, self.browser.marker
+        return {
+            "reload_cache": b.reload, "mark_upgrades": marker.mark_all_upgrades,
+            "mark_unneeded": marker.mark_unneeded, "unmark_all": marker.unmark_all,
+            "properties": lambda: self.show_tab("general"), "why_blocked": lambda: self.show_tab("dependencies"),
+            "find": self.find, "back": b.go_back, "quit": self.app.request_quit, "about": self.about,
+            "copy_name": b.copy_names, "copy_nevra": b.copy_nevras, "unmark": b.unmark_selected,
+            "filters": b.custom_filters.edit,
+            "new_filter": lambda: b.custom_filters.new_from_view(b.filter, b.search.text(), b.search.mode()),
+            "save_marks": b.save_marks, "read_marks": b.read_marks, "export_csv": b.export_csv,
+            **{mark_upgrades_id(kind): lambda kind=kind: marker.mark_upgrades(kind) for kind in UPGRADE_KINDS},
+            **{mark_id(a): lambda a=a: b.mark_selected(a) for a in MARK_ACTIONS},
+        }
+
+    def run_either(self, *action_ids: str) -> None:
+        """A key with two actions (`+`: install or upgrade, `=`: lock or unlock): the first one that is on."""
+        self.run_action(next((a for a in action_ids if self.action_enabled(a)), action_ids[0]))
+
+    def show_tab(self, name: str) -> None:
+        """Properties, Why It Cannot Be Upgraded: that tab of the details, shown."""
+        self.details.select_name(name)
+        self.open_details()
+
+    def about(self) -> None:
+        self.app.push_screen(AboutDialog(self.ui))
 
     def change_group(self, key: str, action: Action) -> None:
         """`+` / `-` on a group or an environment of the sidebar: what its menu's first item of that kind does
@@ -262,6 +345,10 @@ class MainWindow:
         b.user_sorted(column, descending)
         self.show_sort((column, descending))
         b.packages.sort(column, descending)
+
+    def context_menu(self, at: tuple[int, int]) -> None:
+        """The row's menu (§7.7.2) at the screen cell `at`."""
+        open_table_menu(self, at)
 
     def find(self) -> None:
         """`/`, ctrl+f and the menu's Find (§7.6): the search dialog, once there is a catalog to search."""

@@ -27,6 +27,7 @@ from textual.scroll_view import ScrollView
 from textual.strip import Strip
 
 from ..app import preferences
+from ..app.actions import action_defs, mark_id
 from ..app.columns import (
     ALIGN_RIGHT,
     COL_ADVISORY,
@@ -51,6 +52,7 @@ from ..core.marks import Action
 from ..core.model import SECURITY_LEVELS, PkgRow, Status
 from ..i18n import _, pgettext
 from .glyphs import UNICODE, Glyphs, StatusGlyphs, status_glyphs
+from .keymap import CONTEXT_KEYS, bindings_key
 from .palette import role
 from .widgets import hint
 
@@ -61,6 +63,11 @@ NAME_WIDTHS = (12, 48)  # the name column's narrowest and widest
 NAME_SHARE = 0.95  # the name column fits this share of the shown names: one very long name pushes nothing away
 SUMMARY_MIN = 20
 SIDE_STEP = 8      # cells per ← →
+# what the keys do, for the Keys dialog (§10.20)
+MOVE = _("Move the cursor")
+EXTEND = _("Extend the selection")
+SIDEWAYS = _("Scroll sideways")
+LABELS = {d.id: d.label for d in action_defs()}
 # the columns after S and Package in their order, hidden ones where they belong: the reason after the installed
 # version, the update type after the latest, the download size after the installed size (as the GUIs show them)
 ORDER = (COL_INSTALLED, COL_REASON, COL_CANDIDATE, COL_ADVISORY, COL_REPO, COL_SIZE, COL_DOWNLOAD, COL_SUMMARY)
@@ -237,24 +244,32 @@ class PackageTable(ScrollView, can_focus=True):
     the keys that act on the rows (sorting, copying, following a link of the empty list)."""
 
     BINDINGS = [
-        Binding("up,k", "move(-1)", show=False),
-        Binding("down,j", "move(1)", show=False),
-        Binding("pageup", "page(-1)", show=False),
-        Binding("pagedown", "page(1)", show=False),
-        Binding("home", "jump(0)", show=False),
-        Binding("end", "jump(-1)", show=False),
-        Binding("shift+up", "extend(-1)", show=False),
-        Binding("shift+down", "extend(1)", show=False),
-        Binding("shift+pageup", "extend_page(-1)", show=False),
-        Binding("shift+pagedown", "extend_page(1)", show=False),
-        Binding("left,h", f"side(-{SIDE_STEP})", show=False),
-        Binding("right,l", f"side({SIDE_STEP})", show=False),
+        Binding("up,k", "move(-1)", MOVE, show=False),
+        Binding("down,j", "move(1)", MOVE, show=False),
+        Binding("pageup", "page(-1)", MOVE, show=False),
+        Binding("pagedown", "page(1)", MOVE, show=False),
+        Binding("home", "jump(0)", MOVE, show=False),
+        Binding("end", "jump(-1)", MOVE, show=False),
+        Binding("shift+up", "extend(-1)", EXTEND, show=False),
+        Binding("shift+down", "extend(1)", EXTEND, show=False),
+        Binding("shift+pageup", "extend_page(-1)", EXTEND, show=False),
+        Binding("shift+pagedown", "extend_page(1)", EXTEND, show=False),
+        Binding("left,h", f"side(-{SIDE_STEP})", SIDEWAYS, show=False),
+        Binding("right,l", f"side({SIDE_STEP})", SIDEWAYS, show=False),
         Binding("s", "sort", _("Sort")),
-        Binding("S", "reverse_sort", show=False),
-        Binding("y", "copy_names", show=False),
-        Binding("Y", "copy_nevras", show=False),
-        Binding("enter", "details", show=False),
-        Binding("escape", "escape", show=False),
+        Binding("S", "reverse_sort", _("Reverse the sort"), show=False),
+        # the actions of the rows (kram.tui.keymap), as the Package menu runs them
+        Binding(bindings_key(mark_id(Action.INSTALL)), "run_either('mark.install', 'mark.upgrade')",
+                _("Mark for installation or upgrade"), show=False),
+        Binding(bindings_key(mark_id(Action.REMOVE)), "run('mark.remove')", LABELS[mark_id(Action.REMOVE)],
+                show=False),
+        Binding(bindings_key("unmark"), "run('unmark')", LABELS["unmark"], show=False),
+        Binding(bindings_key("lock"), "run_either('lock', 'unlock')", _("Lock or unlock the version"), show=False),
+        Binding(bindings_key("copy_name"), "copy_names", LABELS["copy_name"], show=False),
+        Binding(bindings_key("copy_nevra"), "copy_nevras", LABELS["copy_nevra"], show=False),
+        Binding(",".join(CONTEXT_KEYS), "context_menu", _("Context menu"), show=False),
+        Binding("enter", "details", _("Details"), show=False),
+        Binding("escape", "escape", _("Clear the selection"), show=False),
         *[Binding(key, f"link({i})", show=False) for i, key in enumerate(LINK_KEYS)],
     ]
     DEFAULT_CSS = "PackageTable { height: 1fr; background: $background; }"
@@ -599,17 +614,37 @@ class PackageTable(ScrollView, can_focus=True):
     def action_link(self, i: int) -> None:
         self.commands.follow_empty_link(self.links[i])
 
+    def action_run(self, action_id: str) -> None:
+        if len(self.packages):
+            self.commands.run_action(action_id)
+
+    def action_run_either(self, *action_ids: str) -> None:
+        if len(self.packages):
+            self.commands.run_either(*action_ids)
+
+    def action_context_menu(self, at: tuple[int, int] | None = None) -> None:
+        """`.`, the Menu key, Shift+F10, a right click: the row's menu (§7.7.2), next to the cursor's row."""
+        if at is None:
+            region = self.content_region
+            line = 1 + self.cursor - self.scroll_offset.y
+            at = (region.x + 4, region.y + max(1, min(line, region.height - 1)) + 1)
+        self.commands.context_menu(at)
+
     def check_action(self, action: str, parameters: tuple[object, ...]) -> bool | None:
         if action == "link":
             return not len(self.packages) and parameters[0] < len(self.links)
         return True
 
     def on_click(self, event: Click) -> None:
+        """A click picks the row; a right click also opens its menu, keeping a selection the row is in."""
         line = event.y
         if line >= 1 and len(self.packages):
             pos = self.scroll_offset.y + line - 1
             if pos < len(self.packages):
-                self._go(pos, scroll=False)
+                if event.button != 3 or pos not in self.selected_positions():
+                    self._go(pos, scroll=False)
+                if event.button == 3:
+                    self.action_context_menu((event.screen_x, event.screen_y + 1))
 
     def on_focus(self) -> None:
         self.refresh()

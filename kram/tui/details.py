@@ -48,7 +48,7 @@ from . import ui_port
 from .doc_view import DocLines, doc_lines, link_of
 from .files import FileState
 from .glyphs import Glyphs
-from .package_list import fit
+from .package_list import EXTEND, MOVE, fit
 from .palette import role
 from .widgets import ChoiceList, hint
 
@@ -133,17 +133,17 @@ class DetailsBody(ScrollView, can_focus=True):
     Files tab has a cursor, line 0 says how many files there are and stays in place."""
 
     BINDINGS = [
-        Binding("up,k", "move(-1)", show=False),
-        Binding("down,j", "move(1)", show=False),
-        Binding("pageup", "page(-1)", show=False),
-        Binding("pagedown", "page(1)", show=False),
-        Binding("home", "jump(0)", show=False),
-        Binding("end", "jump(-1)", show=False),
-        Binding("shift+up", "extend(-1)", show=False),
-        Binding("shift+down", "extend(1)", show=False),
-        Binding("tab", "link(1)", show=False),
-        Binding("shift+tab", "link(-1)", show=False),
-        Binding("enter", "follow", show=False),
+        Binding("up,k", "move(-1)", MOVE, show=False),
+        Binding("down,j", "move(1)", MOVE, show=False),
+        Binding("pageup", "page(-1)", MOVE, show=False),
+        Binding("pagedown", "page(1)", MOVE, show=False),
+        Binding("home", "jump(0)", MOVE, show=False),
+        Binding("end", "jump(-1)", MOVE, show=False),
+        Binding("shift+up", "extend(-1)", EXTEND, show=False),
+        Binding("shift+down", "extend(1)", EXTEND, show=False),
+        Binding("tab", "link(1)", _("Next or previous link"), show=False),
+        Binding("shift+tab", "link(-1)", _("Next or previous link"), show=False),
+        Binding("enter", "follow", _("Follow the link"), show=False),
     ]
     DEFAULT_CSS = "DetailsBody { height: 1fr; background: $background; overflow-x: hidden; }"
 
@@ -347,14 +347,14 @@ class Details(Vertical):
     # a cell between the left border and the text, as the list's margin
     DEFAULT_CSS = "Details { padding: 0 0 0 1; }"
     BINDINGS = [
-        Binding("left_square_bracket", "tab(-1)", show=False),
-        Binding("right_square_bracket", "tab(1)", show=False),
-        *[Binding(str(i), f"tab_no({i})", show=False) for i in range(1, len(TABS) + 1)],
+        Binding("left_square_bracket", "tab(-1)", _("Previous or next tab"), show=False),
+        Binding("right_square_bracket", "tab(1)", _("Previous or next tab"), show=False),
+        *[Binding(str(i), f"tab_no({i})", _("A tab by its number"), show=False) for i in range(1, len(TABS) + 1)],
         Binding("t", "tabs", _("Tabs")),
-        Binding("f", "files_mode", show=False),
-        Binding("slash", "filter", show=False),
-        Binding("y", "copy", show=False),
-        Binding("o", "show_file", show=False),
+        Binding("f", "files_mode", _("Tree or list"), show=False),
+        Binding("slash", "filter", _("Filter the files"), show=False),
+        Binding("y", "copy", _("Copy the selected paths"), show=False),
+        Binding("o", "show_file", _("Show in File Manager"), show=False),
     ]
 
     def __init__(self, main, glyphs: Glyphs, **kw):

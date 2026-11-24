@@ -516,11 +516,13 @@ def test_scheduler_timers():
 
 def test_tui_settings_are_the_terminals_own_and_saved():
     tui = {p.key for p in preferences.prefs_for("tui")} | {p.key for p in preferences.prefs_for("tui", "layout")}
-    assert tui == {preferences.TUI_SCHEME, preferences.TUI_CENTRE_SCROLLING, preferences.TUI_STATUS_GLYPHS,
-                   preferences.TUI_CONFIRM_QUIT, preferences.TUI_SIDEBAR_WIDTH, preferences.TUI_DETAILS_HEIGHT,
-                   preferences.TUI_PINNED}
+    own = {preferences.TUI_SCHEME, preferences.TUI_CENTRE_SCROLLING, preferences.TUI_STATUS_GLYPHS,
+           preferences.TUI_CONFIRM_QUIT, preferences.TUI_SIDEBAR_WIDTH, preferences.TUI_DETAILS_HEIGHT,
+           preferences.TUI_PINNED}
+    # and the shared ones that mean something in a terminal (§13.1)
+    assert tui == own | {preferences.STATUS_CLICK, preferences.WATCH_RELEASES}
     for gui in ("qt", "gtk"):
-        assert not {p.key for p in preferences.PREFS if gui in p.toolkits} & tui
+        assert not {p.key for p in preferences.PREFS if gui in p.toolkits} & own
     assert preferences.value(preferences.TUI_CENTRE_SCROLLING) is True
     preferences.set_value(preferences.TUI_CENTRE_SCROLLING, False)
     preferences.set_value(preferences.TUI_SIDEBAR_WIDTH, 500)

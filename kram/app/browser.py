@@ -40,7 +40,7 @@ from .marking import Marker, group_menu
 from .markings import ask_markings_file, save_markings
 from .mirrors import MirrorChoice
 from .package_list import PackageList, Sort
-from .ports import CANCEL, OK, Button, Question, Ui
+from .ports import CANCEL, NO, OK, YES, Button, Question, Ui
 from .repos import ReposData
 from .scheduler import Scheduler
 from .search import SearchController
@@ -224,19 +224,23 @@ class Browser:
         else:
             self.sidebar.select("status", "status:upgradable")
 
-    def can_close(self, done: Callable[[bool], None]) -> None:
-        """Quitting: not while something runs; with unapplied marks only if the user says so."""
+    def can_close(self, done: Callable[[bool], None], confirm: bool = True,
+                  buttons: tuple[Button, ...] = (YES, NO), default: str | None = None) -> None:
+        """Quitting: not while something runs; with unapplied marks only if the user says so. `confirm` False
+        quits with them without asking (the terminal's setting, docs/TUI_SPEC.md §13.2). `buttons` and `default`
+        are the question's, for a front end whose design names them (the terminal: Quit / Cancel, Cancel
+        focused); the first button quits."""
         if self.busy():
             done(False)
             return
         n = len(self.packages.marks)
-        if not n:
+        if not n or not confirm:
             done(True)
             return
         self.ui.ask(Question("Kram", ngettext("{n} marked change has not been applied. Quit anyway?",
                                               "{n} marked changes have not been applied. Quit anyway?",
-                                              n).format(n=n)),
-                    lambda answer: done(answer == "yes"))
+                                              n).format(n=n), buttons=buttons, default=default),
+                    lambda answer: done(answer == buttons[0].id))
 
     def shutdown(self) -> None:
         self.helper.stop()

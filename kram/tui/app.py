@@ -4,7 +4,9 @@
 Who gets a key (§6, T13): Textual hands a key to the focused widget, then to its parents, the screen and the app; a
 text field takes printable keys itself, and a modal screen keeps the window under it from its keys. What is left is
 one rule, in `check_action`: the window's keys (WINDOW_ACTIONS) work only while no other screen is up and no text
-field has the focus. Returning False there also takes them out of the footer.
+field has the focus. Returning False there also takes them out of the footer. Textual's command palette is off: the
+menu (§7.7) has its place, and its key, ctrl+p, is Apply (§6.5). Textual's own app keys are not inherited either
+(its ctrl+q is ours, ctrl+c is kept): the Keys dialog lists the window's keys from the bindings, in Kram's words.
 
 The layout follows the terminal (§5.2): from WIDE columns the sidebar and the details are pinned beside and under
 the list; below that they slide over it, one at a time. Textual 8 sends the app no Resize when the terminal changes
@@ -23,9 +25,13 @@ from textual.widget import Widget
 from textual.widgets import Footer, Input, Static
 
 from ..app import preferences
+from ..app.actions import action_defs
+from ..app.ports import CANCEL, Button
+from ..app.progress import BUSY
 from ..i18n import _
 from . import loop
 from .glyphs import glyphs, is_utf8
+from .keymap import KEYS_KEYS, MENU_KEYS, WINDOW_RUN, bindings_key
 from .palette import ANSI_THEMES, DEFAULT_SCHEME, PALETTE_CSS, Palette, is_ansi, schemes
 from .ui_port import TuiUi
 from .widgets import hint
@@ -38,7 +44,7 @@ SLIDE_HEIGHT = 11  # the details slide-over; at most 3/5 of the body, so that ro
 PANELS = ("sidebar", "details")
 PINNED = {"both": {"sidebar", "details"}, "sidebar": {"sidebar"}, "details": {"details"}, "none": set()}
 # the window's own keys: off while another screen is up or a text field has the focus (the module's docstring)
-WINDOW_ACTIONS = frozenset({"toggle_panel", "find", "back_to_list", "quit", "back"})
+WINDOW_ACTIONS = frozenset({"toggle_panel", "find", "back_to_list", "quit", "back", "menu", "keys", "run"})
 
 CSS = PALETTE_CSS + """
 /* 16 colours: Textual draws some widgets in colours blended with transparency, which a 16-colour terminal cannot
@@ -81,6 +87,25 @@ App:ansi .window { background: $background; }
 
 .dialog { width: 90%; max-width: 110; height: auto; max-height: 90%; padding: 0 1; }
 .dialog.question, .dialog.path { max-width: 76; }
+.dialog .gap { margin-top: 1; }
+.dialog.about { max-width: 64; }
+.dialog.keys { max-width: 80; }
+/* modal windows in the middle of the screen (the question and path dialogs of step 1.1 were left at the top left) */
+QuestionDialog, PathDialog, AboutDialog, KeysDialog { align: center middle; }
+.keys #keys-list { height: auto; max-height: 100%; background: $surface; }
+App:ansi .keys #keys-list { background: $background; }
+
+/* the menu (§7.7): the menus on the left, a rule, the entries; the status line under both */
+MenuPopup { align: center middle; }
+.menu { width: auto; height: auto; max-height: 90%; }
+.menu #menu-columns { width: auto; height: auto; }
+.menu OptionList { height: auto; border: none; padding: 0 1; background: $surface; }
+.menu #menu-titles { border-right: $panel-border $border-blurred; padding: 0 1 0 1; }
+.menu #menu-entries { max-height: 100%; }
+.menu #menu-status { height: 3; border-top: $panel-border $border-blurred; padding: 0 1; color: $text-muted;
+                     width: 100%; }
+App:ansi .menu OptionList { background: $background; }
+App:ansi .menu #menu-status { color: $foreground; text-style: dim; }
 .dialog .note { color: $text-muted; }
 App:ansi .dialog .note { color: $foreground; text-style: dim; }
 .dialog .details { height: auto; max-height: 10; margin-top: 1; }
@@ -191,16 +216,30 @@ class TooSmall(Screen):
         self.app.request_quit()
 
 
-class KramApp(App):
-    CSS = CSS
-    BINDINGS = [
+def _window_bindings() -> list[Binding]:
+    """The window's keys (§6.5): the panels, the search, the menu, the keys; the actions of kram.tui.keymap with
+    their labels in the GUIs' menus, for the Keys dialog (shown in the footer: the panels, the search, the menu,
+    quitting)."""
+    labels = {d.id: d.label for d in action_defs()}
+    return [
         Binding("g", "toggle_panel('sidebar')", _("Sidebar")),
         Binding("d", "toggle_panel('details')", _("Details")),
-        Binding("slash,ctrl+f", "find", _("Search")),
-        Binding("escape", "back_to_list", show=False),
-        Binding("alt+left", "back", show=False),
-        Binding("q", "quit", _("Quit")),
+        Binding(bindings_key("find"), "find", _("Search")),
+        Binding(",".join(MENU_KEYS), "menu", _("Menu")),
+        Binding(",".join(KEYS_KEYS), "keys", _("Keys")),
+        Binding("escape", "back_to_list", _("Focus the list"), show=False),
+        Binding(bindings_key("back"), "back", labels["back"], show=False),
+        *[Binding(bindings_key(a), f"run('{a}')", labels[a], show=False) for a in WINDOW_RUN],
+        Binding(bindings_key("quit"), "quit", _("Quit")),
+        # Textual's own: says how to quit, instead of quitting at a reflex ctrl+c
+        Binding("ctrl+c", "help_quit", show=False, system=True),
     ]
+
+
+class KramApp(App, inherit_bindings=False):
+    CSS = CSS
+    BINDINGS = _window_bindings()
+    ENABLE_COMMAND_PALETTE = False  # the module's docstring
 
     def __init__(self, upgradable: bool = False, file: str | None = None):
         self.utf8 = is_utf8()
@@ -216,6 +255,7 @@ class KramApp(App):
         self.narrow: bool | None = None  # None until the first layout
         self.pinned = {name: name in PINNED[preferences.value(preferences.TUI_PINNED)] for name in PANELS}
         self.ui = TuiUi(self, self.show_status)
+        self.quitting = False  # the quit question is up: a second q does not ask again
         for theme in ANSI_THEMES:
             self.register_theme(theme)
         from .window import MainWindow  # it needs the Ui port and the glyphs set above
@@ -255,6 +295,10 @@ class KramApp(App):
 
     # ---------------------------------------------------------------- colours
 
+    @property
+    def scheme(self) -> str:
+        return self._scheme
+
     def set_scheme(self, name: str, save: bool = True) -> None:
         """A colour scheme (palette.schemes), at once: no restart. `save` False for a preview."""
         if name not in self.available_themes:
@@ -263,6 +307,10 @@ class KramApp(App):
         self.theme = name
         # Textual turns ANSI colours on only for its own "textual-ansi"; ours are 16-colour schemes as well
         self.ansi_color = is_ansi(name)
+        # Textual applies the new theme's CSS on its next turn, its colour filter at once: a frame drawn in between
+        # (the window under the Colours preview) had a 16-colour scheme's colours under the true-colour filter,
+        # which failed on them. The CSS now, before any frame
+        self.refresh_css(animate=False)
         if save:
             preferences.set_value(preferences.TUI_SCHEME, name)
 
@@ -273,7 +321,7 @@ class KramApp(App):
         self.ansi_color = is_ansi(theme_name)
 
     def _theme_changed(self, theme: Theme) -> None:
-        if theme.name != self._scheme:  # changed elsewhere: Textual's command palette
+        if theme.name != self._scheme:  # changed elsewhere (Textual's command palette, off now; App.theme set)
             self._scheme = theme.name
             if theme.name in {value for value, _label in schemes()}:
                 preferences.set_value(preferences.TUI_SCHEME, theme.name)
@@ -408,6 +456,28 @@ class KramApp(App):
         """alt+←: the package before the last link followed (§6.5)."""
         self.main.browser.go_back()
 
+    def action_run(self, action_id: str) -> None:
+        """A key of kram.tui.keymap: what the menu's entry does (MainWindow.run_action)."""
+        self.main.run_action(action_id)
+
+    def action_menu(self) -> None:
+        """`m`, `f9`: the menu popup (§7.7.1)."""
+        from .menu import MenuPopup, run_result
+        self.push_screen(MenuPopup(self.main), run_result)
+
+    def action_keys(self) -> None:
+        """`?`, `f1`: the keys of the focused panel and the window (§10.20)."""
+        from .dialogs.keys import KeysDialog, key_sections
+        focused = self.window.focused
+        panel = next((n for n in (focused.ancestors_with_self if focused else ()) if n.has_class("panel")), None)
+        scope = str(panel.border_title or "") if panel is not None else ""
+        self.push_screen(KeysDialog(key_sections(self.window, scope, self.glyphs)))
+
+    def open_colours(self) -> None:
+        """Settings → Colours… (§10.17)."""
+        from .dialogs.colours import ColoursDialog
+        self.push_screen(ColoursDialog(self._scheme))
+
     def list_focused(self) -> None:
         """Focus moved to the list (Esc, Tab, a click): a slide-over closes, a pinned panel stays."""
         if self.narrow:
@@ -432,6 +502,19 @@ class KramApp(App):
         self.request_quit()
 
     def request_quit(self) -> None:
-        """Quit (§10.19). With nothing pending Kram quits at once; asking first comes with the marks."""
-        self.main.shutdown()
-        self.exit()
+        """Quit (§10.19), as the GUIs close their window: Browser.can_close. With nothing pending Kram quits at
+        once; with marks not applied it asks, Cancel focused, unless the setting says not to (§13.2); while a
+        transaction runs it does not quit, and says why."""
+        if self.quitting:
+            return
+
+        def answered(ok: bool) -> None:
+            self.quitting = False
+            if ok:
+                self.main.shutdown()
+                self.exit()
+            elif self.main.browser.busy():
+                self.show_status(_(BUSY), 4000)
+        self.quitting = True
+        self.main.browser.can_close(answered, confirm=preferences.value(preferences.TUI_CONFIRM_QUIT),
+                                    buttons=(Button("yes", _("Quit"), "destructive"), CANCEL), default="cancel")
