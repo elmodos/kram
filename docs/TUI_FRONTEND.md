@@ -1,6 +1,19 @@
 # A terminal front end for Kram (`kram-tui`) — concept
 
-Status: **concept and spikes** (2026-11-23) on branch `feature/tui`. The binding description for implementation
+Status (2026-11-24): **phases 1–3 of `docs/TUI_SPEC.md` §17 are implemented** on branch `feature/tui` (pushed,
+not merged, not released): `kram/tui/`, tests `tests/test_tui_*.py`, checks `scripts/tui_check.sh` (Textual 4.0 and
+8.1) and `scripts/tui_root_check.sh` (the real kram-tui with polkit in a container: password, Ctrl+C, a real
+install/removal, a repository on/off). Every feature of `kram/app/parity.py` is SUPPORTED, PARTIAL or NOT_INTENDED
+for "tui". Left: phase 4 (the `kram-tui` subpackage, man page, a hand check in real terminals, release) and the
+open points in the next paragraph.
+
+Open points for the author (2026-11-24): the new strings of every step were translated by the implementing agents
+and are unreviewed (`po/uk.po` first); TUI_SPEC §18.5 (settings under `sudo`); whether Space should mark by default
+in the terminal (the shared Status-click setting is off); the upgrade commands the Fedora N dialog shows without a
+desktop; not checked yet: the desktop polkit window (KDE), the Linux console, enabling a real COPR project,
+installing a real local .rpm; SidebarModel recounts make a filter change and the first frame slower than §14.1.
+
+Earlier status: **concept and spikes** (2026-11-23). The binding description for implementation
 is `docs/TUI_SPEC.md`; this document keeps the reasons and the spike results. Two throwaway spikes show every layout and
 dialog described here over the real catalog (70,235 rows of Fedora 44): `scripts/spikes/t1_tui.py` (the window)
 and `scripts/spikes/t2_dialogs.py` (the dialogs that need root). Nothing of `kram/tui` exists yet; nothing is
