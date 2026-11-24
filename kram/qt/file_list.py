@@ -27,8 +27,16 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from ..app.files import (
+    can_show_in_file_manager,
+    count_text,
+    filter_placeholder,
+    name_spans,
+    partial_notice,
+    shown_paths,
+)
 from ..core.file_tree import Node, PathFilter, build_tree, path_filter
-from ..i18n import _, ngettext
+from ..i18n import _
 from .files import show_in_file_manager
 from .qt_loop import QtScheduler
 
@@ -149,7 +157,7 @@ class MatchDelegate(QStyledItemDelegate):
 
     def paint(self, painter, option, index) -> None:
         name, path = index.data(DISPLAY), index.data(PATH_ROLE)
-        spans = self.filter.spans(path, len(path) - len(name)) if self.filter and name and path else []
+        spans = name_spans(name, path, self.filter)
         if not spans:
             super().paint(painter, option, index)
             return
@@ -196,7 +204,7 @@ class FileList(QWidget):
         self._stale = False  # new paths or a new filter not shown yet
 
         self.filter = QLineEdit()
-        self.filter.setPlaceholderText(_("Filter files: text, or a pattern like *.so"))
+        self.filter.setPlaceholderText(filter_placeholder())
         self.filter.setClearButtonEnabled(True)
         self._timer = QtScheduler(self).timer(FILTER_DELAY_MS, self._rebuild)
         self.filter.textChanged.connect(lambda _text: self._timer.start())
@@ -216,7 +224,7 @@ class FileList(QWidget):
         self.tree_button.setChecked(True)
         group.buttonToggled.connect(lambda _button, on: on and self._rebuild_now())
         self.count = QLabel()
-        self.notice = QLabel(_("Not installed: repository metadata lists only some of the files."))
+        self.notice = QLabel(partial_notice())
         self.notice.setWordWrap(True)
         self.notice.setVisible(False)
 
@@ -287,7 +295,7 @@ class FileList(QWidget):
     def _rebuild(self) -> None:
         self._stale = False
         self.delegate.filter = f = path_filter(self.filter.text())
-        paths = self._paths if f is None else [p for p in self._paths if f.match(p)]
+        paths = shown_paths(self._paths, f)
         if self.tree_mode:
             self.tree_model.set_root(build_tree(paths))
             self.flat_model.set_paths([])
@@ -298,11 +306,7 @@ class FileList(QWidget):
             self.flat_model.set_paths(paths)
             self.view.setModel(self.flat_model)
         self.view.setRootIsDecorated(self.tree_mode)
-        if len(paths) == len(self._paths):
-            self.count.setText(ngettext("{n} file", "{n} files", len(paths)).format(n=len(paths)))
-        else:
-            self.count.setText(ngettext("{shown} of {n} file", "{shown} of {n} files", len(self._paths))
-                               .format(shown=len(paths), n=len(self._paths)))
+        self.count.setText(count_text(len(paths), len(self._paths)))
 
     # ---------------------------------------------------------------- actions
 
@@ -323,5 +327,5 @@ class FileList(QWidget):
         menu.addAction(self.copy_action)
         show = menu.addAction(QIcon.fromTheme("system-file-manager"), _("Show in File Manager"),
                               lambda: show_in_file_manager(path))
-        show.setEnabled(self._installed and os.path.lexists(path))
+        show.setEnabled(can_show_in_file_manager(self._installed, path))
         menu.exec(self.view.viewport().mapToGlobal(pos))

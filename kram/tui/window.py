@@ -1,6 +1,7 @@
 """The main window of the terminal front end: a view of kram.app.browser.Browser (docs/TUI_SPEC.md §7), as
-kram.gtk.window.MainWindow is. It wires the sidebar (kram.tui.sidebar), the package list (kram.tui.package_list) and
-the top line (§5.4) to the Browser; the app (kram.tui.app) lays out the panels and decides who gets a key.
+kram.gtk.window.MainWindow is. It wires the sidebar (kram.tui.sidebar), the package list (kram.tui.package_list),
+the details (kram.tui.details) and the top line (§5.4) to the Browser; the app (kram.tui.app) lays out the panels
+and decides who gets a key.
 
 The parts of `BrowserView` that later steps bring (the Apply dialog, the progress of the helper, the repositories,
 the mirrors) say so through the Ui port meanwhile, each with the section that replaces it.
@@ -13,16 +14,19 @@ from .. import instance
 from ..app.actions import ActionState, DynamicItem, action_defs
 from ..app.browser import STATUS_MESSAGE_MS, Browser, ReposChoice
 from ..app.custom_filters import CustomFilters
+from ..app.details import DETAILS_TAB_KEY
 from ..app.doc import Doc, para
 from ..app.marking import group_menu
 from ..app.mirrors import MirrorChoice
 from ..app.package_list import Sort
 from ..app.status import error_text, metadata_age, missing_repos
 from ..core.marks import Action
-from ..core.model import CatalogSnapshot, GroupInfo, PkgDetails, PkgRow, TransactionPreview
+from ..core.model import CatalogSnapshot, GroupInfo, PkgRow, TransactionPreview
+from ..core.settings import store as settings
 from ..i18n import _, ngettext
 from ..notifier import stale_days
 from . import loop
+from .details import Details
 from .package_list import PackageTable, column_label
 from .palette import role
 from .sidebar import Sidebar
@@ -33,29 +37,13 @@ FRONT_PACKAGE = "kram-tui"
 LOCK_STATUS = "Waiting for another package manager to finish…"
 
 
-class NoDetails:
-    """The details panel's DetailsSink until it shows documents (§7.4, the next step)."""
-
-    def show_advisories(self, row: PkgRow | None) -> None:
-        pass
-
-    def show_blocked(self, reason: str | None) -> None:
-        pass
-
-    def show_package(self, row: PkgRow, d: PkgDetails) -> None:
-        pass
-
-    def clear(self) -> None:
-        pass
-
-
 class MainWindow:
     """`app`: the KramApp, whose screen shows `list` in its Packages panel and whose top line this fills."""
 
     def __init__(self, app):
         self.app = app
         self.ui = app.ui
-        self.details = NoDetails()
+        self.details = Details(self, app.glyphs, id="details", classes="panel")
         self.scheduler = loop.TuiScheduler()
         self.browser = b = Browser(self, self.ui, self.scheduler, self.details, loop.post,
                                    front_package=FRONT_PACKAGE)
@@ -75,6 +63,7 @@ class MainWindow:
         b = self.browser
         b.restore_settings()
         b.custom_filters.restore()
+        self.details.select_name(settings.get(DETAILS_TAB_KEY, "description"))
         if self.app.upgradable:
             b.show_view(instance.UPGRADABLE)
         b.reload()

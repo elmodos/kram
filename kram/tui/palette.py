@@ -84,7 +84,34 @@ def role(name: str) -> Style:
         style = palette.get_component_rich_style(f"role--{name}", partial=True)
     except KeyError:  # not styled yet
         return Style()
+    if not palette.app.ansi_color:
+        style = _blended(palette, name, style)
     return style.without_color if palette.app.no_color else style
+
+
+_blends: dict[tuple[str, str, Style], Style] = {}  # by the scheme, the role and its rich style
+
+
+def _blended(palette: Palette, name: str, style: Style) -> Style:
+    """A role's colour with transparency ("$primary 30%", the blurred cursor of most themes) laid over the window's
+    background, as Textual does for its own widgets: the rich style alone drops the transparency, and the blurred
+    cursor came out as bright as the focused one."""
+    key = (palette.app.theme, name, style)
+    found = _blends.get(key)
+    if found is not None:
+        return found
+    if len(_blends) > 512:  # old schemes' entries
+        _blends.clear()
+    styles = palette.get_component_styles(f"role--{name}")
+    back = palette.screen.styles.background
+    color, bgcolor = styles.color, styles.background
+    blended = style
+    if style.bgcolor is not None and 0 < bgcolor.a < 1:
+        blended += Style(bgcolor=(back + bgcolor).rich_color)
+    if style.color is not None and 0 < color.a < 1:
+        blended += Style(color=(back + color).rich_color)
+    _blends[key] = blended
+    return blended
 
 
 # 16-colour schemes of our own: only the terminal's 16 colours, by their ANSI names

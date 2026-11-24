@@ -93,7 +93,6 @@ App:ansi .dialog Input { background: $background; }
 #sidebar { height: 1fr; }
 #main { width: 1fr; }
 #packages { height: 1fr; }
-PanelBody { height: 1fr; }
 #views { height: auto; border-top: $panel-border $border-blurred; color: $text-muted; display: none; }
 App:ansi #views { color: $foreground; }
 #body.tall #views { display: block; }
@@ -112,13 +111,6 @@ class Body(Horizontal):
 
     def on_resize(self) -> None:
         self.app.apply_layout()
-
-
-class PanelBody(Widget, can_focus=True):
-    """What a panel focuses until its real content (the details) is built."""
-
-    def render(self) -> str:
-        return ""
 
 
 class TopLine(Static):
@@ -233,8 +225,7 @@ class KramApp(App):
             with Vertical(id="main"):
                 with Vertical(id="packages", classes="panel"):
                     yield self.main.list
-                with Vertical(id="details", classes="panel"):
-                    yield PanelBody(id="details-body")
+                yield self.main.details
         yield Footer()
 
     def on_mount(self) -> None:
@@ -266,6 +257,12 @@ class KramApp(App):
         if save:
             preferences.set_value(preferences.TUI_SCHEME, name)
 
+    def watch_theme(self, theme_name: str) -> None:
+        """Right after Textual's own watcher, which turns ANSI colours off for every theme but "textual-ansi": ours
+        need them on before the next frame. A frame drawn in between, with ANSI colours in the theme and Textual's
+        filters for true colour, stopped the app (a scheme picked in Textual's command palette)."""
+        self.ansi_color = is_ansi(theme_name)
+
     def _theme_changed(self, theme: Theme) -> None:
         if theme.name != self._scheme:  # changed elsewhere: Textual's command palette
             self._scheme = theme.name
@@ -278,7 +275,6 @@ class KramApp(App):
 
     def refresh_colours(self) -> None:
         """Draw again what took its colours from `role` in Python: the hints, every widget's text."""
-        self.window.query_one("#details").border_subtitle = hint(("d", _("hide")), ("esc", _("list")))
         self.window.query_one("#packages").border_subtitle = hint(("s", _("sort")), ("y", _("copy")))
         for screen in self.screen_stack:
             for widget in screen.query("*"):

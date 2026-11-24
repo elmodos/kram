@@ -19,6 +19,9 @@ from .scheduler import Scheduler
 # the list, and kernel-core provides some 16000 (8 s, with the window frozen)
 MAX_DEP_ITEMS = 1000
 
+# the setting of the selected tab, by its name in TABS, shared by every front end ("details/tab" held its position
+# before the advisories tab came)
+DETAILS_TAB_KEY = "details/tab-name"
 # the tabs, in their order, by the names the settings keep
 TABS = ("description", "general", "advisories", "dependencies", "files", "versions", "changelog")
 

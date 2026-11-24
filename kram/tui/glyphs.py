@@ -44,15 +44,23 @@ class Glyphs:
     unfolded: str
     selected: str         # the package list's margin of a row in a selection of several (§7.3.6)
     warning: str          # before a warning on the top line (§5.4)
+    item: str             # before an item of a list in a document (the Dependencies tab)
+    rule: str             # a separator line in a document
+    separator: str        # between the tabs of a strip
+    branch: str           # the Files tab's tree (§7.4.3): before a child that has more after it,
+    last: str             # before the last child,
+    through: str          # and under a child that has more after it, on the way down to them
     panel_border: str     # Textual border types: a panel's single line, a modal window's double one
     modal_border: str
 
 
 # folding is `+`/`-` on every terminal, as trees in terminals always were: no triangles (T10, the author's wish)
 UNICODE = Glyphs(left="←", right="→", up="↑", down="↓", ellipsis="…", times="×", bullet="●", folded="+",
-                 unfolded="-", selected="▌", warning="!", panel_border="solid", modal_border="double")
+                 unfolded="-", selected="▌", warning="!", item="•", rule="─", separator="│", branch="├─ ", last="└─ ",
+                 through="│  ", panel_border="solid", modal_border="double")
 ASCII = Glyphs(left="<-", right="->", up="^", down="v", ellipsis="...", times="x", bullet="*", folded="+",
-               unfolded="-", selected="|", warning="!", panel_border="ascii", modal_border="ascii")
+               unfolded="-", selected="|", warning="!", item="*", rule="-", separator="|", branch="|- ", last="\\- ",
+               through="|  ", panel_border="ascii", modal_border="ascii")
 
 
 @dataclass(frozen=True)

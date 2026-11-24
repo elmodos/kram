@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kram\n"
 "Report-Msgid-Bugs-To: https://github.com/elmodos/kram/issues\n"
-"POT-Creation-Date: 2026-11-24 02:11+0200\n"
+"POT-Creation-Date: 2026-11-24 02:35+0200\n"
 "PO-Revision-Date: 2026-11-04 14:07+0200\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -201,7 +201,7 @@ msgstr "패키지 파일 열기…"
 msgid "Install a downloaded .rpm file (you can also drop it on the window)"
 msgstr "내려받은 .rpm 파일을 설치합니다 (창에 끌어다 놓아도 됩니다)"
 
-#: kram/app/actions.py:100 kram/tui/app.py:201
+#: kram/app/actions.py:100 kram/tui/app.py:193
 msgid "Quit"
 msgstr "끝내기"
 
@@ -936,7 +936,7 @@ msgstr "비교하여 변경 사항을 가져온 다음 삭제하십시오."
 msgid "Could not count the caches: {error}"
 msgstr "캐시를 집계할 수 없습니다: {error}"
 
-#: kram/app/cache.py:138 kram/gtk/files.py:175 kram/qt/file_list.py:302
+#: kram/app/cache.py:138 kram/app/files.py:28
 #, python-brace-format
 msgid "{n} file"
 msgid_plural "{n} files"
@@ -1067,7 +1067,7 @@ msgstr "설치된 버전"
 msgid "Latest version"
 msgstr "최신 버전"
 
-#: kram/app/columns.py:25 kram/app/details.py:92 kram/app/install.py:148
+#: kram/app/columns.py:25 kram/app/details.py:95 kram/app/install.py:148
 #: kram/gtk/dialogs/apply.py:68 kram/gtk/dialogs/history.py:85
 #: kram/qt/apply_dialog.py:52 kram/qt/history_dialog.py:63
 msgid "Package"
@@ -1081,7 +1081,7 @@ msgstr "이유"
 #: kram/app/columns.py:25 kram/core/custom_filters.py:54
 #: kram/gtk/details.py:160 kram/gtk/dialogs/apply.py:72
 #: kram/gtk/dialogs/history.py:87 kram/qt/apply_dialog.py:52
-#: kram/qt/details.py:56 kram/qt/history_dialog.py:63
+#: kram/qt/details.py:56 kram/qt/history_dialog.py:63 kram/tui/details.py:75
 msgid "Repository"
 msgstr "저장소"
 
@@ -1090,11 +1090,11 @@ msgstr "저장소"
 msgid "S"
 msgstr "S"
 
-#: kram/app/columns.py:26 kram/app/details.py:105
+#: kram/app/columns.py:26 kram/app/details.py:108
 msgid "Download size"
 msgstr "다운로드 크기"
 
-#: kram/app/columns.py:26 kram/app/details.py:104 kram/app/install.py:151
+#: kram/app/columns.py:26 kram/app/details.py:107 kram/app/install.py:151
 msgid "Installed size"
 msgstr "설치 크기"
 
@@ -1106,7 +1106,7 @@ msgstr "요약"
 msgid "Update type"
 msgstr "업데이트 유형"
 
-#: kram/app/columns.py:28 kram/app/details.py:93 kram/app/sidebar.py:31
+#: kram/app/columns.py:28 kram/app/details.py:96 kram/app/sidebar.py:31
 #: kram/core/custom_filters.py:53 kram/gtk/dialogs/repos.py:154
 #: kram/qt/repos_dialog.py:67
 msgid "Origin"
@@ -1350,51 +1350,51 @@ msgstr "필터 편집…"
 msgid "Delete Filter"
 msgstr "필터 삭제"
 
-#: kram/app/details.py:27
+#: kram/app/details.py:30
 msgid "Advisories"
 msgstr "권고문"
 
-#: kram/app/details.py:27 kram/gtk/dialogs/copr.py:88
+#: kram/app/details.py:30 kram/gtk/dialogs/copr.py:88
 #: kram/gtk/dialogs/install.py:91 kram/qt/copr_dialog.py:92
 #: kram/qt/install_dialog.py:112
 msgid "Description"
 msgstr "설명"
 
-#: kram/app/details.py:27
+#: kram/app/details.py:30
 msgid "General"
 msgstr "일반"
 
-#: kram/app/details.py:28 kram/gtk/dialogs/install.py:93
+#: kram/app/details.py:31 kram/gtk/dialogs/install.py:93
 #: kram/qt/install_dialog.py:113
 msgid "Dependencies"
 msgstr "의존성"
 
-#: kram/app/details.py:28 kram/gtk/dialogs/install.py:94
+#: kram/app/details.py:31 kram/gtk/dialogs/install.py:94
 #: kram/qt/install_dialog.py:113
 msgid "Files"
 msgstr "파일"
 
-#: kram/app/details.py:28
+#: kram/app/details.py:31
 msgid "Versions"
 msgstr "버전"
 
-#: kram/app/details.py:29 kram/gtk/dialogs/install.py:95
+#: kram/app/details.py:32 kram/gtk/dialogs/install.py:95
 #: kram/qt/install_dialog.py:114
 msgid "Changelog"
 msgstr "변경 기록"
 
-#: kram/app/details.py:47
+#: kram/app/details.py:50
 msgid ""
 "These fixes stay out until the lock is removed (Package → Unlock Version)."
 msgstr ""
 "잠금을 해제할 때까지 이 수정 사항은 설치되지 않습니다 (패키지 → 버전 잠금 해"
 "제)."
 
-#: kram/app/details.py:61
+#: kram/app/details.py:64
 msgid "References:"
 msgstr "참조:"
 
-#: kram/app/details.py:72
+#: kram/app/details.py:75
 msgid ""
 "The repository has to fix it. Until then Mark All Upgrades leaves this "
 "package out."
@@ -1402,95 +1402,95 @@ msgstr ""
 "저장소에서 수정해야 합니다. 그때까지 '모든 업그레이드 표시'는 이 패키지를 건"
 "너뜁니다."
 
-#: kram/app/details.py:88
+#: kram/app/details.py:91
 msgid "as a dependency"
 msgstr "의존성으로"
 
-#: kram/app/details.py:88
+#: kram/app/details.py:91
 msgid "by the user"
 msgstr "사용자가"
 
-#: kram/app/details.py:94
+#: kram/app/details.py:97
 msgid "Candidate repository"
 msgstr "후보 저장소"
 
-#: kram/app/details.py:95 kram/app/install.py:149
+#: kram/app/details.py:98 kram/app/install.py:149
 msgid "License"
 msgstr "라이선스"
 
-#: kram/app/details.py:96 kram/app/install.py:149
+#: kram/app/details.py:99 kram/app/install.py:149
 msgid "Website"
 msgstr "웹사이트"
 
-#: kram/app/details.py:97 kram/app/install.py:149
+#: kram/app/details.py:100 kram/app/install.py:149
 msgid "Vendor"
 msgstr "공급업체"
 
-#: kram/app/details.py:98 kram/app/install.py:150
+#: kram/app/details.py:101 kram/app/install.py:150
 msgid "Packager"
 msgstr "패키저"
 
-#: kram/app/details.py:99
+#: kram/app/details.py:102
 msgid "Source package"
 msgstr "소스 패키지"
 
-#: kram/app/details.py:100 kram/app/install.py:150
+#: kram/app/details.py:103 kram/app/install.py:150
 msgid "Built"
 msgstr "빌드 날짜"
 
-#: kram/app/details.py:101
+#: kram/app/details.py:104
 msgctxt "install date"
 msgid "Installed"
 msgstr "설치 날짜"
 
-#: kram/app/details.py:102 kram/core/custom_filters.py:56
+#: kram/app/details.py:105 kram/core/custom_filters.py:56
 msgid "Install reason"
 msgstr "설치 이유"
 
-#: kram/app/details.py:103
+#: kram/app/details.py:106
 msgid "Version lock"
 msgstr "버전 잠금"
 
-#: kram/app/details.py:120
+#: kram/app/details.py:123
 #, python-brace-format
 msgid "…and {n} more"
 msgid_plural "…and {n} more"
 msgstr[0] "…외 {n}개"
 
-#: kram/app/details.py:124 kram/app/install.py:204
+#: kram/app/details.py:127 kram/app/install.py:204
 msgid "Requires"
 msgstr "필요로 함"
 
-#: kram/app/details.py:125 kram/app/install.py:204
+#: kram/app/details.py:128 kram/app/install.py:204
 msgid "Recommends"
 msgstr "추천"
 
-#: kram/app/details.py:126 kram/app/install.py:205
+#: kram/app/details.py:129 kram/app/install.py:205
 msgid "Suggests"
 msgstr "제안"
 
-#: kram/app/details.py:127
+#: kram/app/details.py:130
 msgid "Required by installed packages"
 msgstr "설치된 패키지가 필요로 함"
 
-#: kram/app/details.py:128 kram/app/install.py:206
+#: kram/app/details.py:131 kram/app/install.py:206
 msgid "Conflicts"
 msgstr "충돌"
 
-#: kram/app/details.py:129 kram/app/install.py:206
+#: kram/app/details.py:132 kram/app/install.py:206
 msgid "Obsoletes"
 msgstr "대체"
 
-#: kram/app/details.py:130 kram/app/install.py:207
+#: kram/app/details.py:133 kram/app/install.py:207
 #: kram/core/custom_filters.py:51 kram/core/search.py:35
 msgid "Provides"
 msgstr "제공"
 
-#: kram/app/details.py:132 kram/app/install.py:208
+#: kram/app/details.py:135 kram/app/install.py:208
 msgid "No dependencies"
 msgstr "의존성 없음"
 
-#: kram/app/details.py:137
+#: kram/app/details.py:140
 msgid ""
 "The changelog is available for installed packages only (dnf5 does not "
 "download it for repositories by default)."
@@ -1498,16 +1498,16 @@ msgstr ""
 "변경 기록은 설치된 패키지에서만 볼 수 있습니다 (dnf5는 기본적으로 저장소에서 "
 "내려받지 않습니다)."
 
-#: kram/app/details.py:153
+#: kram/app/details.py:156
 msgid "candidate"
 msgstr "후보"
 
-#: kram/app/details.py:153
+#: kram/app/details.py:156
 msgctxt "version state"
 msgid "installed"
 msgstr "설치됨"
 
-#: kram/app/details.py:154
+#: kram/app/details.py:157
 msgid "excluded by the version lock"
 msgstr "버전 잠금으로 제외됨"
 
@@ -1570,6 +1570,20 @@ msgstr "패키지 카탈로그를 불러올 수 없습니다."
 #: kram/app/empty_list.py:62
 msgid "Try again"
 msgstr "다시 시도"
+
+#: kram/app/files.py:13
+msgid "Filter files: text, or a pattern like *.so"
+msgstr "파일 필터: 텍스트 또는 *.so 같은 패턴"
+
+#: kram/app/files.py:18
+msgid "Not installed: repository metadata lists only some of the files."
+msgstr "설치 안 됨: 저장소 메타데이터에는 일부 파일만 나열되어 있습니다."
+
+#: kram/app/files.py:29
+#, python-brace-format
+msgid "{shown} of {n} file"
+msgid_plural "{shown} of {n} files"
+msgstr[0] "파일 {n}개 중 {shown}개"
 
 #: kram/app/filters_edit.py:36
 msgid "megabytes"
@@ -2480,14 +2494,14 @@ msgstr "고정된 패널"
 msgid "Sidebar and details"
 msgstr "사이드바와 자세히"
 
-#: kram/app/preferences.py:107 kram/tui/app.py:197
+#: kram/app/preferences.py:107 kram/tui/app.py:189
 msgid "Sidebar"
 msgstr "사이드바"
 
 #: kram/app/preferences.py:108 kram/gtk/dialogs/install.py:92
 #: kram/gtk/dialogs/progress.py:50 kram/gtk/ui_port.py:32
 #: kram/qt/install_dialog.py:112 kram/qt/progress_dialog.py:57
-#: kram/tui/app.py:198 kram/tui/app.py:245
+#: kram/tui/app.py:190 kram/tui/app.py:236
 msgid "Details"
 msgstr "자세히"
 
@@ -3334,11 +3348,11 @@ msgstr "설명"
 
 #: kram/gtk/details.py:159 kram/gtk/dialogs/apply.py:70
 #: kram/gtk/dialogs/history.py:86 kram/qt/apply_dialog.py:52
-#: kram/qt/details.py:56 kram/qt/history_dialog.py:63
+#: kram/qt/details.py:56 kram/qt/history_dialog.py:63 kram/tui/details.py:75
 msgid "Version"
 msgstr "버전"
 
-#: kram/gtk/details.py:161 kram/qt/details.py:56
+#: kram/gtk/details.py:161 kram/qt/details.py:56 kram/tui/details.py:75
 msgid "State"
 msgstr "상태"
 
@@ -3422,8 +3436,8 @@ msgid "Delete the copies of files that no longer exist"
 msgstr "더 이상 존재하지 않는 파일의 사본을 삭제합니다"
 
 #: kram/gtk/dialogs/cache.py:111 kram/gtk/dialogs/notifier.py:57
-#: kram/gtk/dialogs/repos.py:214 kram/gtk/files.py:124
-#: kram/qt/cache_dialog.py:255 kram/qt/file_list.py:324
+#: kram/gtk/dialogs/repos.py:214 kram/gtk/files.py:130
+#: kram/qt/cache_dialog.py:255 kram/qt/file_list.py:328
 #: kram/qt/notifier_dialog.py:104 kram/qt/repos_dialog.py:206
 msgid "Show in File Manager"
 msgstr "파일 관리자에서 보기"
@@ -3470,7 +3484,7 @@ msgid "Hub"
 msgstr "허브"
 
 #: kram/gtk/dialogs/copr.py:50 kram/gtk/dialogs/repos.py:152
-#: kram/qt/copr_dialog.py:51 kram/qt/repos_dialog.py:67 kram/tui/app.py:244
+#: kram/qt/copr_dialog.py:51 kram/qt/repos_dialog.py:67 kram/tui/app.py:235
 msgid "Packages"
 msgstr "패키지"
 
@@ -3700,7 +3714,7 @@ msgstr "패키지 보기"
 msgid "Remove Repository…"
 msgstr "저장소 제거…"
 
-#: kram/gtk/dialogs/repos.py:213 kram/gtk/files.py:123 kram/qt/file_list.py:237
+#: kram/gtk/dialogs/repos.py:213 kram/gtk/files.py:129 kram/qt/file_list.py:245
 #: kram/qt/repos_dialog.py:205
 msgid "Copy Path"
 msgstr "경로 복사"
@@ -3731,35 +3745,21 @@ msgstr "업그레이드 안내서"
 msgid "Open {program}"
 msgstr "{program} 열기"
 
-#: kram/gtk/files.py:76 kram/qt/file_list.py:199
-msgid "Filter files: text, or a pattern like *.so"
-msgstr "파일 필터: 텍스트 또는 *.so 같은 패턴"
-
-#: kram/gtk/files.py:85 kram/qt/file_list.py:208
+#: kram/gtk/files.py:91 kram/qt/file_list.py:216
 msgid "Show the files in their folders"
 msgstr "파일을 폴더별로 표시"
 
-#: kram/gtk/files.py:86 kram/qt/file_list.py:205
+#: kram/gtk/files.py:92 kram/qt/file_list.py:213
 msgid "Tree"
 msgstr "트리"
 
-#: kram/gtk/files.py:88 kram/qt/file_list.py:212
+#: kram/gtk/files.py:94 kram/qt/file_list.py:220
 msgid "Show the full path of every file, one per line"
 msgstr "각 파일의 전체 경로를 한 줄에 하나씩 표시"
 
-#: kram/gtk/files.py:89 kram/qt/file_list.py:209
+#: kram/gtk/files.py:95 kram/qt/file_list.py:217
 msgid "List"
 msgstr "목록"
-
-#: kram/gtk/files.py:96 kram/qt/file_list.py:219
-msgid "Not installed: repository metadata lists only some of the files."
-msgstr "설치 안 됨: 저장소 메타데이터에는 일부 파일만 나열되어 있습니다."
-
-#: kram/gtk/files.py:177 kram/qt/file_list.py:304
-#, python-brace-format
-msgid "{shown} of {n} file"
-msgid_plural "{shown} of {n} files"
-msgstr[0] "파일 {n}개 중 {shown}개"
 
 #: kram/gtk/search.py:9 kram/qt/search_bar.py:27
 msgid ""
@@ -3787,19 +3787,19 @@ msgstr "검색 (Ctrl+F)"
 msgid "The list is filtered by the search text"
 msgstr "목록이 검색어로 필터링되어 있습니다"
 
-#: kram/gtk/window.py:99 kram/qt/main_window.py:70
+#: kram/gtk/window.py:99 kram/qt/main_window.py:69
 msgid "Package Manager"
 msgstr "패키지 관리자"
 
-#: kram/gtk/window.py:464 kram/qt/main_window.py:536
+#: kram/gtk/window.py:464 kram/qt/main_window.py:535
 msgid "Open Package File"
 msgstr "패키지 파일 열기"
 
-#: kram/gtk/window.py:465 kram/qt/main_window.py:537
+#: kram/gtk/window.py:465 kram/qt/main_window.py:536
 msgid "RPM packages (*.rpm)"
 msgstr "RPM 패키지 (*.rpm)"
 
-#: kram/gtk/window.py:538 kram/qt/main_window.py:426
+#: kram/gtk/window.py:538 kram/qt/main_window.py:425
 msgid "A Synaptic-style package manager for Fedora."
 msgstr "Synaptic 스타일의 Fedora용 패키지 관리자입니다."
 
@@ -3832,7 +3832,7 @@ msgid "{n} of them is a security update"
 msgid_plural "{n} of them are security updates"
 msgstr[0] "그중 {n}개는 보안 업데이트"
 
-#: kram/notifier/tray.py:237 kram/tui/window.py:142
+#: kram/notifier/tray.py:237 kram/tui/window.py:131
 #, python-brace-format
 msgid "The package information is {days} day old"
 msgid_plural "The package information is {days} days old"
@@ -3842,7 +3842,7 @@ msgstr[0] "패키지 정보가 {days}일 전 것입니다"
 msgid "What's New"
 msgstr "새로운 기능"
 
-#: kram/qt/main_window.py:428
+#: kram/qt/main_window.py:427
 msgid "Released under the MIT License."
 msgstr "MIT 라이선스로 배포됩니다."
 
@@ -3871,30 +3871,89 @@ msgstr "업그레이드가 있는 패키지로 열기"
 msgid "install a package file"
 msgstr "패키지 파일 설치"
 
-#: kram/tui/app.py:183
+#: kram/tui/app.py:175
 #, python-brace-format
 msgid "Make the terminal larger: Kram needs {size}"
 msgstr "터미널을 키우십시오: Kram에는 {size}이(가) 필요합니다"
 
-#: kram/tui/app.py:184 kram/tui/window.py:129
+#: kram/tui/app.py:176 kram/tui/window.py:118
 msgid "quit"
 msgstr "끝내기"
 
-#: kram/tui/app.py:281
-msgid "hide"
-msgstr "숨기기"
-
-#: kram/tui/app.py:281
-msgid "list"
-msgstr "목록"
-
-#: kram/tui/app.py:282
+#: kram/tui/app.py:278
 msgid "copy"
 msgstr "복사"
 
-#: kram/tui/app.py:282
+#: kram/tui/app.py:278
 msgid "sort"
 msgstr "정렬"
+
+#: kram/tui/details.py:63
+msgctxt "details key hint"
+msgid "next"
+msgstr "다음"
+
+#: kram/tui/details.py:63
+msgctxt "details key hint"
+msgid "prev"
+msgstr "이전"
+
+#: kram/tui/details.py:64
+msgctxt "details key hint"
+msgid "links"
+msgstr "링크"
+
+#: kram/tui/details.py:64
+msgctxt "details key hint"
+msgid "tabs"
+msgstr "탭"
+
+#: kram/tui/details.py:65
+msgctxt "details key hint"
+msgid "open"
+msgstr "열기"
+
+#: kram/tui/details.py:65
+msgctxt "details key hint"
+msgid "tree"
+msgstr "트리"
+
+#: kram/tui/details.py:66
+msgctxt "details key hint"
+msgid "filter"
+msgstr "필터"
+
+#: kram/tui/details.py:66
+msgctxt "details key hint"
+msgid "list"
+msgstr "목록"
+
+#: kram/tui/details.py:67
+msgctxt "details key hint"
+msgid "copy"
+msgstr "복사"
+
+#: kram/tui/details.py:67
+msgctxt "details key hint"
+msgid "show"
+msgstr "보기"
+
+#: kram/tui/details.py:353 kram/tui/details.py:492
+msgid "Tabs"
+msgstr "탭"
+
+#: kram/tui/details.py:440
+msgctxt "details tab strip"
+msgid "advisories"
+msgstr "권고문"
+
+#: kram/tui/details.py:542
+msgid "No desktop to show it in"
+msgstr "보여 줄 데스크톱이 없습니다"
+
+#: kram/tui/details.py:544
+msgid "The file is not on this system: its package is not installed"
+msgstr "이 파일은 이 시스템에 없습니다: 패키지가 설치되어 있지 않습니다"
 
 #: kram/tui/dialogs/path.py:79 kram/tui/dialogs/question.py:60
 msgid "cancel"
@@ -4037,25 +4096,28 @@ msgstr "복사했습니다"
 msgid "pick"
 msgstr "선택"
 
-#: kram/tui/window.py:128
+#: kram/tui/window.py:117
 msgid "Another package manager is running: waiting"
 msgstr "다른 패키지 관리자가 실행 중입니다: 기다리는 중"
 
-#: kram/tui/window.py:156
+#: kram/tui/window.py:145
 #, python-brace-format
 msgid "“{text}” in {filter}"
 msgstr "{filter}의 “{text}”"
 
-#: kram/tui/window.py:161
+#: kram/tui/window.py:150
 #, python-brace-format
 msgid "{n} change marked"
 msgid_plural "{n} changes marked"
 msgstr[0] "{n}개 변경 표시됨"
 
-#: kram/tui/window.py:179
+#: kram/tui/window.py:168
 msgid "Not in this version yet"
 msgstr "이 버전에는 아직 없습니다"
 
-#: kram/tui/window.py:261
+#: kram/tui/window.py:250
 msgid "Sort by"
 msgstr "정렬 기준"
+
+#~ msgid "hide"
+#~ msgstr "숨기기"

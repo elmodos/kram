@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kram\n"
 "Report-Msgid-Bugs-To: https://github.com/elmodos/kram/issues\n"
-"POT-Creation-Date: 2026-11-24 02:11+0200\n"
+"POT-Creation-Date: 2026-11-24 02:35+0200\n"
 "PO-Revision-Date: 2026-11-04 14:07+0200\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -216,7 +216,7 @@ msgid "Install a downloaded .rpm file (you can also drop it on the window)"
 msgstr ""
 "Installa un file .rpm scaricato (puoi anche trascinarlo sulla finestra)"
 
-#: kram/app/actions.py:100 kram/tui/app.py:201
+#: kram/app/actions.py:100 kram/tui/app.py:193
 msgid "Quit"
 msgstr "Esci"
 
@@ -994,7 +994,7 @@ msgstr "Confronta, riprendi le tue modifiche, poi eliminala."
 msgid "Could not count the caches: {error}"
 msgstr "Impossibile contare le cache: {error}"
 
-#: kram/app/cache.py:138 kram/gtk/files.py:175 kram/qt/file_list.py:302
+#: kram/app/cache.py:138 kram/app/files.py:28
 #, python-brace-format
 msgid "{n} file"
 msgid_plural "{n} files"
@@ -1133,7 +1133,7 @@ msgstr "Versione installata"
 msgid "Latest version"
 msgstr "Ultima versione"
 
-#: kram/app/columns.py:25 kram/app/details.py:92 kram/app/install.py:148
+#: kram/app/columns.py:25 kram/app/details.py:95 kram/app/install.py:148
 #: kram/gtk/dialogs/apply.py:68 kram/gtk/dialogs/history.py:85
 #: kram/qt/apply_dialog.py:52 kram/qt/history_dialog.py:63
 msgid "Package"
@@ -1147,7 +1147,7 @@ msgstr "Motivo"
 #: kram/app/columns.py:25 kram/core/custom_filters.py:54
 #: kram/gtk/details.py:160 kram/gtk/dialogs/apply.py:72
 #: kram/gtk/dialogs/history.py:87 kram/qt/apply_dialog.py:52
-#: kram/qt/details.py:56 kram/qt/history_dialog.py:63
+#: kram/qt/details.py:56 kram/qt/history_dialog.py:63 kram/tui/details.py:75
 msgid "Repository"
 msgstr "Repository"
 
@@ -1156,11 +1156,11 @@ msgstr "Repository"
 msgid "S"
 msgstr "S"
 
-#: kram/app/columns.py:26 kram/app/details.py:105
+#: kram/app/columns.py:26 kram/app/details.py:108
 msgid "Download size"
 msgstr "Dimensione del download"
 
-#: kram/app/columns.py:26 kram/app/details.py:104 kram/app/install.py:151
+#: kram/app/columns.py:26 kram/app/details.py:107 kram/app/install.py:151
 msgid "Installed size"
 msgstr "Dimensione installata"
 
@@ -1172,7 +1172,7 @@ msgstr "Sommario"
 msgid "Update type"
 msgstr "Tipo di aggiornamento"
 
-#: kram/app/columns.py:28 kram/app/details.py:93 kram/app/sidebar.py:31
+#: kram/app/columns.py:28 kram/app/details.py:96 kram/app/sidebar.py:31
 #: kram/core/custom_filters.py:53 kram/gtk/dialogs/repos.py:154
 #: kram/qt/repos_dialog.py:67
 msgid "Origin"
@@ -1423,51 +1423,51 @@ msgstr "Modifica filtro…"
 msgid "Delete Filter"
 msgstr "Elimina filtro"
 
-#: kram/app/details.py:27
+#: kram/app/details.py:30
 msgid "Advisories"
 msgstr "Avvisi"
 
-#: kram/app/details.py:27 kram/gtk/dialogs/copr.py:88
+#: kram/app/details.py:30 kram/gtk/dialogs/copr.py:88
 #: kram/gtk/dialogs/install.py:91 kram/qt/copr_dialog.py:92
 #: kram/qt/install_dialog.py:112
 msgid "Description"
 msgstr "Descrizione"
 
-#: kram/app/details.py:27
+#: kram/app/details.py:30
 msgid "General"
 msgstr "Generale"
 
-#: kram/app/details.py:28 kram/gtk/dialogs/install.py:93
+#: kram/app/details.py:31 kram/gtk/dialogs/install.py:93
 #: kram/qt/install_dialog.py:113
 msgid "Dependencies"
 msgstr "Dipendenze"
 
-#: kram/app/details.py:28 kram/gtk/dialogs/install.py:94
+#: kram/app/details.py:31 kram/gtk/dialogs/install.py:94
 #: kram/qt/install_dialog.py:113
 msgid "Files"
 msgstr "File"
 
-#: kram/app/details.py:28
+#: kram/app/details.py:31
 msgid "Versions"
 msgstr "Versioni"
 
-#: kram/app/details.py:29 kram/gtk/dialogs/install.py:95
+#: kram/app/details.py:32 kram/gtk/dialogs/install.py:95
 #: kram/qt/install_dialog.py:114
 msgid "Changelog"
 msgstr "Registro delle modifiche"
 
-#: kram/app/details.py:47
+#: kram/app/details.py:50
 msgid ""
 "These fixes stay out until the lock is removed (Package → Unlock Version)."
 msgstr ""
 "Queste correzioni restano escluse finché il blocco non viene rimosso "
 "(Pacchetto → Sblocca la versione)."
 
-#: kram/app/details.py:61
+#: kram/app/details.py:64
 msgid "References:"
 msgstr "Riferimenti:"
 
-#: kram/app/details.py:72
+#: kram/app/details.py:75
 msgid ""
 "The repository has to fix it. Until then Mark All Upgrades leaves this "
 "package out."
@@ -1475,96 +1475,96 @@ msgstr ""
 "Deve correggerlo il repository. Fino ad allora «Contrassegna tutti gli "
 "aggiornamenti» esclude questo pacchetto."
 
-#: kram/app/details.py:88
+#: kram/app/details.py:91
 msgid "as a dependency"
 msgstr "come dipendenza"
 
-#: kram/app/details.py:88
+#: kram/app/details.py:91
 msgid "by the user"
 msgstr "dall'utente"
 
-#: kram/app/details.py:94
+#: kram/app/details.py:97
 msgid "Candidate repository"
 msgstr "Repository candidato"
 
-#: kram/app/details.py:95 kram/app/install.py:149
+#: kram/app/details.py:98 kram/app/install.py:149
 msgid "License"
 msgstr "Licenza"
 
-#: kram/app/details.py:96 kram/app/install.py:149
+#: kram/app/details.py:99 kram/app/install.py:149
 msgid "Website"
 msgstr "Sito web"
 
-#: kram/app/details.py:97 kram/app/install.py:149
+#: kram/app/details.py:100 kram/app/install.py:149
 msgid "Vendor"
 msgstr "Fornitore"
 
-#: kram/app/details.py:98 kram/app/install.py:150
+#: kram/app/details.py:101 kram/app/install.py:150
 msgid "Packager"
 msgstr "Pacchettizzatore"
 
-#: kram/app/details.py:99
+#: kram/app/details.py:102
 msgid "Source package"
 msgstr "Pacchetto sorgente"
 
-#: kram/app/details.py:100 kram/app/install.py:150
+#: kram/app/details.py:103 kram/app/install.py:150
 msgid "Built"
 msgstr "Compilato"
 
-#: kram/app/details.py:101
+#: kram/app/details.py:104
 msgctxt "install date"
 msgid "Installed"
 msgstr "Installato"
 
-#: kram/app/details.py:102 kram/core/custom_filters.py:56
+#: kram/app/details.py:105 kram/core/custom_filters.py:56
 msgid "Install reason"
 msgstr "Motivo dell'installazione"
 
-#: kram/app/details.py:103
+#: kram/app/details.py:106
 msgid "Version lock"
 msgstr "Blocco della versione"
 
-#: kram/app/details.py:120
+#: kram/app/details.py:123
 #, python-brace-format
 msgid "…and {n} more"
 msgid_plural "…and {n} more"
 msgstr[0] "…e altri {n}"
 msgstr[1] "…e altri {n}"
 
-#: kram/app/details.py:124 kram/app/install.py:204
+#: kram/app/details.py:127 kram/app/install.py:204
 msgid "Requires"
 msgstr "Richiede"
 
-#: kram/app/details.py:125 kram/app/install.py:204
+#: kram/app/details.py:128 kram/app/install.py:204
 msgid "Recommends"
 msgstr "Raccomanda"
 
-#: kram/app/details.py:126 kram/app/install.py:205
+#: kram/app/details.py:129 kram/app/install.py:205
 msgid "Suggests"
 msgstr "Suggerisce"
 
-#: kram/app/details.py:127
+#: kram/app/details.py:130
 msgid "Required by installed packages"
 msgstr "Richiesto da pacchetti installati"
 
-#: kram/app/details.py:128 kram/app/install.py:206
+#: kram/app/details.py:131 kram/app/install.py:206
 msgid "Conflicts"
 msgstr "Conflitti"
 
-#: kram/app/details.py:129 kram/app/install.py:206
+#: kram/app/details.py:132 kram/app/install.py:206
 msgid "Obsoletes"
 msgstr "Rende obsoleti"
 
-#: kram/app/details.py:130 kram/app/install.py:207
+#: kram/app/details.py:133 kram/app/install.py:207
 #: kram/core/custom_filters.py:51 kram/core/search.py:35
 msgid "Provides"
 msgstr "Fornisce"
 
-#: kram/app/details.py:132 kram/app/install.py:208
+#: kram/app/details.py:135 kram/app/install.py:208
 msgid "No dependencies"
 msgstr "Nessuna dipendenza"
 
-#: kram/app/details.py:137
+#: kram/app/details.py:140
 msgid ""
 "The changelog is available for installed packages only (dnf5 does not "
 "download it for repositories by default)."
@@ -1572,16 +1572,16 @@ msgstr ""
 "Il registro delle modifiche è disponibile solo per i pacchetti installati "
 "(dnf5 non lo scarica dai repository per impostazione predefinita)."
 
-#: kram/app/details.py:153
+#: kram/app/details.py:156
 msgid "candidate"
 msgstr "candidato"
 
-#: kram/app/details.py:153
+#: kram/app/details.py:156
 msgctxt "version state"
 msgid "installed"
 msgstr "installato"
 
-#: kram/app/details.py:154
+#: kram/app/details.py:157
 msgid "excluded by the version lock"
 msgstr "esclusa dal blocco della versione"
 
@@ -1650,6 +1650,22 @@ msgstr "Impossibile caricare il catalogo dei pacchetti."
 #: kram/app/empty_list.py:62
 msgid "Try again"
 msgstr "Riprova"
+
+#: kram/app/files.py:13
+msgid "Filter files: text, or a pattern like *.so"
+msgstr "Filtra i file: testo o un modello come *.so"
+
+#: kram/app/files.py:18
+msgid "Not installed: repository metadata lists only some of the files."
+msgstr ""
+"Non installato: i metadati del repository elencano solo parte dei file."
+
+#: kram/app/files.py:29
+#, python-brace-format
+msgid "{shown} of {n} file"
+msgid_plural "{shown} of {n} files"
+msgstr[0] "{shown} di {n} file"
+msgstr[1] "{shown} di {n} file"
 
 #: kram/app/filters_edit.py:36
 msgid "megabytes"
@@ -2607,14 +2623,14 @@ msgstr "Pannelli fissati"
 msgid "Sidebar and details"
 msgstr "Barra laterale e dettagli"
 
-#: kram/app/preferences.py:107 kram/tui/app.py:197
+#: kram/app/preferences.py:107 kram/tui/app.py:189
 msgid "Sidebar"
 msgstr "Barra laterale"
 
 #: kram/app/preferences.py:108 kram/gtk/dialogs/install.py:92
 #: kram/gtk/dialogs/progress.py:50 kram/gtk/ui_port.py:32
 #: kram/qt/install_dialog.py:112 kram/qt/progress_dialog.py:57
-#: kram/tui/app.py:198 kram/tui/app.py:245
+#: kram/tui/app.py:190 kram/tui/app.py:236
 msgid "Details"
 msgstr "Dettagli"
 
@@ -3485,11 +3501,11 @@ msgstr "Descrizione"
 
 #: kram/gtk/details.py:159 kram/gtk/dialogs/apply.py:70
 #: kram/gtk/dialogs/history.py:86 kram/qt/apply_dialog.py:52
-#: kram/qt/details.py:56 kram/qt/history_dialog.py:63
+#: kram/qt/details.py:56 kram/qt/history_dialog.py:63 kram/tui/details.py:75
 msgid "Version"
 msgstr "Versione"
 
-#: kram/gtk/details.py:161 kram/qt/details.py:56
+#: kram/gtk/details.py:161 kram/qt/details.py:56 kram/tui/details.py:75
 msgid "State"
 msgstr "Stato"
 
@@ -3574,8 +3590,8 @@ msgid "Delete the copies of files that no longer exist"
 msgstr "Elimina le copie dei file che non esistono più"
 
 #: kram/gtk/dialogs/cache.py:111 kram/gtk/dialogs/notifier.py:57
-#: kram/gtk/dialogs/repos.py:214 kram/gtk/files.py:124
-#: kram/qt/cache_dialog.py:255 kram/qt/file_list.py:324
+#: kram/gtk/dialogs/repos.py:214 kram/gtk/files.py:130
+#: kram/qt/cache_dialog.py:255 kram/qt/file_list.py:328
 #: kram/qt/notifier_dialog.py:104 kram/qt/repos_dialog.py:206
 msgid "Show in File Manager"
 msgstr "Mostra nel gestore di file"
@@ -3624,7 +3640,7 @@ msgid "Hub"
 msgstr "Hub"
 
 #: kram/gtk/dialogs/copr.py:50 kram/gtk/dialogs/repos.py:152
-#: kram/qt/copr_dialog.py:51 kram/qt/repos_dialog.py:67 kram/tui/app.py:244
+#: kram/qt/copr_dialog.py:51 kram/qt/repos_dialog.py:67 kram/tui/app.py:235
 msgid "Packages"
 msgstr "Pacchetti"
 
@@ -3858,7 +3874,7 @@ msgstr "Mostra i pacchetti"
 msgid "Remove Repository…"
 msgstr "Rimuovi repository…"
 
-#: kram/gtk/dialogs/repos.py:213 kram/gtk/files.py:123 kram/qt/file_list.py:237
+#: kram/gtk/dialogs/repos.py:213 kram/gtk/files.py:129 kram/qt/file_list.py:245
 #: kram/qt/repos_dialog.py:205
 msgid "Copy Path"
 msgstr "Copia percorso"
@@ -3889,37 +3905,21 @@ msgstr "Guida all'aggiornamento"
 msgid "Open {program}"
 msgstr "Apri {program}"
 
-#: kram/gtk/files.py:76 kram/qt/file_list.py:199
-msgid "Filter files: text, or a pattern like *.so"
-msgstr "Filtra i file: testo o un modello come *.so"
-
-#: kram/gtk/files.py:85 kram/qt/file_list.py:208
+#: kram/gtk/files.py:91 kram/qt/file_list.py:216
 msgid "Show the files in their folders"
 msgstr "Mostra i file nelle loro cartelle"
 
-#: kram/gtk/files.py:86 kram/qt/file_list.py:205
+#: kram/gtk/files.py:92 kram/qt/file_list.py:213
 msgid "Tree"
 msgstr "Albero"
 
-#: kram/gtk/files.py:88 kram/qt/file_list.py:212
+#: kram/gtk/files.py:94 kram/qt/file_list.py:220
 msgid "Show the full path of every file, one per line"
 msgstr "Mostra il percorso completo di ogni file, uno per riga"
 
-#: kram/gtk/files.py:89 kram/qt/file_list.py:209
+#: kram/gtk/files.py:95 kram/qt/file_list.py:217
 msgid "List"
 msgstr "Elenco"
-
-#: kram/gtk/files.py:96 kram/qt/file_list.py:219
-msgid "Not installed: repository metadata lists only some of the files."
-msgstr ""
-"Non installato: i metadati del repository elencano solo parte dei file."
-
-#: kram/gtk/files.py:177 kram/qt/file_list.py:304
-#, python-brace-format
-msgid "{shown} of {n} file"
-msgid_plural "{shown} of {n} files"
-msgstr[0] "{shown} di {n} file"
-msgstr[1] "{shown} di {n} file"
 
 #: kram/gtk/search.py:9 kram/qt/search_bar.py:27
 msgid ""
@@ -3949,19 +3949,19 @@ msgstr "Cerca (Ctrl+F)"
 msgid "The list is filtered by the search text"
 msgstr "L’elenco è filtrato in base al testo di ricerca"
 
-#: kram/gtk/window.py:99 kram/qt/main_window.py:70
+#: kram/gtk/window.py:99 kram/qt/main_window.py:69
 msgid "Package Manager"
 msgstr "Gestore dei pacchetti"
 
-#: kram/gtk/window.py:464 kram/qt/main_window.py:536
+#: kram/gtk/window.py:464 kram/qt/main_window.py:535
 msgid "Open Package File"
 msgstr "Apri file di pacchetto"
 
-#: kram/gtk/window.py:465 kram/qt/main_window.py:537
+#: kram/gtk/window.py:465 kram/qt/main_window.py:536
 msgid "RPM packages (*.rpm)"
 msgstr "Pacchetti RPM (*.rpm)"
 
-#: kram/gtk/window.py:538 kram/qt/main_window.py:426
+#: kram/gtk/window.py:538 kram/qt/main_window.py:425
 msgid "A Synaptic-style package manager for Fedora."
 msgstr "Un gestore dei pacchetti per Fedora in stile Synaptic."
 
@@ -3998,7 +3998,7 @@ msgid_plural "{n} of them are security updates"
 msgstr[0] "di cui {n} di sicurezza"
 msgstr[1] "di cui {n} di sicurezza"
 
-#: kram/notifier/tray.py:237 kram/tui/window.py:142
+#: kram/notifier/tray.py:237 kram/tui/window.py:131
 #, python-brace-format
 msgid "The package information is {days} day old"
 msgid_plural "The package information is {days} days old"
@@ -4009,7 +4009,7 @@ msgstr[1] "Le informazioni sui pacchetti risalgono a {days} giorni fa"
 msgid "What's New"
 msgstr "Novità"
 
-#: kram/qt/main_window.py:428
+#: kram/qt/main_window.py:427
 msgid "Released under the MIT License."
 msgstr "Distribuito con licenza MIT."
 
@@ -4038,30 +4038,89 @@ msgstr "apri sui pacchetti con un aggiornamento"
 msgid "install a package file"
 msgstr "installa un file di pacchetto"
 
-#: kram/tui/app.py:183
+#: kram/tui/app.py:175
 #, python-brace-format
 msgid "Make the terminal larger: Kram needs {size}"
 msgstr "Ingrandisci il terminale: Kram ha bisogno di {size}"
 
-#: kram/tui/app.py:184 kram/tui/window.py:129
+#: kram/tui/app.py:176 kram/tui/window.py:118
 msgid "quit"
 msgstr "esci"
 
-#: kram/tui/app.py:281
-msgid "hide"
-msgstr "nascondi"
-
-#: kram/tui/app.py:281
-msgid "list"
-msgstr "elenco"
-
-#: kram/tui/app.py:282
+#: kram/tui/app.py:278
 msgid "copy"
 msgstr "copia"
 
-#: kram/tui/app.py:282
+#: kram/tui/app.py:278
 msgid "sort"
 msgstr "ordina"
+
+#: kram/tui/details.py:63
+msgctxt "details key hint"
+msgid "next"
+msgstr "succ."
+
+#: kram/tui/details.py:63
+msgctxt "details key hint"
+msgid "prev"
+msgstr "prec."
+
+#: kram/tui/details.py:64
+msgctxt "details key hint"
+msgid "links"
+msgstr "link"
+
+#: kram/tui/details.py:64
+msgctxt "details key hint"
+msgid "tabs"
+msgstr "schede"
+
+#: kram/tui/details.py:65
+msgctxt "details key hint"
+msgid "open"
+msgstr "apri"
+
+#: kram/tui/details.py:65
+msgctxt "details key hint"
+msgid "tree"
+msgstr "albero"
+
+#: kram/tui/details.py:66
+msgctxt "details key hint"
+msgid "filter"
+msgstr "filtra"
+
+#: kram/tui/details.py:66
+msgctxt "details key hint"
+msgid "list"
+msgstr "elenco"
+
+#: kram/tui/details.py:67
+msgctxt "details key hint"
+msgid "copy"
+msgstr "copia"
+
+#: kram/tui/details.py:67
+msgctxt "details key hint"
+msgid "show"
+msgstr "mostra"
+
+#: kram/tui/details.py:353 kram/tui/details.py:492
+msgid "Tabs"
+msgstr "Schede"
+
+#: kram/tui/details.py:440
+msgctxt "details tab strip"
+msgid "advisories"
+msgstr "avvisi"
+
+#: kram/tui/details.py:542
+msgid "No desktop to show it in"
+msgstr "Nessun desktop in cui mostrarlo"
+
+#: kram/tui/details.py:544
+msgid "The file is not on this system: its package is not installed"
+msgstr "Il file non è su questo sistema: il suo pacchetto non è installato"
 
 #: kram/tui/dialogs/path.py:79 kram/tui/dialogs/question.py:60
 msgid "cancel"
@@ -4204,26 +4263,29 @@ msgstr "Copiato"
 msgid "pick"
 msgstr "scegli"
 
-#: kram/tui/window.py:128
+#: kram/tui/window.py:117
 msgid "Another package manager is running: waiting"
 msgstr "È in esecuzione un altro gestore di pacchetti: in attesa"
 
-#: kram/tui/window.py:156
+#: kram/tui/window.py:145
 #, python-brace-format
 msgid "“{text}” in {filter}"
 msgstr "«{text}» in {filter}"
 
-#: kram/tui/window.py:161
+#: kram/tui/window.py:150
 #, python-brace-format
 msgid "{n} change marked"
 msgid_plural "{n} changes marked"
 msgstr[0] "{n} modifica contrassegnata"
 msgstr[1] "{n} modifiche contrassegnate"
 
-#: kram/tui/window.py:179
+#: kram/tui/window.py:168
 msgid "Not in this version yet"
 msgstr "Non ancora in questa versione"
 
-#: kram/tui/window.py:261
+#: kram/tui/window.py:250
 msgid "Sort by"
 msgstr "Ordina per"
+
+#~ msgid "hide"
+#~ msgstr "nascondi"

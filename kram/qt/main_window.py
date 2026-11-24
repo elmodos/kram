@@ -20,7 +20,9 @@ from ..app import preferences
 from ..app.actions import ActionState, DynamicItem, table_menu
 from ..app.browser import Browser, ReposChoice, rpm_path
 from ..app.custom_filters import CustomFilters
+from ..app.details import DETAILS_TAB_KEY
 from ..app.doc import Doc
+from ..app.files import FILES_VIEW_KEY
 from ..app.mirrors import MirrorChoice
 from ..app.package_list import Sort
 from ..core.model import CatalogSnapshot, PkgRow, TransactionPreview
@@ -49,9 +51,6 @@ from .sidebar import Sidebar
 from .status_bar import MainStatusBar
 from .toolbar import MainToolBar
 from .upgrade_dialog import UpgradeDialog
-
-DETAILS_TAB_KEY = "details/tab-name"  # "details/tab" held its position before the advisories tab came
-FILES_VIEW_KEY = "details/files-view"  # "tree" or "list"
 
 
 def _order(descending: bool) -> Qt.SortOrder:

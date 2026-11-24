@@ -1,11 +1,17 @@
 """The Files tab for GTK: the package's files as a folder tree or a flat list, with a filter field (kram.core.file_tree),
 as kram.qt.file_list."""
-import os
-
 from gi.repository import Gdk, Gio, GLib, GObject, Gtk, Pango
 
+from ..app.files import (
+    can_show_in_file_manager,
+    count_text,
+    filter_placeholder,
+    name_spans,
+    partial_notice,
+    shown_paths,
+)
 from ..core.file_tree import Node, PathFilter, build_tree, path_filter
-from ..i18n import _, ngettext
+from ..i18n import _
 
 FILTER_DELAY_MS = 150  # a package can have tens of thousands of files: filter once the typing pauses
 
@@ -48,7 +54,7 @@ def _children(item: FileItem) -> Gio.ListStore | None:
 def name_markup(name: str, path: str, f: PathFilter | None) -> str:
     """`name` with the parts the filter matched in bold: in the tree a file can be shown only because a folder above it
     matched, and then nothing in the file's own name is."""
-    spans = f.spans(path, len(path) - len(name)) if f is not None and name and path else []
+    spans = name_spans(name, path, f)
     out, pos = [], 0
     for begin, end in spans:
         out.append(GLib.markup_escape_text(name[pos:begin]))
@@ -73,7 +79,7 @@ class FileList(Gtk.Box):
         self._icons = FileIcons()
 
         bar = Gtk.Box(spacing=6)
-        self.filter = Gtk.SearchEntry(placeholder_text=_("Filter files: text, or a pattern like *.so"),
+        self.filter = Gtk.SearchEntry(placeholder_text=filter_placeholder(),
                                       search_delay=FILTER_DELAY_MS, hexpand=True)
         self.filter.connect("search-changed", lambda _e: self._rebuild())
         bar.append(self.filter)
@@ -93,7 +99,7 @@ class FileList(Gtk.Box):
         modes.append(self.list_button)
         bar.append(modes)
         self.append(bar)
-        self.notice = Gtk.Label(label=_("Not installed: repository metadata lists only some of the files."),
+        self.notice = Gtk.Label(label=partial_notice(),
                                 xalign=0, wrap=True, visible=False)
         self.notice.add_css_class("dim-label")
         self.append(self.notice)
@@ -160,7 +166,7 @@ class FileList(Gtk.Box):
     def _rebuild(self) -> None:
         self._stale = False
         self._filter = f = path_filter(self.filter.get_text())
-        paths = self._paths if f is None else [p for p in self._paths if f.match(p)]
+        paths = shown_paths(self._paths, f)
         if self.tree_mode:
             root = build_tree(paths)
             store = Gio.ListStore(item_type=FileItem)
@@ -171,11 +177,7 @@ class FileList(Gtk.Box):
             store = Gio.ListStore(item_type=FileItem)
             store.splice(0, 0, [FileItem(p, p) for p in paths])
             self.selection.set_model(store)
-        if len(paths) == len(self._paths):
-            self.count.set_text(ngettext("{n} file", "{n} files", len(paths)).format(n=len(paths)))
-        else:
-            self.count.set_text(ngettext("{shown} of {n} file", "{shown} of {n} files", len(self._paths))
-                                .format(shown=len(paths), n=len(self._paths)))
+        self.count.set_text(count_text(len(paths), len(self._paths)))
 
     # ---------------------------------------------------------------- rows
 
@@ -235,7 +237,7 @@ class FileList(Gtk.Box):
                     self.selection.select_item(i, True)
                 break
         self._menu_path = path or ""
-        self._actions.lookup_action("show").set_enabled(self._installed and bool(path) and os.path.lexists(path))
+        self._actions.lookup_action("show").set_enabled(can_show_in_file_manager(self._installed, path or ""))
         rect = Gdk.Rectangle()
         rect.x, rect.y, rect.width, rect.height = int(x), int(y), 1, 1
         self._popover.set_pointing_to(rect)

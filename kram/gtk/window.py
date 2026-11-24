@@ -14,6 +14,7 @@ from ..app import preferences
 from ..app.actions import ActionState, DynamicItem
 from ..app.browser import Browser, ReposChoice, rpm_path
 from ..app.custom_filters import CustomFilters
+from ..app.details import DETAILS_TAB_KEY
 from ..app.doc import Doc
 from ..app.mirrors import MirrorChoice
 from ..app.package_list import Sort
@@ -66,7 +67,6 @@ def header_icon(key: str) -> str:
     return icons.first_themed(names) or names[0]
 
 
-DETAILS_TAB_KEY = "details/tab-name"  # shared with Qt
 WINDOW_KEY = "gtk/window"             # {"width", "height", "maximized"}
 PANES_KEY = "gtk/panes"               # {"sidebar", "details"}: the two dividers' positions
 COLUMNS_KEY = "gtk/columns"           # the package list's {"order", "widths", "hidden"}
