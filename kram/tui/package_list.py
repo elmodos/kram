@@ -53,7 +53,7 @@ from ..core.model import SECURITY_LEVELS, PkgRow, Status
 from ..i18n import _, pgettext
 from .glyphs import UNICODE, Glyphs, StatusGlyphs, status_glyphs
 from .keymap import CONTEXT_KEYS, bindings_key
-from .palette import filled, role
+from .palette import filled, over, role
 from .widgets import hint
 
 # ---------------------------------------------------------------- the columns (§7.3.2)
@@ -486,17 +486,17 @@ class PackageTable(ScrollView, can_focus=True):
         if pos == self.cursor:
             base += role("cursor") if self.has_focus else role("cursor-blurred")
         selected = len(self.selection) > 1 and pos in self.selection
-        segments = [Segment(self.glyphs.selected if selected else " ", base + role("marked") if selected else base)]
+        segments = [Segment(self.glyphs.selected if selected else " ", over(base, role("marked")) if selected else base)]
         ellipsis = self.glyphs.ellipsis
         for col, w in self.columns:
             if col == COL_STATUS:
                 glyph, glyph_role, flag, flag_role = status_cells(r, action, r.key in ctx.blocked, self.symbols)
-                segments += [Segment(glyph, base + role(glyph_role)), Segment(flag, base + role(flag_role))]
+                segments += [Segment(glyph, over(base, role(glyph_role))), Segment(flag, over(base, role(flag_role)))]
             else:
                 style = cell_style(r, col, ctx)
                 cell = base + Style(bold=style.bold or None, italic=style.italic or None, dim=style.dimmed or None)
                 if col == COL_NAME and action and ansi:
-                    cell += role(mark_role(action))
+                    cell = over(cell, role(mark_role(action)))
                 segments.append(Segment(fit(cell_text(r, col, ctx) or "", w, col in ALIGN_RIGHT, ellipsis), cell))
             segments.append(Segment(" ", base))
         return segments, base

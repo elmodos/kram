@@ -9,6 +9,7 @@ dim, reverse and underline: nothing blended with transparency, which shows there
 The rules live in `PALETTE_CSS`, which the app puts in its own CSS: a widget's DEFAULT_CSS is scoped to that widget,
 and Textual prefixes a rule starting with `App:ansi` there with the widget's name, so it never matches.
 """
+from rich.color import Color
 from rich.style import Style
 from textual.strip import Strip
 from textual.theme import Theme
@@ -101,6 +102,18 @@ def filled(widget: Widget, strip: Strip) -> Strip:
     if bgcolor is None or bgcolor.is_default:
         return strip
     return strip.apply_style(Style(bgcolor=bgcolor))
+
+
+def over(base: Style, style: Style) -> Style:
+    """`style` (a role's colour) on a line's `base`. The 16-colour cursor is reverse video, which would turn a
+    coloured glyph into a block of its colour: the colour goes to the background there, which reverse shows as the
+    text's colour again, on the cursor's own background (the base's text colour; the terminal's own if unset)."""
+    if not base.reverse or style.color is None:
+        return base + style
+    color = base.color or Color.default()
+    combined = base + style
+    return Style(color=color, bgcolor=style.color, bold=combined.bold, dim=combined.dim, italic=combined.italic,
+                 underline=combined.underline, reverse=True, strike=combined.strike)
 
 
 def _without_default(style: Style) -> Style:

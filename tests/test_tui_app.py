@@ -586,3 +586,17 @@ def test_lines_drawn_in_python_are_on_the_schemes_background():
         assert all(s.style is None or s.style.bgcolor is None
                    for s in app.window.query_one("EntryList").render_line(5))
     run(test)
+
+
+def test_a_coloured_glyph_under_the_16_colour_cursor_keeps_its_colour():
+    """The 16-colour cursor is reverse video: a glyph's colour goes to the background, which reverse shows as the
+    text's colour, on the cursor's background (the green "installed" box came out as a green block)."""
+    from rich.color import Color
+
+    from kram.tui.palette import over
+    cursor = Style(color="bright_white", bgcolor="blue", reverse=True, bold=True)
+    green = Style(color="green")
+    assert over(cursor, green) == Style(color="bright_white", bgcolor="green", reverse=True, bold=True)
+    assert over(Style(reverse=True), green) == Style(color=Color.default(), bgcolor="green", reverse=True)
+    assert over(cursor, Style(dim=True)) == cursor + Style(dim=True)  # no colour of its own: nothing to move
+    assert over(Style(bgcolor="blue"), green) == Style(bgcolor="blue") + green  # high colour: no reverse

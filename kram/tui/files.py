@@ -13,7 +13,7 @@ from rich.text import Text
 from ..app.files import count_text, name_spans, partial_notice, shown_paths
 from ..core.file_tree import Node, PathFilter, build_tree, path_filter
 from .glyphs import Glyphs
-from .palette import role
+from .palette import over, role
 
 
 @dataclass(frozen=True)
@@ -139,7 +139,7 @@ class FileState:
         if pos == self.cursor:
             base = role("cursor") if focused else role("cursor-blurred")
         selected = len(self.selection) > 1 and pos in self.selection
-        text = Text(self.glyphs.selected if selected else " ", base + role("marked") if selected else base)
+        text = Text(self.glyphs.selected if selected else " ", over(base, role("marked")) if selected else base)
         text.append(r.prefix, base if pos == self.cursor else role("muted"))
         name = Text(r.name, base)
         for begin, end in name_spans(r.name, r.path, self.filter):
