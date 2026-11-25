@@ -256,6 +256,20 @@ def test_the_menu_fits_a_narrow_terminal(monkeypatch):
     run(test, NARROW)
 
 
+def test_the_menu_opens_at_the_top_left_under_the_top_line(monkeypatch):
+    """§7.7.1: where a GUI's menu bar drops its menus; on a short terminal too, whole."""
+    use_catalog(monkeypatch)
+
+    for size in (WIDE, NARROW, (64, 12)):
+        async def test(app, pilot):
+            await pilot.press("f9")
+            await pilot.pause()
+            box = popup(app).query_one("#menu-box").region
+            assert (box.x, box.y) == (0, 1)
+            assert box.bottom <= app.size.height
+        run(test, size)
+
+
 # ---------------------------------------------------------------- settings (§7.7.3, §13)
 
 @pytest.mark.feature(Feature.SETTINGS_REGISTRY, front="tui")

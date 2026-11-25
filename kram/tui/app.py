@@ -97,9 +97,10 @@ QuestionDialog, PathDialog, AboutDialog, KeysDialog { align: center middle; }
 .keys #keys-list { height: auto; max-height: 100%; background: $surface; }
 App:ansi .keys #keys-list { background: $background; }
 
-/* the menu (§7.7): the menus on the left, a rule, the entries; the status line under both */
-MenuPopup { align: center middle; }
-.menu { width: auto; height: auto; max-height: 90%; }
+/* the menu (§7.7): the menus on the left, a rule, the entries; the status line under both. At the top left, under
+   the top line, where a GUI's menu bar drops its menus */
+MenuPopup { align: left top; }
+.menu { width: auto; height: auto; max-height: 90%; margin-top: 1; }
 .menu #menu-columns { width: auto; height: auto; }
 .menu OptionList { height: auto; border: none; padding: 0 1; background: $surface; }
 .menu #menu-titles { border-right: $panel-border $border-blurred; padding: 0 1 0 1; }

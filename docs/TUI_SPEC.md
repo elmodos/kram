@@ -331,9 +331,9 @@ each with its mode) apply, under the GUIs' settings keys.
 
 ### 7.7 Menus (`MENU_*`)
 
-7.7.1 `m`/`f9` opens the menu popup in the middle: the menus of `menu_bar()` on the left, the entries on the right
-with their TUI key (§6.6); submenus open in place with a `← back` line; preferences as `[x]` entries;
-dynamic menus (Downgrade to Version, `MENU_DOWNGRADE_SUBMENU`) fill when opened. `←`/`→` move between the columns,
+7.7.1 `m`/`f9` opens the menu popup at the top left, under the top line (where a GUI's menu bar drops its menus):
+the menus of `menu_bar()` on the left, the entries on the right with their TUI key (§6.6); submenus open in place
+with a `← back` line; preferences as `[x]` entries; dynamic menus (Downgrade to Version, `MENU_DOWNGRADE_SUBMENU`) fill when opened. `←`/`→` move between the columns,
 `Enter` runs, `Esc` closes. Disabled entries are dim and say why on the status line of the popup.
 
 7.7.2 The row's context menu (`.`) is `table_menu()` as a one-column popup next to the cursor row.
