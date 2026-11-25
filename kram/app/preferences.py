@@ -35,7 +35,7 @@ TUI_PINNED = "tui/pinned"
 TUI_COLUMNS = "tui/columns"
 # the terminal's colour schemes: Textual's theme names, ours ("kram-…") made of the terminal's 16 colours only
 TUI_SCHEME_DEFAULT = "textual-ansi"
-TUI_ANSI_SCHEMES = frozenset({"textual-ansi", "kram-midnight", "kram-console"})
+TUI_ANSI_SCHEMES = frozenset({"textual-ansi", "kram-turbo", "kram-console"})
 
 
 @dataclass(frozen=True)
@@ -86,7 +86,7 @@ def _tui_prefs() -> tuple[Pref, ...]:
     return (
         Pref(TUI_SCHEME, "choice", TUI_SCHEME_DEFAULT, _("Colour scheme"), toolkits=TUI, choices=(
             ("textual-ansi", _("Terminal: 16 colours, follows the terminal")),
-            ("kram-midnight", _("Midnight: 16 colours, blue")),
+            ("kram-turbo", _("Turbo: 16 colours, blue")),
             ("kram-console", _("Console: 16 colours, black")),
             # Textual's own themes, by their names
             ("textual-dark", "Textual dark"),

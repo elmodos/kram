@@ -323,7 +323,7 @@ def test_colours_previews_the_scheme_and_esc_puts_it_back(monkeypatch):
         assert isinstance(app.screen, ColoursDialog)
         await pilot.press("down")
         await pilot.pause()
-        assert app.theme == "kram-midnight" and preferences.value(preferences.TUI_SCHEME) == "textual-ansi"
+        assert app.theme == "kram-turbo" and preferences.value(preferences.TUI_SCHEME) == "textual-ansi"
         await pilot.press("down", "down")
         await pilot.pause()
         assert app.theme == "textual-dark" and not app.ansi_color
@@ -335,8 +335,8 @@ def test_colours_previews_the_scheme_and_esc_puts_it_back(monkeypatch):
         await pilot.pause()
         await pilot.press("down", "enter")
         await pilot.pause()
-        assert len(app.screen_stack) == 1 and app.theme == "kram-midnight"
-        assert preferences.value(preferences.TUI_SCHEME) == "kram-midnight"
+        assert len(app.screen_stack) == 1 and app.theme == "kram-turbo"
+        assert preferences.value(preferences.TUI_SCHEME) == "kram-turbo"
     run(test)
 
 

@@ -275,16 +275,16 @@ class MainWindow:
             if age is not None and (days := age // 86400) >= stale_days():
                 parts.append(Text(warn + ngettext("The package information is {days} day old",
                                                   "The package information is {days} days old",
-                                                  days).format(days=days), role("danger")))
+                                                  days).format(days=days), role("danger", bar=True)))
             if (missing := missing_repos(snap)) is not None:
-                parts.append(Text(warn + missing[0], role("danger")))
+                parts.append(Text(warn + missing[0], role("danger", bar=True)))
         if (target := self.releases.target()) is not None:
             # TRANSLATORS: on the top line of the terminal front end; the key that opens its dialog follows
-            notice = Text(_("Fedora {version} is out").format(version=target) + ": ", role("info"))
-            notice.append("r", role("key"))
+            notice = Text(_("Fedora {version} is out").format(version=target) + ": ", role("info", bar=True))
+            notice.append("r", role("key", bar=True))
             parts.append(notice)
         if snap is not None:
-            parts.append(Text(metadata_age(snap.metadata_age), role("muted")))
+            parts.append(Text(metadata_age(snap.metadata_age), role("muted", bar=True)))
         self.top.set_right(parts)
 
     def show_counts(self, snap: CatalogSnapshot, shown: int, to_install: int, to_remove: int,
@@ -297,10 +297,10 @@ class MainWindow:
         if text and (b.filter is None or b.filter.query != (text, int(b.search.mode()))):
             label = _("“{text}” in {filter}").format(text=text, filter=label)
         line = Text(label)
-        line.append(f"  {shown}", role("muted"))
+        line.append(f"  {shown}", role("muted", bar=True))
         if n := len(b.packages.marks):
             line.append("  ")
-            line.append(ngettext("{n} change marked", "{n} changes marked", n).format(n=n), role("marked"))
+            line.append(ngettext("{n} change marked", "{n} changes marked", n).format(n=n), role("marked", bar=True))
         self.top.set_status(line)
 
     def show_error(self, error: BaseException) -> None:

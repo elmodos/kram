@@ -202,7 +202,7 @@ def test_the_small_terminal_screen_quits_with_q():
 def test_set_scheme_turns_ansi_colours_on_for_16_colour_schemes_only():
     async def test(app, pilot):
         assert app.theme == "textual-ansi" and app.ansi_color
-        for scheme, ansi in (("kram-midnight", True), ("textual-dark", False), ("kram-console", True),
+        for scheme, ansi in (("kram-turbo", True), ("textual-dark", False), ("kram-console", True),
                              ("nord", False), ("textual-ansi", True)):
             app.set_scheme(scheme)
             await pilot.pause()
@@ -231,18 +231,48 @@ def test_a_true_colour_scheme_picked_after_a_16_colour_one_drops_the_16_colour_s
         assert app.theme == "textual-dark" and not app.ansi_color and not app.has_pseudo_class("ansi")
         assert not role("cursor-blurred").underline and not role("cursor").reverse
         assert role("cursor-blurred").bgcolor is not None
-        app.set_scheme("kram-midnight", save=False)
+        app.set_scheme("kram-console", save=False)
         await pilot.pause()
         assert role("cursor-blurred").underline and role("cursor").reverse
     run(test)
 
 
+def test_turbo_has_grey_bars_with_red_keys_and_a_green_cursor_only_while_it_is_on():
+    from rich.style import Style
+    from textual.color import Color
+
+    from kram.tui.palette import over
+    from kram.tui.widgets import KeyFooter
+
+    async def test(app, pilot):
+        footer, top = app.query_one(KeyFooter), app.query_one("#top")
+        app.set_scheme("kram-turbo", save=False)
+        await pilot.pause()
+        assert app.has_class("-kram-turbo")
+        grey = Color.parse("ansi_white")
+        assert footer.styles.background == grey and top.styles.background == grey
+        assert role("key", bar=True).color.number == 1 and role("key").color.number == 14  # red; bright cyan
+        assert role("muted", bar=True).color.number == 0  # black
+        cursor = role("cursor")
+        assert (cursor.bgcolor.number, cursor.color.number) == (2, 0) and not cursor.reverse  # black on green
+        # a glyph that would not show on the green cursor takes the cursor's black; one that shows keeps its colour
+        assert over(cursor, role("installed")).color.number == 0
+        assert over(cursor, Style(color="bright_white")).color.number == 15
+        assert over(Style(), role("installed")).color.number == 10
+        app.theme = "kram-console"  # as Textual's command palette does
+        await pilot.pause()
+        assert not app.has_class("-kram-turbo")
+        assert footer.styles.background != grey and top.styles.background != grey
+        assert role("key", bar=True) == role("key") and role("cursor").reverse
+    run(test)
+
+
 def test_a_theme_changed_elsewhere_is_followed_and_saved():
     async def test(app, pilot):
-        app.theme = "kram-midnight"  # as Textual's command palette does
+        app.theme = "kram-turbo"  # as Textual's command palette does
         await pilot.pause()
         await pilot.pause()
-        assert app.ansi_color and preferences.value(preferences.TUI_SCHEME) == "kram-midnight"
+        assert app.ansi_color and preferences.value(preferences.TUI_SCHEME) == "kram-turbo"
     run(test)
 
 
@@ -596,7 +626,7 @@ def test_lines_drawn_in_python_are_in_the_schemes_colours():
     """Textual lays no colours under `render_line`'s segments: without `palette.filled` the panels showed the
     terminal's own background (black) and text colour in every scheme; only a modal screen put the scheme's back."""
     async def test(app, pilot):
-        for scheme in ("solarized-light", "kram-midnight"):
+        for scheme in ("solarized-light", "kram-turbo"):
             app.set_scheme(scheme)
             await pilot.pause()
             await pilot.pause()

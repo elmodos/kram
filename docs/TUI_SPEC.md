@@ -394,7 +394,7 @@ plain theme colours (T19).
 | Scheme | Kind | Notes |
 |---|---|---|
 | Terminal (default) | 16 colours | `textual-ansi`: the terminal's palette, background and text; light and dark follow the terminal, live. |
-| Midnight | 16 colours | blue background, as mc. |
+| Turbo | 16 colours | as Turbo Vision and the Turbo Pascal 7.0 IDE: yellow on blue, white frames, top line and footer black and red on grey, the cursor black on green. |
 | Console | 16 colours | black background, green accents. |
 | Textual dark / light, Nord, Gruvbox, Solarized light, Tokyo Night | high colour | Textual's themes. |
 

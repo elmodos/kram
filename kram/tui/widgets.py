@@ -33,14 +33,14 @@ from ..i18n import _
 from .palette import role
 
 
-def hint(*pairs: tuple[str, str]) -> Text:
+def hint(*pairs: tuple[str, str], bar: bool = False) -> Text:
     """Key hints: each key in the key role, then the word for what it does; lower case, as the key is typed. A Text,
     not markup: Textual's markup has no working escape for "[", and "[ prev  ] next" is a common hint."""
     t = Text()
     for i, (key, label) in enumerate(pairs):
         if i:
             t.append("  ")
-        t.append(key, role("key"))
+        t.append(key, role("key", bar))
         t.append(f" {label}")
     return t
 
@@ -76,7 +76,7 @@ class KeyFooter(Widget):
             seen.add(binding.action)
             side = right if binding.action in self.RIGHT else left
             side.append((self.app.get_key_display(binding), binding.description))
-        start, end = hint(*left), hint(*right)
+        start, end = hint(*left, bar=True), hint(*right, bar=True)
         width = self.content_region.width or self.size.width
         room = width - end.cell_len - (2 if left and right else 0)
         if start.cell_len > room:

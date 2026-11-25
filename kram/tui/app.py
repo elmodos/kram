@@ -34,7 +34,18 @@ from ..i18n import _
 from . import loop
 from .glyphs import glyphs, is_utf8
 from .keymap import KEYS_KEYS, MENU_KEYS, WINDOW_RUN, bindings_key
-from .palette import ANSI_THEMES, DEFAULT_SCHEME, PALETTE_CSS, Palette, is_ansi, role, schemes
+from .palette import (
+    ANSI_THEMES,
+    DEFAULT_SCHEME,
+    PALETTE_CSS,
+    SCHEME_CLASSES,
+    SCHEME_CSS,
+    Palette,
+    is_ansi,
+    role,
+    scheme_class,
+    schemes,
+)
 from .ui_port import TuiUi
 from .widgets import KeyFooter, hint
 
@@ -158,7 +169,7 @@ App:ansi .progress-log Log { background: $background; }
 
 TooSmall { align: center middle; }
 TooSmall > Static { width: 100%; height: auto; }
-"""
+""" + SCHEME_CSS
 
 
 class Body(Horizontal):
@@ -197,8 +208,8 @@ class TopLine(Static):
         if not self.root:
             return []
         # TRANSLATORS: the badge on the top line of the terminal front end when it runs as root
-        badge = [Text(" " + _("ROOT") + " ", role("badge"))]
-        return badge + [Text(_("changes need no password"), role("muted"))] if note else badge
+        badge = [Text(" " + _("ROOT") + " ", role("badge", bar=True))]
+        return badge + [Text(_("changes need no password"), role("muted", bar=True))] if note else badge
 
     def show_message(self, text: str, timeout_ms: int = 0) -> None:
         """`text` until the next one, or for `timeout_ms`."""
@@ -383,6 +394,10 @@ class KramApp(App, inherit_bindings=False):
         need them on before the next frame. A frame drawn in between, with ANSI colours in the theme and Textual's
         filters for true colour, stopped the app (a scheme picked in Textual's command palette)."""
         self.ansi_color = is_ansi(theme_name)
+        # the scheme's own rules (palette.SCHEME_CSS)
+        own = scheme_class(theme_name)
+        for name in SCHEME_CLASSES:
+            self.set_class(name == own, name)
 
     def _theme_changed(self, theme: Theme) -> None:
         if theme.name != self.theme:

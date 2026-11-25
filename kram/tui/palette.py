@@ -19,6 +19,9 @@ from ..app import preferences
 
 ROLES = ("muted", "rule", "key", "current", "header", "cursor", "cursor-blurred", "upgradable", "installed", "ok",
          "marked", "info", "danger", "badge", "frame", "frame-focus", "tint-marked", "tint-danger")
+# the roles of the text on the top line and the footer. A scheme that draws those two as bars of their own colour
+# (Turbo's grey) gives them their own styles there, `role(name, bar=True)`: "role--bar-<name>" in SCHEME_CSS
+BAR_ROLES = ("muted", "key", "info", "danger", "marked", "badge")
 
 PALETTE_CSS = """
 Palette > .role--muted { color: $text-muted; }
@@ -58,7 +61,7 @@ App:ansi Palette > .role--frame { color: $border-blurred; }
 class Palette(Widget):
     """Holds the roles as component classes; never shown. The app has exactly one."""
 
-    COMPONENT_CLASSES = {f"role--{r}" for r in ROLES}
+    COMPONENT_CLASSES = {f"role--{r}" for r in ROLES} | {f"role--bar-{r}" for r in BAR_ROLES}
     DEFAULT_CSS = "Palette { display: none; }"
 
     def on_mount(self) -> None:
@@ -74,16 +77,20 @@ class Palette(Widget):
 _palette: Palette | None = None
 
 
-def role(name: str) -> Style:
+def role(name: str, bar: bool = False) -> Style:
     """The text style of a colour role in the current scheme; plain until the palette is mounted and styled. With
-    NO_COLOR only the role's bold, dim, reverse and underline are left (§9.6)."""
+    NO_COLOR only the role's bold, dim, reverse and underline are left (§9.6). `bar`: text on the top line or the
+    footer (BAR_ROLES), which a scheme may draw in colours of their own."""
     if name not in ROLES:
         raise KeyError(name)
     palette = _palette
     if palette is None:
         return Style()
+    component = f"role--{name}"
+    if bar and name in BAR_ROLES and any(palette.app.has_class(c) for c in SCHEME_CLASSES):
+        component = f"role--bar-{name}"
     try:
-        style = palette.get_component_rich_style(f"role--{name}", partial=True)
+        style = palette.get_component_rich_style(component, partial=True)
     except KeyError:  # not styled yet
         return Style()
     if not palette.app.ansi_color:
@@ -118,7 +125,19 @@ def over(base: Style, style: Style) -> Style:
         return Style(color=base.color or RichColor.default(), bgcolor=style.color, bold=combined.bold,
                      dim=combined.dim, italic=combined.italic, underline=combined.underline, reverse=True,
                      strike=combined.strike)
+    if (base.bgcolor is not None and style.color is not None and _palette is not None and _palette.app.ansi_color
+            and _contrast(_rgb(style.color), _rgb(base.bgcolor)) < 4.5):
+        # a 16-colour cursor with a background of its own (Turbo's black on green): a colour that would not show on
+        # it is the cursor's own text colour there; the glyph still says what it is
+        return base + style + Style(color=base.color or RichColor.default())
     return base + style
+
+
+def _rgb(color: RichColor) -> RichColor:
+    """A colour by number as the usual terminal palette shows it, for `_contrast`; the terminal's own as it is."""
+    if color.is_default or color.triplet is not None:
+        return color
+    return RichColor.from_triplet(color.get_truecolor())
 
 
 def _contrast(a: RichColor, b: RichColor) -> float:
@@ -182,19 +201,34 @@ def _blended(palette: Palette, name: str, style: Style) -> Style:
 
 # 16-colour schemes of our own: only the terminal's 16 colours, by their ANSI names
 ANSI_THEMES = (
-    Theme(name="kram-midnight", primary="ansi_bright_cyan", secondary="ansi_bright_cyan", accent="ansi_bright_yellow",
-          warning="ansi_bright_yellow", error="ansi_bright_red", success="ansi_bright_green",
-          foreground="ansi_bright_white", background="ansi_blue", surface="ansi_blue", panel="ansi_blue",
+    # Turbo Vision and the Turbo Pascal 7.0 IDE: yellow text on blue, white frames (the focused one bright), a grey
+    # status line with red keys (SCHEME_CSS)
+    Theme(name="kram-turbo", primary="ansi_bright_white", secondary="ansi_bright_cyan", accent="ansi_bright_white",
+          warning="ansi_bright_cyan", error="ansi_bright_red", success="ansi_bright_green",
+          foreground="ansi_bright_yellow", background="ansi_blue", surface="ansi_blue", panel="ansi_blue",
           boost="ansi_blue", dark=True,
-          variables={"border": "ansi_bright_cyan", "border-blurred": "ansi_white", "scrollbar": "ansi_cyan",
-                     "footer-background": "ansi_cyan", "footer-foreground": "ansi_black",
-                     "footer-key-foreground": "ansi_bright_white", "input-cursor-text-style": "reverse"}),
+          variables={"border": "ansi_bright_white", "border-blurred": "ansi_white", "scrollbar": "ansi_cyan",
+                     "input-cursor-text-style": "reverse"}),
     Theme(name="kram-console", primary="ansi_green", secondary="ansi_cyan", accent="ansi_bright_green",
           warning="ansi_yellow", error="ansi_red", success="ansi_green", foreground="ansi_white",
           background="ansi_black", surface="ansi_black", panel="ansi_black", boost="ansi_black", dark=True,
           variables={"border": "ansi_bright_green", "border-blurred": "ansi_bright_black", "scrollbar": "ansi_green",
                      "input-cursor-text-style": "reverse"}),
 )
+# what a scheme's theme variables cannot say: the app carries the class "-<theme name>" (`scheme_class`), and these
+# rules follow the app's own CSS. Turbo Vision: the menu bar (our top line) and the status line grey, black text,
+# red keys; the cursor black on green
+SCHEME_CSS = """
+App.-kram-turbo KeyFooter, App.-kram-turbo #top { background: ansi_white; color: ansi_black; }
+App.-kram-turbo Palette > .role--bar-muted { color: ansi_black; }
+App.-kram-turbo Palette > .role--bar-key { color: ansi_red; }
+App.-kram-turbo Palette > .role--bar-info { color: ansi_black; text-style: bold; }
+App.-kram-turbo Palette > .role--bar-marked { color: ansi_black; text-style: bold; }
+App.-kram-turbo Palette > .role--bar-danger { color: ansi_red; text-style: bold; }
+App.-kram-turbo Palette > .role--bar-badge { background: ansi_red; color: ansi_bright_white; text-style: bold; }
+App.-kram-turbo Palette > .role--cursor { background: ansi_green; color: ansi_black; text-style: none; }
+"""
+SCHEME_CLASSES = ("-kram-turbo",)
 ANSI_SCHEMES = preferences.TUI_ANSI_SCHEMES
 DEFAULT_SCHEME = preferences.TUI_SCHEME_DEFAULT
 
@@ -202,6 +236,12 @@ DEFAULT_SCHEME = preferences.TUI_SCHEME_DEFAULT
 def schemes() -> tuple[tuple[str, str], ...]:
     """(theme name, label) of every scheme Settings → Colours offers, in its order."""
     return preferences.pref(preferences.TUI_SCHEME).choices
+
+
+def scheme_class(scheme: str) -> str:
+    """The app's class for `scheme`, one of SCHEME_CLASSES, or "" when it has no rules of its own."""
+    name = f"-{scheme}"
+    return name if name in SCHEME_CLASSES else ""
 
 
 def is_ansi(scheme: str) -> bool:

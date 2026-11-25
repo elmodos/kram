@@ -256,13 +256,15 @@ bold, dim, reverse, underline. Muted text is `dim`, the list's cursor is `revers
 | Scheme | Kind | |
 |---|---|---|
 | Terminal (default) | 16 colours | Textual's `textual-ansi`: the terminal's own palette, background and text. Light and dark follow the terminal, with no restart. |
-| Midnight | 16 colours | Ours: the blue of mc and Norton Commander. |
+| Turbo | 16 colours | Ours: Turbo Vision and the Turbo Pascal 7.0 IDE: yellow text on blue, white frames, the top line and the footer grey with black text and red keys, the cursor black on green. |
 | Console | 16 colours | Ours: black, green accents. |
 | Textual dark, Textual light, Nord, Gruvbox, Solarized light, Tokyo Night | high colour | Textual's themes; they look the same in every terminal. |
 
 A 16-colour scheme of our own is a `textual.theme.Theme` whose colours are all ANSI names (`ansi_blue`,
 `ansi_bright_yellow`, …). Textual turns ANSI output on only for its own `textual-ansi`; Kram sets `ansi_color` for
-its own 16-colour schemes too.
+its own 16-colour schemes too. What theme variables cannot say (Turbo's grey bars, its green cursor) is CSS of
+`palette.SCHEME_CSS`, under the class `-<theme name>` the app carries while that scheme is on; text on the top line
+and the footer asks `role(name, bar=True)`, which such a scheme styles apart (`role--bar-<name>`).
 
 ## 10. What Textual does differently (found in the spikes)
 
