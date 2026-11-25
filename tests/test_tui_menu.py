@@ -21,6 +21,7 @@ from kram.app.actions import menu_bar, table_menu, walk  # noqa: E402
 from kram.app.parity import Feature  # noqa: E402
 from kram.core import releases  # noqa: E402
 from kram.core.marks import Action  # noqa: E402
+from kram.core.model import CatalogSnapshot, Origin, PkgRow, Status  # noqa: E402
 from kram.tui.app import KramApp  # noqa: E402
 from kram.tui.dialogs.about import AboutDialog, WhatsNewDialog  # noqa: E402
 from kram.tui.dialogs.colours import ColoursDialog  # noqa: E402
@@ -424,6 +425,20 @@ def test_the_window_s_and_the_list_s_action_keys(monkeypatch):
         await pilot.press("up", "equals_sign")  # installed: locked (tests/test_tui_progress.py runs it)
         await pilot.pause()
         assert ran[-1] == ("lock", True)
+    run(test)
+
+
+def test_plus_marks_the_upgrade_of_an_upgradable_package(monkeypatch):
+    # `+` runs the first of its two actions that is on: Textual passed `run_either` only the first (install)
+    found = [PkgRow("pkg0000", "x86_64", "Summary", "1.0-1", "2.0-1", "fedora", 1000, Origin.FEDORA,
+                    Status.UPGRADABLE)]
+    use_catalog(monkeypatch, snap=CatalogSnapshot(found, 1, 0, 0.1, descriptions=[""]))
+
+    async def test(app, pilot):
+        ran = []
+        monkeypatch.setattr(app.main.browser, "mark_selected", lambda action, evr="": ran.append(action))
+        await pilot.press("plus")
+        assert ran == [Action.UPGRADE]
     run(test)
 
 

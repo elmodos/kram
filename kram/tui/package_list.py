@@ -653,9 +653,11 @@ class PackageTable(ScrollView, can_focus=True):
         if len(self.packages):
             self.commands.run_action(action_id)
 
-    def action_run_either(self, *action_ids: str) -> None:
+    def action_run_either(self, first: str, second: str) -> None:
+        # two named parameters: Textual passes an action as many arguments as its signature names, and `*args`
+        # counts as one, so `+` got only "mark.install"
         if len(self.packages):
-            self.commands.run_either(*action_ids)
+            self.commands.run_either(first, second)
 
     def _beside_cursor(self, x: int) -> tuple[int, int]:
         """The screen cell under the cursor's row, `x` cells into the list: where its menus open."""
