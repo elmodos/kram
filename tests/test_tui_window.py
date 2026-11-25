@@ -30,6 +30,7 @@ from kram.core.model import (  # noqa: E402
     VersionLock,
 )
 from kram.core.search import Mode  # noqa: E402
+from kram.tui import loop  # noqa: E402
 from kram.tui import window as window_module  # noqa: E402
 from kram.tui.app import KramApp  # noqa: E402
 from kram.tui.package_list import Columns, name_lengths, name_width  # noqa: E402
@@ -65,11 +66,11 @@ def use_catalog(monkeypatch, snap: CatalogSnapshot | None = None, load=None, blo
     monkeypatch.setattr(release_watch.ReleaseWatcher, "check", lambda self: None)
     catalog = SimpleNamespace(load=load or (lambda *a, **k: snap), blocked_upgrades=lambda: blocked or {},
                               details=lambda key: (_ for _ in ()).throw(LookupError(key)), **more)
-    made = SimpleNamespace(worker=None, clock=None)
+    made = SimpleNamespace(worker=None, clock=ManualClock(loop.post) if clock else None)
+    if clock:  # the window's scheduler, which the Browser and the dialogs get
+        monkeypatch.setattr(loop, "TuiScheduler", lambda: made.clock)
 
     def browser(view, ui, scheduler, details, post, **kw):
-        if clock:
-            made.clock = scheduler = ManualClock(post)
         if not threaded:
             made.worker = kw["dnf"] = InlineWorker(post)
         return Browser(view, ui, scheduler, details, post, catalog=catalog, **kw)

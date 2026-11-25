@@ -37,7 +37,6 @@ from kram.tui.dialogs.upgrade import UpgradeDialog, upgrade_commands  # noqa: E4
 from kram.tui.package_list import Columns  # noqa: E402
 from kram.tui.widgets import Button, CheckBox, Choice, Radio  # noqa: E402
 
-COUNT_WAIT = 0.4  # s: the count settles after kram.app.filters_edit.RECOUNT_MS
 VIM = CustomFilter("Vim", [Condition(Field.NAME, Op.CONTAINS, "pkg000")])
 BIG = CustomFilter("Big", [Condition(Field.SIZE, Op.GREATER, "0.2")])
 
@@ -63,7 +62,10 @@ def table_names(dialog: FiltersDialog) -> list[str]:
 
 
 async def count(dialog: FiltersDialog, pilot) -> str:
-    await pilot.pause(COUNT_WAIT)
+    """The count once it has settled: the recount timer goes off on the test's clock."""
+    await pilot.pause()
+    dialog.app.main.scheduler.fire()
+    await pilot.pause()
     return dialog.count
 
 
@@ -71,7 +73,7 @@ async def count(dialog: FiltersDialog, pilot) -> str:
 
 @pytest.mark.feature(Feature.DIALOG_CUSTOM_FILTERS, front="tui")
 def test_the_filters_dialog_edits_a_copy_that_ok_saves(monkeypatch):
-    use_catalog(monkeypatch)
+    use_catalog(monkeypatch, clock=True)
     keep_filters(VIM, BIG)
 
     async def test(app, pilot):
@@ -144,7 +146,7 @@ def test_the_filters_dialog_edits_a_copy_that_ok_saves(monkeypatch):
 @pytest.mark.feature(Feature.DIALOG_CUSTOM_FILTERS_COUNT, front="tui")
 @pytest.mark.feature(Feature.DIALOG_CUSTOM_FILTERS_MATCH, front="tui")
 def test_the_count_follows_the_conditions_and_all_or_any(monkeypatch):
-    use_catalog(monkeypatch)
+    use_catalog(monkeypatch, clock=True)
     keep_filters(VIM)
 
     async def test(app, pilot):
@@ -177,7 +179,7 @@ def test_the_count_follows_the_conditions_and_all_or_any(monkeypatch):
 
 @pytest.mark.feature(Feature.DIALOG_CUSTOM_FILTERS_NEW_FROM_VIEW, front="tui")
 def test_a_new_filter_from_the_view_is_filled_in(monkeypatch):
-    use_catalog(monkeypatch)
+    use_catalog(monkeypatch, clock=True)
     keep_filters(VIM)
 
     async def test(app, pilot):
@@ -199,7 +201,7 @@ def test_a_new_filter_from_the_view_is_filled_in(monkeypatch):
 
 @pytest.mark.feature(Feature.SIDEBAR_CUSTOM_FILTER_EDIT, front="tui")
 def test_e_on_a_custom_filter_edits_it(monkeypatch):
-    use_catalog(monkeypatch)
+    use_catalog(monkeypatch, clock=True)
     keep_filters(VIM, BIG)
 
     async def test(app, pilot):
@@ -220,7 +222,7 @@ def test_e_on_a_custom_filter_edits_it(monkeypatch):
 
 
 def test_the_filters_dialog_fits_a_narrow_terminal(monkeypatch):
-    use_catalog(monkeypatch)
+    use_catalog(monkeypatch, clock=True)
     keep_filters(CustomFilter("Vim", [Condition(Field.UPDATE, Op.IS_NOT, "bugfix")]))
 
     async def test(app, pilot):
