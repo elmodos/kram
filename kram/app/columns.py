@@ -167,6 +167,8 @@ def cell_text(r: PkgRow, col: int, ctx: CellContext) -> str | None:
         case 5:
             if r.held_evr:
                 return r.held_evr
+            if r.replaced_by:  # another package takes its place (Obsoletes): kram -> kram-qt
+                return f"{r.replaced_by} {r.candidate_evr}"
             return f"{r.candidate_evr} ({r.candidate_arch})" if r.candidate_arch else r.candidate_evr
         case 6: return repo_text(r)
         case 7: return human_size(r.size)

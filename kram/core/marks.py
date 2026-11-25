@@ -49,7 +49,7 @@ def allowed_actions(row: PkgRow) -> list[Action]:
     actions = []
     if row.status is Status.UPGRADABLE:
         actions.append(Action.UPGRADE)
-    if row.candidate_evr == row.installed_evr and not row.candidate_arch:
+    if row.candidate_evr == row.installed_evr and not (row.candidate_arch or row.replaced_by):
         actions.append(Action.REINSTALL)  # needs the exact installed version in a repo
     actions.append(Action.REMOVE)
     actions.append(Action.MARK_DEP if row.user_installed else Action.MARK_USER)
@@ -74,9 +74,10 @@ def group_request(group: GroupInfo, action: Action, optional: bool = False) -> d
 
 def spec(row: PkgRow, mark: Mark) -> str:
     """Package spec for libdnf5's Goal: name.arch, or a full NEVRA when a version is pinned."""
-    if mark.action is Action.UPGRADE and row.candidate_arch:
+    if mark.action is Action.UPGRADE and (row.candidate_arch or row.replaced_by):
         # name.arch finds only the old arch, which has nothing newer, and libdnf5 refuses a spec with the new
-        # arch ("installed for a different architecture"): the bare name is what `dnf5 upgrade` resolves
+        # arch ("installed for a different architecture"): the bare name is what `dnf5 upgrade` resolves. The
+        # same for a package another one obsoletes (kram -> kram-qt): `dnf5 upgrade kram` installs kram-qt
         return row.name
     if mark.evr:
         return f"{row.name}-{mark.evr}.{row.arch}"

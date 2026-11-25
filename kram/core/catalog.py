@@ -49,6 +49,7 @@ from .updates import (
     advisories_up_to,
     installable_upgrades,
     open_system_base,
+    replacements,
     upgradable_keys,
     upgrade_advisories,
     waiting_for_lock,
@@ -117,6 +118,7 @@ class Catalog:
         self._capabilities: dict[str, set[tuple[str, str]]] | None = None  # built on first use, see search_provides
         self._required: set[str] | None = None  # built on first use, see details
         self._user_installed: set[tuple[str, str]] = set()
+        self._replaced: dict[tuple[str, str], object] = {}  # see updates.replacements
         self._system_base = None
         self._local: dict[str, object] = {}  # package file path -> its Package in @commandline
 
@@ -153,9 +155,10 @@ class Catalog:
             query_setup(q)
             return {(p.get_name(), p.get_arch()) for p in q}
 
-        upgradable = upgradable_keys(base)  # the tray update checker counts with the same functions
+        replaced = self._replaced = replacements(base)  # kram -> kram-qt: the new package is the old one's candidate
+        upgradable = upgradable_keys(base, replaced)  # the tray update checker counts with the same functions
         advisories = upgrade_advisories(base, upgradable)
-        arch_changes = self._arch_changes(base, installed, cand_by_key, upgradable, arches)
+        arch_changes = self._arch_changes(base, installed, cand_by_key, upgradable - set(replaced), arches)
         for new in arch_changes.values():  # one row per package: the new arch is that row's candidate
             cand_by_key.pop((new.get_name(), new.get_arch()), None)
         orphans = keys(lambda q: q.filter_extras())
@@ -176,7 +179,7 @@ class Catalog:
         for p in installed:
             key = (p.get_name(), p.get_arch())
             cand = cand_by_key.pop(key, None)
-            cand = arch_changes.get(key, cand)
+            cand = replaced.get(key) or arch_changes.get(key, cand)
             from_repo = p.get_from_repo_id()
             if key in upgradable and cand is not None:
                 status = Status.UPGRADABLE
@@ -196,6 +199,7 @@ class Catalog:
                 size=p.get_install_size(), origin=classify(from_repo), status=status,
                 user_installed=key in user_installed, from_repo_id=from_repo, reason=reasons.get(p.get_reason()),
                 candidate_arch=cand.get_arch() if key in arch_changes else "",
+                replaced_by=cand.get_name() if key in replaced else "",
                 advisories=advisories.get(key, ()) if status is Status.UPGRADABLE else (),
                 unneeded=key in unneeded, download_size=cand.get_download_size() if cand else None,
                 **self._lock_fields(locks, excluded, key, p, cand),
@@ -496,7 +500,7 @@ class Catalog:
         """Upgradable packages whose upgrade `dnf5 upgrade` would leave out now (see installable_upgrades), as
         (name, arch) -> the resolver's reason ("" past MAX_BLOCKED_REASONS). Run after `load`, apart from it: it
         resolves a full upgrade, a few tenths of a second the list does not have to wait for."""
-        upgradable = upgradable_keys(self._base)
+        upgradable = upgradable_keys(self._base, self._replaced)
         blocked = sorted(upgradable - installable_upgrades(self._base, upgradable))
         reasons = {}
         for n, key in enumerate(blocked):
@@ -510,7 +514,8 @@ class Catalog:
         """Why the upgrade of one package cannot be installed now, as the resolver's messages ("" when it gives
         none). blocked_upgrades explains the first MAX_BLOCKED_REASONS with it, the selected row the others."""
         goal = libdnf5.base.Goal(self._base)
-        goal.add_upgrade(f"{key[0]}.{key[1]}")
+        # a package another one replaces (Obsoletes): name.arch finds nothing to upgrade, the bare name does
+        goal.add_upgrade(key[0] if key in self._replaced else f"{key[0]}.{key[1]}")
         tr = goal.resolve()
         skipped = skipped_changes(tr)
         if not skipped and tr.get_problems() != libdnf5.base.GoalProblem_NO_PROBLEM:

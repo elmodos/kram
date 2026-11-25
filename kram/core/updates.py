@@ -92,12 +92,42 @@ def _open_system_base() -> libdnf5.base.Base:
     return base
 
 
-def upgradable_keys(base) -> set[tuple[str, str]]:
-    """(name, arch) of the installed packages that a repository has a newer version of."""
+def upgradable_keys(base, replaced: dict[tuple[str, str], object] | None = None) -> set[tuple[str, str]]:
+    """(name, arch) of the installed packages that a repository has a newer version of, or that a package of
+    another name replaces (see replacements; pass them when they are already known)."""
     q = libdnf5.rpm.PackageQuery(base)
     q.filter_installed()
     q.filter_upgradable()
-    return {(p.get_name(), p.get_arch()) for p in q}
+    return {(p.get_name(), p.get_arch()) for p in q} | set(replacements(base) if replaced is None else replaced)
+
+
+def replacements(base) -> dict[tuple[str, str], object]:
+    """(name, arch) of an installed package -> the newest available package of another name that obsoletes it, which
+    `dnf5 upgrade` installs in its place: kram 0.11 is replaced by kram-qt, which has `Obsoletes: kram < 0.12.0`.
+    libdnf5's filter_upgradable sees only newer versions of the same name. Empty with obsoletes=False, as dnf5."""
+    if not base.get_config().get_obsoletes_option().get_value():
+        return {}
+    installed = libdnf5.rpm.PackageQuery(base)
+    installed.filter_installed()
+    installed_names = {p.get_name() for p in installed}
+    obsoleters = libdnf5.rpm.PackageQuery(base)
+    obsoleters.filter_available()
+    obsoleters.filter_latest_evr()
+    obsoleters.filter_obsoletes(installed)
+    found: dict[tuple[str, str], object] = {}
+    for new in obsoleters:
+        if new.get_name() in installed_names:
+            continue  # an upgrade of the installed obsoleter, not a replacement
+        for reldep in new.get_obsoletes():
+            # obsoletes match the package's own name and version (not what it provides, as in dnf5)
+            q = libdnf5.rpm.PackageQuery(installed)
+            q.filter_name([reldep.get_name()])
+            q.filter_provides(reldep)
+            for old in q:
+                key = old.get_name(), old.get_arch()
+                if key not in found or rpm.labelCompare(_evr(new), _evr(found[key])) > 0:
+                    found[key] = new
+    return found
 
 
 def installable_upgrades(base, upgradable: set[tuple[str, str]]) -> set[tuple[str, str]]:

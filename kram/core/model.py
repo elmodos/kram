@@ -87,6 +87,8 @@ class PkgRow:
     from_repo_id: str = ""     # repo it was installed from; "" if not installed
     reason: Reason | None = None  # None if not installed
     candidate_arch: str = ""   # set when the candidate has another arch (noarch -> x86_64 upgrades), else ""
+    # set when the candidate is a package of another name that obsoletes this one (kram -> kram-qt): its name
+    replaced_by: str = ""
     # upgradable packages: the advisories of the versions between the installed one and the candidate, the most
     # important first; empty for repositories without advisories (RPM Fusion, COPR, most third-party ones)
     advisories: tuple[Advisory, ...] = ()
