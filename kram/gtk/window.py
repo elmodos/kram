@@ -47,6 +47,25 @@ from .sidebar import Sidebar
 from .status_bar import StatusBar
 from .ui_port import GtkUi
 
+# The header bar's icons, each with fallbacks: Adwaita's names first, then the ones Breeze, Papirus and themes built
+# on them (Klassy) have — GTK does not fall back to Adwaita from a theme that does not inherit it
+HEADER_ICONS = {
+    "reload": ("view-refresh-symbolic",),
+    "mark_upgrades": ("software-update-available-symbolic", "update-medium-symbolic",
+                      "system-software-update-symbolic", "system-software-update"),
+    "repos": ("preferences-system-symbolic", "configure-symbolic", "emblem-system-symbolic"),
+    "copr": ("application-x-addon-symbolic", "folder-cloud-symbolic", "preferences-plugin-symbolic",
+             "folder-remote-symbolic"),
+    "menu": ("open-menu-symbolic", "application-menu-symbolic", "application-menu"),
+}
+
+
+def header_icon(key: str) -> str:
+    """The first icon of HEADER_ICONS[key] the theme has; the first name (GTK's missing-icon image) if none."""
+    names = HEADER_ICONS[key]
+    return icons.first_themed(names) or names[0]
+
+
 DETAILS_TAB_KEY = "details/tab-name"  # shared with Qt
 WINDOW_KEY = "gtk/window"             # {"width", "height", "maximized"}
 PANES_KEY = "gtk/panes"               # {"sidebar", "details"}: the two dividers' positions
@@ -97,9 +116,9 @@ class MainWindow(Adw.ApplicationWindow):
     def _build(self) -> None:
         b = self.browser
         header = Adw.HeaderBar(title_widget=Adw.WindowTitle(title="Kram", subtitle=_("Package Manager")))
-        reload = Gtk.Button(icon_name="view-refresh-symbolic", action_name="win.reload",
+        reload = Gtk.Button(icon_name=header_icon("reload"), action_name="win.reload",
                             tooltip_text=f"{self.acts.defs['reload'].label} (Ctrl+R)")
-        mark = Adw.SplitButton(icon_name="software-update-available-symbolic",
+        mark = Adw.SplitButton(icon_name=header_icon("mark_upgrades"),
                                action_name=f"win.{action_name('mark_upgrades')}",
                                menu_model=self.acts.mark_upgrades_menu(),
                                tooltip_text=self.acts.defs["mark_upgrades"].tip)
@@ -108,17 +127,18 @@ class MainWindow(Adw.ApplicationWindow):
         apply.add_css_class("suggested-action")
         for w in (reload, mark, apply):
             header.pack_start(w)
-        self.menu_button = Gtk.MenuButton(icon_name="open-menu-symbolic", menu_model=self.acts.main_menu(),
+        self.menu_button = Gtk.MenuButton(icon_name=header_icon("menu"), menu_model=self.acts.main_menu(),
                                           primary=True)
         header.pack_end(self.menu_button)
         header.pack_end(self.search)
         # after Apply, in the Qt toolbar's order: repositories, COPR, then the Fedora release button
-        for action_id, icon in (("repos", "preferences-system-symbolic"), ("copr", "application-x-addon-symbolic")):
-            header.pack_start(Gtk.Button(icon_name=icon, action_name=f"win.{action_name(action_id)}",
+        for action_id in ("repos", "copr"):
+            header.pack_start(Gtk.Button(icon_name=header_icon(action_id),
+                                         action_name=f"win.{action_name(action_id)}",
                                          tooltip_text=self.acts.defs[action_id].label))
         first, fallback = RELEASE_ICONS
         self.upgrade_button = Gtk.Button(action_name="win.upgrade", child=Adw.ButtonContent(
-            label="Fedora", icon_name=icons.first_themed((first, fallback)) or "software-update-available-symbolic"))
+            label="Fedora", icon_name=icons.first_themed((first, fallback)) or header_icon("mark_upgrades")))
         header.pack_start(self.upgrade_button)
         self.releases.changed.connect(self.update_release_button)
         b.refreshed.connect(self.releases.check)
