@@ -435,7 +435,7 @@ def test_the_top_line_says_a_new_release_is_out_while_watching(monkeypatch):
 
 @pytest.mark.feature(Feature.RELEASE_DIALOG, front="tui")
 def test_the_release_dialog_checks_and_cannot_close_meanwhile(monkeypatch):
-    use_catalog(monkeypatch)
+    use_catalog(monkeypatch, threaded=True)  # the check waits for its cancel
     on_fedora_44(monkeypatch)
     monkeypatch.delenv("DISPLAY", raising=False)
     monkeypatch.delenv("WAYLAND_DISPLAY", raising=False)

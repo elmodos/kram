@@ -11,6 +11,8 @@ import pytest
 
 pytest.importorskip("textual")
 
+from tui_kit import InlineWorker  # noqa: E402
+
 from kram import __version__  # noqa: E402
 from kram.app import preferences, release_watch  # noqa: E402
 from kram.app.browser import Browser  # noqa: E402
@@ -49,17 +51,25 @@ def snapshot(n: int = 300, **kw) -> CatalogSnapshot:
                            descriptions=[f"Description {i}" for i in range(n)], **kw)
 
 
-def use_catalog(monkeypatch, snap: CatalogSnapshot | None = None, load=None, blocked=None, **more) -> None:
+def use_catalog(monkeypatch, snap: CatalogSnapshot | None = None, load=None, blocked=None, threaded: bool = False,
+                **more) -> SimpleNamespace:
     """The window's Browser over a made-up catalog, as tests/test_gtk.py does it; `more`: what else the catalog
-    answers (`resolve` for the Apply dialog, …)."""
+    answers (`resolve` for the Apply dialog, …). Its libdnf5 jobs run on the app's thread (tests/tui_kit.py,
+    InlineWorker), unless `threaded`: a job that waits for the test (a held lock, a slow load) needs the real
+    worker. The returned namespace's `worker` is the inline worker once the window has made it."""
     snap = snap or snapshot()
     # a Reload does not ask Bodhi whether a new release is out (tests/test_tui_dialogs.py puts the check back)
     monkeypatch.setattr(release_watch.ReleaseWatcher, "check", lambda self: None)
     catalog = SimpleNamespace(load=load or (lambda *a, **k: snap), blocked_upgrades=lambda: blocked or {},
                               details=lambda key: (_ for _ in ()).throw(LookupError(key)), **more)
-    monkeypatch.setattr(window_module, "Browser",
-                        lambda view, ui, scheduler, details, post, **kw: Browser(view, ui, scheduler, details, post,
-                                                                                 catalog=catalog, **kw))
+    made = SimpleNamespace(worker=None)
+
+    def browser(view, ui, scheduler, details, post, **kw):
+        if not threaded:
+            made.worker = kw["dnf"] = InlineWorker(post)
+        return Browser(view, ui, scheduler, details, post, catalog=catalog, **kw)
+    monkeypatch.setattr(window_module, "Browser", browser)
+    return made
 
 
 async def loaded(app, pilot) -> None:
@@ -117,7 +127,7 @@ def test_loading_the_catalog_says_so_in_the_list(monkeypatch):
     def load(*_a, **_k):
         go_on.wait(5)
         return snap
-    use_catalog(monkeypatch, load=load)
+    use_catalog(monkeypatch, load=load, threaded=True)  # the load waits for the test
 
     async def test(app, pilot):
         try:
@@ -139,7 +149,7 @@ def test_a_held_lock_is_waited_for_and_esc_quits(monkeypatch):
         on_wait()
         go_on.wait(5)
         return snapshot()
-    use_catalog(monkeypatch, load=load)
+    use_catalog(monkeypatch, load=load, threaded=True)  # the load waits for the test
 
     async def test(app, pilot):
         try:
