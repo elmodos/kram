@@ -20,7 +20,7 @@ from kram.core.settings import store as settings  # noqa: E402
 from kram.tui.dialogs.filters import FiltersDialog  # noqa: E402
 from kram.tui.dialogs.question import QuestionDialog  # noqa: E402
 from kram.tui.palette import role  # noqa: E402
-from kram.tui.sidebar import PLACEHOLDERS  # noqa: E402
+from kram.tui.sidebar import PLACEHOLDERS, VIEWS  # noqa: E402
 from kram.tui.widgets import ChoiceList, PopupMenu  # noqa: E402
 
 WIDE, NARROW = (120, 40), (64, 22)
@@ -208,6 +208,19 @@ def test_the_list_of_views_shows_when_wide_and_tall_and_follows_the_view(monkeyp
         await pilot.resize_terminal(80, 40)  # tall, but narrow
         await pilot.pause()
         assert not views.region.height
+    run(test, (140, 36))
+
+
+def test_a_click_on_a_view_shows_that_view(monkeypatch):
+    use_catalog(monkeypatch, catalog())
+
+    async def test(app, pilot):
+        views = bar(app).views
+        await pilot.click(views, offset=(4, 0))  # the rule over the views: nothing
+        assert app.main.browser.sidebar.current_view == "status"
+        for line, (view_id, _label, _builder) in enumerate(VIEWS, start=1):
+            await pilot.click(views, offset=(4, line))
+            assert app.main.browser.sidebar.current_view == view_id
     run(test, (140, 36))
 
 

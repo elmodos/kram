@@ -278,8 +278,10 @@ class ViewList(Static):
     shows a view, as `[ ]` and `v` do."""
 
     def on_click(self, event: Click) -> None:
-        if 0 <= event.y < len(VIEWS):
-            self.parent.browse(VIEWS[event.y][0])
+        # the offset in the content: the click's own counts the rule over the views as a line
+        at = event.get_content_offset(self)
+        if at is not None and 0 <= at.y < len(VIEWS):
+            self.parent.browse(VIEWS[at.y][0])
 
 
 class Sidebar(Vertical):
