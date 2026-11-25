@@ -7,7 +7,7 @@ pytest.importorskip("textual")
 
 from rich.style import Style  # noqa: E402
 from rich.text import Text  # noqa: E402
-from tui_kit import assert_snapshot, cells, grid, plain, scheme, styles_at  # noqa: E402, F401 - scheme: a fixture
+from tui_kit import assert_snapshot, cells, grid, plain, scheme_fixture, styles_at  # noqa: E402, F401 - a fixture
 
 from kram import __version__  # noqa: E402
 from kram.app.columns import COL_NAME  # noqa: E402

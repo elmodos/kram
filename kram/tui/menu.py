@@ -66,6 +66,104 @@ class Entry:
     value: Any = None
 
 
+# ---------------------------------------------------------------- the entries: built and drawn without the screen
+
+def menu_entries(main, items: tuple[MenuItem, ...], g, scheme: str, fill: bool = True) -> list[Entry | None]:
+    """The lines of a menu as the window's state makes them (`main`: the MainWindow; None separators). `fill`
+    False: without asking the window anything, to measure."""
+    out: list[Entry | None] = []
+    for item in items:
+        if item.separator:
+            out.append(None)
+        elif item.action is not None:
+            if fill and not main.action_visible(item.action):
+                continue
+            d = main.defs[item.action]
+            on = main.action_enabled(item.action) if fill else True
+            out.append(Entry("action", d.label, action_key(item.action, g), on,
+                             d.tip if on else main.disabled_reason(item.action), action=item.action))
+        elif item.submenu is not None:
+            sub = item.submenu
+            state_id = {"downgrade": "downgrade", "mark_upgrades": "mark_upgrades_menu"}.get(sub.id)
+            on = main.action_enabled(state_id) if fill and state_id else True
+            out.append(Entry("submenu", menu_title(sub), g.right, on, "" if on else main.disabled_reason(state_id),
+                             submenu=sub))
+        elif item.prefs is not None:
+            out += pref_entries(item.prefs, g, scheme, fill)
+    return out
+
+
+def pref_entries(section: str, g, scheme: str, fill: bool = True) -> list[Entry | None]:
+    """The registry's preferences for the terminal in `section`; Settings also has Colours… and Columns…."""
+    out: list[Entry | None] = []
+    for pref in preferences.prefs_for(TOOLKIT, section):
+        if pref.key == preferences.TUI_SCHEME or (fill and not pref.visible()):
+            continue  # the scheme has its own dialog, Colours…
+        if pref.kind == "bool":
+            out.append(Entry("bool", pref.label, note=pref.tip, pref=pref))
+        elif pref.kind == "choice":
+            label = dict(pref.choices).get(preferences.value(pref), "") if fill else ""
+            out.append(Entry("choice", pref.label, g.right, note=label or pref.tip, pref=pref))
+    if section == "settings":
+        schemes = preferences.pref(preferences.TUI_SCHEME)
+        out.append(Entry("colours", colours_label(), note=dict(schemes.choices).get(scheme, schemes.label)))
+        out.append(Entry("columns", columns_label(),
+                         note=_("Which columns the package list shows, their order and their widths")))
+    return out
+
+
+def choice_entries(pref: Pref) -> list[Entry | None]:
+    return [Entry("value", label, pref=pref, value=value) for value, label in pref.choices]
+
+
+def dynamic_entries(items: list[DynamicItem]) -> list[Entry | None]:
+    return [Entry("dynamic", i.label, enabled=i.enabled and i.run is not None, note=i.tip, item=i) for i in items]
+
+
+def _prefix_len(e: Entry) -> int:
+    return 4 if e.kind in ("bool", "value") else 0
+
+
+def entries_width(main, items: tuple[MenuItem, ...], g, scheme: str) -> int:
+    """The cells the widest entry of `items` asks for, its submenus' entries included."""
+    widest = 0
+    for e in menu_entries(main, items, g, scheme, fill=False):
+        if e is not None:
+            widest = max(widest, _prefix_len(e) + cell_len(e.label) + (cell_len(e.key) + 2 if e.key else 0))
+        if e is not None and e.submenu is not None:
+            widest = max(widest, entries_width(main, e.submenu.items, g, scheme))
+        if e is not None and e.kind == "choice":
+            widest = max(widest, *(4 + cell_len(label) for _value, label in e.pref.choices))
+    return widest + 1
+
+
+def entry_line(e: Entry, width: int, g) -> Text:
+    """An entry as one line `width` cells wide: the tick of a preference, the label cut with "…", the key or the
+    submenu's arrow at the right; dim when it is off."""
+    prefix, ticked = "", False
+    if e.kind == "bool":
+        ticked = bool(preferences.value(e.pref))
+        prefix = "[x] " if ticked else "[ ] "
+    elif e.kind == "value":
+        ticked = preferences.value(e.pref) == e.value
+        prefix = f"({g.item}) " if ticked else "( ) "
+    right = e.key
+    room = width - cell_len(prefix) - (cell_len(right) + 2 if right else 0)
+    label = e.label
+    if cell_len(label) > room:
+        label = set_cell_size(label, max(0, room - cell_len(g.ellipsis))) + g.ellipsis
+    line = Text(no_wrap=True, overflow="crop")
+    base = Style(dim=True) if not e.enabled else Style()
+    if prefix:
+        line.append(prefix[:3], role("marked") if ticked else base)
+        line.append(" ", base)
+    line.append(label, base + Style(bold=True) if e.kind == "back" else base)
+    if right:
+        line.append(" " * (width - line.cell_len - cell_len(right)), base)
+        line.append(right, base + role("muted"))
+    return line
+
+
 class MenuPopup(ModalScreen):
     """The screen's result: what to run (a callable without arguments), or None when closed."""
 
@@ -100,7 +198,8 @@ class MenuPopup(ModalScreen):
         titles.styles.width = max(cell_len(menu_title(m)) for m in self.menus) + 3  # its padding and rule
         # the double frame, the entries' padding and their scrollbar's cell
         room = self.app.size.width - int(titles.styles.width.value) - 5
-        needed = max(self._needed(m.items) for m in self.menus)
+        g = self.app.glyphs
+        needed = max(entries_width(self.main, m.items, g, self.app.scheme) for m in self.menus)
         self.width = max(20, min(ENTRIES_MAX, needed, room))
         entries = self.query_one("#menu-entries", OptionList)
         entries.styles.width = self.width + 3  # its padding, and a cell for the scrollbar when it scrolls
@@ -111,78 +210,14 @@ class MenuPopup(ModalScreen):
         self.show(self.menus[0].items)
         titles.focus()
 
-    # ---------------------------------------------------------------- building the entries
-
-    def _needed(self, items: tuple[MenuItem, ...]) -> int:
-        """The cells the widest entry of `items` asks for, its submenus' entries included."""
-        widest = 0
-        for e in self._entries(items, fill=False):
-            if e is not None:
-                widest = max(widest, self._prefix_len(e) + cell_len(e.label) + (cell_len(e.key) + 2 if e.key else 0))
-            if e is not None and e.submenu is not None:
-                widest = max(widest, self._needed(e.submenu.items))
-            if e is not None and e.kind == "choice":
-                widest = max(widest, *(4 + cell_len(label) for _value, label in e.pref.choices))
-        return widest + 1
-
-    @staticmethod
-    def _prefix_len(e: Entry) -> int:
-        return 4 if e.kind in ("bool", "value") else 0
-
-    def _entries(self, items: tuple[MenuItem, ...], fill: bool = True) -> list[Entry | None]:
-        """The lines of a menu. `fill` False: without asking the window anything (to measure)."""
-        main, g = self.main, self.app.glyphs
-        out: list[Entry | None] = []
-        for item in items:
-            if item.separator:
-                out.append(None)
-            elif item.action is not None:
-                if fill and not main.action_visible(item.action):
-                    continue
-                d = main.defs[item.action]
-                on = main.action_enabled(item.action) if fill else True
-                out.append(Entry("action", d.label, action_key(item.action, g), on,
-                                 d.tip if on else main.disabled_reason(item.action), action=item.action))
-            elif item.submenu is not None:
-                sub = item.submenu
-                state_id = {"downgrade": "downgrade", "mark_upgrades": "mark_upgrades_menu"}.get(sub.id)
-                on = main.action_enabled(state_id) if fill and state_id else True
-                out.append(Entry("submenu", menu_title(sub), g.right, on, "" if on else main.disabled_reason(state_id),
-                                 submenu=sub))
-            elif item.prefs is not None:
-                out += self._pref_entries(item.prefs, fill)
-        return out
-
-    def _pref_entries(self, section: str, fill: bool) -> list[Entry | None]:
-        out: list[Entry | None] = []
-        for pref in preferences.prefs_for(TOOLKIT, section):
-            if pref.key == preferences.TUI_SCHEME or (fill and not pref.visible()):
-                continue  # the scheme has its own dialog, Colours…
-            if pref.kind == "bool":
-                out.append(Entry("bool", pref.label, note=pref.tip, pref=pref))
-            elif pref.kind == "choice":
-                label = dict(pref.choices).get(preferences.value(pref), "") if fill else ""
-                out.append(Entry("choice", pref.label, self.app.glyphs.right, note=label or pref.tip, pref=pref))
-        if section == "settings":
-            scheme = preferences.pref(preferences.TUI_SCHEME)
-            out.append(Entry("colours", colours_label(), note=dict(scheme.choices).get(self.app.scheme, scheme.label)))
-            out.append(Entry("columns", columns_label(),
-                             note=_("Which columns the package list shows, their order and their widths")))
-        return out
-
-    def _choice_entries(self, pref: Pref) -> list[Entry | None]:
-        return [Entry("value", label, pref=pref, value=value) for value, label in pref.choices]
-
-    def _dynamic_entries(self, items: list[DynamicItem]) -> list[Entry | None]:
-        return [Entry("dynamic", i.label, enabled=i.enabled and i.run is not None, note=i.tip, item=i)
-                for i in items]
-
     # ---------------------------------------------------------------- showing them
 
     def show(self, items: tuple[MenuItem, ...] | list[Entry | None], back: str = "") -> None:
         """The entries of a menu (MenuItems) or ready lines (Entries); `back`: a submenu's title, on its "back"
         line."""
-        lines = self._entries(items) if items and isinstance(items[0], MenuItem) else list(items)
+        g = self.app.glyphs
+        lines = (menu_entries(self.main, items, g, self.app.scheme) if items and isinstance(items[0], MenuItem)
+                 else list(items))
         if back:
             lines.insert(0, Entry("back", f"{self.app.glyphs.left} {back}", note=_("Back")))
         self.entries = lines
@@ -192,7 +227,7 @@ class MenuPopup(ModalScreen):
                 if options and options[-1] is not None:  # never two in a row, nor one first
                     options.append(None)
             else:
-                options.append(Option(self._line(e), id=str(i)))
+                options.append(Option(entry_line(e, self.width, g), id=str(i)))
         while options and options[-1] is None:
             options.pop()
         column = self.query_one("#menu-entries", OptionList)
@@ -201,32 +236,19 @@ class MenuPopup(ModalScreen):
         column.highlighted = 0 if options else None
         self._status(lines[int(options[0].id)] if options else None)
 
-    def _line(self, e: Entry) -> Text:
-        """An entry as one line of the column's width: the tick of a preference, the label cut with "…", the key
-        or the submenu's arrow at the right."""
-        prefix, ticked = "", False
-        if e.kind == "bool":
-            ticked = bool(preferences.value(e.pref))
-            prefix = "[x] " if ticked else "[ ] "
-        elif e.kind == "value":
-            ticked = preferences.value(e.pref) == e.value
-            prefix = f"({self.app.glyphs.item}) " if ticked else "( ) "
-        right = e.key
-        room = self.width - cell_len(prefix) - (cell_len(right) + 2 if right else 0)
-        label = e.label
-        if cell_len(label) > room:
-            ellipsis = self.app.glyphs.ellipsis
-            label = set_cell_size(label, max(0, room - cell_len(ellipsis))) + ellipsis
-        line = Text(no_wrap=True, overflow="crop")
-        base = Style(dim=True) if not e.enabled else Style()
-        if prefix:
-            line.append(prefix[:3], role("marked") if ticked else base)
-            line.append(" ", base)
-        line.append(label, base + Style(bold=True) if e.kind == "back" else base)
-        if right:
-            line.append(" " * (self.width - line.cell_len - cell_len(right)), base)
-            line.append(right, base + role("muted"))
-        return line
+    def show_menu(self, index: int) -> None:
+        """The menu at `index` of the menu bar, as ↑ ↓ on the menus' column show it."""
+        self.stack = []
+        self.menu_index = index
+        self.query_one("#menu-titles", OptionList).highlighted = index
+        self.show(self.menus[index].items)
+
+    def entry(self, label: str) -> Entry:
+        """The shown entry whose label starts with `label`."""
+        found = next((e for e in self.entries if e is not None and e.label.startswith(label)), None)
+        if found is None:
+            raise LookupError(label)
+        return found
 
     def _status(self, e: Entry | None) -> None:
         self.query_one("#menu-status", Static).update(e.note if e is not None else "")
@@ -301,16 +323,16 @@ class MenuPopup(ModalScreen):
     def _show_top(self) -> None:
         e = self.stack[-1]
         if e.kind == "choice":
-            self.show(self._choice_entries(e.pref), back=e.label)
+            self.show(choice_entries(e.pref), back=e.label)
         elif e.submenu.id == "downgrade":  # filled now, for the package under the cursor
-            self.show(self._dynamic_entries(self.main.browser.downgrade_items()), back=e.label)
+            self.show(dynamic_entries(self.main.browser.downgrade_items()), back=e.label)
         else:
             self.show(e.submenu.items, back=e.label)
 
     def _redraw(self, e: Entry) -> None:
         column = self.query_one("#menu-entries", OptionList)
         index = next(i for i, line in enumerate(self.entries) if line is e)
-        column.replace_option_prompt(str(index), self._line(e))
+        column.replace_option_prompt(str(index), entry_line(e, self.width, self.app.glyphs))
 
     def action_left(self) -> None:
         """← in the entries: out of a submenu, else to the menus."""

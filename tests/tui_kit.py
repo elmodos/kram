@@ -2,7 +2,7 @@
 draw, run without an app; lines turned into a text grid and a grid of roles; snapshot files; a worker that runs its
 jobs on the app's thread.
 
-Not a test module: the TUI tests import from it (and its fixtures, `scheme`).
+Not a test module: the TUI tests import from it, and its fixture `scheme` as `scheme_fixture`.
 """
 import asyncio
 import os
@@ -61,8 +61,8 @@ def roles_of(scheme: str) -> Roles:
     return _roles[scheme]
 
 
-@pytest.fixture
-def scheme(request):
+@pytest.fixture(name="scheme")
+def scheme_fixture(request):
     """The roles of a scheme (`parametrize("scheme", [...], indirect=True)`; Turbo if not given), answered by
     `role` while the test runs."""
     roles = roles_of(getattr(request, "param", "kram-turbo"))
