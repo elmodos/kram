@@ -247,13 +247,13 @@ def test_the_filter_and_the_debuginfo_and_source_repositories(monkeypatch, updat
         dialog = await open_repos(app, pilot)
         await pilot.press("shift+tab")
         assert dialog.focused is dialog.query_one("#repos-filter")
-        await pilot.press(*"visual")
+        dialog.focused.value = "visual"
         await pilot.pause()
         assert dialog.shown_ids() == ["code"]  # by name
-        await pilot.press(*["backspace"] * 6, *"tools-")
+        dialog.focused.value = "tools-"
         await pilot.pause()
         assert dialog.shown_ids() == ["tools-extra"]  # by id
-        await pilot.press(*["backspace"] * 6, *"x86_64")
+        dialog.focused.value = "x86_64"
         await pilot.pause()
         assert dialog.shown_ids() == ["fedora"]  # the debuginfo one is hidden
         await pilot.press("ctrl+d")

@@ -64,11 +64,14 @@ def use_catalog(monkeypatch, snap: CatalogSnapshot | None = None, load=None, blo
     snap = snap or snapshot()
     # a Reload does not ask Bodhi whether a new release is out (tests/test_tui_dialogs.py puts the check back)
     monkeypatch.setattr(release_watch.ReleaseWatcher, "check", lambda self: None)
-    catalog = SimpleNamespace(load=load or (lambda *a, **k: snap), blocked_upgrades=lambda: blocked or {},
-                              details=lambda key: (_ for _ in ()).throw(LookupError(key)), **more)
-    made = SimpleNamespace(worker=None, clock=ManualClock(loop.post) if clock else None)
-    if clock:  # the window's scheduler, which the Browser and the dialogs get
-        monkeypatch.setattr(loop, "TuiScheduler", lambda: made.clock)
+    more.setdefault("details", lambda key: (_ for _ in ()).throw(LookupError(key)))
+    catalog = SimpleNamespace(load=load or (lambda *a, **k: snap), blocked_upgrades=lambda: blocked or {}, **more)
+    made = SimpleNamespace(worker=None, clock=None)
+    if clock:  # the window's scheduler, which the Browser and the dialogs get; one for each window started
+        def new_clock():
+            made.clock = ManualClock(loop.post)
+            return made.clock
+        monkeypatch.setattr(loop, "TuiScheduler", new_clock)
 
     def browser(view, ui, scheduler, details, post, **kw):
         if not threaded:

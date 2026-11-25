@@ -6,7 +6,6 @@ Run with Textual's headless driver (`App.run_test`, `Pilot`), as tests/test_tui_
 """
 import asyncio
 import threading
-from types import SimpleNamespace
 
 import pytest
 
@@ -14,14 +13,13 @@ pytest.importorskip("textual")
 
 from rich.style import Style  # noqa: E402
 from test_tui_window import rows  # noqa: E402
+from test_tui_window import use_catalog as use_window_catalog  # noqa: E402
 
-from kram.app.browser import Browser  # noqa: E402
 from kram.app.details import DETAILS_TAB_KEY  # noqa: E402
 from kram.app.files import FILES_VIEW_KEY  # noqa: E402
 from kram.app.parity import Feature  # noqa: E402
 from kram.core.model import Advisory, CatalogSnapshot, ChangelogEntry, PkgDetails, Status, VersionInfo  # noqa: E402
 from kram.core.settings import store as settings  # noqa: E402
-from kram.tui import window as window_module  # noqa: E402
 from kram.tui.app import KramApp  # noqa: E402
 from kram.tui.files import FileState, tree_rows  # noqa: E402
 from kram.tui.glyphs import ASCII, UNICODE  # noqa: E402
@@ -61,29 +59,31 @@ def fake_details(key: tuple[str, str]) -> PkgDetails:
                   VersionInfo("1.1-1", "updates-testing", locked_out=True)])
 
 
-def use_catalog(monkeypatch, blocked=None, details=fake_details, reasons=None):
-    """The window's Browser over a made-up catalog whose details are made up from the key, on a UTF-8 terminal: the
-    tests check the box drawing (the ASCII set is tested on its own)."""
+def use_catalog(monkeypatch, blocked=None, details=fake_details, reasons=None, threaded=False):
+    """The window over a made-up catalog whose details are made up from the key, on a UTF-8 terminal (the tests
+    check the box drawing; the ASCII set is tested on its own). The details' delay goes off on the test's clock,
+    their job runs on the app's thread (test_tui_window.use_catalog), unless `threaded`."""
     monkeypatch.setenv("LC_ALL", "C.UTF-8")
     found = catalog_rows()
     snap = CatalogSnapshot(found, 10, 0, 0.1, descriptions=[""] * len(found))
     providers = {"pkg0002": ("pkg0002", "x86_64")}
-    catalog = SimpleNamespace(load=lambda *a, **k: snap, blocked_upgrades=lambda: blocked or {}, details=details,
-                              find_provider=providers.get,
-                              blocked_reason=lambda key: (reasons.append(key) if reasons is not None else None)
-                              or "nothing provides libbar.so.2")
-    monkeypatch.setattr(window_module, "Browser",
-                        lambda view, ui, scheduler, details, post, **kw: Browser(view, ui, scheduler, details, post,
-                                                                                 catalog=catalog, **kw))
+    use_window_catalog(monkeypatch, snap, blocked=blocked, clock=True, threaded=threaded, details=details,
+                       find_provider=providers.get,
+                       blocked_reason=lambda key: (reasons.append(key) if reasons is not None else None)
+                       or "nothing provides libbar.so.2")
 
 
 async def shown(app, pilot, key: tuple[str, str] = ("pkg0000", "x86_64")) -> None:
-    """Until the details of `key` are shown, not the dimmed ones of a package the cursor was on before."""
+    """Until the details of `key` are shown, not the dimmed ones of a package the cursor was on before: the delay
+    before they load goes off, their job's result comes in."""
     d = app.main.details
+    clock = app.main.scheduler
     for _ in range(200):
         if d.shown_key == key and not d.stale:
             break
-        await pilot.pause(0.01)
+        if hasattr(clock, "fire"):
+            clock.fire()
+        await pilot.pause(0 if hasattr(clock, "fire") else 0.01)
     await pilot.pause()
     assert d.shown_key == key and not d.stale
 
@@ -94,10 +94,7 @@ def run(test, size=WIDE):
     async def go():
         async with app.run_test(size=size) as pilot:
             await pilot.pause()
-            for _ in range(100):
-                if app.main.browser.filter is not None:
-                    break
-                await pilot.pause(0.01)
+            await pilot.pause()
             await shown(app, pilot)
             await test(app, pilot)
     asyncio.run(go())
@@ -469,7 +466,7 @@ def test_the_filter_keeps_matching_files_with_the_match_bold(monkeypatch):
         await focus_details(app, pilot)
         await pilot.press("4", "slash")
         assert app.focused is d.filter and not d.filter.has_class("hidden")
-        await pilot.press(*"doc")
+        d.filter.value = "doc"
         await pilot.pause()
         # focused, it stays one line with no border: Input:focus's tall border once left no room for the text
         assert d.filter.size.height == 1 and "doc" in d.filter.render_line(0).text
@@ -483,7 +480,10 @@ def test_the_filter_keeps_matching_files_with_the_match_bold(monkeypatch):
         bold = [s.text for s in d.body.render_line(doc_line) if s.style and s.style.bold]
         assert "doc" in bold
         await pilot.press("f")  # a pattern, in the list
-        await pilot.press("slash", "ctrl+u", *"*.so*", "enter")
+        await pilot.press("slash")
+        d.filter.value = "*.so*"
+        await pilot.pause()
+        await pilot.press("enter")
         await pilot.pause()
         assert [line.strip() for line in body_lines(app)[:2]] == ["1 of 4 files", "/usr/lib64/libpkg0000.so.1"]
         await pilot.press("slash", "escape")  # empties it

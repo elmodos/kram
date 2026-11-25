@@ -215,11 +215,11 @@ def test_enable_a_result_runs_over_the_dialog_and_the_reload_shows_it(monkeypatc
 def test_a_typed_owner_and_project_is_enabled_without_a_search(monkeypatch, helper):
     async def test(app, pilot):
         dialog = await open_copr(app, pilot)
-        await pilot.press(*"elmodos/kram")
+        app.focused.value = "elmodos/kram"  # typed in the line, which has the focus
         await pilot.pause()
         assert not dialog.query_one("#enable", Button).enabled  # on already
         assert text(dialog, "why") == "Enable selected: elmodos/kram is already enabled"
-        await pilot.press(*["backspace"] * 4, *"other")
+        app.focused.value = "elmodos/other"
         await pilot.pause()
         assert dialog.query_one("#enable", Button).enabled and not text(dialog, "why")
         await pilot.press("ctrl+e")  # in the line: not its own end-of-line key
@@ -228,7 +228,7 @@ def test_a_typed_owner_and_project_is_enabled_without_a_search(monkeypatch, help
         # after a search, an owner/project typed in the line wins over the results
         await search(app, pilot, dialog, "tool")
         dialog.query_one("#copr-search").focus()
-        await pilot.press(*["backspace"] * 4, *"x/y")
+        dialog.query_one("#copr-search").value = "x/y"
         await pilot.pause()
         assert dialog.selected_result() is None
         await press(pilot, dialog, "enable")

@@ -134,17 +134,17 @@ def test_the_filter_leaves_the_transactions_of_a_package(monkeypatch):
     async def test(app, pilot):
         dialog = await open_history(app, pilot)
         dialog.query_one("#history-filter").focus()
-        await pilot.press(*"FISH")
+        dialog.query_one("#history-filter").value = "FISH"
         await until(pilot, lambda: dialog.state == "2 of 3 transactions")
         assert dialog.transaction_table.keys == [3, 1]
         dialog.transaction_table.select_key(1)
         await pilot.pause()
         assert bold(dialog.package_table, 0) == ["Install", "fish.x86_64", "4.0-1", "fedora", "user"]
         assert bold(dialog.package_table, 1) == []  # ncurses-term does not match
-        await pilot.press(*["backspace"] * 4, *"vim")
+        dialog.query_one("#history-filter").value = "vim"
         await until(pilot, lambda: dialog.transaction_table.keys == [2])
         assert dialog.history.current == 2  # the current one was hidden: the first shown one instead
-        await pilot.press(*"zzz")
+        dialog.query_one("#history-filter").value = "vimzzz"
         await until(pilot, lambda: dialog.transaction_table.keys == [])
         assert dialog.state == "0 of 3 transactions" and lines(dialog.package_table) == \
             [lines(dialog.package_table)[0]]
