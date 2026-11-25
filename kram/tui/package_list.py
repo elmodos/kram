@@ -267,6 +267,55 @@ def doc_paragraphs(doc: Doc, extra: Iterable[tuple[str, str]] = ()) -> tuple[lis
 
 # ---------------------------------------------------------------- the list
 
+def header_segments(columns: list[tuple[int, int]], sort: Sort | None, glyphs: Glyphs) -> tuple[list[Segment], Style]:
+    """The list's header line: each column's title in its width, the sorted one with its arrow."""
+    base = role("header")
+    segments = [Segment(" ", base)]
+    for col, w in columns:
+        text = header_text(col)
+        if sort is not None and sort[0] == col:
+            arrow = glyphs.down if sort[1] else glyphs.up
+            text = fit(text, max(1, w - cell_len(arrow) - 1), False, glyphs.ellipsis).rstrip() + " " + arrow
+        segments += [Segment(fit(text, w, col in ALIGN_RIGHT, glyphs.ellipsis), base), Segment(" ", base)]
+    return segments, base
+
+
+def row_segments(packages: PackageList, pos: int, columns: list[tuple[int, int]], cursor: str | None, selected: bool,
+                 glyphs: Glyphs, symbols: StatusGlyphs, ansi: bool) -> tuple[list[Segment], Style]:
+    """The line of the row at `pos`, whole (not scrolled or cut); `cursor`: "focus", "blur" or None. A marked row
+    is tinted in high colour; in 16 colours its glyph and name take the mark's colour instead (§7.3.5)."""
+    r, ctx = packages.row(pos), packages.ctx
+    mark = ctx.marks.get(r.key)
+    action = mark.action if mark else None
+    base = role("tint-danger" if action is Action.REMOVE else "tint-marked") if action and not ansi else Style()
+    if cursor is not None:
+        base += role("cursor") if cursor == "focus" else role("cursor-blurred")
+    segments = [Segment(glyphs.selected if selected else " ", over(base, role("marked")) if selected else base)]
+    for col, w in columns:
+        if col == COL_STATUS:
+            glyph, glyph_role, flag, flag_role = status_cells(r, action, r.key in ctx.blocked, symbols)
+            segments += [Segment(glyph, over(base, role(glyph_role))), Segment(flag, over(base, role(flag_role)))]
+        else:
+            style = cell_style(r, col, ctx)
+            cell = base + Style(bold=style.bold or None, italic=style.italic or None, dim=style.dimmed or None)
+            if col == COL_NAME and action and ansi:
+                cell = over(cell, role(mark_role(action)))
+            segments.append(Segment(fit(cell_text(r, col, ctx) or "", w, col in ALIGN_RIGHT, glyphs.ellipsis), cell))
+        segments.append(Segment(" ", base))
+    return segments, base
+
+
+def visible_line(segments: list[Segment], base: Style, width: int, frozen: int, scroll_x: int) -> Strip:
+    """A whole line as the list shows it: `frozen` cells on the left stay, the rest scrolls by `scroll_x`; padded or
+    cut to `width` in the line's own style."""
+    line = Strip(segments)
+    if frozen:
+        line = Strip.join([line.crop(0, frozen), line.crop(frozen + scroll_x, scroll_x + width)])
+    else:
+        line = line.crop(scroll_x, scroll_x + width)
+    return line.adjust_cell_length(width, base)
+
+
 class PackageTable(ScrollView, can_focus=True):
     """The view. The cursor is a position; a selection of several rows (Shift with the arrows and pages) is a set of
     positions around it, kept through a sort and dropped when the list changes. What the user does reaches its
@@ -454,52 +503,14 @@ class PackageTable(ScrollView, can_focus=True):
         pos = None if y == 0 else sy + y - 1
         if pos is not None and pos >= len(self.packages):
             return Strip.blank(width)
-        segments, base = self._header() if pos is None else self._row(pos)
-        line = Strip(segments)
-        frozen = self.frozen
-        if frozen:
-            line = Strip.join([line.crop(0, frozen), line.crop(frozen + sx, sx + width)])
+        if pos is None:
+            segments, base = header_segments(self.columns, self.sort_shown, self.glyphs)
         else:
-            line = line.crop(sx, sx + width)
-        return line.adjust_cell_length(width, base)
-
-    def _header(self) -> tuple[list[Segment], Style]:
-        base = role("header")
-        segments = [Segment(" ", base)]
-        sort = self.sort_shown
-        for col, w in self.columns:
-            text = header_text(col)
-            if sort is not None and sort[0] == col:
-                arrow = self.glyphs.down if sort[1] else self.glyphs.up
-                text = fit(text, max(1, w - cell_len(arrow) - 1), False, self.glyphs.ellipsis).rstrip() + " " + arrow
-            segments += [Segment(fit(text, w, col in ALIGN_RIGHT, self.glyphs.ellipsis), base), Segment(" ", base)]
-        return segments, base
-
-    def _row(self, pos: int) -> tuple[list[Segment], Style]:
-        p = self.packages
-        r, ctx = p.row(pos), p.ctx
-        mark = ctx.marks.get(r.key)
-        action = mark.action if mark else None
-        ansi = self.app.ansi_color
-        # a marked row: tinted in high colour; in 16 colours its glyph and name take the mark's colour (§7.3.5)
-        base = role("tint-danger" if action is Action.REMOVE else "tint-marked") if action and not ansi else Style()
-        if pos == self.cursor:
-            base += role("cursor") if self.has_focus else role("cursor-blurred")
-        selected = len(self.selection) > 1 and pos in self.selection
-        segments = [Segment(self.glyphs.selected if selected else " ", over(base, role("marked")) if selected else base)]
-        ellipsis = self.glyphs.ellipsis
-        for col, w in self.columns:
-            if col == COL_STATUS:
-                glyph, glyph_role, flag, flag_role = status_cells(r, action, r.key in ctx.blocked, self.symbols)
-                segments += [Segment(glyph, over(base, role(glyph_role))), Segment(flag, over(base, role(flag_role)))]
-            else:
-                style = cell_style(r, col, ctx)
-                cell = base + Style(bold=style.bold or None, italic=style.italic or None, dim=style.dimmed or None)
-                if col == COL_NAME and action and ansi:
-                    cell = over(cell, role(mark_role(action)))
-                segments.append(Segment(fit(cell_text(r, col, ctx) or "", w, col in ALIGN_RIGHT, ellipsis), cell))
-            segments.append(Segment(" ", base))
-        return segments, base
+            cursor = None if pos != self.cursor else ("focus" if self.has_focus else "blur")
+            selected = len(self.selection) > 1 and pos in self.selection
+            segments, base = row_segments(self.packages, pos, self.columns, cursor, selected, self.glyphs,
+                                          self.symbols, self.app.ansi_color)
+        return visible_line(segments, base, width, self.frozen, sx)
 
     def _empty_line(self, line: int, width: int) -> Strip:
         """A line of the empty list's explanation, centred in the rows in sight."""

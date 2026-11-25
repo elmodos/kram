@@ -75,6 +75,32 @@ class Palette(Widget):
 
 
 _palette: Palette | None = None
+# the roles of one scheme, resolved beforehand: what `role` answers while no palette is mounted (`use_roles`)
+_static: "Roles | None" = None
+
+
+class Roles:
+    """Every role's style in one scheme, taken from a running app (`Roles.taken`): lets the functions that draw run
+    without an app, in tests, with the scheme's real colours."""
+
+    def __init__(self, scheme: str, ansi: bool, styles: dict[tuple[str, bool], Style]):
+        self.scheme, self.ansi, self.styles = scheme, ansi, styles
+
+    @classmethod
+    def taken(cls) -> "Roles":
+        """From the mounted palette, as it is now."""
+        palette = _palette
+        if palette is None:
+            raise RuntimeError("no palette mounted")
+        styles = {(name, False): role(name) for name in ROLES}
+        styles.update({(name, True): role(name, bar=True) for name in BAR_ROLES})
+        return cls(palette.app.theme, palette.app.ansi_color, styles)
+
+
+def use_roles(roles: Roles | None) -> None:
+    """What `role` answers while no palette is mounted; None: plain styles again."""
+    global _static
+    _static = roles
 
 
 def role(name: str, bar: bool = False) -> Style:
@@ -85,7 +111,9 @@ def role(name: str, bar: bool = False) -> Style:
         raise KeyError(name)
     palette = _palette
     if palette is None:
-        return Style()
+        if _static is None:
+            return Style()
+        return _static.styles[(name, bar and name in BAR_ROLES)]
     component = f"role--{name}"
     if bar and name in BAR_ROLES and any(palette.app.has_class(c) for c in SCHEME_CLASSES):
         component = f"role--bar-{name}"
@@ -125,12 +153,19 @@ def over(base: Style, style: Style) -> Style:
         return Style(color=base.color or RichColor.default(), bgcolor=style.color, bold=combined.bold,
                      dim=combined.dim, italic=combined.italic, underline=combined.underline, reverse=True,
                      strike=combined.strike)
-    if (base.bgcolor is not None and style.color is not None and _palette is not None and _palette.app.ansi_color
+    if (base.bgcolor is not None and style.color is not None and _ansi()
             and _contrast(_rgb(style.color), _rgb(base.bgcolor)) < 4.5):
         # a 16-colour cursor with a background of its own (Turbo's black on green): a colour that would not show on
         # it is the cursor's own text colour there; the glyph still says what it is
         return base + style + Style(color=base.color or RichColor.default())
     return base + style
+
+
+def _ansi() -> bool:
+    """Whether the current scheme has 16 colours: the app's, or the resolved roles' (`use_roles`)."""
+    if _palette is not None:
+        return _palette.app.ansi_color
+    return _static is not None and _static.ansi
 
 
 def _rgb(color: RichColor) -> RichColor:

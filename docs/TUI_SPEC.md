@@ -600,9 +600,26 @@ auto-close (shared with the GUIs' meaning); confirm quit with marks (on).
 drawing the visible lines ≤ 3 ms; a filter or view change ≤ 100 ms; a sort ≤ 150 ms; first frame after the catalog
 ≤ 300 ms. Memory: the catalog + ≤ 40 MB.
 
-14.2 **Tests** (pytest, in the `kram-test` container, Textual's `run_test`/`Pilot`, no terminal): every feature
-SUPPORTED for "tui" has a test marked `@pytest.mark.feature(Feature.X, front="tui")` (`tests/test_parity.py`).
-Layout tests assert focus, shown panels, cursor and scroll, as the spikes print them. Run on Textual 4.0 and 8.1.
+14.2 **Tests** (pytest, in the `kram-test` container, no terminal; `scripts/tui_check.sh`, Textual 4.0 and 8.1).
+Every feature SUPPORTED for "tui" has a test marked `@pytest.mark.feature(Feature.X, front="tui")`
+(`tests/test_parity.py`). Three levels, the first that can show the point is the one used:
+
+1. **Unit tests, no App.** What draws is a function that returns a `Text` or a `Strip` (a list row, a hint, a
+   Details tab, the top line, `palette.over`), and state is a class of its own (`FileState`): tested directly, in
+   milliseconds. Colours come from a scheme's roles resolved once per test session (`tests/tui_kit.py`, the
+   `scheme` fixture) and are asserted per cell. Drawing code inside a widget's `render_line` is moved out into such a
+   function first.
+2. **Snapshot tests of a widget or the whole screen.** The widget, or the app, is put in the state under test
+   through its own API (no keys), drawn (`render_line`, `Compositor.render_strips`) and turned into a text grid with
+   a second grid naming each cell's role; the pair is compared with a file under `tests/snapshots/tui/`
+   (`KRAM_UPDATE_SNAPSHOTS=1` writes them, reviewed in the diff).
+3. **Integration tests through the API.** The window with the Browser over a made-up catalog and an inline worker
+   (`tests/tui_kit.py`: jobs run on the app's thread, or when the test releases them; no threads, no waiting by
+   time); actions are called (`run_action`, methods), not typed. A key is pressed only where the binding itself is
+   what is tested (the keymap), never to reach a state.
+
+No end-to-end scenarios that drive the app by keys and pauses: they were slow (a whole app per test, about a second
+each) and raced the app under load.
 
 14.3 **Screenshots**: a `shots` command keeps the spikes' screenshot cases (wide, narrow, tiny, every dialog, every
 scheme); reviewed by eye before a release.

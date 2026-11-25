@@ -179,6 +179,42 @@ class Body(Horizontal):
         self.app.apply_layout()
 
 
+def root_badge(note: bool) -> list[Text]:
+    """The ROOT badge of the top line (§5.4, §11.2), with its note or without."""
+    # TRANSLATORS: the badge on the top line of the terminal front end when it runs as root
+    badge = [Text(" " + _("ROOT") + " ", role("badge", bar=True))]
+    return badge + [Text(_("changes need no password"), role("muted", bar=True))] if note else badge
+
+
+def top_line_text(left: Text, right: list[Text], root: bool, width: int) -> Text:
+    """The top line: "Kram TUI vX.Y.Z", `left` (the window's status or a message), and on the right the ROOT badge
+    when `root`, then the `right` parts; what does not fit is dropped from the right, the badge's note and the badge
+    last."""
+    line = Text()
+    line.append(f"Kram TUI v{__version__}", "bold")
+    if left:
+        line.append("  ")
+        line.append_text(left)
+
+    def fits(parts: list[Text]) -> bool:
+        return line.cell_len + sum(p.cell_len + 2 for p in parts) <= width
+    right = (root_badge(True) if root else []) + list(right)
+    while right and not fits(right):
+        if len(right) == 2 and root:
+            right = root_badge(False)
+        else:
+            right.pop()
+    if right:
+        gap = width - line.cell_len - sum(p.cell_len for p in right) - 2 * (len(right) - 1)
+        line.append(" " * gap)
+        for i, part in enumerate(right):
+            line.append("  " if i else "")
+            line.append_text(part)
+    else:
+        line.truncate(width, overflow="ellipsis")
+    return line
+
+
 class TopLine(Static):
     """The top line (§5.4): "Kram TUI vX.Y.Z", the window's status (the filter, its rows, the marks; or what Kram is doing)
     or a transient message over it (the Ui port's `status`), and on the right what is wrong with the catalog and its
@@ -204,13 +240,6 @@ class TopLine(Static):
         self.root = on
         self.refresh()
 
-    def _badge(self, note: bool) -> list[Text]:
-        if not self.root:
-            return []
-        # TRANSLATORS: the badge on the top line of the terminal front end when it runs as root
-        badge = [Text(" " + _("ROOT") + " ", role("badge", bar=True))]
-        return badge + [Text(_("changes need no password"), role("muted", bar=True))] if note else badge
-
     def show_message(self, text: str, timeout_ms: int = 0) -> None:
         """`text` until the next one, or for `timeout_ms`."""
         if self._timer is not None:
@@ -222,32 +251,7 @@ class TopLine(Static):
         self.refresh()
 
     def render(self) -> Text:
-        line = Text()
-        line.append(f"Kram TUI v{__version__}", "bold")
-        left = Text(self.message) if self.message else self.status
-        if left:
-            line.append("  ")
-            line.append_text(left)
-        width = self.size.width
-
-        def fits(parts: list[Text]) -> bool:
-            return line.cell_len + sum(p.cell_len + 2 for p in parts) <= width
-        # the badge first on the right, so that dropping from the right drops it last: its note, then itself
-        right = self._badge(True) + list(self.right)
-        while right and not fits(right):
-            if len(right) == 2 and self.root:
-                right = self._badge(False)
-            else:
-                right.pop()
-        if right:
-            gap = width - line.cell_len - sum(p.cell_len for p in right) - 2 * (len(right) - 1)
-            line.append(" " * gap)
-            for i, part in enumerate(right):
-                line.append("  " if i else "")
-                line.append_text(part)
-        else:
-            line.truncate(width, overflow="ellipsis")
-        return line
+        return top_line_text(Text(self.message) if self.message else self.status, self.right, self.root, self.size.width)
 
 
 class TooSmall(Screen):

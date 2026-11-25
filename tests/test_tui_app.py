@@ -238,33 +238,23 @@ def test_a_true_colour_scheme_picked_after_a_16_colour_one_drops_the_16_colour_s
     run(test)
 
 
-def test_turbo_has_grey_bars_with_red_keys_and_a_green_cursor_only_while_it_is_on():
-    from rich.style import Style
+def test_turbo_s_bars_are_grey_only_while_it_is_on():
+    """The drawing of Turbo's bars and cursor: tests/test_tui_draw.py. Here: the app's class and CSS follow the
+    scheme, whichever way it changes."""
     from textual.color import Color
 
-    from kram.tui.palette import over
     from kram.tui.widgets import KeyFooter
 
     async def test(app, pilot):
         footer, top = app.query_one(KeyFooter), app.query_one("#top")
+        grey = Color.parse("ansi_white")
         app.set_scheme("kram-turbo", save=False)
         await pilot.pause()
-        assert app.has_class("-kram-turbo")
-        grey = Color.parse("ansi_white")
-        assert footer.styles.background == grey and top.styles.background == grey
-        assert role("key", bar=True).color.number == 1 and role("key").color.number == 14  # red; bright cyan
-        assert role("muted", bar=True).color.number == 0  # black
-        cursor = role("cursor")
-        assert (cursor.bgcolor.number, cursor.color.number) == (2, 0) and not cursor.reverse  # black on green
-        # a glyph that would not show on the green cursor takes the cursor's black; one that shows keeps its colour
-        assert over(cursor, role("installed")).color.number == 0
-        assert over(cursor, Style(color="bright_white")).color.number == 15
-        assert over(Style(), role("installed")).color.number == 10
+        assert app.has_class("-kram-turbo") and footer.styles.background == grey and top.styles.background == grey
         app.theme = "kram-console"  # as Textual's command palette does
         await pilot.pause()
-        assert not app.has_class("-kram-turbo")
-        assert footer.styles.background != grey and top.styles.background != grey
-        assert role("key", bar=True) == role("key") and role("cursor").reverse
+        assert not app.has_class("-kram-turbo") and footer.styles.background != grey
+        assert top.styles.background != grey
     run(test)
 
 
