@@ -9,7 +9,7 @@ dim, reverse and underline: nothing blended with transparency, which shows there
 The rules live in `PALETTE_CSS`, which the app puts in its own CSS: a widget's DEFAULT_CSS is scoped to that widget,
 and Textual prefixes a rule starting with `App:ansi` there with the widget's name, so it never matches.
 """
-from rich.color import Color
+from rich.color import Color as RichColor
 from rich.style import Style
 from textual.strip import Strip
 from textual.theme import Theme
@@ -94,26 +94,54 @@ def role(name: str) -> Style:
 
 
 def filled(widget: Widget, strip: Strip) -> Strip:
-    """A line drawn in Python (`render_line`) on the widget's own background. Textual does not lay it under such
-    lines: a segment without a background shows the terminal's default one, black on most terminals, whatever the
-    scheme (only a translucent modal screen on top covered it up). The terminal's own background ("default", the
-    Terminal scheme) is left unset: it is what shows anyway."""
-    bgcolor = widget.rich_style.bgcolor
-    if bgcolor is None or bgcolor.is_default:
+    """A line drawn in Python (`render_line`) in the widget's own colours. Textual lays neither under such lines: a
+    segment without a colour shows the terminal's default one, the terminal's own text colour and background
+    (black on most terminals), whatever the scheme; only a modal screen on top put the scheme's back. The
+    terminal's own colours ("default", the Terminal scheme) are left unset: they are what shows anyway."""
+    style = widget.rich_style
+    color = None if style.color is None or style.color.is_default else style.color
+    bgcolor = None if style.bgcolor is None or style.bgcolor.is_default else style.bgcolor
+    if color is None and bgcolor is None:
         return strip
-    return strip.apply_style(Style(bgcolor=bgcolor))
+    return strip.apply_style(Style(color=color, bgcolor=bgcolor))
 
 
 def over(base: Style, style: Style) -> Style:
-    """`style` (a role's colour) on a line's `base`. The 16-colour cursor is reverse video, which would turn a
-    coloured glyph into a block of its colour: the colour goes to the background there, which reverse shows as the
-    text's colour again, on the cursor's own background (the base's text colour; the terminal's own if unset)."""
-    if not base.reverse or style.color is None:
-        return base + style
-    color = base.color or Color.default()
-    combined = base + style
-    return Style(color=color, bgcolor=style.color, bold=combined.bold, dim=combined.dim, italic=combined.italic,
-                 underline=combined.underline, reverse=True, strike=combined.strike)
+    """`style` (a role's colour: a status glyph, a mark) on a line's `base`, which may be the cursor.
+
+    The 16-colour cursor is reverse video, which would turn a coloured glyph into a block of its colour: the colour
+    goes to the background there, which reverse shows as the text's colour again, on the cursor's own background
+    (the base's text colour; the terminal's own if unset). In high colour a role's colour that barely shows on the
+    base's background (green on most themes' blue cursor) gives way to the base's text colour: the glyph's shape
+    still tells it apart."""
+    if base.reverse and style.color is not None:
+        combined = base + style
+        return Style(color=base.color or RichColor.default(), bgcolor=style.color, bold=combined.bold,
+                     dim=combined.dim, italic=combined.italic, underline=combined.underline, reverse=True,
+                     strike=combined.strike)
+    if (base.bgcolor is not None and base.color is not None and style.color is not None
+            and _contrast(style.color, base.bgcolor) < MIN_CONTRAST):
+        return base + style + Style(color=base.color)
+    return base + style
+
+
+MIN_CONTRAST = 3.0  # WCAG's ratio for large text and graphics
+
+
+def _contrast(a: RichColor, b: RichColor) -> float:
+    """WCAG's contrast ratio of two colours; 21 (enough) for colours by number, whose look is the terminal's."""
+    if a.triplet is None or b.triplet is None:
+        return 21.0
+    la, lb = sorted((_luminance(a.triplet), _luminance(b.triplet)), reverse=True)
+    return (la + 0.05) / (lb + 0.05)
+
+
+def _luminance(rgb) -> float:
+    def channel(v: int) -> float:
+        v /= 255
+        return v / 12.92 if v <= 0.03928 else ((v + 0.055) / 1.055) ** 2.4
+    r, g, b = rgb
+    return 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b)
 
 
 def _without_default(style: Style) -> Style:
@@ -148,6 +176,11 @@ def _blended(palette: Palette, name: str, style: Style) -> Style:
     blended = style
     if style.bgcolor is not None and 0 < bgcolor.a < 1:
         blended += Style(bgcolor=(back + bgcolor).rich_color)
+    if styles.has_rule("auto_color") and styles.auto_color:
+        # an "auto" colour ($text-muted is "auto 60%") contrasts with the background: Textual's partial style took
+        # the hidden palette's transparent one for black, and muted text came out white on light schemes
+        color = (back + bgcolor if bgcolor.a else back).get_contrast_text(color.a)
+        style = blended = blended + Style(color=color.rich_color)
     if style.color is not None and 0 < color.a < 1:
         blended += Style(color=(back + color).rich_color)
     _blends[key] = blended

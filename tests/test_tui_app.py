@@ -567,9 +567,9 @@ def test_a_modal_window_is_transparent_in_16_colours():
     run(test)
 
 
-def test_lines_drawn_in_python_are_on_the_schemes_background():
-    """Textual lays no background under `render_line`'s segments: without `palette.filled` the panels showed the
-    terminal's own background (black) in every scheme."""
+def test_lines_drawn_in_python_are_in_the_schemes_colours():
+    """Textual lays no colours under `render_line`'s segments: without `palette.filled` the panels showed the
+    terminal's own background (black) and text colour in every scheme; only a modal screen put the scheme's back."""
     async def test(app, pilot):
         for scheme in ("solarized-light", "kram-midnight"):
             app.set_scheme(scheme)
@@ -579,7 +579,8 @@ def test_lines_drawn_in_python_are_on_the_schemes_background():
                 widget = app.window.query_one(name)
                 assert widget.rich_style.bgcolor is not None
                 for y in range(widget.size.height):  # the cursor's line has a background of its own
-                    assert all(s.style and s.style.bgcolor for s in widget.render_line(y) if s.text), (scheme, name, y)
+                    assert all(s.style and s.style.bgcolor and s.style.color
+                               for s in widget.render_line(y) if s.text), (scheme, name, y)
         app.set_scheme("textual-ansi")  # the terminal's own background: left unset
         await pilot.pause()
         await pilot.pause()
@@ -600,3 +601,24 @@ def test_a_coloured_glyph_under_the_16_colour_cursor_keeps_its_colour():
     assert over(Style(reverse=True), green) == Style(color=Color.default(), bgcolor="green", reverse=True)
     assert over(cursor, Style(dim=True)) == cursor + Style(dim=True)  # no colour of its own: nothing to move
     assert over(Style(bgcolor="blue"), green) == Style(bgcolor="blue") + green  # high colour: no reverse
+    # high colour: a colour that barely shows on the cursor gives way to the cursor's text colour
+    cursor = Style(color="#ffffff", bgcolor="#88c0d0")
+    assert over(cursor, Style(color="#a3be8c")).color == cursor.color
+    assert over(cursor, Style(color="#2e3440")).color == Style.parse("#2e3440").color
+
+
+def test_muted_text_contrasts_with_light_and_dark_schemes():
+    """$text-muted is "auto 60%": against the hidden palette's transparent background it came out white, unreadable
+    on light schemes."""
+    from kram.tui.palette import _contrast
+
+    async def test(app, pilot):
+        for scheme in ("textual-light", "solarized-light", "textual-dark", "nord"):
+            app.set_scheme(scheme, save=False)
+            await pilot.pause()
+            await pilot.pause()
+            back = app.screen.styles.background.rich_color
+            assert _contrast(role("muted").color, back) >= 3, scheme
+            cursor = role("cursor")
+            assert _contrast(cursor.color, cursor.bgcolor) >= 3, scheme
+    run(test)
