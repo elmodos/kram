@@ -13,6 +13,19 @@ def _settings_file(tmp_path_factory, monkeypatch):
     monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path_factory.mktemp("config")))
 
 
+@pytest.fixture(autouse=True)
+def _tui_made_up_catalog(request, monkeypatch):
+    """A terminal front end's test runs its window over a small made-up catalog unless it gives one of its own
+    (test_tui_window.use_catalog): never the system's, which libdnf5 would load in a second or two."""
+    if request.module.__name__.startswith("test_tui"):
+        try:
+            import textual  # noqa: F401
+        except ImportError:
+            return
+        from test_tui_window import snapshot, use_catalog
+        use_catalog(monkeypatch, snapshot(40))
+
+
 @pytest.fixture(scope="module", autouse=True)
 def _collect_garbage():
     """Let the garbage collector free the Qt windows and dialogs a module's tests left behind, at the module's end.
