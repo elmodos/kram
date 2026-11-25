@@ -11,6 +11,7 @@ import pytest
 
 pytest.importorskip("textual")
 
+from kram import __version__  # noqa: E402
 from kram.app import preferences, release_watch  # noqa: E402
 from kram.app.browser import Browser  # noqa: E402
 from kram.app.columns import COL_ADVISORY, COL_DOWNLOAD, COL_NAME, COL_REASON, COL_SIZE, COL_SUMMARY  # noqa: E402
@@ -100,7 +101,7 @@ def test_the_catalog_shows_with_the_first_row_selected(monkeypatch):
         b = app.main.browser
         assert len(b.packages) == 300 and app.main.current_key() == ("pkg0000", "x86_64")
         assert [r.name for r in app.main.selected_rows()] == ["pkg0000"]
-        assert top(app).startswith("Kram  All  300")
+        assert top(app).startswith(f"Kram TUI v{__version__}  All  300")
         header, first = lines(app, 2)
         assert header.split() == ["S", "Package", app.glyphs.up, "Installed", "Latest", "Repository", "Size",
                                   "Summary"]
@@ -412,7 +413,7 @@ def test_the_empty_list_explains_and_its_links_are_keys(monkeypatch):
         assert "Nothing found for “pkg0001” in “Installed”." in text
         assert "1 Show 1 result in “All”" in text
         assert app.main.list.check_action("link", (0,)) and not app.main.list.check_action("link", (1,))
-        assert top(app).startswith("Kram  “pkg0001” in Installed  0")
+        assert top(app).startswith(f"Kram TUI v{__version__}  “pkg0001” in Installed  0")
         await pilot.press("2")  # no second link: nothing happens
         assert b.filter.id == "status:installed"
         await pilot.press("1")
@@ -525,7 +526,7 @@ def test_a_filter_change_updates_the_list_and_the_top_line(monkeypatch):
         b.sidebar.select("status", "status:installed")
         await pilot.pause()
         assert len(b.packages) == 100 and app.main.current_key() == ("pkg0000", "x86_64")
-        assert top(app).startswith("Kram  Installed  100")
+        assert top(app).startswith(f"Kram TUI v{__version__}  Installed  100")
         assert "pkg0003" in lines(app, 3)[2]
         b.sidebar.select("status", "status:all")
         await pilot.pause()
@@ -540,19 +541,22 @@ def test_the_top_line_drops_what_does_not_fit_from_the_right(monkeypatch):
     use_catalog(monkeypatch, snapshot(repos=repos))
     monkeypatch.setattr(window_module, "is_root", lambda: False)  # the test container runs as root: no badge
 
+    title = f"Kram TUI v{__version__}"
+    extra = len(title) - len("Kram")  # the widths below were picked for a bare "Kram"
+
     async def test(app, pilot):
         line = top(app)
-        assert line.startswith("Kram  All  300")
+        assert line.startswith(f"{title}  All  300")
         assert line.endswith("! The package information is 9 days old  ! 1 repository has no metadata  "
                              "Metadata: 9 d ago")
-        await pilot.resize_terminal(90, 24)
+        await pilot.resize_terminal(90 + extra, 24)
         await pilot.pause()
         assert top(app).endswith("! 1 repository has no metadata") and "Metadata" not in top(app)
-        await pilot.resize_terminal(50, 24)
+        await pilot.resize_terminal(50 + extra, 24)
         await pilot.pause()
-        assert top(app).rstrip() == "Kram  All  300"
+        assert top(app).rstrip() == f"{title}  All  300"
         app.ui.status("Copied", 0)  # a message stands in for the counts
-        assert top(app).startswith("Kram  Copied")
+        assert top(app).startswith(f"Kram TUI v{__version__}  Copied")
     run(test)
 
 

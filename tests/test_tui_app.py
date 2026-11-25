@@ -16,6 +16,7 @@ from textual.containers import Vertical  # noqa: E402
 from textual.screen import ModalScreen  # noqa: E402
 from textual.widgets import Input  # noqa: E402
 
+from kram import __version__  # noqa: E402
 from kram.app import preferences  # noqa: E402
 from kram.app.ports import CANCEL, NO, OK, YES, Question  # noqa: E402
 from kram.app.ports import Button as QuestionButton
@@ -427,10 +428,10 @@ def test_messages_and_status():
         await pilot.press("enter")
         await pilot.pause()
         app.ui.status("Loading", 0)
-        assert app.window.query_one("#top").render().plain.startswith("Kram  Loading")
+        assert app.window.query_one("#top").render().plain.startswith(f"Kram TUI v{__version__}  Loading")
         app.ui.copy_text("vim-enhanced")
         assert app.clipboard == "vim-enhanced"
-        assert app.window.query_one("#top").render().plain.startswith("Kram  Copied")
+        assert app.window.query_one("#top").render().plain.startswith(f"Kram TUI v{__version__}  Copied")
     run(test)
 
 

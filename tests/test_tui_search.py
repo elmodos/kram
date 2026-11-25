@@ -14,6 +14,7 @@ pytest.importorskip("textual")
 from test_tui_window import WIDE, loaded, snapshot, top  # noqa: E402
 from textual.widgets import Input  # noqa: E402
 
+from kram import __version__  # noqa: E402
 from kram.app.browser import Browser  # noqa: E402
 from kram.app.parity import Feature  # noqa: E402
 from kram.app.search import DEBOUNCE_MS, HISTORY_IDLE_MS  # noqa: E402
@@ -106,7 +107,8 @@ def test_slash_opens_the_search_and_the_list_filters_while_typing(monkeypatch):
         await pilot.press(*"pkg01")
         await pilot.pause(TYPED)
         assert len(b.packages) == 100 and status(app) == "Filtering as you type: 100 packages"
-        assert top(app).startswith("Kram  “pkg01” in All  100")  # the top line above the dialog says so too
+        # the top line above the dialog says so too
+        assert top(app).startswith(f"Kram TUI v{__version__}  “pkg01” in All  100")
         # the window's keys are text in the field and off under the dialog
         for action, params in (("find", ()), ("toggle_panel", ("sidebar",)), ("quit", ())):
             assert app.check_action(action, params) is False
@@ -219,7 +221,7 @@ def test_enter_keeps_the_search_within_the_sidebar_entry(monkeypatch):
         assert app.main.list.sort_shown is None
         assert b.sidebar.history == [("pkg01", 0, 33)]
         assert app.focused is app.main.list and app.main.current_key() == ("pkg0102", "x86_64")
-        assert top(app).startswith("Kram  “pkg01” in Installed  33")
+        assert top(app).startswith(f"Kram TUI v{__version__}  “pkg01” in Installed  33")
         await pilot.pause(HISTORY_IDLE_MS / 1000 + 0.2)  # remembered once, not moved again by the idle timer
         assert b.sidebar.history == [("pkg01", 0, 33)]
     run(test)

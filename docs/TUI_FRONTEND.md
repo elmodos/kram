@@ -65,7 +65,7 @@ toolkit-free layer (the TUI uses `kram/app` as the GTK front end does); features
 ## 2. The window
 
 ```
- Kram  Upgradable (13) · 3 marked                                     [ROOT when root]
+ Kram TUI v0.14.1  Upgradable (13) · 3 marked                         [ROOT when root]
 ╭ Status ───────────╮╭ Packages ──────────────────────────────────────────────────────╮
 │ All        70,235 ││ S Package          Installed      Latest         Repository … │
 │ Installed     569 ││ ▲ file-libs        5.46-10.fc44   5.48-2.fc44    updates      │

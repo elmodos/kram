@@ -25,6 +25,7 @@ from textual.timer import Timer
 from textual.widget import Widget
 from textual.widgets import Input, Static
 
+from .. import __version__
 from ..app import preferences
 from ..app.actions import action_defs
 from ..app.ports import CANCEL, Button
@@ -168,7 +169,7 @@ class Body(Horizontal):
 
 
 class TopLine(Static):
-    """The top line (§5.4): "Kram", the window's status (the filter, its rows, the marks; or what Kram is doing)
+    """The top line (§5.4): "Kram TUI vX.Y.Z", the window's status (the filter, its rows, the marks; or what Kram is doing)
     or a transient message over it (the Ui port's `status`), and on the right what is wrong with the catalog and its
     age. What does not fit is dropped from the right."""
 
@@ -211,7 +212,7 @@ class TopLine(Static):
 
     def render(self) -> Text:
         line = Text()
-        line.append("Kram", "bold")
+        line.append(f"Kram TUI v{__version__}", "bold")
         left = Text(self.message) if self.message else self.status
         if left:
             line.append("  ")

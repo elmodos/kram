@@ -110,7 +110,7 @@ from the same `_()` strings where they exist).
 5.3 Under 40 columns or 12 lines Kram shows only "Make the terminal larger: Kram needs 40×12" centred, and the
 quit key. Nothing else reacts. It comes back as it was when the terminal grows.
 
-5.4 **Top line**: `Kram`, the shown filter or search and its row count, the number of marks; on the right, the
+5.4 **Top line**: `Kram TUI v` and the version, the shown filter or search and its row count, the number of marks; on the right, the
 catalog's age (`catalog 3 h old`), the warning of `WINDOW_STATUS_BAR` when the catalog is stale (`! 9 days old: f5
 reload`), `Fedora N is out: r` when `RELEASE_BUTTON` applies, and a `ROOT` badge when Kram runs as root (§11.2).
 What does not fit is dropped from the right, the ROOT badge last.
