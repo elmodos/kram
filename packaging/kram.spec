@@ -1,5 +1,5 @@
 %global appid io.github.elmodos.Kram
-%global base_version 0.14.1
+%global base_version 0.14.2
 # the first version that is split into kram-common + kram-qt + kram-gtk; the single kram package before it is
 # obsoleted by kram-qt
 %global split_version 0.12.0
@@ -272,6 +272,10 @@ rm -f "$state"
 %{python3_sitelib}/kram/gtk/
 
 %changelog
+* Wed Nov 25 2026 Modo Ltunzher <offnormal@gmail.com> - 0.14.2-1
+- Packages replaced by a package of another name (Obsoletes), such as kram by kram-qt, are upgradable again
+- GTK front end: the Mark All Upgrades and COPR buttons have icons with the Breeze icon theme
+
 * Mon Nov 23 2026 Modo Ltunzher <offnormal@gmail.com> - 0.14.1-1
 - COPR: the search no longer offers to enable a project that is already enabled
 - GTK front end: right-clicking a selected package that is not installed opens the context menu again
