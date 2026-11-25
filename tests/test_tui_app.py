@@ -626,10 +626,9 @@ def test_a_coloured_glyph_under_the_16_colour_cursor_keeps_its_colour():
     assert over(Style(reverse=True), green) == Style(color=Color.default(), bgcolor="green", reverse=True)
     assert over(cursor, Style(dim=True)) == cursor + Style(dim=True)  # no colour of its own: nothing to move
     assert over(Style(bgcolor="blue"), green) == Style(bgcolor="blue") + green  # high colour: no reverse
-    # high colour: a colour that barely shows on the cursor gives way to the cursor's text colour
+    # high colour: a glyph keeps its colour under the cursor, however little it shows there
     cursor = Style(color="#ffffff", bgcolor="#88c0d0")
-    assert over(cursor, Style(color="#a3be8c")).color == cursor.color
-    assert over(cursor, Style(color="#2e3440")).color == Style.parse("#2e3440").color
+    assert over(cursor, Style(color="#a3be8c")).color == Style.parse("#a3be8c").color
 
 
 def test_muted_text_contrasts_with_light_and_dark_schemes():

@@ -111,21 +111,14 @@ def over(base: Style, style: Style) -> Style:
 
     The 16-colour cursor is reverse video, which would turn a coloured glyph into a block of its colour: the colour
     goes to the background there, which reverse shows as the text's colour again, on the cursor's own background
-    (the base's text colour; the terminal's own if unset). In high colour a role's colour that barely shows on the
-    base's background (green on most themes' blue cursor) gives way to the base's text colour: the glyph's shape
-    still tells it apart."""
+    (the base's text colour; the terminal's own if unset). In high colour the role's colour stays as it is under the
+    cursor too: a status keeps one colour, and a cursor that hides it is the colour scheme's to fix."""
     if base.reverse and style.color is not None:
         combined = base + style
         return Style(color=base.color or RichColor.default(), bgcolor=style.color, bold=combined.bold,
                      dim=combined.dim, italic=combined.italic, underline=combined.underline, reverse=True,
                      strike=combined.strike)
-    if (base.bgcolor is not None and base.color is not None and style.color is not None
-            and _contrast(style.color, base.bgcolor) < MIN_CONTRAST):
-        return base + style + Style(color=base.color)
     return base + style
-
-
-MIN_CONTRAST = 3.0  # WCAG's ratio for large text and graphics
 
 
 def _contrast(a: RichColor, b: RichColor) -> float:
