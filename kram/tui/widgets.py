@@ -49,9 +49,14 @@ class KeyFooter(Widget):
     """The footer: the keys of the focused widget, its parents and the window, as `key word` hints. Textual's own
     Footer draws its words black on black with 16 colours (its FooterKey turns the terminal's default colours into
     #000000, on any terminal: found on a real one), so this one draws the hints itself, in the key role and the
-    terminal's own colour. It follows the screen's bindings as Textual's Footer does."""
+    terminal's own colour. It follows the screen's bindings as Textual's Footer does.
+
+    The keys that are always there (menu, keys, quit: RIGHT) stand on the right; the rest on the left, cut with an
+    ellipsis where the line is too short for both. The app may leave out a binding it lets through
+    (`footer_shows`)."""
 
     DEFAULT_CSS = "KeyFooter { dock: bottom; height: 1; padding: 0 1; }"
+    RIGHT = ("menu", "keys", "quit", "quit_kram")
 
     def on_mount(self) -> None:
         self.screen.bindings_updated_signal.subscribe(self, self._changed)
@@ -63,14 +68,23 @@ class KeyFooter(Widget):
         self.refresh()
 
     def render(self) -> Text:
-        pairs, seen = [], set()
+        left, right, seen = [], [], set()
+        shows = getattr(self.app, "footer_shows", lambda _action: True)
         for _node, binding, enabled, _tooltip in self.screen.active_bindings.values():
-            if not binding.show or not enabled or binding.action in seen:
+            if not binding.show or not enabled or binding.action in seen or not shows(binding.action):
                 continue
             seen.add(binding.action)
-            pairs.append((self.app.get_key_display(binding), binding.description))
+            side = right if binding.action in self.RIGHT else left
+            side.append((self.app.get_key_display(binding), binding.description))
+        start, end = hint(*left), hint(*right)
+        width = self.content_region.width or self.size.width
+        room = width - end.cell_len - (2 if left and right else 0)
+        if start.cell_len > room:
+            start.truncate(max(room, 0), overflow="ellipsis")
         line = Text(no_wrap=True, overflow="ellipsis")
-        line.append_text(hint(*pairs))
+        line.append_text(start)
+        line.append(" " * max(width - start.cell_len - end.cell_len, 0 if not left else 2))
+        line.append_text(end)
         return line
 
 

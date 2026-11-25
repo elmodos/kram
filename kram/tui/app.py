@@ -270,10 +270,11 @@ def _window_bindings() -> list[Binding]:
         Binding(",".join(KEYS_KEYS), "keys", _("Keys")),
         Binding("escape", "back_to_list", _("Focus the list"), show=False),
         Binding(bindings_key("back"), "back", labels["back"], show=False),
-        *[Binding(bindings_key(a), f"run('{a}')", labels[a], show=False)
-          for a in WINDOW_RUN if a != "mark_upgrades"],
         # with advisories, the list of Edit → Mark Upgrades first (§7.5.2)
-        Binding(bindings_key("mark_upgrades"), "mark_upgrades", labels["mark_upgrades"], show=False),
+        Binding(bindings_key("mark_upgrades"), "mark_upgrades", labels["mark_upgrades"]),
+        # in the footer: Reload always, Mark All Upgrades and Apply while they are on (KramApp.footer_shows)
+        *[Binding(bindings_key(a), f"run('{a}')", labels[a], show=a in ("reload", "apply"))
+          for a in WINDOW_RUN if a != "mark_upgrades"],
         Binding(bindings_key("quit"), "quit", _("Quit")),
         # the Fedora N dialog, while the top line says a new release is out (§5.4)
         Binding("r", "release", _("A new Fedora release"), show=False),
@@ -585,6 +586,16 @@ class KramApp(App, inherit_bindings=False):
         if action == "command_palette" and isinstance(self.screen, TooSmall):
             return False
         return True
+
+    # the footer's actions that it shows only while they are on: Apply with marks, Mark All Upgrades with upgrades
+    FOOTER_WHILE_ON = {"run('apply')": "apply", "mark_upgrades": "mark_upgrades"}
+
+    def footer_shows(self, action: str) -> bool:
+        """Whether the footer shows a binding of the window that check_action lets through. Apply and Mark All
+        Upgrades are left out while they are off; their keys still work and say on the top line why nothing
+        happens (MainWindow.run_action)."""
+        action_id = self.FOOTER_WHILE_ON.get(action)
+        return action_id is None or self.main is None or self.main.action_enabled(action_id)
 
     def on_paste(self, event: events.Paste) -> None:
         """A paste the focused widget left to the window: the path of a package file opens the installer

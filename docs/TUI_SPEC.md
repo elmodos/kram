@@ -116,7 +116,9 @@ reload`), `Fedora N is out: r` when `RELEASE_BUTTON` applies, and a `ROOT` badge
 What does not fit is dropped from the right, the ROOT badge last.
 
 5.5 **Footer**: Textual's `Footer`, the keys of the focused widget and its parents, the window's keys last. Keys
-that do not apply now are left out (§6.3).
+that do not apply now are left out (§6.3). The window's keys there: Sidebar, Details, Search, Mark All Upgrades
+(while a package has an upgrade), Reload, Apply (while something is marked); Menu, Keys and Quit stand on the right,
+and the left part is cut with an ellipsis where the line is too short for both.
 
 ## 6. Focus and keys
 

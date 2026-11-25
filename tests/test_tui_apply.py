@@ -503,3 +503,22 @@ def test_u_without_advisories_marks_every_upgrade_at_once(monkeypatch):
         await pilot.pause()
         assert len(app.screen_stack) == 1 and mark_of(app, "plain") is Action.UPGRADE
     run(monkeypatch, test, CatalogSnapshot(rows(3) + plain, 1, 1, 0.1))
+
+
+def test_the_footer_shows_reload_and_apply_and_mark_upgrades_while_they_are_on(monkeypatch):
+    """The footer has f5 Reload always, U Mark All Upgrades while a package has an upgrade, a Apply while something
+    is marked; Menu, Keys and Quit stand on its right (§5.5)."""
+    from kram.tui.widgets import KeyFooter
+    plain = [PkgRow("plain", "x86_64", "P", "1-1", "2-1", "updates", 10, Origin.FEDORA, Status.UPGRADABLE)]
+
+    async def test(app, pilot):
+        footer = app.query_one(KeyFooter)
+        line = footer.render().plain
+        assert "f5 Reload" in line and "U Mark All Upgrades" in line and "a Apply" not in line
+        assert line.rstrip().endswith("m Menu  ? Keys  q Quit")
+        assert len(line) == footer.content_region.width
+        await pilot.press("U")
+        await until(pilot, lambda: "a Apply" in footer.render().plain)
+        line = footer.render().plain
+        assert line.index("U Mark All Upgrades") < line.index("a Apply") < line.index("m Menu")
+    run(monkeypatch, test, CatalogSnapshot(rows(3) + plain, 1, 1, 0.1))

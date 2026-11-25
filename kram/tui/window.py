@@ -308,6 +308,7 @@ class MainWindow:
 
     def apply_actions(self, state: ActionState, catalog: bool, busy: bool) -> None:
         self.actions = state  # the menus (§7.7) and the keys (§6.5) read it when used
+        self.app.refresh_bindings()  # the footer shows Apply and Mark All Upgrades only while they are on
 
     def set_reload_enabled(self, on: bool) -> None:
         self.reload_enabled = on
