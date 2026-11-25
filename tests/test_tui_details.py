@@ -469,7 +469,11 @@ def test_the_filter_keeps_matching_files_with_the_match_bold(monkeypatch):
         await focus_details(app, pilot)
         await pilot.press("4", "slash")
         assert app.focused is d.filter and not d.filter.has_class("hidden")
-        await pilot.press(*"doc", "enter")
+        await pilot.press(*"doc")
+        await pilot.pause()
+        # focused, it stays one line with no border: Input:focus's tall border once left no room for the text
+        assert d.filter.size.height == 1 and "doc" in d.filter.render_line(0).text
+        await pilot.press("enter")
         await pilot.pause()
         assert app.focused is d.body and not d.filter.has_class("hidden")
         lines = body_lines(app)

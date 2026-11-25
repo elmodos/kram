@@ -116,7 +116,8 @@ class FilterLine(Input):
 
     BINDINGS = [Binding("escape", "close", show=False)]
     DEFAULT_CSS = """
-    FilterLine { border: none; height: 1; padding: 0 1; background: $background; }
+    /* :focus too: Input:focus's tall border outranks a bare type selector and leaves no room for the text */
+    FilterLine, FilterLine:focus { border: none; height: 1; padding: 0 1; background: $background; }
     FilterLine.hidden { display: none; }
     """
 
