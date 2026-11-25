@@ -11,7 +11,7 @@ import pytest
 
 pytest.importorskip("textual")
 
-from tui_kit import InlineWorker  # noqa: E402
+from tui_kit import InlineWorker, ManualClock  # noqa: E402
 
 from kram import __version__  # noqa: E402
 from kram.app import preferences, release_watch  # noqa: E402
@@ -52,19 +52,23 @@ def snapshot(n: int = 300, **kw) -> CatalogSnapshot:
 
 
 def use_catalog(monkeypatch, snap: CatalogSnapshot | None = None, load=None, blocked=None, threaded: bool = False,
-                **more) -> SimpleNamespace:
+                clock: bool = False, **more) -> SimpleNamespace:
     """The window's Browser over a made-up catalog, as tests/test_gtk.py does it; `more`: what else the catalog
     answers (`resolve` for the Apply dialog, …). Its libdnf5 jobs run on the app's thread (tests/tui_kit.py,
     InlineWorker), unless `threaded`: a job that waits for the test (a held lock, a slow load) needs the real
-    worker. The returned namespace's `worker` is the inline worker once the window has made it."""
+    worker. `clock`: the Browser's timers (the search's debounce and history) go off when the test says so
+    (tests/tui_kit.py, ManualClock). The returned namespace has the inline worker and the clock once the window has
+    made them."""
     snap = snap or snapshot()
     # a Reload does not ask Bodhi whether a new release is out (tests/test_tui_dialogs.py puts the check back)
     monkeypatch.setattr(release_watch.ReleaseWatcher, "check", lambda self: None)
     catalog = SimpleNamespace(load=load or (lambda *a, **k: snap), blocked_upgrades=lambda: blocked or {},
                               details=lambda key: (_ for _ in ()).throw(LookupError(key)), **more)
-    made = SimpleNamespace(worker=None)
+    made = SimpleNamespace(worker=None, clock=None)
 
     def browser(view, ui, scheduler, details, post, **kw):
+        if clock:
+            made.clock = scheduler = ManualClock(post)
         if not threaded:
             made.worker = kw["dnf"] = InlineWorker(post)
         return Browser(view, ui, scheduler, details, post, catalog=catalog, **kw)

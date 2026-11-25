@@ -200,3 +200,43 @@ class InlineWorker:
 
     def shutdown(self) -> None:
         self.cancelled.set()
+
+
+# ---------------------------------------------------------------- the clock
+
+class _ManualTimer:
+    def __init__(self, clock: "ManualClock", ms: int, fn: Callable[[], None]):
+        self.clock, self.ms, self.fn = clock, ms, fn
+        self.active = False
+
+    def start(self) -> None:
+        self.active = True
+
+    def stop(self) -> None:
+        self.active = False
+
+
+class ManualClock:
+    """`kram.app.scheduler.Scheduler` whose timers go off when the test says so (`fire`), not after their time: a
+    debounce or an idle timer is tested without waiting for it."""
+
+    def __init__(self, post: Callable[[Callable[[], None]], None]):
+        self._post = post
+        self.timers: list[_ManualTimer] = []
+
+    def timer(self, ms: int, fn: Callable[[], None]) -> _ManualTimer:
+        t = _ManualTimer(self, ms, fn)
+        self.timers.append(t)
+        return t
+
+    def later(self, fn: Callable[[], None]) -> None:
+        self._post(fn)
+
+    def fire(self, up_to_ms: int | None = None) -> int:
+        """Every running timer of at most `up_to_ms` (all when None) goes off, as if that time had passed; how many
+        did."""
+        due = [t for t in self.timers if t.active and (up_to_ms is None or t.ms <= up_to_ms)]
+        for t in due:
+            t.active = False
+            t.fn()
+        return len(due)

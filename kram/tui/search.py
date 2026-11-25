@@ -273,7 +273,11 @@ class SearchDialog(ModalScreen):
 
     def on_input_submitted(self, event: Input.Submitted) -> None:
         event.stop()
-        self._close((event.value.strip(), self.mode))
+        self.submit()
+
+    def submit(self) -> None:
+        """Enter in the field: keep the search typed."""
+        self._close((self.text.strip(), self.mode))
 
     def action_close(self) -> None:
         self._close(None)
