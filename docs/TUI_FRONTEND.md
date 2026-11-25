@@ -2,7 +2,7 @@
 
 Status (2026-11-24): **phases 1–3 of `docs/TUI_SPEC.md` §17 are implemented** on branch `feature/tui` (pushed,
 not merged, not released): `kram/tui/`, tests `tests/test_tui_*.py`, checks `scripts/tui_check.sh` (Textual 4.0 and
-8.1) and `scripts/tui_root_check.sh` (the real kram-tui with polkit in a container: password, Ctrl+C, a real
+8.1 at once, pytest-xdist; `quick 45` while working, the full run with no arguments before a merge into main) and `scripts/tui_root_check.sh` (the real kram-tui with polkit in a container: password, Ctrl+C, a real
 install/removal, a repository on/off). Every feature of `kram/app/parity.py` is SUPPORTED, PARTIAL or NOT_INTENDED
 for "tui". Left: phase 4 (the `kram-tui` subpackage, man page, a hand check in real terminals, release) and the
 open points in the next paragraph.

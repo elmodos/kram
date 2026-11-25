@@ -1,6 +1,5 @@
 #!/bin/bash
-# Do not run tui_check.sh and tui_root_check.sh at the same time: both mount the source tree with :Z, and the
-# relabelling of one takes /src away from the other's container.
+# The source tree is mounted with the shared label (:z), as scripts/tui_check.sh does: the two can run at once.
 # The terminal front end's root path for real (docs/TUI_SPEC.md §11), a manual check, not part of pytest: in a Fedora
 # container booted with systemd, with polkit and a user "user" in wheel (password "secret"), scripts/tui_root_pty.py
 # runs `python3 -m kram.tui` from this source tree as that user in a pseudo-terminal, as SSH gives one, and presses
@@ -33,7 +32,7 @@ RUN dnf5 -y install systemd dbus-broker polkit util-linux sudo procps-ng python3
  && useradd -m -G wheel user && echo user:secret | chpasswd
 CMD ["/sbin/init"]
 EOF
-podman run -d --name "$name" --systemd=always -v "$src:/src:ro,Z" \
+podman run -d --name "$name" --systemd=always -v "$src:/src:ro,z" \
     -v "kram-dnf-cache-$release:/var/cache/libdnf5:Z" "kram-tui-root:$release" >/dev/null
 
 podman exec -i "$name" bash -euo pipefail <<'TEST'

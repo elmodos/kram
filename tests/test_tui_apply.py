@@ -106,7 +106,14 @@ def run(monkeypatch, test, snap: CatalogSnapshot | None = None, loads: list | No
 
 
 async def wait_for(app, pilot, kind):
-    await until(pilot, lambda: isinstance(app.screen, kind))
+    try:
+        await until(pilot, lambda: isinstance(app.screen, kind))
+    except AssertionError:
+        raise AssertionError(f"waited for {kind.__name__}, the screen is {app.screen!r}") from None
+    # the screen sets its own focus as it mounts: a focus() before that was taken back under load, and Enter
+    # pressed the dialog's default button instead of the one the test meant
+    await until(pilot, lambda: app.screen.is_mounted and app.screen.focused is not None)
+    await pilot.pause()
     return app.screen
 
 

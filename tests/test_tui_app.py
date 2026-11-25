@@ -5,6 +5,7 @@ Run with Textual's headless driver (`App.run_test`, `Pilot`): no terminal needed
 """
 import asyncio
 import threading
+from types import SimpleNamespace
 
 import pytest
 
@@ -543,6 +544,16 @@ def test_post_from_another_thread_runs_on_the_apps_thread():
             await pilot.pause(0.01)
         assert seen == [me, "same thread"]
     run(test)
+
+
+def test_a_posted_call_that_comes_due_while_the_app_closes_is_dropped():
+    """A worker's result (the catalog loaded) delivered after the screens were taken down raised ScreenStackError."""
+    seen = []
+    app = SimpleNamespace(screen_stack=[])
+    loop._while_open(app, lambda: seen.append("closing"))()
+    app.screen_stack.append("screen")
+    loop._while_open(app, lambda: seen.append("open"))()
+    assert seen == ["open"]
 
 
 def test_scheduler_timers():
