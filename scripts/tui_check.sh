@@ -11,6 +11,8 @@
 # Usage: scripts/tui_check.sh [quick] [44|45]
 #   quick   only the TUI and parity tests, in both containers (ruff still runs in 44)
 #   44, 45  only that container
+# KRAM_UPDATE_SNAPSHOTS=1 in the environment rewrites the TUI's snapshot files (tests/snapshots/tui/), each
+# container its own Textual's set.
 # While working: `scripts/tui_check.sh quick 45` (the newest Textual, about a minute). Before a merge into main:
 # `scripts/tui_check.sh`, both versions and the whole suite.
 set -euo pipefail
@@ -32,7 +34,7 @@ tui_tests="tests/test_parity.py $(cd "$src" && find tests -maxdepth 1 -name "tes
 pytest="python3 -m pytest -q -p no:cacheprovider -rf -n $workers"
 
 check_44() {
-    podman run --rm -v "$src:/src:z" -v kram-dnf-cache-44:/var/cache/libdnf5:Z -w /src localhost/kram-test:44 bash -c "
+    podman run --rm -e KRAM_UPDATE_SNAPSHOTS -v "$src:/src:z" -v kram-dnf-cache-44:/var/cache/libdnf5:Z -w /src localhost/kram-test:44 bash -c "
         dnf5 -q -y install python3-textual python3-pytest-xdist >/dev/null 2>&1 \
             || { echo 'python3-textual, python3-pytest-xdist: install failed'; exit 1; }
         python3 -c 'import textual; print(\"Textual\", textual.__version__)'
@@ -41,7 +43,7 @@ check_44() {
 }
 
 check_45() {
-    podman run --rm -v "$src:/src:z" -v kram-dnf-cache-45:/var/cache/libdnf5:Z -w /src registry.fedoraproject.org/fedora:45 bash -c "
+    podman run --rm -e KRAM_UPDATE_SNAPSHOTS -v "$src:/src:z" -v kram-dnf-cache-45:/var/cache/libdnf5:Z -w /src registry.fedoraproject.org/fedora:45 bash -c "
         echo keepcache=True >> /etc/dnf/dnf.conf
         dnf5 -q -y install python3-textual python3-pytest python3-pytest-xdist python3-libdnf5 python3-rpm >/dev/null 2>&1 \
             || { echo 'test dependencies: install failed'; exit 1; }

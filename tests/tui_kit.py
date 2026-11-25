@@ -112,9 +112,15 @@ def role_names(style: Style, roles: Roles) -> str:
     if not style:
         return "plain"
     for (name, bar), known in roles.styles.items():
-        if known == style:
+        if look(known) == style:
             return f"bar-{name}" if bar else name
     return repr(style)
+
+
+def look(style: Style) -> Style:
+    """What a style looks like: its colours and attributes, without Textual's mouse bookkeeping (meta, links)."""
+    return Style(color=style.color, bgcolor=style.bgcolor, bold=style.bold, dim=style.dim, italic=style.italic,
+                 underline=style.underline, reverse=style.reverse, strike=style.strike)
 
 
 def grid(lines: Iterable[Line], roles: Roles | None = None) -> str:
@@ -129,6 +135,7 @@ def grid(lines: Iterable[Line], roles: Roles | None = None) -> str:
         text_rows.append("|" + "".join(ch for ch, _s in row) + " " * (width - len(row)) + "|")
         codes = []
         for _ch, style in row:
+            style = look(style)
             if style not in letters:
                 letters[style] = alphabet[len(letters) % len(alphabet)]
             codes.append(letters[style])
@@ -137,15 +144,20 @@ def grid(lines: Iterable[Line], roles: Roles | None = None) -> str:
     return "\n".join(["text:", *text_rows, "styles:", *style_rows, "legend:", *legend]) + "\n"
 
 
-def assert_snapshot(name: str, content: str) -> None:
-    """`content` is what tests/snapshots/tui/<name>.txt holds; KRAM_UPDATE_SNAPSHOTS=1 writes it instead."""
+def assert_snapshot(name: str, content: str, per_textual: bool = False) -> None:
+    """`content` is what tests/snapshots/tui/<name>.txt holds; KRAM_UPDATE_SNAPSHOTS=1 writes it instead (a missing
+    one fails otherwise). `per_textual`: a file for each major version of Textual (<name>.textual8.txt), for what
+    Textual draws itself, which its versions draw differently (a field's placeholder, the order of its styles)."""
+    if per_textual:
+        import textual
+        name = f"{name}.textual{textual.__version__.split('.')[0]}"
     path = SNAPSHOTS / f"{name}.txt"
-    if UPDATE or not path.exists():
-        if not UPDATE and os.environ.get("CI"):
-            raise AssertionError(f"no snapshot {path.name}: run with KRAM_UPDATE_SNAPSHOTS=1")
+    if UPDATE:
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(content)
         return
+    if not path.exists():
+        raise AssertionError(f"no snapshot {path.name}: write it with KRAM_UPDATE_SNAPSHOTS=1 and read it in the diff")
     expected = path.read_text()
     assert content == expected, f"{path.name} differs (KRAM_UPDATE_SNAPSHOTS=1 rewrites it):\n{content}"
 

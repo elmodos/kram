@@ -612,7 +612,9 @@ Every feature SUPPORTED for "tui" has a test marked `@pytest.mark.feature(Featur
 2. **Snapshot tests of a widget or the whole screen.** The widget, or the app, is put in the state under test
    through its own API (no keys), drawn (`render_line`, `Compositor.render_strips`) and turned into a text grid with
    a second grid naming each cell's role; the pair is compared with a file under `tests/snapshots/tui/`
-   (`KRAM_UPDATE_SNAPSHOTS=1` writes them, reviewed in the diff).
+   (`KRAM_UPDATE_SNAPSHOTS=1 scripts/tui_check.sh quick` writes them, reviewed in the diff). A screen's snapshot
+   is kept for each major version of Textual, which draws its own widgets a little differently; the app is started
+   in the scheme shot and its timers fired first (the test clock), so that nothing races the shot.
 3. **Integration tests through the API.** The window with the Browser over a made-up catalog and an inline worker
    (`tests/tui_kit.py`: jobs run on the app's thread, or when the test releases them; no threads, no waiting by
    time); actions are called (`run_action`, methods), not typed. A key is pressed only where the binding itself is
