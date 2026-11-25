@@ -209,7 +209,10 @@ them at the bottom with `●` at the current one; the list is not clickable-only
 
 7.2.2 Entries come from `SidebarModel`; each on one line: label (indented by level), the count right-aligned and
 muted (`SIDEBAR_COUNTS`). Labels are cut with `…`; counts never are. Bold: an "All" entry and installed groups;
-italic: optional groups of an environment.
+italic: optional groups of an environment. In the Status view the label follows the glyph the status column
+(§7.3.4) shows for what the entry lists, in its colour, so the view reads as the column's legend, as the GUIs' icons
+do: the state glyph, the flag for security updates, blocked upgrades and locks, `*` for installed by user, `✓`
+(`+` in ASCII) for marked; nothing for "All" and bug fix updates, which the column has no glyph for.
 
 7.2.3 Changing the view does not filter; `Enter` on an entry does. In a slide-over, `Enter` also closes it.
 `SidebarModel.browse(view)` shows a view without filtering, and `filter_view` is the view of the entry the list is

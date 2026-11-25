@@ -15,7 +15,7 @@ from kram.app.actions import DynamicItem  # noqa: E402
 from kram.app.parity import Feature  # noqa: E402
 from kram.core.custom_filters import Condition, CustomFilter, Field, Op  # noqa: E402
 from kram.core.marks import Action  # noqa: E402
-from kram.core.model import CatalogSnapshot, GroupInfo  # noqa: E402
+from kram.core.model import CatalogSnapshot, GroupInfo, Status  # noqa: E402
 from kram.core.settings import store as settings  # noqa: E402
 from kram.tui.dialogs.filters import FiltersDialog  # noqa: E402
 from kram.tui.dialogs.question import QuestionDialog  # noqa: E402
@@ -80,7 +80,11 @@ def test_the_status_view_lists_its_entries_with_counts(monkeypatch):
         sidebar = bar(app)
         assert sidebar.border_title == "Status"
         lines = shown(app)
-        assert lines[0].split() == ["All", "30"] and lines[1].split() == ["Installed", "10"]
+        installed = sidebar.entries.symbols.status[Status.INSTALLED]
+        assert lines[0].split() == ["All", "30"] and lines[1].split() == [installed, "Installed", "10"]
+        # the status column's glyph before each entry, in its colour: the view is the column's legend
+        glyph = next(s for s in sidebar.entries.render_line(1) if s.text == installed)
+        assert glyph.style.color == role("installed").color
         width = sidebar.entries.scrollable_content_region.width
         assert all(len(line) <= width for line in entry_lines(app))
         assert entry_lines(app)[0].rstrip().endswith("30") and len(entry_lines(app)[0].rstrip()) == width - 1

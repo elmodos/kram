@@ -22,14 +22,16 @@ from textual.scroll_view import ScrollView
 from textual.strip import Strip
 from textual.widgets import Static
 
+from ..app import preferences
 from ..app.sidebar import VIEWS, Listing, SidebarModel, entry_font
 from ..core.filters import FilterEntry
 from ..core.marks import Action
+from ..core.model import Status
 from ..i18n import _, pgettext
-from .glyphs import Glyphs
+from .glyphs import UNICODE, Glyphs, StatusGlyphs, status_glyphs
 from .keymap import CONTEXT_KEYS
-from .package_list import MOVE
-from .palette import filled, role
+from .package_list import MOVE, STATUS_ROLES
+from .palette import filled, over, role
 from .widgets import ChoiceList, PopupMenu, hint
 
 PLACEHOLDERS = {
@@ -42,10 +44,32 @@ def view_label(view_id: str) -> str:
     return next(label for vid, label, _b in VIEWS if vid == view_id)
 
 
-def entry_line(e: FilterEntry, width: int, prefix: str, ellipsis: str, base: Style, count_style: Style) -> Strip:
-    """An entry on one line of `width` cells: a margin, `prefix` (the indent and the fold glyph), the label cut with
-    the ellipsis, its count right-aligned and never cut, a margin."""
+def status_entry_glyph(entry_id: str, symbols: StatusGlyphs, g: Glyphs) -> tuple[str, str] | None:
+    """(glyph, role) before an entry of the Status view: the glyph the package list's status column shows for what
+    the entry lists, so that the view reads as the column's legend, as the GUIs' icons do (STATUS_FILTER_ICONS)."""
+    status = {"status:installed": Status.INSTALLED, "status:not-installed": Status.NOT_INSTALLED,
+              "status:upgradable": Status.UPGRADABLE, "status:unneeded": Status.UNNEEDED,
+              "status:orphan": Status.ORPHAN, "status:newer": Status.NEWER}.get(entry_id)
+    if status is not None:
+        return symbols.status[status], STATUS_ROLES[status]
+    return {"status:all": (" ", "muted"),
+            "status:security": (symbols.security, "danger"),
+            "status:bugfix": (" ", "muted"),
+            "status:blocked": (symbols.blocked, "danger"),
+            "status:user": (symbols.marks[Action.MARK_USER], "installed"),
+            "status:locked": (symbols.locked, "upgradable"),
+            "status:marked": (g.yes, "marked")}.get(entry_id)
+
+
+def entry_line(e: FilterEntry, width: int, prefix: str, ellipsis: str, base: Style, count_style: Style,
+               glyph: tuple[str, Style] | None = None) -> Strip:
+    """An entry on one line of `width` cells: a margin, `prefix` (the indent and the fold glyph), `glyph` and a
+    space, the label cut with the ellipsis, its count right-aligned and never cut, a margin."""
     count = str(e.count) if e.count is not None else ""
+    lead = [Segment(" " + prefix, base)]
+    if glyph is not None:
+        lead += [Segment(glyph[0], glyph[1]), Segment(" ", base)]
+        prefix += glyph[0] + " "
     room = max(0, width - 2 - cell_len(prefix) - (cell_len(count) + 1 if count else 0))
     label = e.label
     if cell_len(label) > room:
@@ -53,7 +77,7 @@ def entry_line(e: FilterEntry, width: int, prefix: str, ellipsis: str, base: Sty
         label = set_cell_size(label, cut) + ellipsis if cut > 0 else set_cell_size(label, room)
     bold, italic = entry_font(e)
     gap = width - 2 - cell_len(prefix) - cell_len(label) - cell_len(count)
-    return Strip([Segment(" " + prefix, base), Segment(label, base + Style(bold=bold or None, italic=italic or None)),
+    return Strip([*lead, Segment(label, base + Style(bold=bold or None, italic=italic or None)),
                   Segment(" " * max(0, gap), base), Segment(count, count_style), Segment(" ", base)]
                  ).adjust_cell_length(width, base)
 
@@ -84,6 +108,7 @@ class EntryList(ScrollView, can_focus=True):
         self.lines: list[int] = []  # the entries' indices in the listing, as shown
         self.cursor = 0
         self.current_id: str | None = None  # the view's current entry: in the filter's view, the filter's
+        self.symbols: StatusGlyphs = status_glyphs(glyphs is UNICODE)
 
     # ---------------------------------------------------------------- the listing
 
@@ -182,7 +207,10 @@ class EntryList(ScrollView, can_focus=True):
         if line == self.cursor:
             base = role("cursor") if self.has_focus else role("cursor-blurred")
             count_style = base if self.has_focus else base + role("muted")
-        return entry_line(e, width, self._prefix(index), self.glyphs.ellipsis, base, count_style)
+        glyph = status_entry_glyph(e.id, self.symbols, self.glyphs) if listing.view == "status" else None
+        if glyph is not None:
+            glyph = glyph[0], over(base, role(glyph[1]))
+        return entry_line(e, width, self._prefix(index), self.glyphs.ellipsis, base, count_style, glyph)
 
     def _placeholder_line(self, y: int, width: int) -> Strip:
         """How to fill an empty view (§7.2.5), wrapped, a line below the top."""
@@ -252,6 +280,17 @@ class EntryList(ScrollView, can_focus=True):
         self.sidebar.choose(self.current_index())
 
     # ---------------------------------------------------------------- focus and the mouse
+
+    def on_mount(self) -> None:
+        preferences.changed.connect(self._pref_changed)
+
+    def on_unmount(self) -> None:
+        preferences.changed.disconnect(self._pref_changed)
+
+    def _pref_changed(self, key: str) -> None:
+        if key == preferences.TUI_STATUS_GLYPHS:
+            self.symbols = status_glyphs(self.glyphs is UNICODE)
+            self.refresh()
 
     def on_focus(self) -> None:
         self.refresh()
