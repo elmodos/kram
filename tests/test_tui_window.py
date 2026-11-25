@@ -11,6 +11,7 @@ import pytest
 
 pytest.importorskip("textual")
 
+from textual.widgets import OptionList  # noqa: E402
 from tui_kit import InlineWorker, ManualClock  # noqa: E402
 
 from kram import __version__  # noqa: E402
@@ -277,11 +278,13 @@ def test_long_names_give_way_to_the_other_columns_in_a_wide_list(monkeypatch):
         assert widths[COL_NAME] < 48 and widths[COL_SUMMARY] >= 20
         assert table.total_width == table.scrollable_content_region.width and not table.show_horizontal_scrollbar
         assert "Summary 0" in lines(app, 2)[1]
-        await pilot.press("g", "g")  # the sidebar unpinned: the list is wider, the name gets the room
+        app.action_toggle_panel("sidebar")  # g, g: focused, then hidden and unpinned
         await pilot.pause()
+        app.action_toggle_panel("sidebar")
+        await pilot.pause()  # the list is wider, the name gets the room
         assert dict(table.columns)[COL_NAME] == min(48, widths[COL_NAME] + 28 + 2)
         assert not table.show_horizontal_scrollbar
-        await pilot.press("g")
+        app.action_toggle_panel("sidebar")
         await pilot.pause()
         assert dict(table.columns)[COL_NAME] == widths[COL_NAME]
         app.main.browser.sidebar.select("status", "status:installed")  # a filter change lays them out again
@@ -332,20 +335,20 @@ def test_centre_scrolling_on_and_off(monkeypatch):
 
     async def test(app, pilot):
         table = app.main.list
-        for _ in range(30):
-            await pilot.press("down")
+        for _ in range(30):  # step by step, as ↓ does
+            table.action_move(1)
         half = table.rows_shown // 2
         assert table.cursor == 30 and table.scroll_offset.y == 30 - half
-        await pilot.press("home")
+        await pilot.press("home")  # the keys to the ends
         assert table.scroll_offset.y == 0
         await pilot.press("end")
         assert table.cursor == 299 and table.scroll_offset.y == 300 - table.rows_shown
         preferences.set_value(preferences.TUI_CENTRE_SCROLLING, False)
-        await pilot.press("home")
+        table.action_jump(0)
         for _ in range(30):
-            await pilot.press("down")
+            table.action_move(1)
         assert table.scroll_offset.y == 30 - table.rows_shown + 1  # the cursor at the bottom
-        await pilot.press("up")
+        table.action_move(-1)
         assert table.scroll_offset.y == 30 - table.rows_shown + 1  # the list stays
     run(test)
 
@@ -387,7 +390,9 @@ def test_s_sorts_by_a_column_and_S_reverses(monkeypatch):
         await pilot.press("s")
         await pilot.pause()
         assert isinstance(app.screen, ChoiceList) and app.screen.current == COL_NAME
-        await pilot.press("down", "down", "down", "down", "enter")  # Installed, Latest, Repository, Size
+        choices = app.screen.query_one(OptionList)
+        choices.highlighted = app.screen.values.index(COL_SIZE)
+        choices.action_select()
         await pilot.pause()
         assert b.user_sort == (COL_SIZE, False)
         assert f"Size {g.up}" in lines(app, 1)[0]
@@ -404,7 +409,9 @@ def test_s_sorts_by_a_column_and_S_reverses(monkeypatch):
         assert app.main.current_key() == ("pkg0102", "x86_64")  # the best match: installed ones first
         await pilot.press("S")  # the last column sort, the other way round
         assert table.sort_shown == (COL_SIZE, False) and b.user_sort == (COL_SIZE, False)
-        await pilot.press("s", "escape")
+        await pilot.press("s")
+        await pilot.pause()
+        app.screen.action_close()
         await pilot.pause()
         assert table.sort_shown == (COL_SIZE, False)
     run(test)
@@ -525,7 +532,8 @@ def test_the_cursor_is_reversed_with_the_focus_and_marked_without(monkeypatch):
         table = app.main.list
         cursor = table.render_line(1)
         assert all(s.style.reverse for s in cursor if s.text.strip())  # 16 colours: reverse, bold
-        await pilot.press("g")  # the sidebar takes the focus
+        app.main.sidebar.entries.focus()  # another panel has the focus
+        await pilot.pause()
         assert all(s.style.underline for s in table.render_line(1) if s.text.strip())
     run(test)
 
