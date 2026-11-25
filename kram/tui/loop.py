@@ -2,7 +2,9 @@
 whichever thread calls it; `TuiScheduler` is the Scheduler port on Textual's timers.
 
 Both need the running app, which `attach` names (KramApp does, as it mounts). A call before that, or after the app
-has closed, is dropped: there is no loop left to run it on.
+has closed, is dropped: there is no loop left to run it on. So is a posted call that comes due while the app is
+closing, once its screens are gone: a catalog that finished loading as Kram quit asked for the window's bindings
+there, and Textual raised.
 """
 import asyncio
 from collections.abc import Callable
@@ -32,9 +34,17 @@ def post(fn: Callable[[], None]) -> None:
     if app is None or running is None:
         return
     try:
-        running.call_soon_threadsafe(app.call_later, fn)
+        running.call_soon_threadsafe(app.call_later, _while_open(app, fn))
     except RuntimeError:  # the loop is closed: the app has ended
         pass
+
+
+def _while_open(app: App, fn: Callable[[], None]) -> Callable[[], None]:
+    """`fn`, run only while the app has its screens (the module's docstring)."""
+    def run() -> None:
+        if app.screen_stack:
+            fn()
+    return run
 
 
 class _Timer:
