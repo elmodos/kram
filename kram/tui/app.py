@@ -368,6 +368,10 @@ class KramApp(App, inherit_bindings=False):
         self.refresh_css(animate=False)
         # Textual turns ANSI colours on only for its own "textual-ansi"; ours are 16-colour schemes as well
         self.ansi_color = is_ansi(name)
+        if not self.ansi_color:
+            # that pass matched the `App:ansi` rules (the 16-colour cursors, reverse and underlined); Textual's own
+            # pass after a theme change drops them, but none follows the scheme picked again (Enter in Colours…)
+            self.refresh_css(animate=False)
         if save:
             preferences.set_value(preferences.TUI_SCHEME, name)
 

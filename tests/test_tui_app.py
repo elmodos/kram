@@ -212,6 +212,30 @@ def test_set_scheme_turns_ansi_colours_on_for_16_colour_schemes_only():
     run(test)
 
 
+def test_a_true_colour_scheme_picked_after_a_16_colour_one_drops_the_16_colour_styles():
+    """The 16-colour cursor is reverse video and the blurred one underlined. A true-colour scheme picked with Enter
+    in Colours… after a 16-colour one kept them until a restart: Enter sets the previewed scheme again."""
+    from kram.tui.dialogs.colours import ColoursDialog
+
+    async def test(app, pilot):
+        assert app.ansi_color
+        assert role("cursor-blurred").underline and role("cursor").reverse
+        app.push_screen(ColoursDialog(app.theme))
+        await pilot.pause()
+        await pilot.press("down", "down", "down")  # textual-dark, previewed
+        await pilot.pause()
+        assert app.theme == "textual-dark" and not role("cursor-blurred").underline
+        await pilot.press("enter")
+        await pilot.pause()
+        assert app.theme == "textual-dark" and not app.ansi_color and not app.has_pseudo_class("ansi")
+        assert not role("cursor-blurred").underline and not role("cursor").reverse
+        assert role("cursor-blurred").bgcolor is not None
+        app.set_scheme("kram-midnight", save=False)
+        await pilot.pause()
+        assert role("cursor-blurred").underline and role("cursor").reverse
+    run(test)
+
+
 def test_a_theme_changed_elsewhere_is_followed_and_saved():
     async def test(app, pilot):
         app.theme = "kram-midnight"  # as Textual's command palette does
