@@ -257,6 +257,7 @@ class HistoryDialog(ModalScreen):
             self._close_pending = True
             return
         self._dismissing = True
+        self._ready = False  # what the history still reads (its packages come in chunks) draws nothing now
         self.dismiss(result)
 
     def on_screen_resume(self) -> None:
