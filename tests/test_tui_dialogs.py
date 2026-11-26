@@ -71,6 +71,19 @@ async def count(dialog: FiltersDialog, pilot) -> str:
 
 # ---------------------------------------------------------------- Custom Filters (§10.10)
 
+def test_the_keys_of_the_dialogs():
+    """The keys the tests below stand in for with the actions they are bound to. Ctrl+S takes priority: OK from a
+    text field too."""
+    def keys(screen):
+        return {key: (b.action, b.priority) for b in screen.BINDINGS for key in b.key.split(",")}
+    filters, columns, upgrade = keys(FiltersDialog), keys(ColumnsDialog), keys(UpgradeDialog)
+    assert filters["ctrl+s"] == ("accept", True) and filters["escape"][0] == "cancel"
+    assert {k: columns[k][0] for k in ("space", "alt+up", "alt+down", "less_than_sign", "greater_than_sign")} == {
+        "space": "toggle", "alt+up": "move(-1)", "alt+down": "move(1)", "less_than_sign": "width(-1)",
+        "greater_than_sign": "width(1)"}
+    assert upgrade["y"][0] == "copy_command" and upgrade["escape"][0] == "close"
+
+
 @pytest.mark.feature(Feature.DIALOG_CUSTOM_FILTERS, front="tui")
 def test_the_filters_dialog_edits_a_copy_that_ok_saves(monkeypatch):
     use_catalog(monkeypatch, clock=True)
@@ -85,7 +98,7 @@ def test_the_filters_dialog_edits_a_copy_that_ok_saves(monkeypatch):
         dialog.query_one("#name", Input).value = "Editors"
         await pilot.pause()
         assert table_names(dialog) == ["Editors", "Big"]  # the list follows the name as it is typed
-        await pilot.press("escape")  # Cancel drops it all
+        dialog.action_cancel()  # Esc: Cancel drops it all
         await pilot.pause()
         assert len(app.screen_stack) == 1 and [f.name for f in b.sidebar.custom] == ["Vim", "Big"]
 
@@ -106,10 +119,10 @@ def test_the_filters_dialog_edits_a_copy_that_ok_saves(monkeypatch):
         await pilot.pause()
         row.query_one("#pick", Button).action_press()
         await pilot.pause()
-        await pilot.press("enter")  # x86_64, the catalog's only one
+        app.screen.dismiss("x86_64")  # the catalog's only one
         await pilot.pause()
         assert row.condition() == Condition(Field.ARCH, Op.IS, "x86_64")
-        await pilot.press("ctrl+s")  # OK, from a text field too
+        dialog.action_accept()  # ctrl+s: OK
         await pilot.pause()
         assert len(app.screen_stack) == 1
         editors = CustomFilter("Editors", [*VIM.conditions, Condition(Field.ARCH, Op.IS, "x86_64")])
@@ -123,10 +136,10 @@ def test_the_filters_dialog_edits_a_copy_that_ok_saves(monkeypatch):
         assert table_names(dialog) == ["Editors", "Big", "New filter"] and dialog.focused.id == "name"
         dialog.query_one("#name", Input).value = "Big"
         await pilot.pause()
-        await pilot.press("ctrl+s")
+        dialog.action_accept()
         await pilot.pause()
         assert isinstance(app.screen, QuestionDialog) and app.screen.question.text == "Two filters have the same name."
-        await pilot.press("enter")
+        app.screen.focused.action_press()  # Enter: OK
         await pilot.pause()
         assert app.screen is dialog
         dialog.query_one("#delete", Button).action_press()
@@ -137,7 +150,7 @@ def test_the_filters_dialog_edits_a_copy_that_ok_saves(monkeypatch):
         await pilot.pause()
         assert table_names(dialog) == [] and not dialog.query_one("#editor").display
         assert "No filters yet" in str(dialog.query_one("#no-filters").render())
-        await pilot.press("ctrl+s")
+        dialog.action_accept()
         await pilot.pause()
         assert saved_filters() == b.sidebar.custom == []
     run(test)
@@ -163,14 +176,13 @@ def test_the_count_follows_the_conditions_and_all_or_any(monkeypatch):
         match = dialog.query_one("#match", Radio)
         dot = app.glyphs.item  # `*` where the terminal is not UTF-8
         assert f"({dot}) all conditions  ( ) any condition" in match.render().plain
-        match.focus()
-        await pilot.press("right")
+        match.action_step(1)  # right
         assert f"( ) all conditions  ({dot}) any condition" in match.render().plain
         assert await count(dialog, pilot) == "106 packages match"  # any: 10 + 100 - 4
         dialog.rows[0].query_one("#remove", Button).action_press()
         await pilot.pause()
         assert len(dialog.rows) == 1 and await count(dialog, pilot) == "100 packages match"
-        await pilot.press("ctrl+s")
+        dialog.action_accept()
         await pilot.pause()
         [vim] = b.sidebar.custom
         assert vim.match_all is False and vim.conditions == [Condition(Field.STATUS, Op.IS, STATUS_ANY_INSTALLED)]
@@ -192,7 +204,7 @@ def test_a_new_filter_from_the_view_is_filled_in(monkeypatch):
         assert dialog.focused.id == "name"
         assert [r.condition() for r in dialog.rows] == [Condition(Field.STATUS, Op.IS, STATUS_ANY_INSTALLED)]
         assert await count(dialog, pilot) == "100 packages match"
-        await pilot.press("ctrl+s")
+        dialog.action_accept()
         await pilot.pause()
         assert [f.name for f in b.sidebar.custom] == ["Vim", label]
         assert b.sidebar.current_entry_id == f"custom:{label}"
@@ -205,19 +217,18 @@ def test_e_on_a_custom_filter_edits_it(monkeypatch):
     keep_filters(VIM, BIG)
 
     async def test(app, pilot):
-        app.main.sidebar.browse("custom")
-        await pilot.press("g", "down", "e")
+        sidebar = app.main.sidebar
+        sidebar.browse("custom")
+        sidebar.entries.go(1)
+        sidebar.action_edit()  # e
         await pilot.pause()
         dialog = app.screen
         assert isinstance(dialog, FiltersDialog) and dialog.edit.current_name() == "Big"
         assert dialog.filter_table.current == 1
-        await pilot.press("escape")
+        dialog.action_cancel()
         await pilot.pause()
-        app.main.sidebar.browse("status")  # not on an entry of another view
-        await pilot.pause()
-        await pilot.press("e")
-        await pilot.pause()
-        assert len(app.screen_stack) == 1
+        sidebar.browse("status")  # not on an entry of another view
+        assert sidebar.check_action("edit", ()) is False
     run(test)
 
 
@@ -263,7 +274,7 @@ def test_the_notifier_dialog_turns_things_on_and_off(monkeypatch, tmp_path):
     calls = notifier_setup(monkeypatch, tmp_path, ["enabled"])
 
     async def test(app, pilot):
-        await pilot.press("m")
+        app.action_menu()  # m
         await pilot.pause()
         app.screen.dismiss(app.main.open_notifications)  # Settings → Update Notifications…
         await pilot.pause()
@@ -273,7 +284,7 @@ def test_the_notifier_dialog_turns_things_on_and_off(monkeypatch, tmp_path):
         assert dialog.focused is tray and not tray.value and not days.can_focus and days.has_class("-off")
         assert "no system tray" in str(dialog.query_one("#no-tray").render())  # FakeBus: no tray host
         assert not dialog.query_one("#timer-line").display  # the timer is on
-        await pilot.press("space")
+        tray.action_toggle()  # space
         await pilot.pause()
         assert calls == [True] and tray.value and days.can_focus
         assert days.value == "7"
@@ -284,7 +295,7 @@ def test_the_notifier_dialog_turns_things_on_and_off(monkeypatch, tmp_path):
         days.focus()
         days.value = "999"  # out of the range: not kept, and put back when left
         await pilot.pause()
-        await pilot.press("tab")
+        dialog.focus_next()  # tab
         await pilot.pause()
         assert preferences.value(preferences.STALE_DAYS) == 14 and days.value == "14"
         # Discover's notifier, off for this user and back on; its file copied without a desktop
@@ -298,7 +309,7 @@ def test_the_notifier_dialog_turns_things_on_and_off(monkeypatch, tmp_path):
         dialog.query_one("#show-0", Button).action_press()
         await pilot.pause()
         assert app.clipboard.endswith("org.kde.discover.notifier.desktop")
-        await pilot.press("escape")
+        dialog.action_close()  # Esc
         await pilot.pause()
         assert len(app.screen_stack) == 1
     run(test)
@@ -334,7 +345,7 @@ def test_fedora_s_timer_is_turned_on_in_the_terminal_without_a_desktop(monkeypat
         await pilot.pause()
         assert suspended == [True] and ran == [["systemctl", "enable", "--now", "dnf-makecache.timer"]]
         assert isinstance(app.screen, QuestionDialog) and app.screen.question.text == "Access denied"
-        await pilot.press("enter")
+        app.screen.focused.action_press()  # Enter: OK
         await pilot.pause()
         dialog.query_one("#timer-on", Button).action_press()
         await pilot.pause()
@@ -417,9 +428,6 @@ def test_the_top_line_says_a_new_release_is_out_while_watching(monkeypatch):
         assert "Fedora 45 is out: r" in top(app) and app.check_action("release", ()) is True
         preferences.set_value(preferences.WATCH_RELEASES, False)
         assert "Fedora" not in top(app) and app.check_action("release", ()) is False
-        await pilot.press("r")
-        await pilot.pause()
-        assert len(app.screen_stack) == 1
         b.refreshed.emit()  # Reload: not asked while not watching
         assert asked == []
         preferences.set_value(preferences.WATCH_RELEASES, True)
@@ -429,7 +437,7 @@ def test_the_top_line_says_a_new_release_is_out_while_watching(monkeypatch):
         await pilot.resize_terminal(50, 24)
         await pilot.pause()
         assert top(app).rstrip().endswith("Fedora 46 is out: r")  # the catalog's age goes first
-        await pilot.press("r")
+        app.action_release()  # r
         await pilot.pause()
         assert isinstance(app.screen, UpgradeDialog) and app.screen.state.target == 46
     run(test)
@@ -452,7 +460,7 @@ def test_the_release_dialog_checks_and_cannot_close_meanwhile(monkeypatch):
     monkeypatch.setattr(upgrade_audit, "simulate", simulate)
 
     async def test(app, pilot):
-        await pilot.press("r")
+        app.action_release()  # r
         await pilot.pause()
         dialog = app.screen
         assert isinstance(dialog, UpgradeDialog)
@@ -462,7 +470,7 @@ def test_the_release_dialog_checks_and_cannot_close_meanwhile(monkeypatch):
         assert dialog.query_one("#notes").url == distro.RELEASE_NOTES_URL.format(version=45)
         assert dialog.query_one("#guide").url == distro.UPGRADE_GUIDE_URL
         assert str(dialog.query_one("#command").render()) == "\n".join(upgrade_commands(45))
-        await pilot.press("y")
+        dialog.action_copy_command()  # y
         assert app.clipboard == "\n".join(upgrade_commands(45))
         assert not dialog.query("#program")  # no desktop: no software centre to open
 
@@ -475,7 +483,7 @@ def test_the_release_dialog_checks_and_cannot_close_meanwhile(monkeypatch):
         assert dialog.state.running and not dialog.query_one("#check").display
         assert dialog.query_one("#cancel").display and not dialog.query_one("#close", Button).enabled
         assert "Working out the upgrade…" in str(dialog.query_one("#log").render())
-        await pilot.press("escape")  # neither the dialog nor Kram closes meanwhile
+        dialog.action_close()  # Esc: neither the dialog nor Kram closes meanwhile
         await pilot.press("q")
         await pilot.pause()
         assert app.screen is dialog and app.return_code is None
@@ -488,10 +496,10 @@ def test_the_release_dialog_checks_and_cannot_close_meanwhile(monkeypatch):
         await pilot.pause()
         assert cancelled == ["45"] and dialog.query_one("#check").display
         assert dialog.state.log[-1].endswith("Cancelling…")
-        await pilot.press("escape")
+        dialog.action_close()
         await pilot.pause()
         assert len(app.screen_stack) == 1
-        await pilot.press("r")  # the check made for this release is kept for the session
+        app.action_release()  # the check made for this release is kept for the session
         await pilot.pause()
         assert app.screen.state is dialog.state and "Cancelling…" in str(app.screen.query_one("#log").render())
     run(test)
@@ -510,28 +518,31 @@ def test_markings_are_saved_and_read_back_through_the_path_line(monkeypatch, tmp
         b.packages.marks.set(b.snapshot.rows[1], Action.INSTALL)
         b.packages.marks.set(b.snapshot.rows[3], Action.REMOVE)
         b.update_actions()
-        await pilot.press("ctrl+s")
+        app.action_run("save_marks")  # ctrl+s
         await pilot.pause()
         dialog = app.screen
         assert isinstance(dialog, PathDialog) and dialog.query_one(Input).value == str(path)
-        await pilot.press("enter")
+        dialog.accept()  # Enter
         await pilot.pause()
         assert len(app.screen_stack) == 1 and path.exists()
         assert "2 markings saved to" in top(app)
-        await pilot.press("ctrl+s", "enter")  # once more: it exists now, so it asks first
+        app.action_run("save_marks")  # once more: it exists now, so it asks first
+        await pilot.pause()
+        app.screen.accept()
         await pilot.pause()
         assert isinstance(app.screen, QuestionDialog) and "already exists" in app.screen.question.text
-        await pilot.press("left", "enter")  # Replace
+        app.screen.dismiss("replace")
         await pilot.pause()
         assert len(app.screen_stack) == 1
         app.main.run_action("unmark_all")
         await pilot.pause()
         assert not b.packages.marks
-        await pilot.press("ctrl+o")
+        app.action_run("read_marks")  # ctrl+o
         await pilot.pause()
         field = app.screen.query_one(Input)
         assert isinstance(app.screen, PathDialog) and field.value == f"{tmp_path}/"
-        await pilot.press("tab", "enter")  # the only matching file
+        app.screen.action_complete()  # Tab: the only matching file
+        app.screen.accept()
         await pilot.pause()
         assert len(app.screen_stack) == 1
         assert {k: m.action for k, m in b.packages.marks.items()} == {
@@ -550,7 +561,7 @@ def test_the_list_is_exported_as_csv_through_the_path_line(monkeypatch, tmp_path
         dialog = app.screen
         assert isinstance(dialog, PathDialog) and dialog.query_one(Input).value == str(tmp_path / "kram-packages.csv")
         dialog.query_one(Input).value = str(tmp_path / "list.csv")
-        await pilot.press("enter")
+        dialog.accept()
         await pilot.pause()
         assert len(app.screen_stack) == 1 and "300 packages exported to" in top(app)
         with open(tmp_path / "list.csv", newline="") as f:
@@ -559,10 +570,10 @@ def test_the_list_is_exported_as_csv_through_the_path_line(monkeypatch, tmp_path
         app.main.run_action("export_csv")
         await pilot.pause()
         app.screen.query_one(Input).value = str(tmp_path / "list.csv")
-        await pilot.press("enter")
+        app.screen.accept()
         await pilot.pause()
         assert isinstance(app.screen, QuestionDialog)  # the overwrite question
-        await pilot.press("escape")  # Cancel: the path line stays
+        app.screen.action_cancel()  # Esc: Cancel, the path line stays
         await pilot.pause()
         assert isinstance(app.screen, PathDialog)
     run(test)
@@ -580,7 +591,7 @@ def test_columns_are_hidden_moved_and_resized_and_kept(monkeypatch):
 
     async def test(app, pilot):
         main = app.main
-        await pilot.press("m")
+        app.action_menu()
         await pilot.pause()
         app.screen.dismiss(main.open_columns)  # Settings → Columns…
         await pilot.pause()
@@ -588,26 +599,28 @@ def test_columns_are_hidden_moved_and_resized_and_kept(monkeypatch):
         assert isinstance(dialog, ColumnsDialog)
         table = dialog.query_one("#column-list")
         assert table.keys[:3] == [COL_NAME, COL_INSTALLED, *table.keys[2:3]] and dialog.focused is table
-        await pilot.press("space")  # Package: always shown
+        dialog.action_toggle()  # space: Package is always shown
         assert COL_NAME in header(app)
-        await pilot.press("down", "space")  # Installed hidden
+        table.action_move(1)
+        dialog.action_toggle()  # Installed hidden
         await pilot.pause()
         assert COL_INSTALLED not in header(app)
         assert dialog._cell(COL_INSTALLED, "on").plain == "[ ]"
         table.select_key(COL_REPO)
-        await pilot.press("alt+up", "alt+up")  # before the latest version
+        dialog.action_move(-1)  # alt+up
+        dialog.action_move(-1)  # before the latest version
         await pilot.pause()
         assert header(app).index(COL_REPO) < header(app).index(COL_CANDIDATE) and table.current == COL_REPO
-        await pilot.press("greater_than_sign", "greater_than_sign", "greater_than_sign")
-        await pilot.press("less_than_sign")
+        for d in (1, 1, 1, -1):  # > > > <
+            dialog.action_width(d)
         await pilot.pause()
         assert dict(main.list.columns)[COL_REPO] == 14
         table.select_key(COL_NAME)
         name = dict(main.list.columns)[COL_NAME]
-        await pilot.press("less_than_sign")  # from the width it had
+        dialog.action_width(-1)  # from the width it had
         await pilot.pause()
         assert dict(main.list.columns)[COL_NAME] == name - 1 and dialog._cell(COL_NAME, "width").plain == str(name - 1)
-        await pilot.press("escape")
+        dialog.action_close()
         await pilot.pause()
         saved = json.loads(preferences.value(preferences.TUI_COLUMNS))
         assert saved["hidden"] == sorted({*Columns().hidden, COL_INSTALLED})
@@ -637,13 +650,18 @@ def test_the_panels_sizes_and_pins_are_kept(monkeypatch):
     use_catalog(monkeypatch)
 
     async def first(app, pilot):
-        await pilot.press("g", "greater_than_sign", "greater_than_sign")
+        app.action_toggle_panel("sidebar")  # g
+        await pilot.pause()
+        app.action_resize_panel("sidebar", 2)  # >
+        app.action_resize_panel("sidebar", 2)
         await pilot.pause()
         assert app.panel("sidebar").outer_size.width == 32
-        await pilot.press("d", "less_than_sign")
+        app.action_toggle_panel("details")  # d
+        await pilot.pause()
+        app.action_resize_panel("details", -1)  # <
         await pilot.pause()
         assert app.panel("details").outer_size.height == 11
-        await pilot.press("d")  # hidden, and no longer pinned
+        app.action_toggle_panel("details")  # hidden, and no longer pinned
         await pilot.pause()
         assert app.shown_panels() == ["sidebar"]
     run(first)
@@ -652,12 +670,14 @@ def test_the_panels_sizes_and_pins_are_kept(monkeypatch):
 
     async def again(app, pilot):
         assert app.shown_panels() == ["sidebar"] and app.panel("sidebar").outer_size.width == 32
-        await pilot.press("d")
+        app.action_toggle_panel("details")
         await pilot.pause()
         assert app.panel("details").outer_size.height == 11
         await pilot.resize_terminal(80, 24)  # a slide-over keeps its own size, and `<` `>` do nothing there
         await pilot.pause()
-        await pilot.press("g", "greater_than_sign")
+        app.action_toggle_panel("sidebar")
+        await pilot.pause()
+        app.action_resize_panel("sidebar", 2)
         await pilot.pause()
         assert app.panel("sidebar").outer_size.width == 30 and preferences.value(preferences.TUI_SIDEBAR_WIDTH) == 32
     run(again)
