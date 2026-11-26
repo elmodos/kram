@@ -32,7 +32,7 @@ from ..i18n import _, ngettext
 from ..ipc.client import HelperClient
 from ..notifier import control as notifier_control
 from . import empty_list
-from .actions import ActionState, DynamicItem, action_state, downgrade_items
+from .actions import ActionState, DynamicItem, action_state, downgrade_items, mark_upgrades_id
 from .columns import COL_NAME
 from .details import DetailsLoader, DetailsSink
 from .doc import Doc
@@ -55,6 +55,14 @@ EMPTY_HINTS = {
 UPGRADE_KINDS = (UPGRADES_SECURITY, UPGRADES_SECURITY_HIGH, UPGRADES_FIXES)
 STATUS_MESSAGE_MS = 5000
 LONG_MESSAGE_MS = 8000
+
+
+# the Upgradable entry and its Security updates one: the Edit → Mark Upgrades actions that mark what they list
+# (SIDEBAR_MARK_UPGRADES); "Bug fix updates" has its own item, as no action marks exactly those
+UPGRADE_ENTRY_MARKS = {
+    "status:upgradable": ("mark_upgrades",),
+    "status:security": (mark_upgrades_id(UPGRADES_SECURITY), mark_upgrades_id(UPGRADES_SECURITY_HIGH)),
+}
 
 
 @dataclass(frozen=True)
@@ -508,6 +516,12 @@ class Browser:
             items += [*group_menu(group, busy=self.busy(), run=self.change_group), None]
         if entry is not None and entry.id == "status:unneeded":
             items += ["mark_unneeded", None]
+        if entry is not None and entry.id in UPGRADE_ENTRY_MARKS:
+            items += [*UPGRADE_ENTRY_MARKS[entry.id], None]
+        if entry is not None and entry.id == "status:bugfix":
+            items += [DynamicItem(_("Mark Bug Fix Upgrades"), lambda: self.marker.mark_upgrades_where(entry.predicate),
+                                  enabled=bool(entry.count),
+                                  tip=_("Mark the upgrades this entry lists, the ones with a bug fix advisory")), None]
         if entry is not None and (repo_id := self.enabled_repo(entry)) is not None:
             items += [DynamicItem(_("Refresh Metadata"), lambda: self.refresh_repo_metadata(repo_id), "view-refresh",
                                   not self.busy()), None]

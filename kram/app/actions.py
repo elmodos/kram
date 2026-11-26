@@ -30,7 +30,7 @@ class ActionDef:
 
 def _upgrades_of_kind() -> list[tuple[str, str, str]]:
     return [
-        (UPGRADES_SECURITY, _("Mark Security Upgrades"),
+        (UPGRADES_SECURITY, _("Mark All Security Upgrades"),
          _("Mark the upgrades that fix a security issue, as dnf upgrade --security")),
         (UPGRADES_SECURITY_HIGH, _("Mark Critical and Important Security Upgrades"),
          _("Mark the upgrades that fix a security issue rated critical or important")),

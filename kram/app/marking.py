@@ -173,6 +173,11 @@ class Marker:
         """Mark the upgrades of one kind: UPGRADES_SECURITY, UPGRADES_SECURITY_HIGH or UPGRADES_FIXES."""
         self._mark_for_upgrade(self.upgrades_of(kind))
 
+    def mark_upgrades_where(self, predicate: Callable[[PkgRow], bool]) -> None:
+        """Mark the upgrades a sidebar entry shows ("Bug fix updates"): its predicate."""
+        if self.snapshot:
+            self._mark_for_upgrade([r for r in self.snapshot.rows if r.status is Status.UPGRADABLE and predicate(r)])
+
     def _mark_for_upgrade(self, rows: list[PkgRow]) -> None:
         """Upgrades that cannot be installed now are left out (see PackageList.blocked): marked one by one, the Apply
         dialog says why they cannot be carried out."""

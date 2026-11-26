@@ -856,3 +856,40 @@ def test_mirrors_opens_over_the_repositories_dialog_and_its_list_updates_in_plac
     assert isinstance(seen["parent"], main_window.ReposDialog)  # over Repositories, which was still open
     assert seen["updated"] == [data] and seen["closed"].changes is None
     b.catalog_loaded.emit(SimpleNamespace())  # after it closed: nothing more for it
+
+
+@pytest.mark.feature(Feature.SIDEBAR_MARK_UPGRADES, front="qt")
+def test_the_upgrade_entries_menus_mark_what_they_list(window):
+    """Upgradable marks all upgrades, Security updates the security ones (all, or only critical and important),
+    Bug fix updates the ones with a bug fix advisory."""
+    from PySide6.QtWidgets import QMenu
+
+    from kram.core.model import Advisory, CatalogSnapshot, Origin, PkgRow, Status
+
+    def upgrade(name, *advisories):
+        return PkgRow(name, "x86_64", "", "1-1", "2-1", "updates", 1, Origin.FEDORA, Status.UPGRADABLE,
+                      advisories=advisories)
+    rows = [upgrade("kernel", Advisory("F-1", "security", "important", "", 0)),
+            upgrade("curl", Advisory("F-2", "security", "low", "", 0)),
+            upgrade("mesa", Advisory("F-3", "bugfix", "", "", 0)),
+            upgrade("vlc")]   # no advisories: RPM Fusion
+    window.browser._on_loaded(CatalogSnapshot(rows, 4, 4, 0.0))
+    entries = {e.id: e for e in window.browser.sidebar.entries}
+
+    def labels(entry_id):
+        menu = QMenu()
+        window._fill_menu(menu, window.browser.sidebar_menu(entries[entry_id]))
+        return menu, {a.text().replace("&", ""): a for a in menu.actions() if not a.isSeparator()}
+
+    def marked_after(entry_id, label):
+        window.marker.unmark_all()
+        _menu, actions = labels(entry_id)
+        assert actions[label].isEnabled()
+        actions[label].trigger()
+        return {k[0] for k in window.model.marks.keys()}
+
+    assert marked_after("status:upgradable", "Mark All Upgrades") == {"kernel", "curl", "mesa", "vlc"}
+    assert marked_after("status:security", "Mark All Security Upgrades") == {"kernel", "curl"}
+    assert marked_after("status:security", "Mark Critical and Important Security Upgrades") == {"kernel"}
+    assert marked_after("status:bugfix", "Mark Bug Fix Upgrades") == {"mesa"}
+    assert not any(t.startswith("Mark") for t in labels("status:installed")[1])

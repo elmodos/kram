@@ -134,6 +134,7 @@ class Feature(Enum):
     SIDEBAR_CUSTOM_FILTER_MENU = "sidebar_custom_filter_menu"
     SIDEBAR_ENVIRONMENTS_TREE = "sidebar_environments_tree"
     SIDEBAR_GROUP_CHANGE = "sidebar_group_change"
+    SIDEBAR_MARK_UPGRADES = "sidebar_mark_upgrades"
     SIDEBAR_SECTION_ICONS = "sidebar_section_icons"
     SIDEBAR_VIEWS = "sidebar_views"
     SYSTEM_FILE_MANAGER = "system_file_manager"
@@ -285,6 +286,7 @@ DESCRIPTIONS: dict[Feature, str] = {
     Feature.SIDEBAR_CUSTOM_FILTER_MENU: 'Custom filter menu: only the actions that make sense for a custom filter',
     Feature.SIDEBAR_ENVIRONMENTS_TREE: 'Environments as a tree of their groups',
     Feature.SIDEBAR_GROUP_CHANGE: 'Groups are installed or removed at once from the sidebar',
+    Feature.SIDEBAR_MARK_UPGRADES: "The menu of Upgradable, Security updates and Bug fix updates marks the upgrades they list",
     Feature.SIDEBAR_SECTION_ICONS: 'The section buttons (status, origin, groups, environments, search, custom) have icons',
     Feature.SIDEBAR_VIEWS: "The sidebar's sections: status, origin, groups, environments, search results, custom filters",
     Feature.SYSTEM_FILE_MANAGER: "Show in File Manager: reveals a file in the desktop's file manager",
@@ -422,6 +424,7 @@ QT: dict[Feature, Entry] = {
     Feature.SIDEBAR_CUSTOM_FILTER_MENU: Entry(Support.SUPPORTED),
     Feature.SIDEBAR_ENVIRONMENTS_TREE: Entry(Support.SUPPORTED),
     Feature.SIDEBAR_GROUP_CHANGE: Entry(Support.SUPPORTED),
+    Feature.SIDEBAR_MARK_UPGRADES: Entry(Support.SUPPORTED),
     Feature.SIDEBAR_SECTION_ICONS: Entry(Support.SUPPORTED),
     Feature.SIDEBAR_VIEWS: Entry(Support.SUPPORTED),
     Feature.SYSTEM_FILE_MANAGER: Entry(Support.PARTIAL, 'not tested'),
@@ -559,6 +562,7 @@ GTK: dict[Feature, Entry] = {
     Feature.SIDEBAR_CUSTOM_FILTER_MENU: Entry(Support.PARTIAL, 'not tested'),
     Feature.SIDEBAR_ENVIRONMENTS_TREE: Entry(Support.PARTIAL, 'not tested'),
     Feature.SIDEBAR_GROUP_CHANGE: Entry(Support.PARTIAL, 'not tested'),
+    Feature.SIDEBAR_MARK_UPGRADES: Entry(Support.PARTIAL, 'not tested'),
     Feature.SIDEBAR_SECTION_ICONS: Entry(Support.SUPPORTED),
     Feature.SIDEBAR_VIEWS: Entry(Support.SUPPORTED),
     Feature.SYSTEM_FILE_MANAGER: Entry(Support.PARTIAL, 'not tested'),
@@ -696,6 +700,7 @@ TUI: dict[Feature, Entry] = {
     Feature.SIDEBAR_CUSTOM_FILTER_MENU: Entry(Support.PLANNED),
     Feature.SIDEBAR_ENVIRONMENTS_TREE: Entry(Support.PLANNED),
     Feature.SIDEBAR_GROUP_CHANGE: Entry(Support.PLANNED),
+    Feature.SIDEBAR_MARK_UPGRADES: Entry(Support.PLANNED),
     Feature.SIDEBAR_SECTION_ICONS: Entry(Support.NOT_INTENDED, 'a terminal draws no icons on its section buttons'),
     Feature.SIDEBAR_VIEWS: Entry(Support.PLANNED),
     Feature.SYSTEM_FILE_MANAGER: Entry(Support.PLANNED),

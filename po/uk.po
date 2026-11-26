@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kram\n"
 "Report-Msgid-Bugs-To: https://github.com/elmodos/kram/issues\n"
-"POT-Creation-Date: 2026-11-23 10:10+0000\n"
+"POT-Creation-Date: 2026-11-26 20:05+0200\n"
 "PO-Revision-Date: 2026-11-03 21:09+0200\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -20,8 +20,8 @@ msgstr ""
 "n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
 #: kram/app/actions.py:33
-msgid "Mark Security Upgrades"
-msgstr "Позначити оновлення безпеки"
+msgid "Mark All Security Upgrades"
+msgstr "Позначити всі оновлення безпеки"
 
 #: kram/app/actions.py:34
 msgid "Mark the upgrades that fix a security issue, as dnf upgrade --security"
@@ -236,7 +236,7 @@ msgstr "Позначити для оновлення"
 msgid "Mark for Reinstallation"
 msgstr "Позначити для перевстановлення"
 
-#: kram/app/actions.py:109 kram/app/browser.py:727
+#: kram/app/actions.py:109 kram/app/browser.py:741
 msgid "Mark for Removal"
 msgstr "Позначити для видалення"
 
@@ -329,7 +329,7 @@ msgstr "&Довідка"
 msgid "(loading…)"
 msgstr "(завантаження…)"
 
-#: kram/app/actions.py:233
+#: kram/app/actions.py:230 kram/app/actions.py:235
 msgid "No older versions in the repositories"
 msgstr "Старіших версій у репозиторіях немає"
 
@@ -562,7 +562,7 @@ msgstr[0] "+{size}, {n} пакунок"
 msgstr[1] "+{size}, {n} пакунки"
 msgstr[2] "+{size}, {n} пакунків"
 
-#: kram/app/apply_review.py:321 kram/app/browser.py:643 kram/app/install.py:303
+#: kram/app/apply_review.py:321 kram/app/browser.py:657 kram/app/install.py:303
 #: kram/app/install.py:337 kram/app/install.py:397
 msgid "Resolving dependencies…"
 msgstr "Розрахунок залежностей…"
@@ -571,7 +571,7 @@ msgstr "Розрахунок залежностей…"
 msgid "These choices cannot be carried out:"
 msgstr "Такий вибір неможливо виконати:"
 
-#: kram/app/apply_review.py:334 kram/app/browser.py:652 kram/app/install.py:384
+#: kram/app/apply_review.py:334 kram/app/browser.py:666 kram/app/install.py:384
 #: kram/app/install.py:418
 #, python-brace-format
 msgid ""
@@ -592,7 +592,7 @@ msgstr ""
 "Пакунок → Заблокувати версію: тоді оновлення оминатимуть його, доки його не "
 "розблоковано."
 
-#: kram/app/browser.py:228
+#: kram/app/browser.py:236
 #, python-brace-format
 msgid "{n} marked change has not been applied. Quit anyway?"
 msgid_plural "{n} marked changes have not been applied. Quit anyway?"
@@ -600,15 +600,15 @@ msgstr[0] "{n} позначену зміну не застосовано. Все
 msgstr[1] "{n} позначені зміни не застосовано. Все одно вийти?"
 msgstr[2] "{n} позначених змін не застосовано. Все одно вийти?"
 
-#: kram/app/browser.py:241 kram/app/install.py:300
+#: kram/app/browser.py:249 kram/app/install.py:300
 msgid "Loading metadata…"
 msgstr "Завантаження метаданих…"
 
-#: kram/app/browser.py:251
+#: kram/app/browser.py:259
 msgid "Waiting for another package manager to finish…"
 msgstr "Очікування завершення роботи іншого менеджера пакунків…"
 
-#: kram/app/browser.py:287 kram/app/install.py:345
+#: kram/app/browser.py:295 kram/app/install.py:345
 #, python-brace-format
 msgid ""
 "Could not load the package catalog:\n"
@@ -619,7 +619,7 @@ msgstr ""
 "\n"
 "{error}"
 
-#: kram/app/browser.py:355
+#: kram/app/browser.py:363
 #, python-brace-format
 msgid ""
 "Searching “{text}” ({mode}); the first search also indexes what packages "
@@ -627,44 +627,54 @@ msgid ""
 msgstr ""
 "Пошук «{text}» ({mode}); перший пошук також індексує, що надають пакунки…"
 
-#: kram/app/browser.py:358
+#: kram/app/browser.py:366
 #, python-brace-format
 msgid "Searching “{text}” ({mode})…"
 msgstr "Пошук «{text}» ({mode})…"
 
-#: kram/app/browser.py:375 kram/app/copr.py:158
+#: kram/app/browser.py:383 kram/app/copr.py:168
 #, python-brace-format
 msgid "Search failed: {error}"
 msgstr "Пошук не вдався: {error}"
 
-#: kram/app/browser.py:467
+#: kram/app/browser.py:475
 #, python-brace-format
 msgid "Nothing provides “{what}”"
 msgstr "Нічого не надає «{what}»"
 
-#: kram/app/browser.py:469
+#: kram/app/browser.py:477
 #, python-brace-format
 msgid "Could not look up “{what}”: {error}"
 msgstr "Не вдалося знайти “{what}”: {error}"
 
-#: kram/app/browser.py:483
+#: kram/app/browser.py:491
 #, python-brace-format
 msgid "Package {name} not found in the catalog"
 msgstr "Пакунок {name} не знайдено в каталозі"
 
-#: kram/app/browser.py:512
+#: kram/app/browser.py:522
+msgid "Mark Bug Fix Upgrades"
+msgstr "Позначити оновлення з виправленнями помилок"
+
+#: kram/app/browser.py:524
+msgid "Mark the upgrades this entry lists, the ones with a bug fix advisory"
+msgstr ""
+"Позначити оновлення, які показує цей пункт: ті, що мають бюлетень "
+"виправлення помилок"
+
+#: kram/app/browser.py:526
 msgid "Refresh Metadata"
 msgstr "Оновити метадані"
 
-#: kram/app/browser.py:519
+#: kram/app/browser.py:533
 msgid "Remove from History"
 msgstr "Вилучити з історії"
 
-#: kram/app/browser.py:521
+#: kram/app/browser.py:535
 msgid "Clear Search History"
 msgstr "Очистити історію пошуку"
 
-#: kram/app/browser.py:568
+#: kram/app/browser.py:582
 #, python-brace-format
 msgid "{n} marking saved to {path}"
 msgid_plural "{n} markings saved to {path}"
@@ -672,11 +682,11 @@ msgstr[0] "{n} позначку збережено в {path}"
 msgstr[1] "{n} позначки збережено в {path}"
 msgstr[2] "{n} позначок збережено в {path}"
 
-#: kram/app/browser.py:576
+#: kram/app/browser.py:590
 msgid "Export List as CSV"
 msgstr "Експортувати список у CSV"
 
-#: kram/app/browser.py:587 kram/app/markings.py:35
+#: kram/app/browser.py:601 kram/app/markings.py:35
 #, python-brace-format
 msgid ""
 "Could not save {path}:\n"
@@ -687,7 +697,7 @@ msgstr ""
 "\n"
 "{error}"
 
-#: kram/app/browser.py:590
+#: kram/app/browser.py:604
 #, python-brace-format
 msgid "{n} package exported to {path}"
 msgid_plural "{n} packages exported to {path}"
@@ -695,11 +705,11 @@ msgstr[0] "{n} пакунок експортовано в {path}"
 msgstr[1] "{n} пакунки експортовано в {path}"
 msgstr[2] "{n} пакунків експортовано в {path}"
 
-#: kram/app/browser.py:593
+#: kram/app/browser.py:607
 msgid "CSV files (*.csv);;All files (*)"
 msgstr "Файли CSV (*.csv);;Усі файли (*)"
 
-#: kram/app/browser.py:612
+#: kram/app/browser.py:626
 #, python-brace-format
 msgid ""
 "{n} upgrade or downgrade unmarked: the version lock keeps the installed "
@@ -717,7 +727,7 @@ msgstr[2] ""
 "Знято {n} позначок оновлення або пониження: блокування зберігає встановлені "
 "версії"
 
-#: kram/app/browser.py:615
+#: kram/app/browser.py:629
 #, python-brace-format
 msgid "Locking the version of {n} package"
 msgid_plural "Locking the versions of {n} packages"
@@ -725,7 +735,7 @@ msgstr[0] "Блокування версії {n} пакунка"
 msgstr[1] "Блокування версій {n} пакунків"
 msgstr[2] "Блокування версій {n} пакунків"
 
-#: kram/app/browser.py:617
+#: kram/app/browser.py:631
 #, python-brace-format
 msgid "Unlocking the version of {n} package"
 msgid_plural "Unlocking the versions of {n} packages"
@@ -733,11 +743,11 @@ msgstr[0] "Розблокування версії {n} пакунка"
 msgstr[1] "Розблокування версій {n} пакунків"
 msgstr[2] "Розблокування версій {n} пакунків"
 
-#: kram/app/browser.py:697
+#: kram/app/browser.py:711
 msgid "Applying changes"
 msgstr "Застосування змін"
 
-#: kram/app/browser.py:720
+#: kram/app/browser.py:734
 #, python-brace-format
 msgid ""
 "This removes the front end of Kram you are using ({package}). Kram closes "
@@ -746,11 +756,11 @@ msgstr ""
 "Це видаляє інтерфейс Kram, яким ви зараз користуєтеся ({package}). Після "
 "застосування змін Kram закриється; запустіть його знову."
 
-#: kram/app/browser.py:723
+#: kram/app/browser.py:737
 msgid "Conflicting packages"
 msgstr "Конфліктні пакунки"
 
-#: kram/app/browser.py:724
+#: kram/app/browser.py:738
 #, python-brace-format
 msgid ""
 "{n} installed package conflicts with the marked changes and has to be "
@@ -768,7 +778,7 @@ msgstr[2] ""
 "{n} встановлених пакунків конфліктують з позначеними змінами і мають бути "
 "видалені, щоб їх застосувати:"
 
-#: kram/app/browser.py:752
+#: kram/app/browser.py:766
 #, python-brace-format
 msgid ""
 "The changes are applied. They removed the front end of Kram you are using "
@@ -777,7 +787,7 @@ msgstr ""
 "Зміни застосовано. Вони видалили інтерфейс Kram, яким ви користуєтеся "
 "({package}), тож Kram зараз закриється. Запустіть його знову."
 
-#: kram/app/browser.py:761
+#: kram/app/browser.py:775
 msgid ""
 "Undoing the whole transaction needs versions the repositories no longer "
 "have. What is still possible can be undone without them."
@@ -785,11 +795,11 @@ msgstr ""
 "Для повного скасування транзакції потрібні версії, яких у репозиторіях уже "
 "немає. Те, що ще можливо, можна скасувати без них."
 
-#: kram/app/browser.py:763
+#: kram/app/browser.py:777
 msgid "Undo What Is Possible…"
 msgstr "Скасувати те, що можливо…"
 
-#: kram/app/browser.py:765
+#: kram/app/browser.py:779
 msgid ""
 "They need a version the version lock excludes. Unlock the package (Package → "
 "Unlock Version) or unmark the change."
@@ -797,35 +807,35 @@ msgstr ""
 "Їм потрібна версія, яку виключає блокування версій. Розблокуйте пакунок "
 "(Пакунок → Розблокувати версію) або зніміть позначку зі зміни."
 
-#: kram/app/browser.py:767
+#: kram/app/browser.py:781
 msgid "Show Locked Packages"
 msgstr "Показати заблоковані пакунки"
 
-#: kram/app/browser.py:768
+#: kram/app/browser.py:782
 msgid "Cannot apply changes"
 msgstr "Неможливо застосувати зміни"
 
-#: kram/app/browser.py:769
+#: kram/app/browser.py:783
 msgid "The marked changes cannot be carried out. Unmark or change them."
 msgstr "Позначені зміни неможливо виконати. Зніміть або змініть позначки."
 
-#: kram/app/browser.py:770
+#: kram/app/browser.py:784
 msgid "This change cannot be carried out."
 msgstr "Цю зміну неможливо виконати."
 
-#: kram/app/browser.py:811 kram/app/browser.py:816
+#: kram/app/browser.py:825 kram/app/browser.py:830
 msgid "Refreshing metadata"
 msgstr "Оновлення метаданих"
 
-#: kram/app/browser.py:822
+#: kram/app/browser.py:836
 msgid "Downloading metadata again"
 msgstr "Повторне завантаження метаданих"
 
-#: kram/app/browser.py:824
+#: kram/app/browser.py:838
 msgid "Cleaning the package cache"
 msgstr "Очищення кешу пакунків"
 
-#: kram/app/browser.py:842
+#: kram/app/browser.py:856
 #, python-brace-format
 msgid ""
 "Could not read the repositories:\n"
@@ -836,11 +846,11 @@ msgstr ""
 "\n"
 "{error}"
 
-#: kram/app/browser.py:851
+#: kram/app/browser.py:865
 msgid "Changing repositories"
 msgstr "Зміна репозиторіїв"
 
-#: kram/app/browser.py:857
+#: kram/app/browser.py:871
 #, python-brace-format
 msgid "Removing {n} repository"
 msgid_plural "Removing {n} repositories"
@@ -848,28 +858,28 @@ msgstr[0] "Видалення {n} репозиторію"
 msgstr[1] "Видалення {n} репозиторіїв"
 msgstr[2] "Видалення {n} репозиторіїв"
 
-#: kram/app/browser.py:886
+#: kram/app/browser.py:900
 msgid "Changing the mirror"
 msgstr "Зміна дзеркала"
 
-#: kram/app/browser.py:886
+#: kram/app/browser.py:900
 msgid "Changing the mirror settings"
 msgstr "Зміна налаштувань дзеркал"
 
-#: kram/app/browser.py:903 kram/app/browser.py:933
+#: kram/app/browser.py:917 kram/app/browser.py:947
 #, python-brace-format
 msgid "Undo Transaction {id}"
 msgstr "Відкат транзакції {id}"
 
-#: kram/app/browser.py:904
+#: kram/app/browser.py:918
 msgid "The groups this transaction changed could not be read."
 msgstr "Не вдалося прочитати групи, які змінила ця транзакція."
 
-#: kram/app/browser.py:918
+#: kram/app/browser.py:932
 msgid "cannot be marked"
 msgstr "не вдалося позначити"
 
-#: kram/app/browser.py:929
+#: kram/app/browser.py:943
 #, python-brace-format
 msgid ""
 "Could not read what the transaction changed:\n"
@@ -880,11 +890,11 @@ msgstr ""
 "\n"
 "{error}"
 
-#: kram/app/browser.py:929
+#: kram/app/browser.py:943
 msgid "Undo Transaction"
 msgstr "Скасувати транзакцію"
 
-#: kram/app/browser.py:934
+#: kram/app/browser.py:948
 #, python-brace-format
 msgid "{n} change marked to undo transaction {id}."
 msgid_plural "{n} changes marked to undo transaction {id}."
@@ -892,22 +902,22 @@ msgstr[0] "Позначено {n} зміну для відкату транза�
 msgstr[1] "Позначено {n} зміни для відкату транзакції {id}."
 msgstr[2] "Позначено {n} змін для відкату транзакції {id}."
 
-#: kram/app/browser.py:936
+#: kram/app/browser.py:950
 #, python-brace-format
 msgid "{package}: installs {version}, {old} is no longer in the repositories"
 msgstr ""
 "{package}: буде встановлено {version}, бо {old} у репозиторіях уже немає"
 
-#: kram/app/browser.py:941
+#: kram/app/browser.py:955
 msgid "Review them, then apply."
 msgstr "Перегляньте їх і застосуйте."
 
-#: kram/app/browser.py:944
+#: kram/app/browser.py:958
 #, python-brace-format
 msgid "Nothing of transaction {id} can be undone."
 msgstr "З транзакції {id} нічого не вдається відкотити."
 
-#: kram/app/browser.py:948
+#: kram/app/browser.py:962
 #, python-brace-format
 msgid "{n} package cannot be undone:"
 msgid_plural "{n} packages cannot be undone:"
@@ -915,7 +925,7 @@ msgstr[0] "{n} пакунок не вдається відкотити:"
 msgstr[1] "{n} пакунки не вдається відкотити:"
 msgstr[2] "{n} пакунків не вдається відкотити:"
 
-#: kram/app/browser.py:952
+#: kram/app/browser.py:966
 #, python-brace-format
 msgid "{n} package comes back in another version:"
 msgid_plural "{n} packages come back in another version:"
@@ -1297,11 +1307,11 @@ msgstr "Встановлено, жоден репозиторій його не 
 msgid "Installed as a dependency, no longer needed"
 msgstr "Встановлено як залежність, більше не потрібен"
 
-#: kram/app/columns.py:104 kram/app/columns.py:218
+#: kram/app/columns.py:104 kram/app/columns.py:220
 msgid "The upgrade cannot be installed now"
 msgstr "Оновлення зараз неможливо встановити"
 
-#: kram/app/columns.py:204
+#: kram/app/columns.py:206
 msgid ""
 "Optional in this group: installing the group brings it only with optional "
 "packages"
@@ -1309,21 +1319,21 @@ msgstr ""
 "Необов'язковий у цій групі: встановлення групи додає його лише разом із "
 "необов'язковими пакунками"
 
-#: kram/app/columns.py:208
+#: kram/app/columns.py:210
 #, python-brace-format
 msgid "Installed from {installed}; the latest version comes from {latest}"
 msgstr "Встановлено з {installed}; найновіша версія — з {latest}"
 
-#: kram/app/columns.py:221
+#: kram/app/columns.py:223
 #, python-brace-format
 msgid "Marked: {action}"
 msgstr "Позначено: {action}"
 
-#: kram/app/columns.py:222
+#: kram/app/columns.py:224
 msgid "Click for actions"
 msgstr "Клік — меню дій"
 
-#: kram/app/copr.py:113 kram/app/repos.py:197
+#: kram/app/copr.py:123 kram/app/repos.py:197
 #, python-brace-format
 msgid ""
 "{n} installed package comes from it. It stays installed but will no longer "
@@ -1341,49 +1351,49 @@ msgstr[2] ""
 "З нього встановлено {n} пакунків. Вони лишаться встановленими, але більше не "
 "отримуватимуть оновлень (стануть осиротілими)."
 
-#: kram/app/copr.py:117 kram/app/repos.py:206
+#: kram/app/copr.py:127 kram/app/repos.py:206
 msgid "Remove"
 msgstr "Видалити"
 
-#: kram/app/copr.py:118 kram/app/repos.py:207 kram/gtk/dialogs/copr.py:60
+#: kram/app/copr.py:128 kram/app/repos.py:207 kram/gtk/dialogs/copr.py:60
 #: kram/gtk/dialogs/repos.py:64 kram/qt/copr_dialog.py:67
 #: kram/qt/repos_dialog.py:99
 msgid "Show packages"
 msgstr "Показати пакунки"
 
-#: kram/app/copr.py:125
+#: kram/app/copr.py:135
 msgid "Remove COPR project"
 msgstr "Видалити проєкт COPR"
 
-#: kram/app/copr.py:126
+#: kram/app/copr.py:136
 #, python-brace-format
 msgid "Remove the {project} repository from the system?"
 msgstr "Видалити репозиторій {project} із системи?"
 
-#: kram/app/copr.py:133
+#: kram/app/copr.py:143
 #, python-brace-format
 msgid "Disabling {project}"
 msgstr "Вимкнення {project}"
 
-#: kram/app/copr.py:133
+#: kram/app/copr.py:143
 #, python-brace-format
 msgid "Enabling {project}"
 msgstr "Підключення {project}"
 
-#: kram/app/copr.py:134
+#: kram/app/copr.py:144
 #, python-brace-format
 msgid "Removing {project}"
 msgstr "Видалення {project}"
 
-#: kram/app/copr.py:148
+#: kram/app/copr.py:158
 msgid "Searching… Copr can take up to a minute to answer."
 msgstr "Пошук… Copr може відповідати до хвилини."
 
-#: kram/app/copr.py:166
+#: kram/app/copr.py:176
 msgid "Search failed: unexpected answer from Copr"
 msgstr "Помилка пошуку: несподівана відповідь від Copr"
 
-#: kram/app/copr.py:171
+#: kram/app/copr.py:181
 #, python-brace-format
 msgid "{n} project found."
 msgid_plural "{n} projects found."
@@ -1391,20 +1401,20 @@ msgstr[0] "Знайдено {n} проєкт."
 msgstr[1] "Знайдено {n} проєкти."
 msgstr[2] "Знайдено {n} проєктів."
 
-#: kram/app/copr.py:185
+#: kram/app/copr.py:194
 msgid "(enabled)"
 msgstr "(підключено)"
 
-#: kram/app/copr.py:187
+#: kram/app/copr.py:196
 #, python-brace-format
 msgid "Builds exist for: {chroots}"
 msgstr "Є збірки для: {chroots}"
 
-#: kram/app/copr.py:199
+#: kram/app/copr.py:210
 msgid "No builds for this system"
 msgstr "Немає збірок для цієї системи"
 
-#: kram/app/copr.py:200
+#: kram/app/copr.py:211
 #, python-brace-format
 msgid ""
 "{project} has no builds for Fedora {release} ({arch}). Enable it anyway?"
@@ -2256,7 +2266,7 @@ msgstr[2] ""
 msgid "Mark"
 msgstr "Позначити"
 
-#: kram/app/marking.py:183
+#: kram/app/marking.py:188
 #, python-brace-format
 msgid "{n} package marked for upgrade"
 msgid_plural "{n} packages marked for upgrade"
@@ -2264,7 +2274,7 @@ msgstr[0] "{n} пакунок позначено для оновлення"
 msgstr[1] "{n} пакунки позначено для оновлення"
 msgstr[2] "{n} пакунків позначено для оновлення"
 
-#: kram/app/marking.py:186
+#: kram/app/marking.py:191
 #, python-brace-format
 msgid "{n} upgrade left out: it cannot be installed now"
 msgid_plural "{n} upgrades left out: they cannot be installed now"
@@ -2272,11 +2282,11 @@ msgstr[0] "{n} оновлення пропущено: його зараз нем
 msgstr[1] "{n} оновлення пропущено: їх зараз неможливо встановити"
 msgstr[2] "{n} оновлень пропущено: їх зараз неможливо встановити"
 
-#: kram/app/marking.py:188
+#: kram/app/marking.py:193
 msgid "Status → Cannot be upgraded now lists them with the reason."
 msgstr "Їх разом із причиною показує Статус → Не можна оновити зараз."
 
-#: kram/app/marking.py:196
+#: kram/app/marking.py:201
 #, python-brace-format
 msgid "{n} unneeded dependency marked for removal"
 msgid_plural "{n} unneeded dependencies marked for removal"
@@ -2284,7 +2294,7 @@ msgstr[0] "{n} непотрібну залежність позначено до
 msgstr[1] "{n} непотрібні залежності позначено до видалення"
 msgstr[2] "{n} непотрібних залежностей позначено до видалення"
 
-#: kram/app/marking.py:204
+#: kram/app/marking.py:209
 #, python-brace-format
 msgid "{n} package marked"
 msgid_plural "{n} packages marked"
@@ -2292,15 +2302,15 @@ msgstr[0] "Позначено {n} пакунок"
 msgstr[1] "Позначено {n} пакунки"
 msgstr[2] "Позначено {n} пакунків"
 
-#: kram/app/marking.py:242
+#: kram/app/marking.py:247
 msgid "Checking for upgrades…"
 msgstr "Перевірка оновлень…"
 
-#: kram/app/marking.py:243
+#: kram/app/marking.py:248
 msgid "Nothing to upgrade: its packages are up to date and match the group"
 msgstr "Нема чого оновлювати: пакунки групи актуальні й відповідають її складу"
 
-#: kram/app/marking.py:245
+#: kram/app/marking.py:250
 msgid "It has no optional packages"
 msgstr "Необов'язкових пакунків немає"
 
@@ -2954,16 +2964,16 @@ msgstr "Результати пошуку"
 msgid "Custom filters"
 msgstr "Власні фільтри"
 
-#: kram/app/sidebar.py:156
+#: kram/app/sidebar.py:161
 #, python-brace-format
 msgid "“{text}” — {mode}"
 msgstr "«{text}» — {mode}"
 
-#: kram/app/sidebar.py:218
+#: kram/app/sidebar.py:223
 msgid "Search history is empty"
 msgstr "Історія пошуку порожня"
 
-#: kram/app/sidebar.py:219
+#: kram/app/sidebar.py:224
 msgid ""
 "No custom filters yet.\n"
 "Right-click to create one."
@@ -3933,19 +3943,19 @@ msgstr "Пошук (Ctrl+F)"
 msgid "The list is filtered by the search text"
 msgstr "Список відфільтровано за текстом пошуку"
 
-#: kram/gtk/window.py:99 kram/qt/main_window.py:70
+#: kram/gtk/window.py:118 kram/qt/main_window.py:70
 msgid "Package Manager"
 msgstr "Менеджер пакунків"
 
-#: kram/gtk/window.py:463 kram/qt/main_window.py:536
+#: kram/gtk/window.py:484 kram/qt/main_window.py:536
 msgid "Open Package File"
 msgstr "Відкрити файл пакунка"
 
-#: kram/gtk/window.py:464 kram/qt/main_window.py:537
+#: kram/gtk/window.py:485 kram/qt/main_window.py:537
 msgid "RPM packages (*.rpm)"
 msgstr "Пакунки RPM (*.rpm)"
 
-#: kram/gtk/window.py:537 kram/qt/main_window.py:426
+#: kram/gtk/window.py:558 kram/qt/main_window.py:426
 msgid "A Synaptic-style package manager for Fedora."
 msgstr "Менеджер пакунків для Fedora в дусі Synaptic."
 
