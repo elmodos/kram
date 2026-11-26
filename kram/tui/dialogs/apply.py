@@ -218,19 +218,22 @@ class RecList(Vertical):
         for box in self.query(RecBox):
             box.set_enabled(on)
 
-    def _widths(self) -> tuple[int, int, bool]:
+    def _widths(self, width: int) -> tuple[int, int, bool]:
         """(the package column, the recommended-by column, whether that one is shown) for the width."""
         rows = self.recs + self.nested
-        width = self.query_one("#recs").size.width or 60
+        width = width or 60
         narrow = width < NARROW
         label = min(30, max([cell_len(r.label) for r in rows] + [cell_len(_("Recommended package"))]) + 2)
         by = min(30, max([cell_len(r.by) for r in rows] + [cell_len(_("Recommended by"))]) + 2)
         return label, by, not narrow
 
     def label(self) -> None:
-        if not self.is_mounted:
+        """After a refresh, once the boxes have their width: not if the dialog was closed meanwhile (at once, or as its
+        recommendations came), when its widgets are going."""
+        recs = self.query("#recs")
+        if not self.is_mounted or not recs:
             return
-        label_w, by_w, with_by = self._widths()
+        label_w, by_w, with_by = self._widths(recs.first().size.width)
         e = self.app.glyphs.ellipsis
 
         def cell(text: str, width: int) -> str:  # a column and the gap after it
