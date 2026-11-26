@@ -1,5 +1,5 @@
 %global appid io.github.elmodos.Kram
-%global base_version 0.14.2
+%global base_version 0.14.3
 # the first version that is split into kram-common + kram-qt + kram-gtk; the single kram package before it is
 # obsoleted by kram-qt
 %global split_version 0.12.0
@@ -272,6 +272,10 @@ rm -f "$state"
 %{python3_sitelib}/kram/gtk/
 
 %changelog
+* Thu Nov 26 2026 Modo Ltunzher <offnormal@gmail.com> - 0.14.3-1
+- The context menu of Upgradable, Security updates and Bug fix updates in the sidebar marks the upgrades they list
+- Mark Security Upgrades is now Mark All Security Upgrades, to tell it from the critical and important ones
+
 * Wed Nov 25 2026 Modo Ltunzher <offnormal@gmail.com> - 0.14.2-1
 - Packages replaced by a package of another name (Obsoletes), such as kram by kram-qt, are upgradable again
 - GTK front end: the Mark All Upgrades and COPR buttons have icons with the Breeze icon theme
