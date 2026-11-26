@@ -28,6 +28,7 @@ def shot(monkeypatch, name: str, size: tuple[int, int], scheme: str, setup=None)
     compared with tests/snapshots/tui/<name>-<scheme>.txt."""
     monkeypatch.setenv("LC_ALL", "C.UTF-8")
     monkeypatch.setattr("kram.tui.window.is_root", lambda: False)  # the test container runs as root
+    monkeypatch.setattr("kram.tui.app.__version__", "1.23.4")  # the top line: the same in every release
     roles = roles_of(scheme)  # before the app's loop: it runs one of its own, once
     preferences.set_value(preferences.TUI_SCHEME, scheme)  # started in it: no switch half drawn
     app = KramApp()
@@ -92,3 +93,13 @@ def test_the_apply_dialog(monkeypatch, scheme):
     async def setup(app, pilot):
         app.push_screen(ApplyDialog(preview(), {"op": "transaction", "install": ["virt-manager"]}, "x86_64", None))
     shot(monkeypatch, "apply", (100, 30), scheme, setup)
+
+
+@pytest.mark.parametrize("scheme", SCHEMES)
+def test_the_question_dialog(monkeypatch, scheme):
+    use_catalog(monkeypatch, snapshot(60), clock=True)
+
+    async def setup(app, pilot):
+        app.ui.error("Failed", "The transaction did not work.", informative="Nothing was changed.",
+                     details="Problem: conflicting requests\n  - nothing provides libfoo.so.1")
+    shot(monkeypatch, "question", (100, 30), scheme, setup)

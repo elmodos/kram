@@ -15,11 +15,11 @@ from rich.style import Style  # noqa: E402
 from textual.app import App, ComposeResult  # noqa: E402
 from textual.containers import Vertical  # noqa: E402
 from textual.screen import ModalScreen  # noqa: E402
-from textual.widgets import Input  # noqa: E402
+from textual.widgets import Input, OptionList  # noqa: E402
 
 from kram import __version__  # noqa: E402
 from kram.app import preferences  # noqa: E402
-from kram.app.ports import CANCEL, NO, OK, YES, Question  # noqa: E402
+from kram.app.ports import CANCEL, OK, Question  # noqa: E402
 from kram.app.ports import Button as QuestionButton
 from kram.core.marks import Action  # noqa: E402
 from kram.core.model import Status  # noqa: E402
@@ -27,25 +27,11 @@ from kram.tui import glyphs, loop  # noqa: E402
 from kram.tui.__main__ import parse_args  # noqa: E402
 from kram.tui.app import KramApp, TooSmall  # noqa: E402
 from kram.tui.dialogs.path import PathDialog, complete  # noqa: E402
-from kram.tui.dialogs.question import QuestionDialog  # noqa: E402
+from kram.tui.dialogs.question import QuestionDialog, default_button, escape_answer  # noqa: E402
 from kram.tui.palette import ROLES, role  # noqa: E402
 from kram.tui.widgets import Button, CheckBox, ChoiceList, hint  # noqa: E402
 
 WIDE, NARROW = (120, 40), (80, 24)
-
-
-@pytest.fixture(autouse=True)
-def _made_up_catalog(monkeypatch):
-    """The window loads the catalog as it starts: a made-up one here, never the system's (tests/test_tui_window.py
-    tests the window itself)."""
-    from types import SimpleNamespace
-
-    from kram.app.browser import Browser
-    from kram.core.model import CatalogSnapshot
-    from kram.tui import window
-    catalog = SimpleNamespace(load=lambda *a, **k: CatalogSnapshot([], 0, 0, 0.1), blocked_upgrades=lambda: {})
-    monkeypatch.setattr(window, "Browser", lambda view, ui, scheduler, details, post, **kw: Browser(
-        view, ui, scheduler, details, post, catalog=catalog, **kw))
 
 
 def run(test, size=WIDE, app=None):
@@ -104,18 +90,40 @@ def test_window_keys_are_off_under_a_modal_screen_and_in_a_text_field():
 
 # ---------------------------------------------------------------- panels (§5.2, §6.4)
 
-def test_wide_g_and_d_focus_a_pinned_panel_and_unpin_it_when_pressed_again():
+async def toggle(app, pilot, name: str) -> None:
+    """`g` (the sidebar) or `d` (the details)."""
+    app.action_toggle_panel(name)
+    await pilot.pause()
+
+
+async def back_to_list(app, pilot) -> None:
+    """`Esc` in the window."""
+    app.action_back_to_list()
+    await pilot.pause()
+
+
+def test_the_window_s_keys():
+    """The keys of the window (§4.4): bound to the actions the tests call."""
+    keys = {key: b.action for b in KramApp.BINDINGS for key in b.key.split(",")}
+    assert keys["g"] == "toggle_panel('sidebar')" and keys["d"] == "toggle_panel('details')"
+    assert keys["escape"] == "back_to_list"
+    question = {b.key: b.action for b in QuestionDialog.BINDINGS}
+    assert question == {"escape": "cancel", "left": "app.focus_previous", "right": "app.focus_next"}
+
+
+def test_wide_a_panel_toggled_is_focused_and_unpinned_when_toggled_again():
     async def test(app, pilot):
-        await pilot.press("g")
+        await toggle(app, pilot, "sidebar")
         assert focused_panel(app) == "sidebar" and app.shown_panels() == ["sidebar", "details"]
-        await pilot.press("g")
+        await toggle(app, pilot, "sidebar")
         assert focused_panel(app) == "list" and app.shown_panels() == ["details"]
         assert preferences.value(preferences.TUI_PINNED) == "details"
-        await pilot.press("g")  # shown and pinned again
+        await toggle(app, pilot, "sidebar")  # shown and pinned again
         assert focused_panel(app) == "sidebar" and preferences.value(preferences.TUI_PINNED) == "both"
-        await pilot.press("escape")  # a pinned panel stays
+        await back_to_list(app, pilot)  # a pinned panel stays
         assert focused_panel(app) == "list" and app.shown_panels() == ["sidebar", "details"]
-        await pilot.press("d", "d")
+        await toggle(app, pilot, "details")
+        await toggle(app, pilot, "details")
         assert focused_panel(app) == "list" and app.shown_panels() == ["sidebar"]
         await pilot.press("tab")
         assert focused_panel(app) in ("sidebar", "list")
@@ -125,14 +133,15 @@ def test_wide_g_and_d_focus_a_pinned_panel_and_unpin_it_when_pressed_again():
 def test_narrow_panels_slide_over_one_at_a_time():
     async def test(app, pilot):
         assert app.narrow and app.shown_panels() == []
-        await pilot.press("g")
+        await toggle(app, pilot, "sidebar")
         assert app.shown_panels() == ["sidebar"] and focused_panel(app) == "sidebar"
-        await pilot.press("d")  # the sidebar makes room for the details
+        await toggle(app, pilot, "details")  # the sidebar makes room for the details
         assert app.shown_panels() == ["details"] and focused_panel(app) == "details"
         assert app.panel("details").styles.height.value == 11
-        await pilot.press("escape")  # a slide-over closes
+        await back_to_list(app, pilot)  # a slide-over closes
         assert app.shown_panels() == [] and focused_panel(app) == "list"
-        await pilot.press("d", "d")
+        await toggle(app, pilot, "details")
+        await toggle(app, pilot, "details")
         assert app.shown_panels() == [] and focused_panel(app) == "list"
         assert preferences.value(preferences.TUI_PINNED) == "both"  # a slide-over is not a pin
     run(test, NARROW)
@@ -140,11 +149,12 @@ def test_narrow_panels_slide_over_one_at_a_time():
 
 def test_narrow_to_wide_keeps_the_open_slide_over_as_a_pinned_panel():
     async def test(app, pilot):
-        await pilot.press("d", "d")  # wide: the details unpinned
+        await toggle(app, pilot, "details")
+        await toggle(app, pilot, "details")  # wide: the details unpinned
         assert app.shown_panels() == ["sidebar"]
         await pilot.resize_terminal(*NARROW)
         await pilot.pause()
-        await pilot.press("d")
+        await toggle(app, pilot, "details")
         assert app.shown_panels() == ["details"]
         await pilot.resize_terminal(*WIDE)
         await pilot.pause()
@@ -155,7 +165,7 @@ def test_narrow_to_wide_keeps_the_open_slide_over_as_a_pinned_panel():
 
 def test_wide_to_narrow_hides_every_panel_but_the_focused_one():
     async def test(app, pilot):
-        await pilot.press("g")
+        await toggle(app, pilot, "sidebar")
         await pilot.resize_terminal(*NARROW)
         await pilot.pause()
         assert app.shown_panels() == ["sidebar"] and focused_panel(app) == "sidebar"
@@ -170,14 +180,14 @@ def test_wide_to_narrow_hides_every_panel_but_the_focused_one():
 
 def test_the_details_slide_over_leaves_rows_of_the_list_in_a_tiny_terminal():
     async def test(app, pilot):
-        await pilot.press("d")
+        await toggle(app, pilot, "details")
         assert app.panel("details").styles.height.value == 6  # 3/5 of the 10 lines of the body
     run(test, (40, 12))
 
 
 def test_a_small_terminal_shows_only_how_large_it_must_be():
     async def test(app, pilot):
-        await pilot.press("g")
+        await toggle(app, pilot, "sidebar")
         await pilot.resize_terminal(39, 11)
         await pilot.pause()
         assert isinstance(app.screen, TooSmall)
@@ -224,10 +234,11 @@ def test_a_true_colour_scheme_picked_after_a_16_colour_one_drops_the_16_colour_s
         assert role("cursor-blurred").underline and role("cursor").reverse
         app.push_screen(ColoursDialog(app.theme))
         await pilot.pause()
-        await pilot.press("down", "down", "down")  # textual-dark, previewed
+        options = app.screen.query_one(OptionList)
+        options.highlighted = app.screen.values.index("textual-dark")  # previewed
         await pilot.pause()
         assert app.theme == "textual-dark" and not role("cursor-blurred").underline
-        await pilot.press("enter")
+        options.action_select()
         await pilot.pause()
         assert app.theme == "textual-dark" and not app.ansi_color and not app.has_pseudo_class("ansi")
         assert not role("cursor-blurred").underline and not role("cursor").reverse
@@ -400,11 +411,14 @@ def test_choice_list_returns_the_chosen_value():
     async def test(app, pilot):
         app.push_screen(ChoiceList("Colours", [("a", "A"), ("b", "B"), ("c", "C")], "b"), chosen.append)
         await pilot.pause()
-        await pilot.press("down", "enter")
+        options = app.screen.query_one(OptionList)
+        assert options.highlighted == 1  # at the current value
+        options.highlighted = 2
+        options.action_select()  # Enter
         await pilot.pause()
         app.push_screen(ChoiceList("Colours", [("a", "A")]), chosen.append)
         await pilot.pause()
-        await pilot.press("escape")
+        app.screen.action_close()  # Esc
         await pilot.pause()
     run(test)
     assert chosen == ["c", None]
@@ -412,32 +426,38 @@ def test_choice_list_returns_the_chosen_value():
 
 # ---------------------------------------------------------------- the question dialog (§10.21) and the Ui port
 
-def ask(question: Question, keys: list[str]) -> list:
+def test_the_default_button_and_the_escape_answer():
+    """The focused button: the question's default, else its first accepting one, else its first. Esc: its first
+    rejecting button, else None (§10.21)."""
+    plain_question = Question("Remove", "Remove vim?")
+    assert (default_button(plain_question), escape_answer(plain_question)) == ("yes", "no")
+    assert default_button(Question("Remove", "Remove vim?", default="no")) == "no"
+    custom = Question("Keys", "Import the key?", buttons=(QuestionButton("import", "Import", "destructive"), CANCEL))
+    assert (default_button(custom), escape_answer(custom)) == ("import", "cancel")
+    show = Question("Show", "Show them?", buttons=(OK, QuestionButton("show", "Show")))
+    assert (default_button(show), escape_answer(show)) == ("ok", None)
+
+
+def test_the_question_dialog_focuses_its_default_button_and_returns_the_one_pressed():
     answers = []
 
     async def test(app, pilot):
-        app.ui.ask(question, answers.append)
+        app.ui.ask(Question("Remove", "Remove vim?", default="no"), answers.append)
         await pilot.pause()
         assert isinstance(app.screen, QuestionDialog) and app.ui.is_modal_open()
         assert app.check_action("toggle_panel", ("sidebar",)) is False
-        await pilot.press(*keys)
+        assert app.screen.focused.render().plain == "< No >"
+        app.screen.query(Button).first().action_press()  # Yes
+        await pilot.pause()
+        assert not app.ui.is_modal_open()
+        app.ui.ask(Question("Show", "Show them?", buttons=(OK, QuestionButton("show", "Show"))), answers.append)
+        await pilot.pause()
+        app.screen.action_cancel()  # Esc
         await pilot.pause()
         assert not app.ui.is_modal_open()
     run(test)
-    return answers
+    assert answers == ["yes", None]
 
-
-def test_the_question_dialog_returns_the_button_pressed():
-    assert ask(Question("Remove", "Remove vim?"), ["enter"]) == ["yes"]  # the accepting button is focused
-    assert ask(Question("Remove", "Remove vim?"), ["right", "enter"]) == ["no"]
-    assert ask(Question("Remove", "Remove vim?", default="no"), ["enter"]) == ["no"]
-    custom = Question("Keys", "Import the key?", buttons=(QuestionButton("import", "Import", "destructive"), CANCEL))
-    assert ask(custom, ["tab", "enter"]) == ["cancel"]
-
-
-def test_escape_is_the_cancel_answer_or_none():
-    assert ask(Question("Remove", "Remove vim?", buttons=(YES, NO)), ["escape"]) == ["no"]
-    assert ask(Question("Show", "Show them?", buttons=(OK, QuestionButton("show", "Show"))), ["escape"]) == [None]
 
 
 def test_messages_and_status():
@@ -446,7 +466,7 @@ def test_messages_and_status():
         await pilot.pause()
         dialog = app.screen
         assert isinstance(dialog, QuestionDialog) and [b.render().plain for b in dialog.query(Button)] == ["< OK >"]
-        await pilot.press("enter")
+        dialog.action_cancel()
         await pilot.pause()
         app.ui.status("Loading", 0)
         assert app.window.query_one("#top").render().plain.startswith(f"Kram TUI v{__version__}  Loading")
@@ -494,24 +514,24 @@ def test_choosing_files(tmp_path):
         await pilot.pause()
         field = app.screen.query_one(Input)
         assert isinstance(app.screen, PathDialog) and field.value == f"{tmp_path}/"
-        await pilot.press("tab")  # the only matching file
+        app.screen.action_complete()  # Tab: the only matching file
         assert field.value == str(existing)
-        await pilot.press("enter")
+        app.screen.accept()  # Enter
         await pilot.pause()
         app.ui.choose_save_file("Save Markings", str(existing), "", chosen.append)
         await pilot.pause()
-        await pilot.press("enter")  # it exists: asked first, Cancel focused
+        app.screen.accept()  # it exists: asked first, Cancel focused
         await pilot.pause()
-        assert isinstance(app.screen, QuestionDialog)
-        await pilot.press("left", "enter")  # Replace
-        await pilot.pause()
+        assert isinstance(app.screen, QuestionDialog) and app.screen.focused.render().plain == "< Cancel >"
+        app.screen.dismiss("replace")
         await pilot.pause()
         app.ui.choose_save_file("Save Markings", str(tmp_path / "missing" / "x.txt"), "", chosen.append)
         await pilot.pause()
-        await pilot.press("enter")  # no such folder: it stays open
+        app.screen.accept()  # no such folder: it stays open
         await pilot.pause()
         assert isinstance(app.screen, PathDialog)
-        await pilot.press("escape")
+        assert "No such folder" in str(app.screen.query_one("#path-status").render())
+        app.screen.dismiss(None)  # Esc
         await pilot.pause()
     run(test)
     assert chosen == [str(existing), str(existing), None]
