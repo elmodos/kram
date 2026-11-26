@@ -171,7 +171,7 @@ def progress_dialog(app) -> ProgressDialog | None:
 
 async def reload_and_finish(app, pilot) -> ProgressDialog:
     """After the helper got the request: the progress dialog is up, done, and closed with Enter."""
-    await until(pilot, lambda: (d := progress_dialog(app)) is not None and d.finished is not None)
+    await until(pilot, lambda: (d := progress_dialog(app)) is not None and d._ready and d.finished is not None)
     dialog = progress_dialog(app)
     assert dialog.finished is True and app.screen is dialog
     dialog.close()  # Enter
@@ -262,7 +262,7 @@ def test_a_dismissed_desktop_window_cancels(monkeypatch, pkexec):
 
     async def test(app, pilot, terminal):
         await reload(app, pilot)
-        await until(pilot, lambda: (d := progress_dialog(app)) is not None and d.finished is not None)
+        await until(pilot, lambda: (d := progress_dialog(app)) is not None and d._ready and d.finished is not None)
         dialog = progress_dialog(app)
         assert dialog.finished is False and dialog.stage.detail == "Authorization was cancelled."
         assert terminal.suspended == 0 and not app.main.browser.busy()
@@ -276,7 +276,7 @@ def test_no_pkexec(monkeypatch, pkexec, tmp_path):
 
     async def test(app, pilot, _terminal):
         await reload(app, pilot)
-        await until(pilot, lambda: (d := progress_dialog(app)) is not None and d.finished is not None)
+        await until(pilot, lambda: (d := progress_dialog(app)) is not None and d._ready and d.finished is not None)
         assert progress_dialog(app).stage.detail == "Could not start pkexec. Is polkit installed?"
     run(monkeypatch, test)
 
@@ -360,7 +360,7 @@ def test_ctrl_c_at_the_prompt_cancels_and_kram_goes_on(monkeypatch, pkexec):
         await reload(app, pilot)
         await administrator_rights(app, pilot)
         await answer(app, pilot, "continue")
-        await until(pilot, lambda: (d := progress_dialog(app)) is not None and d.finished is not None)
+        await until(pilot, lambda: (d := progress_dialog(app)) is not None and d._ready and d.finished is not None)
         dialog = progress_dialog(app)
         assert dialog.finished is False and dialog.stage.detail == "Authorization was cancelled."
         assert app.is_running and not app.main.browser.busy()
@@ -382,7 +382,7 @@ def test_a_dismissed_window_in_the_terminal_step_cancels(monkeypatch, pkexec):
         await reload(app, pilot)
         await administrator_rights(app, pilot)
         await answer(app, pilot, "continue")
-        await until(pilot, lambda: (d := progress_dialog(app)) is not None and d.finished is not None)
+        await until(pilot, lambda: (d := progress_dialog(app)) is not None and d._ready and d.finished is not None)
         assert progress_dialog(app).stage.detail == "Authorization was cancelled."
     run(monkeypatch, test)
 
@@ -400,6 +400,6 @@ def test_the_suspend_cannot_be_had(monkeypatch, pkexec):
         await reload(app, pilot)
         await administrator_rights(app, pilot)
         await answer(app, pilot, "continue")
-        await until(pilot, lambda: (d := progress_dialog(app)) is not None and d.finished is not None)
+        await until(pilot, lambda: (d := progress_dialog(app)) is not None and d._ready and d.finished is not None)
         assert "not supported" in progress_dialog(app).stage.detail
     run(monkeypatch, test)
