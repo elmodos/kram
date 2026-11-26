@@ -150,6 +150,21 @@ def _counting_load(loads: list):
     return load
 
 
+async def reload(app, pilot) -> None:
+    """Reload (F5, Ctrl+R): metadata refreshed by the helper, which needs root."""
+    app.action_run("reload")
+    await pilot.pause()
+
+
+async def answer(app, pilot, value) -> None:
+    """The question on top answered: a button's id, or the Esc answer for None."""
+    if value is None:
+        app.screen.action_cancel()
+    else:
+        app.screen.dismiss(value)
+    await pilot.pause()
+
+
 def progress_dialog(app) -> ProgressDialog | None:
     return next((s for s in app.screen_stack if isinstance(s, ProgressDialog)), None)
 
@@ -159,7 +174,7 @@ async def reload_and_finish(app, pilot) -> ProgressDialog:
     await until(pilot, lambda: (d := progress_dialog(app)) is not None and d.finished is not None)
     dialog = progress_dialog(app)
     assert dialog.finished is True and app.screen is dialog
-    await pilot.press("enter")
+    dialog.close()  # Enter
     await until(pilot, lambda: progress_dialog(app) is None)
     return dialog
 
@@ -198,7 +213,7 @@ def test_headless_pkexec_authenticates_once_for_the_session(monkeypatch, pkexec)
 
     async def test(app, pilot, terminal):
         before = len(loads)
-        await pilot.press("f5")
+        await reload(app, pilot)
         dialog = await reload_and_finish(app, pilot)
         assert not dialog.waiting and dialog.stage.text == "Done."  # the answer came at once: no "Waiting…"
         assert "Refreshing repository metadata…" in "\n".join(dialog.lines)
@@ -208,7 +223,7 @@ def test_headless_pkexec_authenticates_once_for_the_session(monkeypatch, pkexec)
         await until(pilot, lambda: len(loads) > before)  # Reload: refresh, then the catalog again
         # the helper lives for the session: the next request asks nothing
         await until(pilot, lambda: app.main.reload_enabled)
-        await pilot.press("ctrl+r")
+        await reload(app, pilot)
         await reload_and_finish(app, pilot)
         assert len(pkexec.calls()) == 1
     run(monkeypatch, test, loads)
@@ -218,7 +233,7 @@ def test_waiting_for_authentication_shows_after_a_moment(monkeypatch, pkexec):
     pkexec.plan("slow-ok")
 
     async def test(app, pilot, _terminal):
-        await pilot.press("f5")
+        await reload(app, pilot)
         await pilot.pause(0.15)
         assert progress_dialog(app) is None  # nothing that would flash up and away
         await until(pilot, lambda: progress_dialog(app) is not None)
@@ -234,9 +249,9 @@ def test_esc_while_waiting_stops_the_request(monkeypatch, pkexec):
     pkexec.plan("hang")
 
     async def test(app, pilot, _terminal):
-        await pilot.press("f5")
+        await reload(app, pilot)
         await until(pilot, lambda: progress_dialog(app) is not None)
-        await pilot.press("escape")
+        progress_dialog(app).action_escape()
         await until(pilot, lambda: progress_dialog(app) is None)
         assert not app.main.browser.busy() and len(app.screen_stack) == 1
     run(monkeypatch, test)
@@ -246,7 +261,7 @@ def test_a_dismissed_desktop_window_cancels(monkeypatch, pkexec):
     pkexec.plan("dismissed")
 
     async def test(app, pilot, terminal):
-        await pilot.press("f5")
+        await reload(app, pilot)
         await until(pilot, lambda: (d := progress_dialog(app)) is not None and d.finished is not None)
         dialog = progress_dialog(app)
         assert dialog.finished is False and dialog.stage.detail == "Authorization was cancelled."
@@ -260,7 +275,7 @@ def test_no_pkexec(monkeypatch, pkexec, tmp_path):
     monkeypatch.setenv("PATH", str(empty))
 
     async def test(app, pilot, _terminal):
-        await pilot.press("f5")
+        await reload(app, pilot)
         await until(pilot, lambda: (d := progress_dialog(app)) is not None and d.finished is not None)
         assert progress_dialog(app).stage.detail == "Could not start pkexec. Is polkit installed?"
     run(monkeypatch, test)
@@ -273,7 +288,6 @@ async def administrator_rights(app, pilot) -> None:
     assert app.screen.question.title == "Administrator rights"
     assert "“Refreshing metadata” needs administrator rights." in app.screen.question.text
     assert progress_dialog(app) is None  # pkexec failed at once: no waiting dialog came first
-    await pilot.pause(0.1)
 
 
 @pytest.mark.feature(Feature.SYSTEM_POLKIT, front="tui")
@@ -281,9 +295,9 @@ def test_no_agent_kram_steps_aside_and_polkit_asks_on_the_terminal(monkeypatch, 
     pkexec.plan("noagent", "ok")
 
     async def test(app, pilot, terminal):
-        await pilot.press("f5")
+        await reload(app, pilot)
         await administrator_rights(app, pilot)
-        await pilot.press("enter")  # Continue
+        await answer(app, pilot, "continue")
         await reload_and_finish(app, pilot)
         headless, tty = pkexec.calls()
         assert headless["new_session"] and not tty["new_session"]  # on Kram's terminal, where polkit asks
@@ -297,11 +311,11 @@ def test_cancel_at_administrator_rights_shows_nothing_more(monkeypatch, pkexec):
     pkexec.plan("noagent")
 
     async def test(app, pilot, terminal):
-        await pilot.press("f5")
+        await reload(app, pilot)
         await administrator_rights(app, pilot)
-        await pilot.press("escape")
+        await answer(app, pilot, None)
         await until(pilot, lambda: not app.main.browser.busy())
-        await pilot.pause(0.1)
+        await pilot.pause()
         assert len(app.screen_stack) == 1 and terminal.suspended == 0
         assert app.main.reload_enabled
     run(monkeypatch, test)
@@ -311,14 +325,13 @@ def test_a_wrong_password_offers_to_try_again(monkeypatch, pkexec):
     pkexec.plan("noagent", "notauth", "ok")
 
     async def test(app, pilot, terminal):
-        await pilot.press("f5")
+        await reload(app, pilot)
         await administrator_rights(app, pilot)
-        await pilot.press("enter")
+        await answer(app, pilot, "continue")
         await until(pilot, lambda: isinstance(app.screen, QuestionDialog)
                     and app.screen.question.title == "Not authorized")
         assert [b.id for b in app.screen.question.buttons] == ["retry", "cancel"]
-        await pilot.pause(0.1)
-        await pilot.press("enter")  # Try again
+        await answer(app, pilot, "retry")
         await reload_and_finish(app, pilot)
         assert terminal.suspended == 2 and [c["mode"] for c in pkexec.calls()] == ["noagent", "notauth", "ok"]
     run(monkeypatch, test)
@@ -328,15 +341,14 @@ def test_a_wrong_password_and_cancel(monkeypatch, pkexec):
     pkexec.plan("noagent", "notauth")
 
     async def test(app, pilot, _terminal):
-        await pilot.press("f5")
+        await reload(app, pilot)
         await administrator_rights(app, pilot)
-        await pilot.press("enter")
+        await answer(app, pilot, "continue")
         await until(pilot, lambda: isinstance(app.screen, QuestionDialog)
                     and app.screen.question.title == "Not authorized")
-        await pilot.pause(0.1)
-        await pilot.press("escape")
+        await answer(app, pilot, None)
         await until(pilot, lambda: not app.main.browser.busy())
-        await pilot.pause(0.1)
+        await pilot.pause()
         assert len(app.screen_stack) == 1
     run(monkeypatch, test)
 
@@ -345,19 +357,19 @@ def test_ctrl_c_at_the_prompt_cancels_and_kram_goes_on(monkeypatch, pkexec):
     pkexec.plan("noagent", "sigint", "ok")
 
     async def test(app, pilot, terminal):
-        await pilot.press("f5")
+        await reload(app, pilot)
         await administrator_rights(app, pilot)
-        await pilot.press("enter")
+        await answer(app, pilot, "continue")
         await until(pilot, lambda: (d := progress_dialog(app)) is not None and d.finished is not None)
         dialog = progress_dialog(app)
         assert dialog.finished is False and dialog.stage.detail == "Authorization was cancelled."
         assert app.is_running and not app.main.browser.busy()
-        await pilot.press("enter")
+        dialog.close()
         await until(pilot, lambda: progress_dialog(app) is None)
         # the next request starts again from the beginning: a new pkexec, a new password
         await until(pilot, lambda: app.main.reload_enabled)
         pkexec.plan("ok")
-        await pilot.press("f5")
+        await reload(app, pilot)
         await reload_and_finish(app, pilot)
         assert terminal.suspended == 1
     run(monkeypatch, test)
@@ -367,9 +379,9 @@ def test_a_dismissed_window_in_the_terminal_step_cancels(monkeypatch, pkexec):
     pkexec.plan("noagent", "dismissed")
 
     async def test(app, pilot, _terminal):
-        await pilot.press("f5")
+        await reload(app, pilot)
         await administrator_rights(app, pilot)
-        await pilot.press("enter")
+        await answer(app, pilot, "continue")
         await until(pilot, lambda: (d := progress_dialog(app)) is not None and d.finished is not None)
         assert progress_dialog(app).stage.detail == "Authorization was cancelled."
     run(monkeypatch, test)
@@ -385,9 +397,9 @@ def test_the_suspend_cannot_be_had(monkeypatch, pkexec):
 
     async def test(app, pilot, _terminal):
         app.main.root._suspend = no_terminal
-        await pilot.press("f5")
+        await reload(app, pilot)
         await administrator_rights(app, pilot)
-        await pilot.press("enter")
+        await answer(app, pilot, "continue")
         await until(pilot, lambda: (d := progress_dialog(app)) is not None and d.finished is not None)
         assert "not supported" in progress_dialog(app).stage.detail
     run(monkeypatch, test)
