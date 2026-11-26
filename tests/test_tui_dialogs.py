@@ -1,14 +1,12 @@
 """The terminal front end's dialogs of step 3.4 over a made-up catalog (docs/TUI_SPEC.md §10.10–§10.15, §10.18): Custom
-Filters, Update Notifications, Fedora N and its notice on the top line, the markings and the CSV export through the
-path line, Columns, and the panels' sizes kept between runs.
+Filters, Fedora N and its notice on the top line, the markings and the CSV export through the path line, Columns, and
+the panels' sizes kept between runs.
 
 Run with Textual's headless driver (`App.run_test`, `Pilot`), as tests/test_tui_window.py. Skipped without Textual.
 """
 import csv
 import json
-import subprocess
 import threading
-from contextlib import contextmanager
 
 import pytest
 
@@ -17,25 +15,20 @@ pytest.importorskip("textual")
 from test_tui_window import run, top, use_catalog, window_module  # noqa: E402
 from textual.widgets import Input  # noqa: E402
 
-from kram.app import notifier as app_notifier  # noqa: E402
 from kram.app import preferences, release_watch  # noqa: E402
 from kram.app.columns import COL_CANDIDATE, COL_INSTALLED, COL_NAME, COL_REPO  # noqa: E402
 from kram.app.parity import Feature  # noqa: E402
-from kram.app.ports import FakeBus  # noqa: E402
 from kram.core import distro, net, upgrade_audit  # noqa: E402
 from kram.core.custom_filters import STATUS_ANY_INSTALLED, Condition, CustomFilter, Field, Op  # noqa: E402
 from kram.core.marks import Action  # noqa: E402
 from kram.core.settings import store as settings  # noqa: E402
-from kram.notifier import control  # noqa: E402
-from kram.tui.dialogs import notifier as notifier_dialog  # noqa: E402
 from kram.tui.dialogs.columns import ColumnsDialog  # noqa: E402
 from kram.tui.dialogs.filters import ConditionRow, FiltersDialog  # noqa: E402
-from kram.tui.dialogs.notifier import NotifierDialog  # noqa: E402
 from kram.tui.dialogs.path import PathDialog  # noqa: E402
 from kram.tui.dialogs.question import QuestionDialog  # noqa: E402
 from kram.tui.dialogs.upgrade import UpgradeDialog, upgrade_commands  # noqa: E402
 from kram.tui.package_list import Columns  # noqa: E402
-from kram.tui.widgets import Button, CheckBox, Choice, Radio  # noqa: E402
+from kram.tui.widgets import Button, Choice, Radio  # noqa: E402
 
 VIM = CustomFilter("Vim", [Condition(Field.NAME, Op.CONTAINS, "pkg000")])
 BIG = CustomFilter("Big", [Condition(Field.SIZE, Op.GREATER, "0.2")])
@@ -247,152 +240,6 @@ def test_the_filters_dialog_fits_a_narrow_terminal(monkeypatch):
         assert widths[:2] == [15, 13] and widths[2] >= 10 and sum(widths) + 3 <= box.content_region.width
         assert dialog.query_one("#match").region.y > dialog.query_one("#match-line").region.y  # under its label
     run(test, size=(64, 22))
-
-
-# ---------------------------------------------------------------- Update notifications (§10.11)
-
-def notifier_setup(monkeypatch, tmp_path, timer: list[str]):
-    system = tmp_path / "xdg-autostart"
-    system.mkdir()
-    (system / "org.kde.discover.notifier.desktop").write_text("[Desktop Entry]\nExec=DiscoverNotifier\n")
-    monkeypatch.setattr(control, "SYSTEM_AUTOSTART", system)
-    calls = []
-    monkeypatch.setattr(control, "checker_enabled", lambda: bool(calls) and calls[-1])
-    monkeypatch.setattr(control, "set_checker_enabled", lambda on: calls.append(on) or "")
-    monkeypatch.setattr(control, "fedora_timer_state", lambda: timer[0])
-    monkeypatch.setattr(notifier_dialog, "BusctlBus", FakeBus)
-    monkeypatch.setattr(notifier_dialog, "is_root", lambda: False)
-    monkeypatch.delenv("DISPLAY", raising=False)
-    monkeypatch.delenv("WAYLAND_DISPLAY", raising=False)
-    return calls
-
-
-@pytest.mark.feature(Feature.DIALOG_NOTIFICATIONS, front="tui")
-@pytest.mark.feature(Feature.DIALOG_NOTIFICATIONS_STALE_DAYS, front="tui")
-def test_the_notifier_dialog_turns_things_on_and_off(monkeypatch, tmp_path):
-    use_catalog(monkeypatch)
-    calls = notifier_setup(monkeypatch, tmp_path, ["enabled"])
-
-    async def test(app, pilot):
-        app.action_menu()  # m
-        await pilot.pause()
-        app.screen.dismiss(app.main.open_notifications)  # Settings → Update Notifications…
-        await pilot.pause()
-        dialog = app.screen
-        assert isinstance(dialog, NotifierDialog)
-        tray, days = dialog.query_one("#tray", CheckBox), dialog.query_one("#stale-days", Input)
-        assert dialog.focused is tray and not tray.value and not days.can_focus and days.has_class("-off")
-        assert "no system tray" in str(dialog.query_one("#no-tray").render())  # FakeBus: no tray host
-        assert not dialog.query_one("#timer-line").display  # the timer is on
-        tray.action_toggle()  # space
-        await pilot.pause()
-        assert calls == [True] and tray.value and days.can_focus
-        assert days.value == "7"
-        days.value = "14"
-        await pilot.pause()
-        assert preferences.value(preferences.STALE_DAYS) == 14
-        assert str(dialog.query_one("#days").render()).strip() == "days"
-        days.focus()
-        days.value = "999"  # out of the range: not kept, and put back when left
-        await pilot.pause()
-        dialog.focus_next()  # tab
-        await pilot.pause()
-        assert preferences.value(preferences.STALE_DAYS) == 14 and days.value == "14"
-        # Discover's notifier, off for this user and back on; its file copied without a desktop
-        toggle = dialog.query_one("#toggle-0", Button)
-        toggle.action_press()
-        await pilot.pause()
-        assert dialog.notifications.notifiers[0].turned_off() and toggle.label == "Turn Back On"
-        toggle.action_press()
-        await pilot.pause()
-        assert not dialog.notifications.notifiers[0].turned_off() and toggle.label == "Turn Off"
-        dialog.query_one("#show-0", Button).action_press()
-        await pilot.pause()
-        assert app.clipboard.endswith("org.kde.discover.notifier.desktop")
-        dialog.action_close()  # Esc
-        await pilot.pause()
-        assert len(app.screen_stack) == 1
-    run(test)
-
-
-@pytest.mark.feature(Feature.DIALOG_NOTIFICATIONS_FEDORA_TIMER, front="tui")
-def test_fedora_s_timer_is_turned_on_in_the_terminal_without_a_desktop(monkeypatch, tmp_path):
-    use_catalog(monkeypatch)
-    timer = ["disabled"]
-    notifier_setup(monkeypatch, tmp_path, timer)
-    suspended, ran = [], []
-
-    @contextmanager
-    def suspend():
-        suspended.append(True)
-        yield
-
-    def run_systemctl(argv, **kw):
-        ran.append(argv)
-        if len(ran) == 1:
-            return subprocess.CompletedProcess(argv, 1, "", "Access denied")
-        timer[0] = "enabled"
-        return subprocess.CompletedProcess(argv, 0, "", "")
-
-    async def test(app, pilot):
-        dialog = NotifierDialog(app.ui, FakeBus(), suspend=suspend, run=run_systemctl)
-        app.push_screen(dialog)
-        await pilot.pause()
-        state = str(dialog.query_one("#timer").render())
-        assert state.startswith(f"{app.glyphs.warning} Off: dnf-makecache.timer is disabled")
-        assert dialog.query_one("#timer-line").display
-        dialog.query_one("#timer-on", Button).action_press()
-        await pilot.pause()
-        assert suspended == [True] and ran == [["systemctl", "enable", "--now", "dnf-makecache.timer"]]
-        assert isinstance(app.screen, QuestionDialog) and app.screen.question.text == "Access denied"
-        app.screen.focused.action_press()  # Enter: OK
-        await pilot.pause()
-        dialog.query_one("#timer-on", Button).action_press()
-        await pilot.pause()
-        assert len(ran) == 2 and app.screen is dialog
-        assert str(dialog.query_one("#timer").render()).startswith(f"{app.glyphs.yes} On: dnf-makecache.timer")
-        assert not dialog.query_one("#timer-line").display
-    run(test)
-
-
-def test_with_a_desktop_its_polkit_window_asks_for_fedora_s_timer(monkeypatch, tmp_path):
-    use_catalog(monkeypatch)
-    timer = ["disabled"]
-    notifier_setup(monkeypatch, tmp_path, timer)
-    monkeypatch.setattr(notifier_dialog, "has_desktop", lambda: True)
-    started = []
-    monkeypatch.setattr(app_notifier.proc, "run", lambda argv, post, done: started.append((argv, done)) or
-                        type("P", (), {"kill": lambda self: None})())
-
-    async def test(app, pilot):
-        dialog = NotifierDialog(app.ui, FakeBus(), suspend=lambda: pytest.fail("no stepping aside"))
-        app.push_screen(dialog)
-        await pilot.pause()
-        button = dialog.query_one("#timer-on", Button)
-        button.action_press()
-        await pilot.pause()
-        assert [argv for argv, _done in started] == [["systemctl", "enable", "--now", "dnf-makecache.timer"]]
-        assert not button.enabled  # while the desktop asks
-        timer[0] = "enabled"
-        started[0][1](0, "", "")
-        await pilot.pause()
-        assert not dialog.query_one("#timer-line").display
-    run(test)
-
-
-def test_the_bus_is_asked_with_busctl():
-    from kram.tui.ui_port import BusctlBus
-    asked = []
-
-    def fake(argv, **kw):
-        asked.append(argv[-3:])
-        out = {"NameHasOwner": "b true", "GetConnectionUnixProcessID": "u 4242"}[argv[-3]]
-        return subprocess.CompletedProcess(argv, 0, out + "\n", "")
-    bus = BusctlBus(fake)
-    assert bus.has_owner("org.kde.StatusNotifierWatcher") and bus.owner_pid("org.kde.discover.notifier") == 4242
-    assert asked[0] == ["NameHasOwner", "s", "org.kde.StatusNotifierWatcher"]
-    gone = BusctlBus(lambda argv, **kw: subprocess.CompletedProcess(argv, 1, "", "no bus"))
-    assert not gone.has_owner("x") and gone.owner_pid("x") is None
 
 
 # ---------------------------------------------------------------- Fedora N (§5.4, §10.12)

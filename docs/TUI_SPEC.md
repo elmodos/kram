@@ -428,7 +428,7 @@ it holds no logic of its own.
 | 10.8 | Install package file | `install` | `DIALOG_INSTALL_FILE*`, `INSTALL_FILE_*` |
 | 10.9 | Cleanup | `cache` | `DIALOG_CLEANUP*` |
 | 10.10 | Custom filters | `custom_filters`, `filters_edit` | `DIALOG_CUSTOM_FILTERS*` |
-| 10.11 | Update notifications | `notifier` | `DIALOG_NOTIFICATIONS*` |
+| 10.11 | ~~Update notifications~~ (not in the terminal) | | `DIALOG_NOTIFICATIONS*` |
 | 10.12 | Fedora N | `upgrade`, `release_watch` | `RELEASE_*` |
 | 10.13 | About | | `DIALOG_ABOUT_TOOLKIT` |
 | 10.14 | What's New | `whats_new` | `DIALOG_WHATS_NEW*` |
@@ -497,8 +497,10 @@ folders >` needs root.
 10.10 **Custom filters.** List of filters; editor: name, Match all / any (`(•)` choices), conditions as rows of
 field, operator, value; live count "Matches 1,234 packages"; New Filter from Current View pre-fills it.
 
-10.11 **Update notifications.** The settings of the tray checker (shared with the GUIs), stale-data days, Fedora's
-timer with `< Turn on >` (needs root) and its state.
+10.11 **Update notifications: not in the terminal** (decided 2026-11-26). The dialog is about the desktop: a tray
+icon, the desktop's own update notifiers, polkit's window for Fedora's timer. Over SSH or on a machine without a
+desktop it would mean nothing, so Settings has no Update Notifications… entry. The top line still warns about stale
+package information after the days set in a GUI (7 by default).
 
 10.12 **Fedora N.** The dialog of `kram/app/upgrade.py`: COPR builds check with its log and `< Cancel >`, release
 notes and guide links (§7.4.5), and the command of the upgrade tool to run.
@@ -672,7 +674,7 @@ N or P here that are PLANNED there change with the note given.
 | DIALOG_HISTORY … DIALOG_HISTORY_UNDO | §10.7 | S |
 | DIALOG_INSTALL_FILE … _RECOMMENDATIONS | §10.8 | S |
 | DIALOG_MIRRORS … DIALOG_MIRRORS_SPEED_TEST | §10.5 | S |
-| DIALOG_NOTIFICATIONS … _STALE_DAYS | §10.11 | S |
+| DIALOG_NOTIFICATIONS … _STALE_DAYS | §10.11 | N (not for a terminal) |
 | DIALOG_PROGRESS … DIALOG_PROGRESS_LOG | §10.2 | S |
 | DIALOG_REPOSITORIES … _UPDATES_IN_PLACE | §10.4 | S |
 | DIALOG_WHATS_NEW, _OVER_ABOUT | §10.14 | S |

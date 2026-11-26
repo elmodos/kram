@@ -2,7 +2,7 @@
 list's context menu. Both are built from kram.app.actions, so an action added there shows up here too; what an
 entry runs is the window's (`MainWindow.run_action`).
 
-The menu popup (`m`, `f9`) has the menus of `menu_bar()` on the left and the chosen one's entries on the right,
+The menu popup (`m`, `f9`) has the menus of `tui_menu_bar()` on the left and the chosen one's entries on the right,
 each with its key in the terminal (kram.tui.keymap, not the GUIs' shortcuts, §6.6). A submenu opens in place with a
 "← back" line above its entries; Downgrade to Version is filled when it opens, from the details of the package. An
 entry that is off is dim and can still get the cursor, so that the status line under the entries can say why it is
@@ -12,6 +12,9 @@ entries; Colours… and Columns… follow them (§7.7.3).
 
 An entry that runs something closes the popup first and runs from its dismissal callback (the screen's result is
 what to run), so that a dialog it opens is pushed once the popup is gone (§11.3.8).
+
+Settings → Update Notifications… is not here (NOT_IN_THE_TERMINAL): a tray icon and the desktop's notifiers mean
+nothing over SSH or on a machine without a desktop.
 """
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -37,8 +40,14 @@ from .palette import role
 from .widgets import PopupMenu, hint
 
 TOOLKIT = "tui"
+NOT_IN_THE_TERMINAL = frozenset({"notifications"})  # the GUIs' actions the terminal does not have
 ENTRIES_MAX = 64  # the entries' column at most, in cells; less when the terminal is narrower
 STATUS_LINES = 3  # the status line under the columns: its rule and two lines of text (the app's CSS)
+
+
+def tui_menu_bar() -> tuple[Menu, ...]:
+    """The GUIs' menu bar without what the terminal does not have."""
+    return menu_bar(NOT_IN_THE_TERMINAL)
 
 
 def menu_title(menu: Menu) -> str:
@@ -176,7 +185,7 @@ class MenuPopup(ModalScreen):
     def __init__(self, main):
         super().__init__()
         self.main = main
-        self.menus = menu_bar()
+        self.menus = tui_menu_bar()
         self.entries: list[Entry | None] = []  # the right column's lines; None for a separator
         self.stack: list[Entry] = []           # the submenus opened in place, the innermost last
         self.menu_index = 0                    # the menu shown, on the left

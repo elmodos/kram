@@ -25,10 +25,11 @@ The Repositories dialog (kram.tui.dialogs.repos, §10.4) and the Mirrors dialog 
 as the GUIs' windows do.
 
 Settings → Custom Filters…, New Filter from Current View and `e` on a custom filter open the Custom Filters dialog
-(kram.tui.dialogs.filters, §10.10); Update Notifications… is kram.tui.dialogs.notifier (§10.11) and Columns… is
-kram.tui.dialogs.columns (§10.18), saved as the list follows it. As in the GUIs, a Reload asks Bodhi whether a new
-Fedora release is out (kram.app.release_watch): the top line says so, and `r` opens the Fedora N dialog
-(kram.tui.dialogs.upgrade, §10.12), whose check is kept for the session.
+(kram.tui.dialogs.filters, §10.10) and Columns… is kram.tui.dialogs.columns (§10.18), saved as the list follows it.
+There is no Update Notifications… (§10.11): the top line still warns about stale package information after the days
+set in a GUI. As in the GUIs, a Reload asks Bodhi whether a new Fedora release is out (kram.app.release_watch): the
+top line says so, and `r` opens the Fedora N dialog (kram.tui.dialogs.upgrade, §10.12), whose check is kept for the
+session.
 
 Marking (§7.5) is the GUIs': `space` and a click on the status cell are the status click (the likely mark, or the
 row's menu, as the setting says), a double click is the likely mark, and the keys of kram.tui.keymap run the Package
@@ -87,7 +88,6 @@ from .dialogs.filters import FiltersDialog
 from .dialogs.history import HistoryDialog
 from .dialogs.install import InstallDialog
 from .dialogs.mirrors import MirrorsDialog
-from .dialogs.notifier import NotifierDialog
 from .dialogs.progress import ProgressDialog
 from .dialogs.repos import ReposDialog
 from .dialogs.upgrade import UpgradeDialog, UpgradeState
@@ -464,10 +464,6 @@ class MainWindow:
         self.open_package_file(path)
         return True
 
-    def open_notifications(self) -> None:
-        """Settings → Update Notifications… (§10.11)."""
-        self.app.push_screen(NotifierDialog(self.ui))
-
     def open_upgrade(self) -> None:
         """`r` while the top line says a new Fedora release is out (§10.12): its dialog, with the check made for
         that release earlier in the session, if any (kram.gtk.window.open_upgrade)."""
@@ -576,7 +572,7 @@ class MainWindow:
         return {
             "reload": b.refresh_metadata, "reload_cache": b.reload, "mark_upgrades": marker.mark_all_upgrades,
             "apply": b.apply, "repos": b.open_repos, "copr": self.open_copr, "history": self.open_history,
-            "open_file": self.open_package_file, "cache": self.open_cache, "notifications": self.open_notifications,
+            "open_file": self.open_package_file, "cache": self.open_cache,
             "show_in_history": self.show_in_history,
             "lock": lambda: b.set_version_lock(True), "unlock": lambda: b.set_version_lock(False),
             "mark_unneeded": marker.mark_unneeded, "unmark_all": marker.unmark_all,

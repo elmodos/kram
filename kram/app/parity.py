@@ -634,9 +634,11 @@ TUI: dict[Feature, Entry] = {
     Feature.DIALOG_MIRRORS_OVER_REPOSITORIES: Entry(Support.SUPPORTED),
     Feature.DIALOG_MIRRORS_PIN: Entry(Support.SUPPORTED),
     Feature.DIALOG_MIRRORS_SPEED_TEST: Entry(Support.SUPPORTED),
-    Feature.DIALOG_NOTIFICATIONS: Entry(Support.SUPPORTED),
-    Feature.DIALOG_NOTIFICATIONS_FEDORA_TIMER: Entry(Support.SUPPORTED),
-    Feature.DIALOG_NOTIFICATIONS_STALE_DAYS: Entry(Support.SUPPORTED),
+    Feature.DIALOG_NOTIFICATIONS: Entry(Support.NOT_INTENDED, "not for a terminal: a tray icon and the desktop's "
+                                        'notifiers mean nothing over SSH or on a machine without a desktop'),
+    Feature.DIALOG_NOTIFICATIONS_FEDORA_TIMER: Entry(Support.NOT_INTENDED, 'with Update Notifications'),
+    Feature.DIALOG_NOTIFICATIONS_STALE_DAYS: Entry(Support.NOT_INTENDED, 'with Update Notifications; the top line '
+                                                   'still warns after the days set in a GUI'),
     Feature.DIALOG_PROGRESS: Entry(Support.SUPPORTED),
     Feature.DIALOG_PROGRESS_AUTO_CLOSE: Entry(Support.SUPPORTED),
     Feature.DIALOG_PROGRESS_CLOSE_LOCK: Entry(Support.SUPPORTED),

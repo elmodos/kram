@@ -1,5 +1,5 @@
 """The terminal front end's menus and the dialogs they lead to (docs/TUI_SPEC.md §7.7, §10.13, §10.17, §10.19,
-§10.20, §13): the menu popup over `menu_bar()`, the package list's context menu, the settings of the registry,
+§10.20, §13): the menu popup over `tui_menu_bar()`, the package list's context menu, the settings of the registry,
 Colours, Keys, About and quitting; and the keys of kram.tui.keymap.
 
 The entries are built and drawn by functions of kram.tui.menu, tested here against the real window's state; the
@@ -19,7 +19,7 @@ from textual.widgets import OptionList  # noqa: E402
 from tui_kit import cells, plain, scheme_fixture, styles_at  # noqa: E402, F401 - a fixture
 
 from kram.app import preferences  # noqa: E402
-from kram.app.actions import menu_bar, table_menu, walk  # noqa: E402
+from kram.app.actions import table_menu, walk  # noqa: E402
 from kram.app.parity import Feature  # noqa: E402
 from kram.core import releases  # noqa: E402
 from kram.core.marks import Action  # noqa: E402
@@ -28,16 +28,15 @@ from kram.tui.app import KramApp  # noqa: E402
 from kram.tui.dialogs.about import AboutDialog, WhatsNewDialog  # noqa: E402
 from kram.tui.dialogs.colours import ColoursDialog  # noqa: E402
 from kram.tui.dialogs.keys import KeysDialog  # noqa: E402
-from kram.tui.dialogs.notifier import NotifierDialog  # noqa: E402
 from kram.tui.dialogs.question import QuestionDialog  # noqa: E402
 from kram.tui.glyphs import UNICODE  # noqa: E402
-from kram.tui.menu import Entry, MenuPopup, entry_line, menu_entries, menu_title  # noqa: E402
+from kram.tui.menu import Entry, MenuPopup, entry_line, menu_entries, menu_title, tui_menu_bar  # noqa: E402
 from kram.tui.palette import role  # noqa: E402
 from kram.tui.search import SearchDialog  # noqa: E402
 from kram.tui.widgets import Button, PopupMenu  # noqa: E402
 
 NARROW = (64, 22)
-MENUS = [menu_title(m) for m in menu_bar()]
+MENUS = [menu_title(m) for m in tui_menu_bar()]
 
 
 def run(test, size=WIDE):
@@ -53,7 +52,7 @@ def run(test, size=WIDE):
 
 def entries(app, title: str) -> list[Entry]:
     """The menu `title`'s entries as the window's state makes them, without the separators."""
-    menu = menu_bar()[MENUS.index(title)]
+    menu = tui_menu_bar()[MENUS.index(title)]
     return [e for e in menu_entries(app.main, menu.items, app.glyphs, app.scheme) if e is not None]
 
 
@@ -94,7 +93,7 @@ def test_the_menus_are_the_menu_bar_s_and_package_has_every_package_action(monke
     async def test(app, pilot):
         assert MENUS == ["File", "Edit", "Package", "Settings", "Help"]
         labels = [e.label for e in entries(app, "Package")]
-        package = [app.main.defs[i.action].label for i in menu_bar()[2].items if i.action and i.action != "why_blocked"]
+        package = [app.main.defs[i.action].label for i in tui_menu_bar()[2].items if i.action and i.action != "why_blocked"]
         assert all(label in labels for label in package)
         assert "Downgrade to Version" in labels
         assert "Why It Cannot Be Upgraded" not in labels  # only for a blocked one
@@ -188,10 +187,10 @@ def test_an_entry_runs_its_action_once_the_popup_is_gone(monkeypatch):
         await pilot.pause()
         assert isinstance(app.screen, SearchDialog) and app.screen_stack[-2] is not popup
         app.pop_screen()
-        popup = await open_menu(app, pilot, "Settings")
-        popup.choose(popup.entry("Update Notifications…"))
+        popup = await open_menu(app, pilot, "Help")
+        popup.choose(popup.entry("About Kram"))
         await pilot.pause()
-        assert isinstance(app.screen, NotifierDialog)
+        assert isinstance(app.screen, AboutDialog)
         app.pop_screen()
         popup = await open_menu(app, pilot, "File")
         popup.choose(popup.entry("Save Markings As…"))  # off: nothing runs, the popup stays
@@ -614,6 +613,17 @@ def test_every_menu_action_has_a_way_to_run(monkeypatch):
     use_catalog(monkeypatch)
 
     async def test(app, pilot):
-        ids = {i.action for m in (*menu_bar(), table_menu()) for i in walk(m.items) if i.action}
+        ids = {i.action for m in (*tui_menu_bar(), table_menu()) for i in walk(m.items) if i.action}
         assert ids <= set(app.main.action_runs())
+    run(test)
+
+
+def test_there_are_no_update_notifications_in_the_terminal(monkeypatch):
+    """A tray icon and the desktop's notifiers mean nothing over SSH or without a desktop: the GUIs' entry is not
+    in the Settings menu, and nothing runs it."""
+    use_catalog(monkeypatch)
+
+    async def test(app, pilot):
+        assert "Update Notifications…" not in [e.label for e in entries(app, "Settings")]
+        assert "notifications" not in app.main.action_runs()
     run(test)

@@ -188,15 +188,17 @@ def table_menu() -> Menu:
     return Menu("", (*package_menu_items(), SEPARATOR, *_items("copy_name", "copy_nevra")))
 
 
-def menu_bar() -> tuple[Menu, ...]:
+def menu_bar(without: frozenset[str] = frozenset()) -> tuple[Menu, ...]:
+    """The menu bar; `without`: the actions a front end does not have (the terminal's Update Notifications…)."""
+    settings = [a for a in ("repos", "copr", "cache", "notifications") if a not in without]
     return (
         Menu(_("&File"), _items("open_file", SEPARATOR, "reload", "reload_cache", SEPARATOR, "read_marks",
                                 "save_marks", "export_csv", SEPARATOR, "history", SEPARATOR, "quit")),
         Menu(_("&Edit"), _items(mark_upgrades_menu(), "mark_unneeded", SEPARATOR, "unmark_all", "apply", SEPARATOR,
                                 "copy_name", "copy_nevra", SEPARATOR, "find")),
         Menu(_("&Package"), (*package_menu_items(), *_items(SEPARATOR, "properties", "back"))),
-        Menu(_("&Settings"), _items("repos", "copr", "cache", "notifications", SEPARATOR, "filters", "new_filter",
-                                    SEPARATOR, MenuItem(prefs="settings"))),
+        Menu(_("&Settings"), _items(*settings, SEPARATOR, "filters", "new_filter", SEPARATOR,
+                                    MenuItem(prefs="settings"))),
         Menu(_("&Help"), _items("about")),
     )
 

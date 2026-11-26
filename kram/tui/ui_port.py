@@ -8,7 +8,6 @@ status line says so.
 """
 import os
 import shutil
-import subprocess
 from collections.abc import Callable
 from pathlib import Path
 
@@ -26,33 +25,6 @@ STATUS_MS = 4000  # how long the confirmations of this port stay on the top line
 def has_desktop(environ=os.environ) -> bool:
     """A graphical session to hand links and folders to (§12.1)."""
     return bool(environ.get("WAYLAND_DISPLAY") or environ.get("DISPLAY")) and shutil.which("xdg-open") is not None
-
-
-class BusctlBus:
-    """kram.app.ports.Bus over systemd's busctl: the terminal front end has no D-Bus library of its own (the GUIs ask
-    through their toolkits). Without a session bus (the Linux console, SSH without a user session) nobody owns
-    anything: no tray host and no other notifier running."""
-
-    TIMEOUT_S = 2
-
-    def __init__(self, run=subprocess.run):
-        self._run = run
-
-    def _call(self, method: str, name: str) -> str:
-        try:
-            out = self._run(["busctl", "--user", "call", "org.freedesktop.DBus", "/org/freedesktop/DBus",
-                             "org.freedesktop.DBus", method, "s", name], capture_output=True, text=True,
-                            timeout=self.TIMEOUT_S, check=False)
-        except (OSError, subprocess.SubprocessError):
-            return ""
-        return out.stdout.strip() if out.returncode == 0 else ""
-
-    def has_owner(self, name: str) -> bool:
-        return self._call("NameHasOwner", name) == "b true"
-
-    def owner_pid(self, name: str) -> int | None:
-        kind, _sep, pid = self._call("GetConnectionUnixProcessID", name).partition(" ")
-        return int(pid) if kind == "u" and pid.isdigit() else None
 
 
 class TuiUi:
