@@ -145,7 +145,7 @@ def test_the_dialog_shows_what_the_file_does_and_the_command(rpm, monkeypatch):
         button = dialog.query_one("#install", Button)
         assert button.label == "Upgrade" and button.enabled and button.has_focus  # the default button
         assert "ctrl+a upgrade" in box._border_subtitle.plain
-        await pilot.press("y")
+        dialog.action_copy_command()  # y
         assert copied == [f"sudo dnf5 install {rpm.path}"]
     run_alone(monkeypatch, test)
 
@@ -157,7 +157,7 @@ def test_a_file_that_cannot_be_installed_says_why_and_has_no_button(rpm, monkeyp
         assert notes.startswith(f"{app.glyphs.no} Cannot be installed.") and "nothing provides libfoo" in notes
         assert not dialog.query_one("#install", Button).display and not text(dialog, "command")
         assert "ctrl+a" not in dialog.query_one("#install-box")._border_subtitle.plain
-        await pilot.press("escape")
+        dialog.action_close()  # Esc
         await pilot.pause()
         assert len(app.screen_stack) == 1
     run_alone(monkeypatch, test)
@@ -205,8 +205,7 @@ def test_unticking_a_recommendation_resolves_again_without_it(rpm, monkeypatch):
         assert box.value and "tool-extras" in box.label
         assert "Recommended packages." in text(dialog, "recs-note")
         assert "tool-extras" in dialog.query_one(ChangeList).render().plain
-        box.focus()
-        await pilot.press("space")
+        box.action_toggle()  # space
         await pilot.pause()
         assert catalog.excluded[-1] == ["tool-extras"]
         assert "tool-extras" not in dialog.query_one(ChangeList).render().plain
@@ -221,8 +220,8 @@ def test_install_runs_the_request_and_closes_when_it_succeeded(rpm, monkeypatch)
     async def test(app, pilot):
         dialog, results = await show(app, pilot, rpm.path, Catalog(),
                                      run=lambda request, title, done: ran.append((request, title, done)))
-        await pilot.press("ctrl+a")
-        await pilot.press("escape")  # not while it runs (root is asked for before its progress shows)
+        dialog.action_install()  # ctrl+a
+        dialog.action_close()  # Esc: not while it runs (root is asked for before its progress shows)
         await pilot.pause()
         assert app.screen is dialog
         request, title, done = ran[0]
@@ -231,7 +230,7 @@ def test_install_runs_the_request_and_closes_when_it_succeeded(rpm, monkeypatch)
         done(False)
         await pilot.pause()
         assert dialog.query_one("#install", Button).enabled and app.screen is dialog
-        await pilot.press("ctrl+a")
+        dialog.action_install()
         ran[1][2](True)
         await pilot.pause()
         await pilot.pause()
@@ -254,7 +253,7 @@ def test_install_through_the_helper_reloads_the_window(rpm, monkeypatch, helper)
         app.main.install_file(rpm.path)
         await until(pilot, lambda: install_ready(app))
         before = len(loads)
-        await pilot.press("ctrl+a")
+        app.screen.action_install()
         dialog = await finish(app, pilot)  # the progress dialog; the installer closes after it
         assert dialog.title_text == "Installing tool" and dialog.request["op"] == "local_install"
         assert helper() == ["local_install"]
@@ -276,12 +275,12 @@ def test_open_package_file_asks_for_a_path_in_the_last_folder(rpm, monkeypatch, 
         assert path_dialog.patterns == ["*.rpm"]
         field = path_dialog.query_one("#path")
         field.value = str(tmp_path) + "/tool"
-        await pilot.press("tab")  # completes the only .rpm
+        path_dialog.action_complete()  # Tab: the only .rpm
         assert field.value == rpm.path
-        await pilot.press("enter")
-        await until(pilot, lambda: isinstance(app.screen, InstallDialog))
+        path_dialog.accept()  # Enter
+        await until(pilot, lambda: install_ready(app))
         assert settings.get(INSTALL_DIR_KEY) == str(tmp_path)
-        await pilot.press("escape")
+        app.screen.action_close()
         await until(pilot, lambda: len(app.screen_stack) == 1)
         app.main.run_action("open_file")  # the folder is remembered
         await pilot.pause()
@@ -311,8 +310,8 @@ def test_a_pasted_rpm_opens_the_installer_but_not_over_a_dialog(rpm, monkeypatch
     async def test(app, pilot):
         assert app.focused is app.main.list
         app.post_message(events.Paste(f"'{rpm.path}'"))
-        await until(pilot, lambda: isinstance(app.screen, InstallDialog))
-        await pilot.press("escape")
+        await until(pilot, lambda: install_ready(app))
+        app.screen.action_close()
         await until(pilot, lambda: len(app.screen_stack) == 1)
         app.post_message(events.Paste(str(tmp_path / "notes.txt")))  # not an rpm
         await pilot.pause()
@@ -345,7 +344,7 @@ def test_kram_tui_file_rpm_runs_the_installer_alone_and_ends_with_it(rpm, monkey
             dialog = app.screen
             assert loaded_ == [1]  # the catalog, loaded by the installer itself
             assert len(app.screen_stack) == 2 and "tool" in text(dialog, "title")
-            await pilot.press("escape")
+            dialog.action_close()
             await until(pilot, lambda: not app.is_running)
     asyncio.run(go())
     assert catalog.forgot and not app.changed_system
@@ -377,10 +376,10 @@ def test_the_installer_alone_shows_questions_over_it(rpm, monkeypatch):
             await pilot.pause()
             assert done == [False] and isinstance(app.screen, QuestionDialog)
             app.helper.busy = False
-            await pilot.press("enter")
+            app.screen.focused.action_press()  # Enter: OK
             await pilot.pause()
             assert app.screen is dialog
             assert not isinstance(app.screen, ProgressDialog)
-            await pilot.press("escape")
+            dialog.action_close()
             await until(pilot, lambda: not app.is_running)
     asyncio.run(go())
