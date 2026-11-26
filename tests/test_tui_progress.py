@@ -91,7 +91,7 @@ def test_the_dialog_follows_the_helper_and_stays_until_it_is_done(monkeypatch):
         assert "Installing a-1-1.noarch" in tail(dialog)
         # the transaction runs: Esc does nothing, and the hint says so
         assert "not while it runs" in str(dialog.query_one("#progress-box").border_subtitle)
-        await pilot.press("escape")
+        dialog.action_escape()
         await pilot.pause()
         assert app.screen is dialog and not finished
         client.event.emit({"event": "done", "ok": True})
@@ -100,7 +100,7 @@ def test_the_dialog_follows_the_helper_and_stays_until_it_is_done(monkeypatch):
         close = dialog.query_one("#close", Button)
         assert close.display and close.has_focus
         assert (bar(dialog, "rpm").progress, bar(dialog, "rpm").total) == (2, 2)
-        await pilot.press("enter")
+        close.action_press()  # Enter
         await until(pilot, lambda: finished)
         assert finished == [(True, {"event": "done", "ok": True})] and not client.event._slots
         assert len(app.screen_stack) == 1
@@ -118,7 +118,7 @@ def test_a_refresh_has_no_package_bar_and_a_failure_stays(monkeypatch):
         await pilot.pause()
         assert dialog.stage.kind == "error" and dialog.stage.detail == "pkexec died"
         assert app.screen is dialog and not finished  # a failure stays on screen, auto-close or not
-        await pilot.press("escape")  # done: Esc closes
+        dialog.action_escape()  # done: Esc closes
         await until(pilot, lambda: finished)
         assert finished == [(False, {})]
     run(monkeypatch, test)
@@ -135,14 +135,14 @@ def test_the_log_under_the_bars_and_the_whole_log_with_its_times(monkeypatch):
         assert len(shown) == 4 and shown[0].startswith(dialog.lines[4][:20]) and "line 7" in shown[-1]
         assert all(len(line) <= dialog.query_one(LogTail).size.width for line in shown)  # cut, not wrapped
         assert dialog.lines[0][2] == ":" and dialog.lines[0][10:].startswith("line 0")  # "12:00:05  line 0 …"
-        await pilot.press("l")
+        dialog.action_log()  # l
         await pilot.pause()
         log_dialog = app.screen
         assert isinstance(log_dialog, LogDialog) and log_dialog.query_one(Log).line_count == 8
         client.event.emit({"event": "log", "text": "one more"})  # it follows while open
         await pilot.pause()
         assert log_dialog.query_one(Log).line_count == 9
-        await pilot.press("escape")
+        log_dialog.action_close()  # Esc
         await pilot.pause()
         assert app.screen is dialog
     run(monkeypatch, test)
@@ -155,8 +155,8 @@ def test_close_when_finished_successfully_is_remembered(monkeypatch):
         dialog, client, finished = await show(app, pilot, {"op": "refresh"}, "Refreshing metadata")
         box = dialog.query_one(CheckBox)
         assert not box.value
-        box.focus()
-        await pilot.press("space")
+        box.action_toggle()  # space
+        await pilot.pause()
         assert box.value and settings.get(AUTO_CLOSE_KEY, False) is True  # saved on change
         client.event.emit({"event": "done", "ok": True})
         await until(pilot, lambda: finished)
@@ -164,12 +164,12 @@ def test_close_when_finished_successfully_is_remembered(monkeypatch):
         dialog, client, finished = await show(app, pilot, {"op": "refresh"}, "Refreshing metadata")
         assert dialog.query_one(CheckBox).value  # the next one starts ticked
         # under the whole log it closes once the log is closed (a screen under another cannot be dismissed)
-        await pilot.press("l")
+        dialog.action_log()
         await pilot.pause()
         client.event.emit({"event": "done", "ok": True})
         await pilot.pause()
         assert isinstance(app.screen, LogDialog) and not finished
-        await pilot.press("escape")
+        app.screen.action_close()
         await until(pilot, lambda: finished)
         assert len(app.screen_stack) == 1
     run(monkeypatch, test)
@@ -185,7 +185,8 @@ def test_the_key_question_is_asked_over_the_dialog(monkeypatch):
         question = app.screen
         assert isinstance(question, QuestionDialog) and question.question.title == "Import key"
         assert "Fingerprint: F1" in question.question.text and app.screen_stack[-2] is dialog
-        await pilot.press("enter")  # Yes is focused
+        assert question.focused.render().plain == "< Yes >"
+        question.focused.action_press()
         await until(pilot, lambda: client.answered)
         assert client.answered == [(4, True)] and app.screen is dialog
         assert dialog.lines[-1].endswith("Key ABCD: importing")
@@ -253,7 +254,7 @@ def counting(loads: list):
 async def finish(app, pilot) -> ProgressDialog:
     await until(pilot, lambda: isinstance(app.screen, ProgressDialog) and app.screen.finished is not None)
     dialog = app.screen
-    await pilot.press("enter")
+    dialog.close()  # Enter
     await until(pilot, lambda: len(app.screen_stack) == 1)
     return dialog
 
@@ -264,7 +265,7 @@ def test_f5_refreshes_the_metadata_then_reloads(monkeypatch, helper):
     async def test(app, pilot):
         before = len(loads)
         assert app.main.action_enabled("reload")
-        await pilot.press("f5")
+        app.action_run("reload")  # F5
         dialog = await finish(app, pilot)
         assert dialog.title_text == "Refreshing metadata" and dialog.finished is True
         assert helper() == ["refresh"]
@@ -282,7 +283,7 @@ def test_the_version_lock_runs_with_its_progress_then_reloads(monkeypatch, helpe
         await pilot.pause()
         assert app.main.action_enabled("lock")
         before = len(loads)
-        await pilot.press("equals_sign")
+        app.list_widget.action_run_either("lock", "unlock")  # =
         dialog = await finish(app, pilot)
         assert dialog.title_text == "Locking the version of 1 package"
         assert dialog.request == {"op": "versionlock", "action": "add", "names": ["pkg0000"]}
