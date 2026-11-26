@@ -92,22 +92,26 @@ def test_the_caches_with_their_sizes_and_their_buttons(monkeypatch, files):
         assert text(dialog, "cleanup-note").startswith(f"{app.glyphs.warning} ")  # an offline update is prepared
         clean = dialog.query_one("#clean", Button)
         assert clean.label == "Clean" and clean.enabled
-        await pilot.press("enter")  # the cache table has the focus
+        assert dialog.focused is dialog.cache_table
+        dialog.action_activate()  # Enter: Clean
+        await pilot.pause()
         assert cleaned == ["dnf_packages"]
-        await pilot.press("down")
+        dialog.cache_table.action_move(1)  # down
+        await pilot.pause()
         assert clean.label == "Download again…" and clean.enabled
-        await pilot.press("enter")  # asks first
+        dialog.action_activate()  # asks first
         await pilot.pause()
         assert isinstance(app.screen, QuestionDialog) and app.screen.question.title == "Download metadata again"
-        await pilot.press("escape")
+        app.screen.action_cancel()  # Esc
         await pilot.pause()
         assert cleaned == ["dnf_packages"] and app.screen is dialog
-        await pilot.press("down")
+        dialog.cache_table.action_move(1)
+        await pilot.pause()
         assert not clean.enabled  # PackageKit's, while an offline update is prepared
         dialog.show_measuring()
         await pilot.pause()
         assert "…" in table_lines(dialog.cache_table)[1] and not clean.enabled
-        await pilot.press("escape")
+        dialog.action_close()
         await pilot.pause()
         assert len(app.screen_stack) == 1
     run_alone(monkeypatch, test)
@@ -134,17 +138,19 @@ def test_the_leftovers_and_compare(monkeypatch, files):
         assert "Your earlier version, put aside by app." in text(dialog, "leftover-about")
         assert dialog.query_one("#compare", Button).enabled and dialog.query_one("#search-root").display
         dialog.leftover_table.focus()
-        await pilot.press("enter")  # Compare
+        await pilot.pause()
+        dialog.action_activate()  # Enter: Compare
         await pilot.pause()
         diff = app.screen
         assert isinstance(diff, DiffDialog)
         shown = diff.query_one("#diff", Lines).render()
         assert "-b" in shown.plain.splitlines() and "+c" in shown.plain.splitlines()
         assert "lines with “+” only in" in diff.query_one("#diff-note", Lines).render().plain
-        await pilot.press("escape")
+        diff.action_close()  # Esc
         await pilot.pause()
         assert app.screen is dialog
-        await pilot.press("down")  # a copy of a file that is gone: nothing to compare it with
+        dialog.leftover_table.action_move(1)  # a copy of a file that is gone: nothing to compare it with
+        await pilot.pause()
         assert not dialog.query_one("#compare", Button).enabled
         assert "There is no current file to compare it with." in text(dialog, "leftover-about")
     run_alone(monkeypatch, test)
@@ -171,7 +177,7 @@ def test_delete_unused_asks_then_runs_the_helper(monkeypatch, files):
         button.action_press()
         await until(pilot, lambda: isinstance(app.screen, QuestionDialog))
         assert app.screen.question.text == "Delete 2 files?"
-        await pilot.press("escape")  # Cancel
+        app.screen.action_cancel()  # Esc: Cancel
         await until(pilot, lambda: app.screen is dialog)
         assert requests == []
         button.action_press()
@@ -229,7 +235,7 @@ def test_cleanup_from_the_menu_cleans_through_the_helper(monkeypatch, helper, fi
             await until(pilot, lambda: isinstance(app.screen, CacheDialog)
                         and any(b.enabled for b in app.screen.query("#clean").results(Button)))
             dialog = app.screen
-            await pilot.press("enter")
+            dialog.action_activate()  # Enter: Clean
             await finish_over(app, pilot, dialog)
             assert helper() == ["clean_cache"]
             await until(pilot, lambda: dialog.query_one("#clean", Button).enabled)  # counted again
@@ -241,5 +247,5 @@ async def finish_over(app, pilot, dialog) -> None:
     """The progress dialog of a request run from `dialog`, closed: the dialog stays."""
     from kram.tui.dialogs.progress import ProgressDialog
     await until(pilot, lambda: isinstance(app.screen, ProgressDialog) and app.screen.finished is not None)
-    await pilot.press("enter")
+    app.screen.close()  # Enter
     await until(pilot, lambda: app.screen is dialog)

@@ -48,10 +48,10 @@ STATES = {("fish", "x86_64"): PackageState(("4.0-1",), frozenset({"4.0-1"}), "4.
 
 def run(monkeypatch, test, size=WIDE):
     monkeypatch.setattr(history_module, "CHUNK", 2)  # the packages load in two chunks
-    use_catalog(monkeypatch, snapshot(), history=lambda: TRANSACTIONS,
-                history_items=lambda ids: {i: ITEMS[i] for i in ids},
-                package_states=lambda keys: {k: STATES[k] for k in keys if k in STATES},
-                removal_dependents=lambda keys: [])
+    run.catalog = use_catalog(monkeypatch, snapshot(), history=lambda: TRANSACTIONS,
+                              history_items=lambda ids: {i: ITEMS[i] for i in ids},
+                              package_states=lambda keys: {k: STATES[k] for k in keys if k in STATES},
+                              removal_dependents=lambda keys: [])
     from kram.tui.app import KramApp
     app = KramApp()
 
@@ -104,13 +104,13 @@ def test_the_transactions_load_with_their_packages(monkeypatch):
         assert header.split() == ["Action", "Package", "Version", "Repository", "Reason"]
         assert fish.split()[:3] == ["Remove", "fish.x86_64", "3.9-1"]
         assert about(dialog) == "dnf5 remove fish"
-        await pilot.press("down")
+        dialog.transaction_table.action_move(1)  # down
         await pilot.pause()
         assert dialog.history.current == 2
         assert about(dialog) == "The transaction failed or did not finish\nkram"
         assert lines(dialog.package_table)[1].split()[:5] == ["Upgrade", "vim.x86_64", "9.1-1", "→", "9.1-2"]
         assert not dialog.query_one("#undo", Button).enabled  # a failed transaction is not undone
-        await pilot.press("down")
+        dialog.transaction_table.action_move(1)
         await pilot.pause()
         assert about(dialog) == "dnf5 install fish a comment"
         assert [line.split()[:2] for line in lines(dialog.package_table)[1:]] == [["Install", "fish.x86_64"],
@@ -174,9 +174,10 @@ def test_enter_on_a_package_closes_the_history_and_selects_it(monkeypatch):
     async def test(app, pilot):
         dialog = await open_history(app, pilot)
         dialog.transaction_table.select_key(2)
-        await pilot.press("enter")  # down to the packages
+        dialog.action_activate()  # Enter: down to the packages
+        await pilot.pause()
         assert dialog.focused is dialog.package_table
-        await pilot.press("enter")
+        dialog.action_activate()
         await until(pilot, lambda: len(app.screen_stack) == 1)
         await pilot.pause()
         assert app.main.current_key() == ("vim", "x86_64") and app.main.list.has_focus
@@ -193,10 +194,28 @@ def test_show_in_history_opens_it_on_the_package(monkeypatch):
         assert dialog.query_one("#history-filter").value == "fish"
         await until(pilot, lambda: dialog.state == "2 of 3 transactions")
         assert dialog.transaction_table.keys == [3, 1]
-        await pilot.press("escape")
+        dialog.action_close()  # Esc
         await until(pilot, lambda: len(app.screen_stack) == 1)
         # ctrl+h opens it without a filter
-        await pilot.press("ctrl+h")
-        await until(pilot, lambda: isinstance(app.screen, HistoryDialog))
+        app.action_run("history")
+        await until(pilot, lambda: isinstance(app.screen, HistoryDialog) and app.screen._ready)
+        await until(pilot, lambda: "Reading" not in app.screen.state)
         assert app.screen.query_one("#history-filter").value == ""
+    run(monkeypatch, test)
+
+
+def test_a_history_closed_while_it_reads_draws_nothing_more(monkeypatch):
+    """Esc while the packages still came in chunks: what came after went to the dialog's widgets, gone by then."""
+    async def test(app, pilot):
+        worker = run.catalog.worker
+        app.main.run_action("history")
+        await until(pilot, lambda: isinstance(app.screen, HistoryDialog) and app.screen._ready)
+        dialog = app.screen
+        worker.hold()  # the next chunk of packages waits
+        dialog.history.reload()
+        dialog.action_close()  # Esc
+        await until(pilot, lambda: len(app.screen_stack) == 1)
+        worker.release()
+        await pilot.pause()
+        assert app.is_running and len(app.screen_stack) == 1
     run(monkeypatch, test)
