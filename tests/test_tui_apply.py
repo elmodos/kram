@@ -117,6 +117,34 @@ async def wait_for(app, pilot, kind):
     return app.screen
 
 
+def plus(app) -> None:
+    """`+`, Insert: the row's installation, or its upgrade."""
+    app.list_widget.action_run_either("mark.install", "mark.upgrade")
+
+
+def minus(app) -> None:
+    """`-`, Delete."""
+    app.list_widget.action_run("mark.remove")
+
+
+async def apply(app, pilot) -> None:
+    """`a`: the marks reviewed in the Apply dialog."""
+    app.action_run("apply")
+    await pilot.pause()
+
+
+async def tick(pilot, box: CheckBox) -> None:
+    """Space on a check box: its change arrives as a message."""
+    box.action_toggle()
+    await pilot.pause()
+
+
+async def press_focused(app, pilot) -> None:
+    """Enter on the button that has the focus (a question's default one)."""
+    app.screen.focused.action_press()
+    await pilot.pause()
+
+
 # ---------------------------------------------------------------- the dialog (§10.1)
 
 @pytest.mark.feature(Feature.DIALOG_APPLY, front="tui")
@@ -153,9 +181,9 @@ def test_the_dialog_shows_every_part_of_the_review(tmp_path):
         assert text(dialog, "command") == "sudo dnf5 install virt-manager"
         assert not dialog.query_one("#download-only", CheckBox).value
         assert apply_button(dialog).enabled and apply_button(dialog).has_focus
-        await pilot.press("y")
+        dialog.action_copy_command()  # y
         assert copied == ["sudo dnf5 install virt-manager"]
-        await pilot.press("escape")
+        dialog.action_cancel()  # Esc
         await pilot.pause()
         assert results == [None] and len(app.screen_stack) == 1
     run_dialog(test)
@@ -183,12 +211,13 @@ def test_unticking_a_recommendation_resolves_again_and_download_only_reaches_the
             (req, done)))
         box = dialog.query_one(RecBox)
         box.focus()
-        await pilot.press("space")
+        await pilot.pause()
+        await tick(pilot, box)  # space
         assert waiting and waiting[-1][0]["exclude_weak"] == ["kvm"]
         assert text(dialog, "summary") == "Resolving dependencies…" and not apply_button(dialog).enabled
-        await pilot.press("space")  # off while it resolves
+        await tick(pilot, box)  # off while it resolves
         assert not box.value and len(waiting) == 1
-        await pilot.press("ctrl+a")  # Apply is off meanwhile
+        dialog.action_apply()  # ctrl+a: Apply is off meanwhile
         assert app.screen is dialog
         waiting[-1][1](preview(with_kvm=False))
         await pilot.pause()
@@ -196,10 +225,9 @@ def test_unticking_a_recommendation_resolves_again_and_download_only_reaches_the
         assert text(dialog, "summary").startswith("2 to install/upgrade")
         assert dialog.query_one(RecBox) is box and box.has_focus and not box.value  # in place, the focus kept
         assert text(dialog, "command") == "sudo dnf5 install --setopt=exclude_from_weak=kvm virt-manager"
-        dialog.query_one("#download-only", CheckBox).focus()
-        await pilot.press("space")
+        await tick(pilot, dialog.query_one("#download-only", CheckBox))
         assert "--downloadonly" in text(dialog, "command")
-        await pilot.press("ctrl+a")
+        dialog.action_apply()
         await until(pilot, lambda: results)
         assert results == [{"op": "transaction", "install": ["virt-manager"], "exclude_weak": ["kvm"],
                             "download_only": True}]
@@ -211,8 +239,7 @@ def test_a_failed_resolve_says_why_on_the_summary_line():
         waiting = []
         dialog, _results = await show(app, pilot, preview(), resolve=lambda req, done, failed: waiting.append(
             failed))
-        dialog.query_one(RecBox).focus()
-        await pilot.press("space")
+        await tick(pilot, dialog.query_one(RecBox))
         waiting[-1](RuntimeError("no network"))
         await pilot.pause()
         assert text(dialog, "summary") == "Could not resolve the changes:\n\nno network"
@@ -226,20 +253,19 @@ def test_apply_is_off_when_the_disk_cannot_hold_it_and_on_for_a_download_that_fi
         dialog, results = await show(app, pilot, preview(to_download=1 << 60, cache_dir=str(tmp_path)))
         assert not apply_button(dialog).enabled and dialog.query_one("#cancel", Button).has_focus
         assert text(dialog, "space").startswith("⚠ Not enough disk space on /")
-        await pilot.press("ctrl+a")
+        dialog.action_apply()
         await pilot.pause()
         assert app.screen is dialog and not results
-        await pilot.press("escape")
+        dialog.action_cancel()
         await pilot.pause()
         # the installation does not fit, the download does: Download only turns Apply on
         p = dataclasses.replace(preview(to_download=100, cache_dir=str(tmp_path)), size_change=1 << 60)
         dialog, results = await show(app, pilot, p)
         assert not apply_button(dialog).enabled
         assert "The download alone fits" in text(dialog, "space")
-        dialog.query_one("#download-only", CheckBox).focus()
-        await pilot.press("space")
+        await tick(pilot, dialog.query_one("#download-only", CheckBox))
         assert apply_button(dialog).enabled and not text(dialog, "space")
-        await pilot.press("ctrl+a")
+        dialog.action_apply()
         await until(pilot, lambda: results)
         assert results[0]["download_only"] is True
     run_dialog(test)
@@ -259,14 +285,13 @@ def test_apply_runs_the_transaction_with_its_progress_then_reloads(monkeypatch, 
     async def test(app, pilot):
         b = app.main.browser
         app.main.list.select(1)  # pkg0001 is not installed
-        await pilot.pause()
-        await pilot.press("plus")
+        plus(app)
         assert b.packages.marks.get(("pkg0001", "x86_64")).action is Action.INSTALL
         before = len(loads)
-        await pilot.press("a")
+        await apply(app, pilot)
         dialog = await wait_for(app, pilot, ApplyDialog)
         assert resolved == [{"op": "transaction", "install": ["pkg0001.x86_64"]}]
-        await pilot.press("ctrl+a")
+        dialog.action_apply()
         progress = await finish(app, pilot)
         assert isinstance(progress, ProgressDialog) and progress.title_text == "Applying changes"
         assert progress.request == dialog.review.result()
@@ -281,10 +306,11 @@ def test_cancel_runs_nothing(monkeypatch, helper):  # noqa: F811
     async def test(app, pilot):
         b = app.main.browser
         app.main.list.select(1)
-        await pilot.press("plus", "a")
-        await wait_for(app, pilot, ApplyDialog)
-        await pilot.press("escape")
-        await pilot.pause(0.3)
+        plus(app)
+        await apply(app, pilot)
+        dialog = await wait_for(app, pilot, ApplyDialog)
+        dialog.action_cancel()
+        await pilot.pause()
         assert len(app.screen_stack) == 1 and helper() == [] and len(b.packages.marks) == 1
         assert not b.busy()
     run(monkeypatch, test, resolve=lambda request, sizes=True: preview())
@@ -302,14 +328,15 @@ def test_a_transaction_that_removes_kram_tui_closes_kram(monkeypatch, helper):  
     async def test(app, pilot):
         app.exit = lambda *a, **k: exited.append(1)
         app.main.select_key(("kram-tui", "noarch"))
-        await pilot.press("minus", "a")
-        await wait_for(app, pilot, ApplyDialog)
-        await pilot.press("ctrl+a")
+        minus(app)
+        await apply(app, pilot)
+        dialog = await wait_for(app, pilot, ApplyDialog)
+        dialog.action_apply()
         await until(pilot, lambda: isinstance(app.screen, ProgressDialog) and app.screen.finished)
-        await pilot.press("enter")  # Close: the question comes after it
+        app.screen.close()  # Close: the question comes after it
         question = await wait_for(app, pilot, QuestionDialog)
         assert "They removed the front end of Kram you are using (kram-tui)" in question.question.text
-        await pilot.press("enter")
+        await press_focused(app, pilot)
         await until(pilot, lambda: exited)
     run(monkeypatch, test, front_end_snapshot(), resolve=lambda request, sizes=True: preview())
 
@@ -323,12 +350,13 @@ def test_conflicting_packages_are_offered_for_removal_then_reviewed(monkeypatch)
     async def test(app, pilot):
         b = app.main.browser
         app.main.select_key(("pkg0001", "x86_64"))
-        await pilot.press("plus", "a")
+        plus(app)
+        await apply(app, pilot)
         question = await wait_for(app, pilot, QuestionDialog)
         q = question.question
         assert q.title == "Conflicting packages" and "1 installed package conflicts" in q.text
         assert "This removes the front end of Kram you are using (kram-tui)" in q.informative  # §10.16
-        await pilot.press("enter")  # Mark for Removal is the default
+        await press_focused(app, pilot)  # Mark for Removal is the default
         await wait_for(app, pilot, ApplyDialog)
         assert b.packages.marks.get(("kram-tui", "noarch")).action is Action.REMOVE
     run(monkeypatch, test, front_end_snapshot(), resolve=resolve,
@@ -347,19 +375,16 @@ def test_when_nothing_can_be_done_the_form_offers_what_can(monkeypatch):
     async def test(app, pilot):
         b = app.main.browser
         app.main.list.select(1)
-        await pilot.press("plus", "a")
+        plus(app)
+        await apply(app, pilot)
         question = await wait_for(app, pilot, QuestionDialog)
         assert question.question.title == "Cannot apply changes"
-        show_locked = next(w for w in question.query(Button) if w.label == "Show Locked Packages")
-        show_locked.focus()
-        await pilot.press("enter")
+        next(w for w in question.query(Button) if w.label == "Show Locked Packages").action_press()
         await until(pilot, lambda: b.filter is not None and b.filter.id == "status:locked")
         # an undo that cannot be done whole: Undo What Is Possible reviews the rest
         b._review({"op": "transaction", "revert": [7]}, marked=False)
         question = await wait_for(app, pilot, QuestionDialog)
-        undo = next(w for w in question.query(Button) if w.label == "Undo What Is Possible…")
-        undo.focus()
-        await pilot.press("enter")
+        next(w for w in question.query(Button) if w.label == "Undo What Is Possible…").action_press()
         dialog = await wait_for(app, pilot, ApplyDialog)
         assert dialog.review.request == {"op": "transaction", "revert": [7], "skip_unavailable": True}
     run(monkeypatch, test, resolve=resolve, conflict_removals=lambda request: [])
@@ -392,16 +417,17 @@ def test_space_and_a_click_on_the_status_cell_follow_the_setting(monkeypatch):
     async def test(app, pilot):
         main = app.main
         preferences.set_value(preferences.STATUS_CLICK, True)
+        status_click = app.list_widget.action_status_click  # space
         main.select_key(("pkg0001", "x86_64"))  # not installed
-        await pilot.press("space")
+        status_click()
         assert mark_of(app, "pkg0001") is Action.INSTALL
-        await pilot.press("space")  # marked: unmarked
+        status_click()  # marked: unmarked
         assert mark_of(app, "pkg0001") is None
         main.select_key(("pkg0000", "x86_64"))  # installed, no upgrade: no likely mark, so the menu
-        await pilot.press("space")
+        status_click()
         menu = await wait_for(app, pilot, PopupMenu)
         assert menu.title_text == "pkg0000" and not any("Copy" in item[0] for item in menu.items if item)
-        await pilot.press("escape")
+        menu.dismiss(None)
         await pilot.pause()
         # a click on the status cell of a row (x 1: after the margin; y: the header is line 0)
         table = app.query_one(PackageTable)
@@ -411,14 +437,14 @@ def test_space_and_a_click_on_the_status_cell_follow_the_setting(monkeypatch):
         assert mark_of(app, "pkg0004") is Action.INSTALL and main.current_key() == ("pkg0004", "x86_64")
         # the setting off: the status menu, as in the GUIs
         preferences.set_value(preferences.STATUS_CLICK, False)
-        await pilot.press("space")
+        status_click()
         menu = await wait_for(app, pilot, PopupMenu)
         assert "Mark for Installation" in [item[0] for item in menu.items if item]
-        await pilot.press("escape")
+        menu.dismiss(None)
         await pilot.pause()
         await pilot.click(PackageTable, offset=(1, y))
-        await wait_for(app, pilot, PopupMenu)
-        await pilot.press("escape")
+        menu = await wait_for(app, pilot, PopupMenu)
+        menu.dismiss(None)
         await pilot.pause()
         assert mark_of(app, "pkg0004") is Action.INSTALL
         preferences.set_value(preferences.STATUS_CLICK, False)
@@ -441,15 +467,15 @@ def test_a_double_click_on_a_row_is_the_likely_mark(monkeypatch):
 
 @pytest.mark.feature(Feature.MARK_UNMARK_ONE, front="tui")
 @pytest.mark.feature(Feature.MARK_UNMARK_ALL, front="tui")
-def test_the_marking_keys_and_the_marks_on_the_top_line(monkeypatch):
+def test_marking_and_the_marks_on_the_top_line(monkeypatch):
     async def test(app, pilot):
         main, b = app.main, app.main.browser
         main.select_key(("pkg0001", "x86_64"))
-        await pilot.press("plus")
+        plus(app)
         main.select_key(("pkg0002", "x86_64"))
-        await pilot.press("insert")
+        plus(app)
         main.select_key(("pkg0003", "x86_64"))  # installed
-        await pilot.press("minus")
+        minus(app)
         assert [mark_of(app, n) for n in ("pkg0001", "pkg0002", "pkg0003")] == [Action.INSTALL, Action.INSTALL,
                                                                                Action.REMOVE]
         assert "3 changes marked" in app.top_line.render().plain
@@ -457,10 +483,10 @@ def test_the_marking_keys_and_the_marks_on_the_top_line(monkeypatch):
         await pilot.pause()
         assert [b.packages.row(i).name for i in range(len(b.packages))] == ["pkg0001", "pkg0002", "pkg0003"]
         main.select_key(("pkg0002", "x86_64"))
-        await pilot.press("z")
+        app.list_widget.action_run("unmark")  # z
         assert mark_of(app, "pkg0002") is None and "2 changes marked" in app.top_line.render().plain
         assert len(b.packages) == 3  # "Marked" keeps the unmarked row
-        await pilot.press("Z")
+        app.action_run("unmark_all")  # Z
         assert not len(b.packages.marks) and "changes marked" not in app.top_line.render().plain
     run(monkeypatch, test)
 
@@ -469,10 +495,10 @@ def test_removing_a_package_asks_about_what_depends_on_it(monkeypatch):
     """Marker's question (§7.5.1) through the Ui port: a §10.21 question dialog."""
     async def test(app, pilot):
         app.main.select_key(("pkg0003", "x86_64"))
-        await pilot.press("minus")
+        minus(app)
         question = await wait_for(app, pilot, QuestionDialog)
         assert "1 installed package depends on the packages marked for removal" in question.question.text
-        await pilot.press("enter")  # Mark
+        await press_focused(app, pilot)  # Mark
         await until(pilot, lambda: mark_of(app, "pkg0006") is Action.REMOVE)
         assert mark_of(app, "pkg0003") is Action.REMOVE
     run(monkeypatch, test, removal_dependents=lambda names: [("pkg0006", "x86_64")] if names else [])
@@ -483,18 +509,18 @@ def test_removing_a_package_asks_about_what_depends_on_it(monkeypatch):
 @pytest.mark.feature(Feature.MARK_UNNEEDED, front="tui")
 def test_u_lists_the_advisory_kinds_and_marks_the_one_chosen(monkeypatch):
     async def test(app, pilot):
-        await pilot.press("U")
+        app.action_mark_upgrades()  # U, ctrl+u
         choice = await wait_for(app, pilot, ChoiceList)
         assert choice.title_text == "Mark Upgrades"
         assert choice.values == ["mark_upgrades", mark_upgrades_id(UPGRADES_SECURITY),
                                  mark_upgrades_id(UPGRADES_SECURITY_HIGH), mark_upgrades_id(UPGRADES_FIXES)]
         assert choice.labels[0] == "Mark All Upgrades"
-        await pilot.press("down", "enter")  # Mark Security Upgrades
+        choice.dismiss(choice.values[1])  # Mark Security Upgrades
         await until(pilot, lambda: mark_of(app, "sec") is not None)
         assert [mark_of(app, n) for n in ("sec", "enh", "plain")] == [Action.UPGRADE, None, None]
-        await pilot.press("ctrl+u")
-        await wait_for(app, pilot, ChoiceList)
-        await pilot.press("enter")  # Mark All Upgrades
+        app.action_mark_upgrades()
+        choice = await wait_for(app, pilot, ChoiceList)
+        choice.dismiss(choice.values[0])  # Mark All Upgrades
         await until(pilot, lambda: mark_of(app, "plain") is not None)
         assert [mark_of(app, n) for n in ("sec", "enh", "plain")] == [Action.UPGRADE] * 3
         app.main.run_action("mark_unneeded")  # Edit → Mark Unneeded Dependencies for Removal
@@ -506,7 +532,7 @@ def test_u_without_advisories_marks_every_upgrade_at_once(monkeypatch):
     plain = [PkgRow("plain", "x86_64", "P", "1-1", "2-1", "updates", 10, Origin.FEDORA, Status.UPGRADABLE)]
 
     async def test(app, pilot):
-        await pilot.press("U")
+        app.action_mark_upgrades()
         await pilot.pause()
         assert len(app.screen_stack) == 1 and mark_of(app, "plain") is Action.UPGRADE
     run(monkeypatch, test, CatalogSnapshot(rows(3) + plain, 1, 1, 0.1))
@@ -524,7 +550,7 @@ def test_the_footer_shows_reload_and_apply_and_mark_upgrades_while_they_are_on(m
         assert "f5 Reload" in line and "U Mark All Upgrades" in line and "a Apply" not in line
         assert line.rstrip().endswith("m Menu  ? Keys  q Quit")
         assert len(line) == footer.content_region.width
-        await pilot.press("U")
+        app.action_mark_upgrades()
         await until(pilot, lambda: "a Apply" in footer.render().plain)
         line = footer.render().plain
         assert line.index("U Mark All Upgrades") < line.index("a Apply") < line.index("m Menu")
