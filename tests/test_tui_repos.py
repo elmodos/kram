@@ -148,7 +148,7 @@ async def finish(app, pilot, under) -> ProgressDialog:
     await until(pilot, lambda: isinstance(app.screen, ProgressDialog) and app.screen.finished is not None)
     dialog = app.screen
     assert isinstance(app.screen_stack[-2], under)  # over the dialog it was run from
-    await pilot.press("enter")
+    dialog.close()  # Enter
     await until(pilot, lambda: isinstance(app.screen, under))
     return dialog
 
@@ -170,6 +170,15 @@ def bold_texts(dialog, key) -> list[str]:
 def text(dialog, name: str) -> str:
     widget = dialog.query_one(f"#{name}", Lines)
     return widget.render().plain if widget.display else ""
+
+
+async def answer(app, pilot, value) -> None:
+    """The question on top answered: a button's id, or the Esc answer for None."""
+    if value is None:
+        app.screen.action_cancel()
+    else:
+        app.screen.dismiss(value)
+    await pilot.pause()
 
 
 async def press(pilot, dialog, name: str) -> None:
@@ -203,18 +212,18 @@ def test_the_table_turns_repositories_on_and_off_and_lists_what_is_not_applied(m
         assert not dialog.query_one("#apply", Button).enabled and not text(dialog, "pending")
         # space turns the one under the cursor on or off; the change is bold, with *, and said in words
         dialog.table.select_key("updates-testing")
-        await pilot.press("space")
+        dialog.action_toggle()  # space
         assert dialog.repos.changes() == {"updates-testing": True}
         assert line_of(dialog, "updates-testing").startswith(" [x] updates-testing * ")
         assert "updates-testing *" in bold_texts(dialog, "updates-testing")
         dialog.table.select_key("code")
-        await pilot.press("space")
+        dialog.action_toggle()
         assert text(dialog, "pending") == "Not applied yet: turn on updates-testing; turn off code"
         assert dialog.query_one("#apply", Button).enabled
         # with changes pending, the buttons wait, and say so once
         assert not dialog.query_one("#packages", Button).enabled and not dialog.query_one("#remove", Button).enabled
         assert text(dialog, "why") == "Apply or undo the changes first."
-        await pilot.press("space")  # back as it was: no longer a change
+        dialog.action_toggle()  # back as it was: no longer a change
         assert dialog.repos.changes() == {"updates-testing": True} and "*" not in line_of(dialog, "code")
         assert text(dialog, "pending") == "Not applied yet: turn on updates-testing"
         # a click on the box turns it too
@@ -245,7 +254,8 @@ def test_the_age_of_the_metadata_is_short():
 def test_the_filter_and_the_debuginfo_and_source_repositories(monkeypatch, updates_file):
     async def test(app, pilot):
         dialog = await open_repos(app, pilot)
-        await pilot.press("shift+tab")
+        dialog.focus_previous()  # shift+tab
+        await pilot.pause()
         assert dialog.focused is dialog.query_one("#repos-filter")
         dialog.focused.value = "visual"
         await pilot.pause()
@@ -256,13 +266,13 @@ def test_the_filter_and_the_debuginfo_and_source_repositories(monkeypatch, updat
         dialog.focused.value = "x86_64"
         await pilot.pause()
         assert dialog.shown_ids() == ["fedora"]  # the debuginfo one is hidden
-        await pilot.press("ctrl+d")
+        dialog.action_aux()  # ctrl+d
         await pilot.pause()
         assert dialog.query_one("#aux", CheckBox).value
         assert dialog.shown_ids() == ["fedora", "fedora-debuginfo"]
-        await pilot.press("space")  # typed into the filter, not a repository turned on
+        dialog.action_toggle()  # space in the filter is a letter, not a repository turned on
         assert not dialog.repos.changes()
-        await pilot.press("ctrl+d")
+        dialog.action_aux()
         await pilot.pause()
         assert dialog.shown_ids() == ["fedora"]
     run(monkeypatch, test, [snap(repos(updates_file))])
@@ -275,13 +285,13 @@ def test_apply_runs_the_changes_through_the_progress_dialog_and_reloads(monkeypa
     async def test(app, pilot):
         dialog = await open_repos(app, pilot)
         dialog.table.select_key("updates-testing")
-        await pilot.press("space")
-        await pilot.press("ctrl+a")
+        dialog.action_toggle()
+        dialog.action_apply()  # ctrl+a
         await until(pilot, lambda: isinstance(app.screen, ProgressDialog) and app.screen.finished is not None)
         progress = app.screen
         assert progress.title_text == "Changing repositories" and len(app.screen_stack) == 2  # the dialog is gone
         assert helper() == [{"op": "repo_set_enabled", "repos": {"updates-testing": True}}]
-        await pilot.press("enter")
+        progress.close()
         await until(pilot, lambda: len(app.screen_stack) == 1)
         await until(pilot, lambda: any(r.id == "updates-testing" and r.enabled for r in app.main.browser.snapshot.repos))
     run(monkeypatch, test, [snap(before), snap(after)])
@@ -290,37 +300,37 @@ def test_apply_runs_the_changes_through_the_progress_dialog_and_reloads(monkeypa
 def test_closing_with_changes_not_applied_asks_first(monkeypatch, helper, updates_file):
     async def test(app, pilot):
         dialog = await open_repos(app, pilot)
-        await pilot.press("escape")  # nothing changed: it closes
+        dialog.action_close()  # Esc: nothing changed, it closes
         await until(pilot, lambda: len(app.screen_stack) == 1)
         dialog = await open_repos(app, pilot)
-        await pilot.press("space")
-        await pilot.press("escape")
+        dialog.action_toggle()
+        dialog.action_close()
         await pilot.pause()
         question = app.screen
         assert isinstance(question, QuestionDialog) and app.screen_stack[-2] is dialog
         assert question.question.text == "The changes to the repositories are not applied yet."
         assert question.question.informative == "Not applied yet: turn off code"
-        await pilot.press("escape")  # Cancel: back, the change still there
-        await pilot.pause()
+        await answer(app, pilot, None)  # Cancel: back, the change still there
         assert app.screen is dialog and dialog.repos.changes() == {"code": False}
-        await pilot.press("escape")
+        dialog.action_close()
         await pilot.pause()
         answers = {b.label: b.id for b in app.screen.question.buttons if b.label}
         assert answers == {"Apply": "apply", "Close without applying": "discard"}
         button = next(b for b, answer in app.screen._answers.items() if answer == "discard")
         button.action_press()
         await until(pilot, lambda: len(app.screen_stack) == 1)
-        await pilot.pause(0.2)
+        await pilot.pause()
         assert helper() == []
         # Apply from the question runs them
         dialog = await open_repos(app, pilot)
-        await pilot.press("space", "escape")
+        dialog.action_toggle()
+        dialog.action_close()
         await pilot.pause()
         button = next(b for b, answer in app.screen._answers.items() if answer == "apply")
         button.action_press()
         await until(pilot, lambda: isinstance(app.screen, ProgressDialog) and app.screen.finished is not None)
         assert helper() == [{"op": "repo_set_enabled", "repos": {"code": False}}]
-        await pilot.press("enter")
+        app.screen.close()
         await until(pilot, lambda: len(app.screen_stack) == 1)
     run(monkeypatch, test, [snap(repos(updates_file))])
 
@@ -393,7 +403,7 @@ def test_mirrors_is_off_with_its_reason_and_opens_over_the_repositories(monkeypa
         mirrors = app.screen
         assert app.screen_stack[-2] is dialog  # over the Repositories, which stays open
         assert mirrors.query_one("#mirrors-box").border_title == "Mirrors of Fedora 45 - Updates"
-        await pilot.press("escape")
+        mirrors.action_close()  # Esc
         await until(pilot, lambda: app.screen is dialog)
         assert net.requests[0].cancelled  # the list's loading stopped with it
     run(monkeypatch, test, [snap(repos(updates_file))], net=net)
@@ -443,7 +453,7 @@ def test_the_speed_test_ranks_the_mirrors_and_stops_when_the_dialog_closes(monke
         # a test that is still running stops with the dialog
         await press(pilot, dialog, "test")
         assert len(net.tests) == 2 and not net.tests[1].cancelled
-        await pilot.press("escape")
+        dialog.action_close()
         await until(pilot, lambda: isinstance(app.screen, ReposDialog))
         assert net.tests[1].cancelled
     run(monkeypatch, test, [snap(repos(updates_file))], net=net)
@@ -462,18 +472,18 @@ def test_use_selected_mirror_asks_about_plain_http_and_shows_the_new_state_in_pl
         assert not dialog.query_one("#automatic", Button).enabled
         assert text(dialog, "why") == "Automatic: The repository takes its mirrors from the list already."
         dialog.table.select_key(C.url)
-        await pilot.pause()
-        await pilot.press("enter")  # Enter on a row: Use selected mirror
+        dialog.action_use()  # Enter on a row: Use selected mirror
         await pilot.pause()
         question = app.screen
         assert isinstance(question, QuestionDialog) and question.question.title == "Use this mirror?"
         assert question.question.informative == "It is not reached over https."
-        await pilot.press("escape")  # Cancel: nothing applied
-        await pilot.pause()
+        await answer(app, pilot, None)  # Cancel: nothing applied
         assert app.screen is dialog and helper() == []
-        await pilot.press("enter")
+        dialog.action_use()
         await pilot.pause()
-        await pilot.press("enter")  # Use This Mirror is focused
+        use = app.screen.focused  # Use This Mirror is focused
+        assert use.render().plain == "< Use This Mirror >"
+        use.action_press()
         await finish(app, pilot, MirrorsDialog)
         assert helper() == [{"op": "mirrors", "pin": {"repo": "updates", "baseurl": C.url}}]
         # the reload: the dialog, still open, shows the mirror in use, bold, and says what happened
@@ -513,8 +523,7 @@ def test_the_fastest_mirror_switch_is_dnf_s_option(monkeypatch, helper, updates_
         assert not box.value and box.label == "Fastest mirror for every repository"
         assert text(dialog, "fastest-text") == "dnf uses the first mirrors of a list that answer, for every " \
                                                "repository."
-        box.focus()
-        await pilot.press("space")
+        box.action_toggle()  # space
         await finish(app, pilot, MirrorsDialog)
         assert helper() == [{"op": "mirrors", "fastestmirror": True}]
         await until(pilot, lambda: dialog.mirrors.fastestmirror)
