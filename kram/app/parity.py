@@ -702,7 +702,7 @@ TUI: dict[Feature, Entry] = {
     Feature.SIDEBAR_CUSTOM_FILTER_MENU: Entry(Support.SUPPORTED),
     Feature.SIDEBAR_ENVIRONMENTS_TREE: Entry(Support.SUPPORTED),
     Feature.SIDEBAR_GROUP_CHANGE: Entry(Support.SUPPORTED),
-    Feature.SIDEBAR_MARK_UPGRADES: Entry(Support.PLANNED),
+    Feature.SIDEBAR_MARK_UPGRADES: Entry(Support.SUPPORTED),
     Feature.SIDEBAR_SECTION_ICONS: Entry(Support.NOT_INTENDED, 'a terminal draws no icons on its section buttons'),
     Feature.SIDEBAR_VIEWS: Entry(Support.SUPPORTED),
     Feature.SYSTEM_FILE_MANAGER: Entry(Support.PARTIAL, 'only with a desktop; else the path is copied'),

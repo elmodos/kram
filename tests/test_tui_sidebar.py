@@ -508,6 +508,42 @@ def test_the_status_view_s_menu_and_the_search_view_s(monkeypatch):
     run(test)
 
 
+@pytest.mark.feature(Feature.SIDEBAR_MARK_UPGRADES, front="tui")
+def test_the_upgrade_entries_menus_mark_what_they_list(monkeypatch):
+    """Upgradable marks all upgrades, Security updates the security ones (all, or only critical and important),
+    Bug fix updates the ones with a bug fix advisory."""
+    from dataclasses import replace
+
+    from kram.core.model import Advisory
+    found = rows(6)
+    advisories = {0: (Advisory("F-1", "security", "important", "", 0),), 3: (Advisory("F-2", "security", "low", "", 0),),
+                  4: (Advisory("F-3", "bugfix", "", "", 0),), 5: ()}
+    found = [replace(r, installed_evr="0.9-1", status=Status.UPGRADABLE, advisories=advisories[i])
+             if i in advisories else r for i, r in enumerate(found)]
+    use_catalog(monkeypatch, CatalogSnapshot(found, 4, 4, 0.1, descriptions=[""] * 6))
+
+    async def test(app, pilot):
+        b, sidebar = app.main.browser, bar(app)
+        await focus_sidebar(app, pilot)
+
+        async def marked_after(entry_id: str, label: str) -> set[str]:
+            b.marker.unmark_all()
+            go_to(app, entry_id)
+            await popup(app, pilot, sidebar.action_menu)
+            items = b.sidebar_menu(sidebar.entries.current_entry())
+            i = next(i for i, item in enumerate(items) if item is not None and app.main.menu_item(item)[0] == label)
+            assert label not in disabled_labels(app)
+            await answer(app, pilot, i)
+            return {k[0] for k in b.marker.marks.keys()}
+
+        assert await marked_after("status:upgradable", "Mark All Upgrades") == {
+            "pkg0000", "pkg0003", "pkg0004", "pkg0005"}
+        assert await marked_after("status:security", "Mark All Security Upgrades") == {"pkg0000", "pkg0003"}
+        assert await marked_after("status:security", "Mark Critical and Important Security Upgrades") == {"pkg0000"}
+        assert await marked_after("status:bugfix", "Mark Bug Fix Upgrades") == {"pkg0004"}
+    run(test)
+
+
 @pytest.mark.feature(Feature.SIDEBAR_CUSTOM_FILTER_MENU, front="tui")
 def test_a_custom_filter_s_menu_edits_and_deletes_it(monkeypatch):
     use_catalog(monkeypatch, catalog())
