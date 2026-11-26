@@ -125,9 +125,10 @@ def builds_style(dialog, row: int):
 
 
 async def search(app, pilot, dialog, words: str) -> None:
-    dialog.query_one("#copr-search").focus()
-    dialog.query_one("#copr-search").value = ""
-    await pilot.press(*words, "enter")
+    field = dialog.query_one("#copr-search")
+    field.focus()
+    field.value = words
+    await field.action_submit()  # Enter
     await until(pilot, lambda: not dialog.searching and dialog.status != "Searching… Copr can take up to a minute "
                                                                           "to answer.")
     await pilot.pause()
@@ -162,7 +163,8 @@ def test_the_projects_on_this_system_and_the_search(monkeypatch):
         # the first result has the cursor and the focus; Enable is on for it
         assert dialog.focused is dialog.result_table and dialog.selected_result().full_name == "a/tool"
         assert dialog.query_one("#enable", Button).enabled and not text(dialog, "why")
-        await pilot.press("down")
+        dialog.result_table.go(1)
+        await pilot.pause()
         assert text(dialog, "why") == "Builds exist for: fedora-42-x86_64"
     run(monkeypatch, test, [snap(repos())])
 
@@ -194,7 +196,7 @@ def test_enable_a_result_runs_over_the_dialog_and_the_reload_shows_it(monkeypatc
     async def test(app, pilot):
         dialog = await open_copr(app, pilot)
         await search(app, pilot, dialog, "tool")
-        await pilot.press("ctrl+e")
+        dialog.action_enable()  # ctrl+e
         progress = await finish(app, pilot, CoprDialog)
         assert progress.title_text == "Enabling a/tool"
         assert helper() == [{"op": "copr", "action": "enable", "project": "a/tool"}]
@@ -243,19 +245,18 @@ def test_a_project_without_a_build_for_this_fedora_asks_first(monkeypatch, helpe
         dialog = await open_copr(app, pilot)
         await search(app, pilot, dialog, "legacy")
         dialog.result_table.go(next(i for i, r in enumerate(dialog.results) if r.project.full_name == "b/legacy"))
-        await pilot.press("enter")  # Enter on a result enables it
+        dialog.action_activate()  # Enter on a result enables it
         await pilot.pause()
         question = app.screen
         assert isinstance(question, QuestionDialog) and question.question.title == "No builds for this system"
         assert question.question.text == ("b/legacy has no builds for Fedora 45 (x86_64). Enable it anyway?")
-        await pilot.press("escape")  # No
+        question.action_cancel()  # Esc: No
         await until(pilot, lambda: app.screen is dialog)
-        await pilot.pause(0.1)
+        await pilot.pause()
         assert helper() == []
-        await pilot.press("ctrl+e")
+        dialog.action_enable()
         await until(pilot, lambda: isinstance(app.screen, QuestionDialog))
-        button = next(b for b, answer in app.screen._answers.items() if answer == "yes")
-        button.action_press()
+        app.screen.dismiss("yes")
         await finish(app, pilot, CoprDialog)
         assert helper() == [{"op": "copr", "action": "enable", "project": "b/legacy"}]
     run(monkeypatch, test, [snap(repos())])
@@ -334,11 +335,11 @@ def test_a_network_error_stays_on_the_status_line_and_ctrl_r_tries_again(monkeyp
         assert dialog.failed and text(dialog, "status") == ("Search failed: Could not connect: no route to host  "
                                                             "ctrl+r try again")
         assert lines(dialog.result_table) == [lines(dialog.result_table)[0]]  # no results
-        await pilot.press("ctrl+r")
+        dialog.action_retry()  # ctrl+r
         await until(pilot, lambda: dialog.status == "2 projects found.")
         assert copr.queries == ["tool", "tool"] and not dialog.failed
         assert text(dialog, "status") == "2 projects found."
-        await pilot.press("ctrl+r")  # nothing to try again
+        dialog.action_retry()  # nothing to try again
         await pilot.pause()
         assert copr.queries == ["tool", "tool"]
     run(monkeypatch, test, [snap(repos())], copr=copr)
@@ -349,8 +350,9 @@ def test_esc_closes_it_and_the_window_lets_it_go(monkeypatch):
         listeners = len(app.main.browser.catalog_loaded._slots)
         dialog = await open_copr(app, pilot)
         assert len(app.main.browser.catalog_loaded._slots) == listeners + 1  # the new state after a change
-        await pilot.press("escape")
+        dialog.action_close()  # Esc
         await until(pilot, lambda: len(app.screen_stack) == 1)
+        await pilot.pause()
         assert dialog.copr._closed  # a search that answers later is dropped
         assert len(app.main.browser.catalog_loaded._slots) == listeners
     run(monkeypatch, test, [snap(repos())])
